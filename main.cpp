@@ -47,6 +47,8 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	// Initialize comctl
 	CoInitializeEx(NULL, COINIT_MULTITHREADED);
 
+	static const wchar_t *class_name = L"ImGui Example";
+
 	// Create application window
 	WNDCLASSEX wc = {sizeof(WNDCLASSEX),
 	                 CS_CLASSDC,
@@ -58,16 +60,17 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	                 LoadCursor(NULL, IDC_ARROW),
 	                 NULL,
 	                 NULL,
-	                 _T("ImGui Example"),
+	                 class_name,
 	                 NULL};
 	RegisterClassEx(&wc);
-	HWND hwnd = CreateWindow(_T("ImGui Example"), _T("ImGui DirectX9 Example"), WS_OVERLAPPEDWINDOW,
-	                         100, 100, 1280, 800, NULL, NULL, wc.hInstance, NULL);
+	HWND hwnd =
+	    CreateWindow(class_name, _T("Open Board Viewer"), WS_OVERLAPPEDWINDOW, CW_USEDEFAULT,
+	                 CW_USEDEFAULT, 1280, 800, NULL, NULL, wc.hInstance, NULL);
 
 	// Initialize Direct3D
 	LPDIRECT3D9 pD3D;
 	if ((pD3D = Direct3DCreate9(D3D_SDK_VERSION)) == NULL) {
-		UnregisterClass(_T("ImGui Example"), wc.hInstance);
+		UnregisterClass(class_name, wc.hInstance);
 		return 0;
 	}
 	ZeroMemory(&g_d3dpp, sizeof(g_d3dpp));
@@ -82,7 +85,7 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	if (pD3D->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, hwnd,
 	                       D3DCREATE_HARDWARE_VERTEXPROCESSING, &g_d3dpp, &g_pd3dDevice) < 0) {
 		pD3D->Release();
-		UnregisterClass(_T("ImGui Example"), wc.hInstance);
+		UnregisterClass(class_name, wc.hInstance);
 		return 0;
 	}
 
@@ -188,7 +191,7 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 		g_pd3dDevice->Release();
 	if (pD3D)
 		pD3D->Release();
-	UnregisterClass(_T("ImGui Example"), wc.hInstance);
+	UnregisterClass(class_name, wc.hInstance);
 
 	return 0;
 }
