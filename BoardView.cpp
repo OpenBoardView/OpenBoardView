@@ -670,8 +670,10 @@ void BoardView::SetNetFilter(const char *net) {
 				count++;
 			}
 		}
-		if (count > 0 && !any_visible) {
-			FlipBoard();
+		if (count > 0) {
+			if (!any_visible)
+				FlipBoard();
+			m_pinSelected = -1;
 		}
 	}
 	m_needsRedraw = true;
@@ -694,8 +696,10 @@ void BoardView::FindComponent(const char *name) {
 				any_visible |= PartIsVisible(part);
 			}
 		}
-		if (part_idx >= 0 && !any_visible) {
-			FlipBoard();
+		if (part_idx >= 0) {
+			if (!any_visible)
+				FlipBoard();
+			m_pinSelected = -1;
 		}
 		for (int i = 0; i < m_file->num_pins; i++) {
 			const BRDPin &pin = m_file->pins[i];
