@@ -6,6 +6,9 @@
 #include "BRDFile.h"
 #include "imgui/imgui.h"
 #include "platform.h"
+#if _MSC_VER
+#define stricmp _stricmp
+#endif
 
 BoardView::~BoardView() {
 	if (m_file)
@@ -58,7 +61,7 @@ void BoardView::Update() {
 				ImGui::SetKeyboardFocusHere(-1);
 			int buttons_left = 10;
 			for (int i = 0; buttons_left && i < m_nets.Size; i++) {
-				if (utf8str(m_nets[i], m_search)) {
+				if (utf8casestr(m_nets[i], m_search)) {
 					if (ImGui::Button(m_nets[i])) {
 						SetNetFilter(m_nets[i]);
 						ImGui::CloseCurrentPopup();
@@ -95,7 +98,7 @@ void BoardView::Update() {
 			int buttons_left = 10;
 			for (int i = 0; buttons_left && i < m_file->num_parts; i++) {
 				const BRDPart &part = m_file->parts[i];
-				if (utf8str(part.name, m_search)) {
+				if (utf8casestr(part.name, m_search)) {
 					if (ImGui::Button(part.name)) {
 						FindComponent(part.name);
 						ImGui::CloseCurrentPopup();
@@ -663,7 +666,7 @@ void BoardView::SetNetFilter(const char *net) {
 		int count = 0;
 		for (int i = 0; i < m_file->num_pins; i++) {
 			const BRDPin &pin = m_file->pins[i];
-			if (!strcmp(m_netFilter, pin.net)) {
+			if (!stricmp(m_netFilter, pin.net)) {
 				any_visible |= PartIsVisible(m_file->parts[pin.part - 1]);
 				m_pinHighlighted.Set(i, true);
 				m_partHighlighted.Set(pin.part - 1, true);
@@ -690,7 +693,7 @@ void BoardView::FindComponent(const char *name) {
 		bool any_visible = false;
 		for (int i = 0; i < m_file->num_parts; i++) {
 			const BRDPart &part = m_file->parts[i];
-			if (!strcmp(name, part.name)) {
+			if (!stricmp(name, part.name)) {
 				part_idx = i;
 				m_partHighlighted.Set(part_idx, true);
 				any_visible |= PartIsVisible(part);
