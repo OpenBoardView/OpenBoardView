@@ -1,0 +1,9 @@
+Debug
+Release
+test
+*.aps
+*.opensdf
+*.VC.db
+*.sdf
+.vs
+imgui.ini

@@ -1,0 +1,9 @@
+BasedOnStyle: LLVM
+PointerBindsToType: false
+AllowShortFunctionsOnASingleLine: false
+BreakBeforeBraces: Attach
+BreakConstructorInitializersBeforeComma: true
+IndentWidth: 4
+TabWidth: 4
+UseTab: ForIndentation
+ColumnLimit: 100
