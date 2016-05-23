@@ -3,6 +3,8 @@
 Software for viewing .brd files, intended as a drop-in replacement for the
 "Test_Link" software.
 
+[Demo Video](https://www.youtube.com/watch?v=1Pi5RGC-rJw)
+
 ### Installation
 
 Downloadable an executable from the [Releases page](https://github.com/chloridite/OpenBoardView/releases)
