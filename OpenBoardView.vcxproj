@@ -157,9 +157,7 @@
     <ResourceCompile Include="OpenBoardView.rc" />
   </ItemGroup>
   <ItemGroup>
-    <Font Include="asset\FiraMono-Regular.ttf" />
     <Font Include="asset\FiraSans-Medium.ttf" />
-    <Font Include="asset\OpenSans-Regular.ttf" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

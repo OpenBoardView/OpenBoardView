@@ -67,15 +67,13 @@
     <Image Include="asset\brd.ico" />
   </ItemGroup>
   <ItemGroup>
-    <Font Include="asset\FiraMono-Regular.ttf">
-      <Filter>assets</Filter>
-    </Font>
-    <Font Include="asset\OpenSans-Regular.ttf" />
-    <Font Include="asset\FiraSans-Medium.ttf" />
-  </ItemGroup>
-  <ItemGroup>
     <ResourceCompile Include="OpenBoardView.rc">
       <Filter>assets</Filter>
     </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Font Include="asset\FiraSans-Medium.ttf">
+      <Filter>assets</Filter>
+    </Font>
   </ItemGroup>
 </Project>
