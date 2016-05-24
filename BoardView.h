@@ -71,6 +71,7 @@ struct BoardView {
 	bool m_showComponentSearch;
 	bool m_firstFrame = true;
 	bool m_lastFileOpenWasInvalid;
+	bool m_wantsQuit;
 
 	~BoardView();
 

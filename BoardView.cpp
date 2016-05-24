@@ -30,6 +30,21 @@ void BoardView::Update() {
 			if (ImGui::MenuItem("Open", "Ctrl+O")) {
 				open_file = true;
 			}
+			if (ImGui::MenuItem("Quit")) {
+				m_wantsQuit = true;
+			}
+			ImGui::EndMenu();
+		}
+		if (ImGui::BeginMenu("View")) {
+			if (ImGui::MenuItem("Flip board", "<Space>")) {
+				FlipBoard();
+			}
+			if (ImGui::MenuItem("Rotate CW", ".")) {
+				Rotate(1);
+			}
+			if (ImGui::MenuItem("Rotate CCW", ",")) {
+				Rotate(-1);
+			}
 			ImGui::EndMenu();
 		}
 		if (ImGui::Button("Net")) {
@@ -305,11 +320,9 @@ void BoardView::HandleInput() {
 		// Rotate board: R and period rotate clockwise; comma rotates counter-clockwise
 		if (ImGui::IsKeyPressed('R') || ImGui::IsKeyPressed(190)) {
 			Rotate(1);
-			m_needsRedraw = true;
 		}
 		if (ImGui::IsKeyPressed(188)) {
 			Rotate(-1);
-			m_needsRedraw = true;
 		}
 
 		// Search for net
@@ -622,6 +635,7 @@ void BoardView::Rotate(int count) {
 			m_dy = -dx;
 		}
 		--count;
+		m_needsRedraw = true;
 	}
 	while (count < 0) {
 		m_rotation = (m_rotation - 1) & 3;
@@ -635,6 +649,7 @@ void BoardView::Rotate(int count) {
 			m_dy = -dx;
 		}
 		++count;
+		m_needsRedraw = true;
 	}
 }
 

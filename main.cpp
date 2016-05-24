@@ -173,6 +173,9 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 		}
 #endif
 		app.Update();
+		if (app.m_wantsQuit) {
+			PostMessage(hwnd, WM_QUIT, 0, 0);
+		}
 
 		// Rendering
 		g_pd3dDevice->SetRenderState(D3DRS_ZENABLE, false);
