@@ -11,8 +11,7 @@
 #endif
 
 BoardView::~BoardView() {
-	if (m_file)
-		delete m_file;
+	delete m_file;
 	free(m_lastFileOpenName);
 }
 
@@ -525,8 +524,7 @@ int qsort_netstrings(const void *a, const void *b) {
 }
 
 void BoardView::SetFile(BRDFile *file) {
-	if (m_file)
-		delete m_file;
+	delete m_file;
 	m_file = file;
 
 	// Generate sorted, uniqued list of nets:
