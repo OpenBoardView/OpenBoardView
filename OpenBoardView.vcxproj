@@ -150,6 +150,7 @@
     <ClCompile Include="platform.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="asset\brd.ico" />
     <Image Include="asset\empty_circle.dds" />
   </ItemGroup>
   <ItemGroup>

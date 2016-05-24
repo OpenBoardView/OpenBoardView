@@ -10,6 +10,7 @@
 #include <tchar.h>
 #include "crtdbg.h"
 #include "platform.h"
+#include "resource.h"
 
 // Data
 static LPDIRECT3DDEVICE9 g_pd3dDevice = NULL;
@@ -50,13 +51,15 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	static const wchar_t *class_name = L"ImGui Example";
 
 	// Create application window
+	HINSTANCE instance = GetModuleHandle(NULL);
+	HICON icon = LoadIcon(instance, MAKEINTRESOURCE(IDI_ICON1));
 	WNDCLASSEX wc = {sizeof(WNDCLASSEX),
 	                 CS_CLASSDC,
 	                 WndProc,
 	                 0L,
 	                 0L,
-	                 GetModuleHandle(NULL),
-	                 NULL,
+	                 instance,
+	                 icon,
 	                 NULL,
 	                 NULL,
 	                 NULL,

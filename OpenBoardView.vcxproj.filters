@@ -64,6 +64,7 @@
     <Image Include="asset\empty_circle.dds">
       <Filter>assets</Filter>
     </Image>
+    <Image Include="asset\brd.ico" />
   </ItemGroup>
   <ItemGroup>
     <Font Include="asset\FiraMono-Regular.ttf">
