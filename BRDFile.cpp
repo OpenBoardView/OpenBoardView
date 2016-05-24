@@ -72,6 +72,7 @@ done:
 }
 
 BRDFile::BRDFile(const char *buf, size_t buffer_size) {
+	memset(this, 0, sizeof(*this));
 #define ENSURE(X)                                                                                  \
 	assert(X);                                                                                     \
 	if (!(X))                                                                                      \
@@ -216,7 +217,7 @@ BRDFile::BRDFile(const char *buf, size_t buffer_size) {
 		} break;
 		}
 	}
-	valid = true;
+	valid = current_block != 0;
 fail_lines:
 	free(lines_begin);
 fail:;

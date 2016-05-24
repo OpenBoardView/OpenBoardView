@@ -13,6 +13,7 @@
 BoardView::~BoardView() {
 	if (m_file)
 		delete m_file;
+	free(m_lastFileOpenName);
 }
 
 void BoardView::Update() {
@@ -47,6 +48,10 @@ void BoardView::Update() {
 		}
 		if (m_showComponentSearch && m_file) {
 			ImGui::OpenPopup("Search for Component");
+		}
+		if (m_lastFileOpenWasInvalid) {
+			ImGui::OpenPopup("Error opening file");
+			m_lastFileOpenWasInvalid = false;
 		}
 		if (ImGui::BeginPopupModal("Search for Net", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
 			if (m_showNetfilterSearch) {
@@ -157,20 +162,33 @@ void BoardView::Update() {
 			    "SOFTWARE.");
 			ImGui::EndPopup();
 		}
+		if (ImGui::BeginPopupModal("Error opening file")) {
+			ImGui::Text("There was an error opening the file: %s", m_lastFileOpenName);
+			// TODO: error details? -- would need the loader to say what's wrong.
+			if (ImGui::Button("OK")) {
+				ImGui::CloseCurrentPopup();
+			}
+			ImGui::EndPopup();
+		}
 		ImGui::EndMainMenuBar();
 	}
 
 	if (open_file) {
 		char *filename = show_file_picker();
 		if (filename) {
+			SetLastFileOpenName(filename);
 			size_t buffer_size;
 			char *buffer = file_as_buffer(&buffer_size, filename);
 			if (buffer) {
 				BRDFile *file = new BRDFile(buffer, buffer_size);
-				SetFile(file);
+				if (file->valid) {
+					SetFile(file);
+				} else {
+					m_lastFileOpenWasInvalid = true;
+					delete file;
+				}
 				free(buffer);
 			}
-			free(filename);
 		}
 	}
 
@@ -714,6 +732,11 @@ void BoardView::FindComponent(const char *name) {
 	m_needsRedraw = true;
 }
 
+void BoardView::SetLastFileOpenName(char *name) {
+	free(m_lastFileOpenName);
+	m_lastFileOpenName = name;
+}
+
 void BoardView::FlipBoard() {
 	m_side ^= 1;
 	m_dx = -m_dx;
@@ -724,8 +747,7 @@ void BoardView::FlipBoard() {
 }
 
 BitVec::~BitVec() {
-	if (m_bits)
-		free(m_bits);
+	free(m_bits);
 }
 
 void BitVec::Resize(uint32_t new_size) {

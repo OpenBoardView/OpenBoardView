@@ -45,6 +45,7 @@ struct BoardView {
 	ImVector<char *> m_nets;
 	char m_search[128];
 	char m_netFilter[128];
+	char *m_lastFileOpenName;
 	float m_dx;
 	float m_dy;
 	float m_mx;
@@ -69,6 +70,7 @@ struct BoardView {
 	bool m_showNetfilterSearch;
 	bool m_showComponentSearch;
 	bool m_firstFrame = true;
+	bool m_lastFileOpenWasInvalid;
 
 	~BoardView();
 
@@ -93,5 +95,6 @@ struct BoardView {
 	bool PartIsHighlighted(int part_idx);
 	void SetNetFilter(const char *net);
 	void FindComponent(const char *name);
+	void SetLastFileOpenName(char *name);
 	void FlipBoard();
 };

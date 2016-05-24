@@ -44,11 +44,7 @@ struct BRDFile {
 
 	BRDFile(const char *buf, size_t buffer_size);
 	~BRDFile() {
-		if (file_buf) {
-			free(file_buf);
-		}
-		if (format) {
-			free(format);
-		}
+		free(file_buf);
+		free(format);
 	}
 };
