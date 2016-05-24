@@ -470,8 +470,8 @@ void BoardView::DrawBoard() {
 			color = 0xff333333;
 			is_test_pad = true;
 		}
-		ImVec2 min = CoordToScreen(min_x, min_y);
-		ImVec2 max = CoordToScreen(max_x, max_y);
+		ImVec2 min = CoordToScreen((float)min_x, (float)min_y);
+		ImVec2 max = CoordToScreen((float)max_x, (float)max_y);
 		min.x -= 0.5f;
 		max.x += 0.5f;
 		draw->AddRect(min, max, color);
