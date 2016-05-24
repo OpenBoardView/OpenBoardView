@@ -57,7 +57,7 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	                 0L,
 	                 GetModuleHandle(NULL),
 	                 NULL,
-	                 LoadCursor(NULL, IDC_ARROW),
+	                 NULL,
 	                 NULL,
 	                 NULL,
 	                 class_name,
