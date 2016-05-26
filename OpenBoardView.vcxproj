@@ -136,6 +136,7 @@
     <ClInclude Include="imgui\stb_textedit.h" />
     <ClInclude Include="imgui\stb_truetype.h" />
     <ClInclude Include="imgui_impl_dx9.h" />
+    <ClInclude Include="NetList.h" />
     <ClInclude Include="platform.h" />
     <ClInclude Include="resource.h" />
   </ItemGroup>
@@ -147,6 +148,7 @@
     <ClCompile Include="imgui\imgui_draw.cpp" />
     <ClCompile Include="imgui_impl_dx9.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="NetList.cpp" />
     <ClCompile Include="platform.cpp" />
   </ItemGroup>
   <ItemGroup>

@@ -35,6 +35,24 @@ struct BitVec {
 	}
 };
 
+struct ColorScheme {
+	uint32_t backgroundColor =	0xa0000000;
+	uint32_t boxColor =			0xffcccccc;
+	uint32_t partTextColor =	0xff808000;
+	uint32_t boardOutline =		0xff00ffff;
+
+	uint32_t pinHighlighted =	0xffffffff;
+	uint32_t pinSelected =		0xff00ff00;
+};
+
+enum DrawChannel
+{
+	kChannelImages = 0,
+	kChannelPolylines = 1,
+	kChannelText = 2,
+	NUM_DRAW_CHANNELS = 3
+};
+
 struct BoardView {
 	BRDFile *m_file;
 	int m_pinSelected;
@@ -58,6 +76,8 @@ struct BoardView {
 	int m_boardWidth;
 	int m_boardHeight;
 
+	ColorScheme m_colors;
+
 	// TODO: save settings to disk
 	// pinDiameter: diameter for all pins.  Unit scale: 1 = 0.025mm
 	int m_pinDiameter = 20;
@@ -69,14 +89,21 @@ struct BoardView {
 	bool m_draggingLastFrame;
 	bool m_showNetfilterSearch;
 	bool m_showComponentSearch;
+	bool m_showNetList;
 	bool m_firstFrame = true;
 	bool m_lastFileOpenWasInvalid;
 	bool m_wantsQuit;
 
 	~BoardView();
 
+	void ShowNetList(bool * p_open);
+
 	void Update();
 	void HandleInput();
+	void RenderOverlay();
+	void DrawOutline(ImDrawList * draw);
+	void DrawPins(ImDrawList * draw);
+	void DrawParts(ImDrawList * draw);
 	void DrawBoard();
 	void SetFile(BRDFile *file);
 	ImVec2 CoordToScreen(float x, float y, float w = 1.0f);

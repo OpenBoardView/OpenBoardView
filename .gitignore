@@ -7,3 +7,13 @@ test
 *.sdf
 .vs
 imgui.ini
+
+# VS cache files
+*.aps
+*.ncb
+*.opendb
+*.opensdf
+*.sdf
+*.cachefile
+*.VC.db
+*.VC.VC.opendb

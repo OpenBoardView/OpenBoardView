@@ -5,7 +5,11 @@
 #include "BoardView.h"
 #include "BRDFile.h"
 #include "imgui/imgui.h"
+
+#include "NetList.h"
+
 #include "platform.h"
+
 #if _MSC_VER
 #define stricmp _stricmp
 #endif
@@ -16,6 +20,7 @@ BoardView::~BoardView() {
 	free(m_lastFileOpenName);
 }
 
+#pragma region Update Logic
 void BoardView::Update() {
 	bool open_file = false;
 	if (ImGui::IsKeyDown(17) && ImGui::IsKeyPressed('O', false)) {
@@ -44,6 +49,12 @@ void BoardView::Update() {
 			}
 			if (ImGui::MenuItem("Rotate CCW", ",")) {
 				Rotate(-1);
+			}
+			ImGui::EndMenu();
+		}
+		if (ImGui::BeginMenu("Windows")) {
+			if (ImGui::MenuItem("Net List", "l")) {
+				m_showNetList = m_showNetList ? false : true;
 			}
 			ImGui::EndMenu();
 		}
@@ -232,6 +243,8 @@ void BoardView::Update() {
 	ImGui::End();
 	ImGui::PopStyleColor();
 
+	RenderOverlay();
+
 	float status_height = (10.0f + ImGui::GetFontSize());
 
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(4.0f, 3.0f));
@@ -334,27 +347,31 @@ void BoardView::HandleInput() {
 		if (ImGui::IsKeyPressed('C')) {
 			m_showComponentSearch = true;
 		}
+
+		// Show Net List
+		if (ImGui::IsKeyPressed('L')) {
+			m_showNetList = m_showNetList ? false : true;
+		}
 	}
 }
+#pragma endregion
 
-void BoardView::DrawBoard() {
-	if (!m_file)
-		return;
-	ImDrawList *draw = ImGui::GetWindowDrawList();
-	if (!m_needsRedraw) {
-		memcpy(draw, m_cachedDrawList, sizeof(ImDrawList));
-		memcpy(draw->CmdBuffer.Data, m_cachedDrawCommands.Data, m_cachedDrawCommands.Size);
-		return;
+#pragma region Overlay & Windows
+void BoardView::ShowNetList(bool* p_open) {
+	static NetList netList;
+	netList.Draw("Net List", p_open);
+}
+
+void BoardView::RenderOverlay() {
+	// Listing of Net elements
+	if (m_showNetList) {
+		ShowNetList(&m_showNetList);
 	}
-	uint32_t background_color = 0xa0000000;
-	// Channels:
-	// 0 - images
-	// 1 - polylines
-	// 2 - text
-	draw->ChannelsSplit(3);
-	draw->ChannelsSetCurrent(1);
-	ImTextureID filled_circle_tex = TextureIDs[0];
-	ImTextureID empty_circle_tex = TextureIDs[1];
+}
+#pragma endregion Showing UI floating above main workspace.
+
+#pragma region Drawing
+void BoardView::DrawOutline(ImDrawList *draw) {
 	for (int i = 0; i < m_file->num_format - 1; i++) {
 		BRDPoint &pa = m_file->format[i];
 		BRDPoint &pb = m_file->format[i + 1];
@@ -362,9 +379,16 @@ void BoardView::DrawBoard() {
 			continue;
 		ImVec2 spa = CoordToScreen((float)pa.x, (float)pa.y);
 		ImVec2 spb = CoordToScreen((float)pb.x, (float)pb.y);
-		draw->AddLine(spa, spb, 0xff0000ff);
+		draw->AddLine(spa, spb, m_colors.boardOutline);
 	}
+}
+
+void BoardView::DrawPins(ImDrawList *draw) {
+	ImTextureID filled_circle_tex = TextureIDs[0];
+	ImTextureID empty_circle_tex = TextureIDs[1];
+
 	float psz = (float)m_pinDiameter * 0.5f * m_scale;
+
 	char pin_number[64];
 	int pin_idx = 0;
 	int part_idx = 1;
@@ -389,11 +413,11 @@ void BoardView::DrawBoard() {
 		uint32_t text_color = color;
 		bool show_text = false;
 		if (m_pinHighlighted[i]) {
-			text_color = color = 0xffffffff;
+			text_color = color = m_colors.pinHighlighted;
 			show_text = true;
 		}
 		if (selected_pin == &pin) {
-			text_color = color = 0xff00ff00;
+			text_color = color = m_colors.pinSelected;
 			show_text = true;
 		}
 		if (PartIsHighlighted(pin.part - 1)) {
@@ -406,7 +430,8 @@ void BoardView::DrawBoard() {
 		int pins_on_part;
 		if (pin.part == 1) {
 			pins_on_part = part.end_of_pins;
-		} else {
+		}
+		else {
 			pins_on_part = part.end_of_pins - m_file->parts[pin.part - 2].end_of_pins;
 		}
 		if (!show_text && selected_pin && !strcmp(selected_pin->net, pin.net)) {
@@ -414,25 +439,29 @@ void BoardView::DrawBoard() {
 		}
 		if (pins_on_part == 1)
 			show_text = false;
-		draw->ChannelsSetCurrent(0);
+		draw->ChannelsSetCurrent(kChannelImages);
 		draw->AddImage(empty_circle_tex, ImVec2(pos.x - psz, pos.y - psz),
-		               ImVec2(pos.x + psz, pos.y + psz), ImVec2(0, 0), ImVec2(1, 1), color);
+			ImVec2(pos.x + psz, pos.y + psz), ImVec2(0, 0), ImVec2(1, 1), color);
 		if (show_text) {
 			sprintf(pin_number, "%d", pin_idx);
 			ImVec2 text_size = ImGui::CalcTextSize(pin_number);
 			ImVec2 pos_adj = ImVec2(pos.x - text_size.x * 0.5f, pos.y - text_size.y * 0.5f);
-			draw->ChannelsSetCurrent(1);
+			draw->ChannelsSetCurrent(kChannelPolylines);
 			draw->AddRectFilled(
-			    ImVec2(pos_adj.x - 2.0f, pos_adj.y - 1.0f),
-			    ImVec2(pos_adj.x + text_size.x + 2.0f, pos_adj.y + text_size.y + 1.0f),
-			    background_color, 3.0f);
-			draw->ChannelsSetCurrent(2);
+				ImVec2(pos_adj.x - 2.0f, pos_adj.y - 1.0f),
+				ImVec2(pos_adj.x + text_size.x + 2.0f, pos_adj.y + text_size.y + 1.0f),
+				m_colors.backgroundColor, 3.0f);
+			draw->ChannelsSetCurrent(kChannelText);
 			draw->AddText(pos_adj, text_color, pin_number);
 		}
 	}
-	uint32_t box_color = 0xffcccccc;
-	uint32_t part_text_color = 0xff808000;
-	pin_idx = 0;
+}
+
+void BoardView::DrawParts(ImDrawList *draw) {
+	float psz = (float)m_pinDiameter * 0.5f * m_scale;
+
+	int pin_idx = 0;
+	int part_idx = 1;
 	for (int i = 0; i < m_file->num_parts; i++) {
 		const BRDPart &part = m_file->parts[i];
 		if (!PartIsVisible(part)) {
@@ -477,7 +506,7 @@ void BoardView::DrawBoard() {
 				bb_y_resized = true;
 			}
 		}
-		uint32_t color = box_color;
+		uint32_t color = m_colors.boxColor;
 		bool is_test_pad = false;
 		if (!strcmp(part.name, "...")) {
 			color = 0xff333333;
@@ -496,18 +525,39 @@ void BoardView::DrawBoard() {
 			ImVec2 pos = ImVec2((min.x + max.x) * 0.5f, top_y);
 			if (bb_y_resized) {
 				pos.y -= text_size.y + 2.0f * psz;
-			} else {
+			}
+			else {
 				pos.y -= text_size.y;
 			}
 			pos.x -= text_size.x * 0.5f;
-			draw->ChannelsSetCurrent(1);
+			draw->ChannelsSetCurrent(kChannelPolylines);
 			draw->AddRectFilled(ImVec2(pos.x - 2.0f, pos.y - 1.0f),
-			                    ImVec2(pos.x + text_size.x + 2.0f, pos.y + text_size.y + 1.0f),
-			                    background_color, 3.0f);
-			draw->ChannelsSetCurrent(2);
-			draw->AddText(pos, part_text_color, part.name);
+				ImVec2(pos.x + text_size.x + 2.0f, pos.y + text_size.y + 1.0f),
+				m_colors.backgroundColor, 3.0f);
+			draw->ChannelsSetCurrent(kChannelText);
+			draw->AddText(pos, m_colors.partTextColor, part.name);
 		}
 	}
+}
+
+void BoardView::DrawBoard() {
+	if (!m_file)
+		return;
+	ImDrawList *draw = ImGui::GetWindowDrawList();
+	if (!m_needsRedraw) {
+		memcpy(draw, m_cachedDrawList, sizeof(ImDrawList));
+		memcpy(draw->CmdBuffer.Data, m_cachedDrawCommands.Data, m_cachedDrawCommands.Size);
+		return;
+	}
+
+	// Splitting channels, drawing onto those and merging back.
+	draw->ChannelsSplit(NUM_DRAW_CHANNELS);
+	draw->ChannelsSetCurrent(kChannelPolylines);
+
+	DrawOutline(draw);
+	DrawPins(draw);
+	DrawParts(draw);
+	
 	draw->ChannelsMerge();
 
 	// Copy the new draw list and cmd buffer:
@@ -517,6 +567,7 @@ void BoardView::DrawBoard() {
 	memcpy(m_cachedDrawCommands.Data, draw->CmdBuffer.Data, cmds_size);
 	m_needsRedraw = false;
 }
+#pragma endregion
 
 int qsort_netstrings(const void *a, const void *b) {
 	const char *sa = *(const char **)a;
