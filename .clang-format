@@ -3,6 +3,8 @@ PointerBindsToType: false
 AllowShortFunctionsOnASingleLine: false
 BreakBeforeBraces: Attach
 BreakConstructorInitializersBeforeComma: true
+AlwaysBreakTemplateDeclarations: true
+AlwaysBreakBeforeMultilineStrings: true
 IndentWidth: 4
 TabWidth: 4
 UseTab: ForIndentation
