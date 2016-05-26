@@ -1,21 +1,34 @@
 #define _CRT_SECURE_NO_WARNINGS 1
+#include "BoardView.h"
+
+#include <algorithm>
 #include <math.h>
+#include <memory>
 #include <stdio.h>
 
-#include "BoardView.h"
+#include "BRDBoard.h"
 #include "BRDFile.h"
 #include "imgui/imgui.h"
+
+#include "NetList.h"
+#include "PartList.h"
+
 #include "platform.h"
+
+using namespace std;
+using namespace std::placeholders;
+
 #if _MSC_VER
 #define stricmp _stricmp
 #endif
 
 BoardView::~BoardView() {
-	if (m_file)
-		delete m_file;
+	delete m_file;
+	delete m_board;
 	free(m_lastFileOpenName);
 }
 
+#pragma region Update Logic
 void BoardView::Update() {
 	bool open_file = false;
 	if (ImGui::IsKeyDown(17) && ImGui::IsKeyPressed('O', false)) {
@@ -44,6 +57,15 @@ void BoardView::Update() {
 			}
 			if (ImGui::MenuItem("Rotate CCW", ",")) {
 				Rotate(-1);
+			}
+			ImGui::EndMenu();
+		}
+		if (ImGui::BeginMenu("Windows")) {
+			if (ImGui::MenuItem("Net List", "l")) {
+				m_showNetList = m_showNetList ? false : true;
+			}
+			if (ImGui::MenuItem("Part List", "k")) {
+				m_showPartList = m_showPartList ? false : true;
 			}
 			ImGui::EndMenu();
 		}
@@ -79,19 +101,23 @@ void BoardView::Update() {
 			if (ImGui::IsItemHovered() || (ImGui::IsRootWindowOrAnyChildFocused() &&
 			                               !ImGui::IsAnyItemActive() && !ImGui::IsMouseClicked(0)))
 				ImGui::SetKeyboardFocusHere(-1);
+
 			int buttons_left = 10;
-			for (int i = 0; buttons_left && i < m_nets.Size; i++) {
-				if (utf8casestr(m_nets[i], m_search)) {
-					if (ImGui::Button(m_nets[i])) {
-						SetNetFilter(m_nets[i]);
-						ImGui::CloseCurrentPopup();
+			for (auto &net : m_nets) {
+				if (buttons_left > 0) {
+					if (utf8casestr(net->name.c_str(), m_search)) {
+						if (ImGui::Button(net->name.c_str())) {
+							SetNetFilter(net->name.c_str());
+							ImGui::CloseCurrentPopup();
+						}
+						if (buttons_left == 10) {
+							first_button = net->name.c_str();
+						}
+						buttons_left--;
 					}
-					if (buttons_left == 10) {
-						first_button = m_nets[i];
-					}
-					buttons_left--;
 				}
 			}
+
 			// Enter and Esc close the search:
 			if (ImGui::IsKeyPressed(13)) {
 				SetNetFilter(first_button);
@@ -158,20 +184,20 @@ void BoardView::Update() {
 			ImGui::Separator();
 			ImGui::Text("The MIT License");
 			ImGui::TextWrapped(
-			    "Permission is hereby granted, free of charge, to any person obtaining a copy "
-			    "of this software and associated documentation files (the \"Software\"), to deal "
-			    "in the Software without restriction, including without limitation the rights "
-			    "to use, copy, modify, merge, publish, distribute, sublicense, and/or sell "
-			    "copies of the Software, and to permit persons to whom the Software is "
-			    "furnished to do so, subject to the following conditions: ");
+			    "Permission is hereby granted, free of charge, to any person obtaining a copy of "
+			    "this software and associated documentation files (the \"Software\"), to deal in "
+			    "the Software without restriction, including without limitation the rights to use, "
+			    "copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the "
+			    "Software, and to permit persons to whom the Software is furnished to do so, "
+			    "subject to the following conditions: ");
 			ImGui::TextWrapped(
 			    "The above copyright notice and this permission notice shall be included in all "
 			    "copies or substantial portions of the Software.");
 			ImGui::TextWrapped(
 			    "THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR "
-			    "IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, "
-			    "FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE "
-			    "AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER "
+			    "IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS "
+			    "FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR "
+			    "COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER "
 			    "LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, "
 			    "OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE "
 			    "SOFTWARE.");
@@ -232,23 +258,21 @@ void BoardView::Update() {
 	ImGui::End();
 	ImGui::PopStyleColor();
 
+	// Overlay
+	RenderOverlay();
+
+	// Status Footer
 	float status_height = (10.0f + ImGui::GetFontSize());
 
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(4.0f, 3.0f));
 	ImGui::SetNextWindowPos(ImVec2{0, io.DisplaySize.y - status_height});
 	ImGui::SetNextWindowSize(ImVec2(io.DisplaySize.x, status_height));
 	ImGui::Begin("status", nullptr, flags);
-	if (m_file && m_pinSelected >= 0 && m_pinSelected < m_file->num_pins) {
-		const BRDPin &pin = m_file->pins[m_pinSelected];
-		const BRDPart &part = m_file->parts[pin.part - 1];
-		int pin_idx = 1;
-		for (int i = m_pinSelected - 1; i >= 0; i--) {
-			if (m_file->pins[i].part != pin.part)
-				break;
-			++pin_idx;
-		}
-		ImGui::Text("Part: %s   Pin: %d   Net: %s   Probe: %d   (%s.)", part.name, pin_idx, pin.net,
-		            pin.probe, (part.type & 0xc) ? "SMD" : "DIP");
+	if (m_file && m_board && m_pinSelected) {
+		auto pin = m_pinSelected;
+		ImGui::Text("Part: %s   Pin: %d   Net: %s   Probe: %d   (%s.)",
+		            pin->component->name.c_str(), pin->number, pin->net->name.c_str(),
+		            pin->net->number, pin->component->mount_type_str().c_str());
 	}
 	ImGui::End();
 	ImGui::PopStyleVar();
@@ -270,20 +294,19 @@ void BoardView::HandleInput() {
 			m_needsRedraw = true;
 		} else {
 			// Click to select pin:
-			if (m_file && ImGui::IsMouseReleased(0) && !m_draggingLastFrame) {
+			if (m_file && m_board && ImGui::IsMouseReleased(0) && !m_draggingLastFrame) {
 				ImVec2 spos = ImGui::GetMousePos();
 				ImVec2 pos = ScreenToCoord(spos.x, spos.y);
 				// threshold to within a pin's diameter of the pin center
 				float min_dist = m_pinDiameter * 1.0f;
 				min_dist *= min_dist; // all distance squared
-				int selection = -1;
-				for (int i = 0; i < m_file->num_pins; i++) {
-					const BRDPin &pin = m_file->pins[i];
-					float dx = (float)pin.pos.x - pos.x;
-					float dy = (float)pin.pos.y - pos.y;
+				Pin *selection = nullptr;
+				for (auto &pin : m_board->Pins()) {
+					float dx = pin->position.x - pos.x;
+					float dy = pin->position.y - pos.y;
 					float dist = dx * dx + dy * dy;
 					if (dist < min_dist) {
-						selection = i;
+						selection = pin.get();
 						min_dist = dist;
 					}
 				}
@@ -304,6 +327,7 @@ void BoardView::HandleInput() {
 				mwheel *= 0.1f;
 			}
 			m_scale = m_scale * powf(2.0f, mwheel);
+
 			ImVec2 dtarget = CoordToScreen(coord.x, coord.y);
 			ImVec2 td = ScreenToCoord(target.x - dtarget.x, target.y - dtarget.y, 0);
 			m_dx += td.x;
@@ -317,7 +341,8 @@ void BoardView::HandleInput() {
 			FlipBoard();
 		}
 
-		// Rotate board: R and period rotate clockwise; comma rotates counter-clockwise
+		// Rotate board: R and period rotate clockwise; comma rotates
+		// counter-clockwise
 		if (ImGui::IsKeyPressed('R') || ImGui::IsKeyPressed(190)) {
 			Rotate(1);
 		}
@@ -334,139 +359,188 @@ void BoardView::HandleInput() {
 		if (ImGui::IsKeyPressed('C')) {
 			m_showComponentSearch = true;
 		}
+
+		// Show Net List
+		if (ImGui::IsKeyPressed('L')) {
+			m_showNetList = m_showNetList ? false : true;
+		}
+
+		// Show Part List
+		if (ImGui::IsKeyPressed('K')) {
+			m_showPartList = m_showPartList ? false : true;
+		}
+	}
+}
+#pragma endregion
+
+#pragma region Overlay &Windows
+void BoardView::ShowNetList(bool *p_open) {
+	static NetList netList(bind(&BoardView::SetNetFilter, this, _1));
+	netList.Draw("Net List", p_open, m_board);
+}
+
+void BoardView::ShowPartList(bool *p_open) {
+	static PartList partList(bind(&BoardView::FindComponent, this, _1));
+	partList.Draw("Part List", p_open, m_board);
+}
+
+void BoardView::RenderOverlay() {
+	// Listing of Net elements
+	if (m_showNetList) {
+		ShowNetList(&m_showNetList);
+	}
+	if (m_showPartList) {
+		ShowPartList(&m_showPartList);
+	}
+}
+#pragma endregion Showing UI floating above main workspace.
+
+#pragma region Drawing
+inline void BoardView::DrawOutline(ImDrawList *draw) {
+	auto &outline = m_board->OutlinePoints();
+
+	for (int i = 0; i < outline.size() - 1; i++) {
+		Point &pa = *outline[i];
+		Point &pb = *outline[i + 1];
+		if (pa.x == pb.x && pa.y == pb.y)
+			continue;
+		ImVec2 spa = CoordToScreen(pa.x, pa.y);
+		ImVec2 spb = CoordToScreen(pb.x, pb.y);
+		draw->AddLine(spa, spb, m_colors.boardOutline);
 	}
 }
 
-void BoardView::DrawBoard() {
-	if (!m_file)
-		return;
-	ImDrawList *draw = ImGui::GetWindowDrawList();
-	if (!m_needsRedraw) {
-		memcpy(draw, m_cachedDrawList, sizeof(ImDrawList));
-		memcpy(draw->CmdBuffer.Data, m_cachedDrawCommands.Data, m_cachedDrawCommands.Size);
-		return;
-	}
-	uint32_t background_color = 0xa0000000;
-	// Channels:
-	// 0 - images
-	// 1 - polylines
-	// 2 - text
-	draw->ChannelsSplit(3);
-	draw->ChannelsSetCurrent(1);
+inline void BoardView::DrawPins(ImDrawList *draw) {
 	ImTextureID filled_circle_tex = TextureIDs[0];
 	ImTextureID empty_circle_tex = TextureIDs[1];
-	for (int i = 0; i < m_file->num_format - 1; i++) {
-		BRDPoint &pa = m_file->format[i];
-		BRDPoint &pb = m_file->format[i + 1];
-		if (pa.x == pb.x && pa.y == pb.y)
-			continue;
-		ImVec2 spa = CoordToScreen((float)pa.x, (float)pa.y);
-		ImVec2 spb = CoordToScreen((float)pb.x, (float)pb.y);
-		draw->AddLine(spa, spb, 0xff0000ff);
-	}
+
+	// TODO: use pin->diameter
 	float psz = (float)m_pinDiameter * 0.5f * m_scale;
-	char pin_number[64];
-	int pin_idx = 0;
-	int part_idx = 1;
-	const BRDPin *selected_pin = nullptr;
-	if (m_pinSelected >= 0 && m_pinSelected < m_file->num_pins) {
-		selected_pin = &m_file->pins[m_pinSelected];
-	}
-	for (int i = 0; i < m_file->num_pins; i++) {
-		const BRDPin &pin = m_file->pins[i];
-		const BRDPart &part = m_file->parts[pin.part - 1];
-		++pin_idx;
-		if (pin.part != part_idx) {
-			part_idx = pin.part;
-			pin_idx = 1;
-		}
-		if (!PartIsVisible(part))
-			continue;
-		ImVec2 pos = CoordToScreen((float)pin.pos.x, (float)pin.pos.y);
-		if (!IsVisibleScreen(pos.x, pos.y, psz))
-			continue;
-		uint32_t color = 0xffff0000;
-		uint32_t text_color = color;
-		bool show_text = false;
-		if (m_pinHighlighted[i]) {
-			text_color = color = 0xffffffff;
-			show_text = true;
-		}
-		if (selected_pin == &pin) {
-			text_color = color = 0xff00ff00;
-			show_text = true;
-		}
-		if (PartIsHighlighted(pin.part - 1)) {
-			if (!show_text) {
-				color = 0xffff8000;
-				text_color = 0xff808000;
-			}
-			show_text = true;
-		}
-		int pins_on_part;
-		if (pin.part == 1) {
-			pins_on_part = part.end_of_pins;
-		} else {
-			pins_on_part = part.end_of_pins - m_file->parts[pin.part - 2].end_of_pins;
-		}
-		if (!show_text && selected_pin && !strcmp(selected_pin->net, pin.net)) {
-			color = 0xff99f8ff;
-		}
-		if (pins_on_part == 1)
-			show_text = false;
-		draw->ChannelsSetCurrent(0);
-		draw->AddImage(empty_circle_tex, ImVec2(pos.x - psz, pos.y - psz),
-		               ImVec2(pos.x + psz, pos.y + psz), ImVec2(0, 0), ImVec2(1, 1), color);
-		if (show_text) {
-			sprintf(pin_number, "%d", pin_idx);
-			ImVec2 text_size = ImGui::CalcTextSize(pin_number);
-			ImVec2 pos_adj = ImVec2(pos.x - text_size.x * 0.5f, pos.y - text_size.y * 0.5f);
-			draw->ChannelsSetCurrent(1);
-			draw->AddRectFilled(
-			    ImVec2(pos_adj.x - 2.0f, pos_adj.y - 1.0f),
-			    ImVec2(pos_adj.x + text_size.x + 2.0f, pos_adj.y + text_size.y + 1.0f),
-			    background_color, 3.0f);
-			draw->ChannelsSetCurrent(2);
-			draw->AddText(pos_adj, text_color, pin_number);
-		}
-	}
-	uint32_t box_color = 0xffcccccc;
-	uint32_t part_text_color = 0xff808000;
-	pin_idx = 0;
-	for (int i = 0; i < m_file->num_parts; i++) {
-		const BRDPart &part = m_file->parts[i];
-		if (!PartIsVisible(part)) {
-			pin_idx = part.end_of_pins;
-			continue;
-		}
-		const BRDPin &pin = m_file->pins[pin_idx];
-		++pin_idx;
-		int pin_count = 1;
-		int min_x = pin.pos.x;
-		int min_y = pin.pos.y;
-		int max_x = min_x;
-		int max_y = min_y;
-		while (pin_idx < part.end_of_pins) {
-			const BRDPin &pin = m_file->pins[pin_idx];
-			if (pin.pos.x > max_x)
-				max_x = pin.pos.x;
-			else if (pin.pos.x < min_x)
-				min_x = pin.pos.x;
-			if (pin.pos.y > max_y)
-				max_y = pin.pos.y;
-			else if (pin.pos.y < min_y)
-				min_y = pin.pos.y;
-			++pin_idx;
-			++pin_count;
+
+	auto io = ImGui::GetIO();
+
+	for (auto &pin : m_board->Pins()) {
+		auto p_pin = pin.get();
+
+		// continue if pin is not visible anyway
+		ImVec2 pos = CoordToScreen(pin->position.x, pin->position.y);
+		{
+			if (!ElementIsVisible(p_pin))
+				continue;
+
+			if (!IsVisibleScreen(pos.x, pos.y, psz, io))
+				continue;
 		}
 
-		int pin_radius = m_pinDiameter / 2;
+		// color & text depending on app state & pin type
+		auto pin_texture = empty_circle_tex;
+		uint32_t color = m_colors.pinDefault;
+		uint32_t text_color = color;
+		bool show_text = false;
+		{
+			if (contains(*pin, m_pinHighlighted)) {
+				text_color = color = m_colors.pinHighlighted;
+				show_text = true;
+			}
+
+			if (!pin->net || pin->type == Pin::kPinTypeNotConnected) {
+				color = m_colors.pinNotConnected;
+			} else {
+				if (pin->net->is_ground)
+					color = m_colors.pinGround;
+			}
+
+			if (PartIsHighlighted(*pin->component)) {
+				if (!show_text) {
+					// TODO: not sure how to name this
+					color = 0xffff8000;
+					text_color = 0xff808000;
+				}
+				show_text = true;
+			}
+
+			if (pin->type == Pin::kPinTypeTestPad) {
+				color = m_colors.pinTestPad;
+				// pin_texture = filled_circle_tex; // TODO
+				show_text = false;
+			}
+
+			// pin is on the same net as selected pin: highlight > rest
+			if (!show_text && m_pinSelected && pin->net == m_pinSelected->net) {
+				color = m_colors.pinHighlightSameNet;
+			}
+
+			// pin selected overwrites everything
+			if (p_pin == m_pinSelected) {
+				color = m_colors.pinSelected;
+				text_color = m_colors.pinSelected;
+				show_text = true;
+			}
+
+			// don't show text if it doesn't make sense
+			if (pin->component->pins.size() <= 1 || pin->type == Pin::kPinTypeTestPad)
+				show_text = false;
+		}
+
+		// Drawing
+		{
+			char pin_number[64];
+			draw->ChannelsSetCurrent(kChannelImages);
+			draw->AddImage(pin_texture, ImVec2(pos.x - psz, pos.y - psz),
+			               ImVec2(pos.x + psz, pos.y + psz), ImVec2(0, 0), ImVec2(1, 1), color);
+			if (show_text) {
+				sprintf(pin_number, "%d", pin->number);
+
+				ImVec2 text_size = ImGui::CalcTextSize(pin_number);
+				ImVec2 pos_adj = ImVec2(pos.x - text_size.x * 0.5f, pos.y - text_size.y * 0.5f);
+				draw->ChannelsSetCurrent(kChannelPolylines);
+				draw->AddRectFilled(
+				    ImVec2(pos_adj.x - 2.0f, pos_adj.y - 1.0f),
+				    ImVec2(pos_adj.x + text_size.x + 2.0f, pos_adj.y + text_size.y + 1.0f),
+				    m_colors.backgroundColor, 3.0f);
+				draw->ChannelsSetCurrent(kChannelText);
+				draw->AddText(pos_adj, text_color, pin_number);
+			}
+		}
+	}
+}
+
+inline void BoardView::DrawParts(ImDrawList *draw) {
+	float psz = (float)m_pinDiameter * 0.5f * m_scale;
+
+	for (auto &part : m_board->Components()) {
+		auto p_part = part.get();
+
+		if (!ElementIsVisible(p_part))
+			continue;
+
+		if (part->is_dummy())
+			continue;
+
+		// scale box around pins
+		float min_x = part->pins[0]->position.x;
+		float min_y = part->pins[0]->position.y;
+		float max_x = min_x;
+		float max_y = min_y;
+		for (auto pin : part->pins) {
+			if (pin->position.x > max_x)
+				max_x = pin->position.x;
+			else if (pin->position.x < min_x)
+				min_x = pin->position.x;
+			if (pin->position.y > max_y)
+				max_y = pin->position.y;
+			else if (pin->position.y < min_y)
+				min_y = pin->position.y;
+		}
+
+		// TODO: pin radius is stored in Pin object
+		float pin_radius = m_pinDiameter / 2.0f;
 		min_x -= pin_radius;
 		max_x += pin_radius;
 		min_y -= pin_radius;
 		max_y += pin_radius;
 		bool bb_y_resized = false;
-		if (part.name[0] == 'U') {
+		if (p_part->name[0] == 'U') {
 			if (min_x < max_x - 4 * m_pinDiameter) {
 				min_x += m_pinDiameter;
 				max_x -= m_pinDiameter;
@@ -477,19 +551,15 @@ void BoardView::DrawBoard() {
 				bb_y_resized = true;
 			}
 		}
-		uint32_t color = box_color;
-		bool is_test_pad = false;
-		if (!strcmp(part.name, "...")) {
-			color = 0xff333333;
-			is_test_pad = true;
-		}
-		ImVec2 min = CoordToScreen((float)min_x, (float)min_y);
-		ImVec2 max = CoordToScreen((float)max_x, (float)max_y);
+
+		uint32_t color = m_colors.boxColor;
+		ImVec2 min = CoordToScreen(min_x, min_y);
+		ImVec2 max = CoordToScreen(max_x, max_y);
 		min.x -= 0.5f;
 		max.x += 0.5f;
 		draw->AddRect(min, max, color);
-		if (PartIsHighlighted(i) && !is_test_pad && part.name && part.name[0]) {
-			ImVec2 text_size = ImGui::CalcTextSize(part.name);
+		if (PartIsHighlighted(*part) && !part->is_dummy() && !part->name.empty()) {
+			ImVec2 text_size = ImGui::CalcTextSize(part->name.c_str());
 			float top_y = min.y;
 			if (max.y < top_y)
 				top_y = max.y;
@@ -500,14 +570,35 @@ void BoardView::DrawBoard() {
 				pos.y -= text_size.y;
 			}
 			pos.x -= text_size.x * 0.5f;
-			draw->ChannelsSetCurrent(1);
+			draw->ChannelsSetCurrent(kChannelPolylines);
 			draw->AddRectFilled(ImVec2(pos.x - 2.0f, pos.y - 1.0f),
 			                    ImVec2(pos.x + text_size.x + 2.0f, pos.y + text_size.y + 1.0f),
-			                    background_color, 3.0f);
-			draw->ChannelsSetCurrent(2);
-			draw->AddText(pos, part_text_color, part.name);
+			                    m_colors.backgroundColor, 3.0f);
+			draw->ChannelsSetCurrent(kChannelText);
+			draw->AddText(pos, m_colors.partTextColor, part->name.c_str());
 		}
 	}
+}
+
+void BoardView::DrawBoard() {
+	if (!m_file || !m_board)
+		return;
+
+	ImDrawList *draw = ImGui::GetWindowDrawList();
+	if (!m_needsRedraw) {
+		memcpy(draw, m_cachedDrawList, sizeof(ImDrawList));
+		memcpy(draw->CmdBuffer.Data, m_cachedDrawCommands.Data, m_cachedDrawCommands.Size);
+		return;
+	}
+
+	// Splitting channels, drawing onto those and merging back.
+	draw->ChannelsSplit(NUM_DRAW_CHANNELS);
+	draw->ChannelsSetCurrent(kChannelPolylines);
+
+	DrawOutline(draw);
+	DrawPins(draw);
+	DrawParts(draw);
+
 	draw->ChannelsMerge();
 
 	// Copy the new draw list and cmd buffer:
@@ -517,6 +608,7 @@ void BoardView::DrawBoard() {
 	memcpy(m_cachedDrawCommands.Data, draw->CmdBuffer.Data, cmds_size);
 	m_needsRedraw = false;
 }
+#pragma endregion
 
 int qsort_netstrings(const void *a, const void *b) {
 	const char *sa = *(const char **)a;
@@ -525,26 +617,13 @@ int qsort_netstrings(const void *a, const void *b) {
 }
 
 void BoardView::SetFile(BRDFile *file) {
-	if (m_file)
-		delete m_file;
-	m_file = file;
+	delete m_file;
+	delete m_board;
 
-	// Generate sorted, uniqued list of nets:
-	m_nets.resize(0);
-	m_nets.reserve(m_file->num_pins);
-	for (int i = 0; i < m_file->num_pins; i++) {
-		m_nets.push_back(m_file->pins[i].net);
-	}
-	qsort(m_nets.Data, m_nets.Size, sizeof(char *), qsort_netstrings);
-	{
-		int i = 0, j = 0;
-		while (++i < m_nets.Size) {
-			if (strcmp(m_nets[i], m_nets[j])) {
-				m_nets[++j] = m_nets[i];
-			}
-		}
-		m_nets.Size = j;
-	}
+	m_file = file;
+	m_board = new BRDBoard(file);
+
+	m_nets = m_board->Nets();
 
 	int min_x = 1000000, max_x = 0, min_y = 1000000, max_y = 0;
 	for (int i = 0; i < m_file->num_format; i++) {
@@ -558,28 +637,31 @@ void BoardView::SetFile(BRDFile *file) {
 		if (pa.y > max_y)
 			max_y = pa.y;
 	}
+
 	m_mx = (float)(min_x + max_x) / 2.0f;
 	m_my = (float)(min_y + max_y) / 2.0f;
+
+	ImVec2 view = ImGui::GetIO().DisplaySize;
 	float dx = 1.05f * (max_x - min_x);
 	float dy = 1.05f * (max_y - min_y);
-	ImVec2 view = ImGui::GetIO().DisplaySize;
 	float sx = dx > 0 ? view.x / dx : 1.0f;
 	float sy = dy > 0 ? view.y / dy : 1.0f;
+
 	m_scale = sx < sy ? sx : sy;
 	m_boardWidth = max_x - min_x;
 	m_boardHeight = max_y - min_y;
 	SetTarget(m_mx, m_my);
 
-	m_pinHighlighted.Resize(m_file->num_pins);
-	m_partHighlighted.Resize(m_file->num_parts);
-	m_pinSelected = -1;
+	m_pinHighlighted.reserve(m_board->Components().size());
+	m_partHighlighted.reserve(m_board->Components().size());
+	m_pinSelected = nullptr;
 
 	m_firstFrame = true;
 	m_needsRedraw = true;
 }
 
 ImVec2 BoardView::CoordToScreen(float x, float y, float w) {
-	float side = m_side ? -1.0f : 1.0f;
+	float side = m_current_side ? -1.0f : 1.0f;
 	float tx = side * m_scale * (x + w * (m_dx - m_mx));
 	float ty = -1.0f * m_scale * (y + w * (m_dy - m_my));
 	switch (m_rotation) {
@@ -614,10 +696,12 @@ ImVec2 BoardView::ScreenToCoord(float x, float y, float w) {
 		ty = x;
 		break;
 	}
-	float side = m_side ? -1.0f : 1.0f;
+	float side = m_current_side ? -1.0f : 1.0f;
 	float invscale = 1.0f / m_scale;
+
 	tx = tx * side * invscale + w * (m_mx - m_dx);
 	ty = ty * -1.0f * invscale + w * (m_my - m_dy);
+
 	return ImVec2(tx, ty);
 }
 
@@ -627,7 +711,7 @@ void BoardView::Rotate(int count) {
 		m_rotation = (m_rotation + 1) & 3;
 		float dx = m_dx;
 		float dy = m_dy;
-		if (m_side == 0) {
+		if (m_current_side == 0) {
 			m_dx = -dy;
 			m_dy = dx;
 		} else {
@@ -641,7 +725,7 @@ void BoardView::Rotate(int count) {
 		m_rotation = (m_rotation - 1) & 3;
 		float dx = m_dx;
 		float dy = m_dy;
-		if (m_side == 1) {
+		if (m_current_side == 1) {
 			m_dx = -dy;
 			m_dy = dx;
 		} else {
@@ -660,87 +744,102 @@ void BoardView::SetTarget(float x, float y) {
 	m_dy += coord.y - y;
 }
 
-bool BoardView::PartIsVisible(const BRDPart &part) {
-	if (m_side == 1) {
-		if (part.type < 8 && part.type >= 4)
-			return false;
-	} else {
-		if (part.type >= 8)
-			return false;
-	}
-	return true;
+inline bool BoardView::ElementIsVisible(const BoardElement *element) {
+	if (!element)
+		return true; // no component? => no board side info
+
+	if (element->board_side == kBoardSideBoth)
+		return true;
+
+	if (element->board_side == m_current_side)
+		return true;
+
+	return false;
 }
 
-bool BoardView::IsVisibleScreen(float x, float y, float radius) {
-	const ImGuiIO &io = ImGui::GetIO();
+inline bool BoardView::IsVisibleScreen(float x, float y, float radius, const ImGuiIO &io) {
 	if (x < -radius || y < -radius || x - radius > io.DisplaySize.x ||
 	    y - radius > io.DisplaySize.y)
 		return false;
 	return true;
 }
 
-bool BoardView::PartIsHighlighted(int part_idx) {
-	bool highlighted = m_partHighlighted[part_idx];
-	if (m_pinSelected >= 0 && m_pinSelected < m_file->num_pins) {
-		highlighted |= part_idx == (m_file->pins[m_pinSelected].part - 1);
-	}
+bool BoardView::PartIsHighlighted(const Component &component) {
+	bool highlighted = contains(component, m_partHighlighted);
+
+	// is any pin of this part selected?
+	if (m_pinSelected)
+		highlighted |= m_pinSelected->component == &component;
+
 	return highlighted;
 }
 
 void BoardView::SetNetFilter(const char *net) {
 	strcpy(m_netFilter, net);
-	if (!m_file)
+	if (!m_file || !m_board)
 		return;
 
-	m_pinHighlighted.Clear();
-	m_partHighlighted.Clear();
-	if (m_netFilter[0]) {
+	m_pinHighlighted.clear();
+	m_partHighlighted.clear();
+
+	string net_name = string(net);
+
+	if (!net_name.empty()) {
 		bool any_visible = false;
 		int count = 0;
-		for (int i = 0; i < m_file->num_pins; i++) {
-			const BRDPin &pin = m_file->pins[i];
-			if (!stricmp(m_netFilter, pin.net)) {
-				any_visible |= PartIsVisible(m_file->parts[pin.part - 1]);
-				m_pinHighlighted.Set(i, true);
-				m_partHighlighted.Set(pin.part - 1, true);
-				count++;
+
+		for (auto &net : m_board->Nets()) {
+			if (is_prefix(net_name, net->name)) {
+				for (auto pin : net->pins) {
+					any_visible |= ElementIsVisible(pin->component);
+					m_pinHighlighted.push_back(pin);
+					// highlighting all components that belong to this net
+					if (!contains(*pin->component, m_partHighlighted)) {
+						m_partHighlighted.push_back(pin->component);
+					}
+				}
 			}
 		}
-		if (count > 0) {
+
+		if (m_pinHighlighted.size() > 0) {
 			if (!any_visible)
 				FlipBoard();
-			m_pinSelected = -1;
+			m_pinSelected = nullptr;
 		}
 	}
+
 	m_needsRedraw = true;
 }
 
 void BoardView::FindComponent(const char *name) {
-	if (!m_file)
+	if (!m_file || !m_board)
 		return;
 
-	m_pinHighlighted.Clear();
-	m_partHighlighted.Clear();
-	if (name[0]) {
-		int part_idx = -1;
+	m_pinHighlighted.clear();
+	m_partHighlighted.clear();
+
+	string comp_name = string(name);
+
+	if (!comp_name.empty()) {
+		Component *part_found = nullptr;
 		bool any_visible = false;
-		for (int i = 0; i < m_file->num_parts; i++) {
-			const BRDPart &part = m_file->parts[i];
-			if (!stricmp(name, part.name)) {
-				part_idx = i;
-				m_partHighlighted.Set(part_idx, true);
-				any_visible |= PartIsVisible(part);
+
+		for (auto &component : m_board->Components()) {
+			if (is_prefix(comp_name, component->name)) {
+				auto p = component.get();
+				m_partHighlighted.push_back(p);
+				any_visible |= ElementIsVisible(p);
+				part_found = p;
 			}
 		}
-		if (part_idx >= 0) {
+
+		if (part_found) {
 			if (!any_visible)
 				FlipBoard();
-			m_pinSelected = -1;
-		}
-		for (int i = 0; i < m_file->num_pins; i++) {
-			const BRDPin &pin = m_file->pins[i];
-			if (pin.part - 1 == part_idx) {
-				m_pinHighlighted.Set(i, true);
+			m_pinSelected = nullptr;
+
+			for (auto &pin : part_found->pins) {
+				m_pinHighlighted.push_back(pin);
 			}
 		}
 	}
@@ -753,7 +852,7 @@ void BoardView::SetLastFileOpenName(char *name) {
 }
 
 void BoardView::FlipBoard() {
-	m_side ^= 1;
+	m_current_side ^= 1;
 	m_dx = -m_dx;
 	if (m_flipVertically) {
 		Rotate(2);
