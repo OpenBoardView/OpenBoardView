@@ -4,11 +4,14 @@
 
 #include "BoardView.h"
 #include "BRDFile.h"
+#include "BRDBoard.h"
 #include "imgui/imgui.h"
 
 #include "NetList.h"
 
 #include "platform.h"
+
+using namespace std::placeholders;
 
 #if _MSC_VER
 #define stricmp _stricmp
@@ -358,8 +361,8 @@ void BoardView::HandleInput() {
 
 #pragma region Overlay & Windows
 void BoardView::ShowNetList(bool* p_open) {
-	static NetList netList;
-	netList.Draw("Net List", p_open);
+	static NetList netList(std::bind(&BoardView::SetNetFilter, this, _1));
+	netList.Draw("Net List", p_open, m_board);
 }
 
 void BoardView::RenderOverlay() {
@@ -384,7 +387,7 @@ void BoardView::DrawOutline(ImDrawList *draw) {
 }
 
 void BoardView::DrawPins(ImDrawList *draw) {
-	ImTextureID filled_circle_tex = TextureIDs[0];
+	//ImTextureID filled_circle_tex = TextureIDs[0];
 	ImTextureID empty_circle_tex = TextureIDs[1];
 
 	float psz = (float)m_pinDiameter * 0.5f * m_scale;
@@ -409,12 +412,16 @@ void BoardView::DrawPins(ImDrawList *draw) {
 		ImVec2 pos = CoordToScreen((float)pin.pos.x, (float)pin.pos.y);
 		if (!IsVisibleScreen(pos.x, pos.y, psz))
 			continue;
-		uint32_t color = 0xffff0000;
+		uint32_t color = m_colors.pinDefault;
 		uint32_t text_color = color;
 		bool show_text = false;
 		if (m_pinHighlighted[i]) {
 			text_color = color = m_colors.pinHighlighted;
 			show_text = true;
+		}
+		const char* name_ground = "GND";
+		if (strcmp(pin.net, name_ground) == 0) {
+			color = m_colors.pinGround;
 		}
 		if (selected_pin == &pin) {
 			text_color = color = m_colors.pinSelected;
@@ -461,7 +468,6 @@ void BoardView::DrawParts(ImDrawList *draw) {
 	float psz = (float)m_pinDiameter * 0.5f * m_scale;
 
 	int pin_idx = 0;
-	int part_idx = 1;
 	for (int i = 0; i < m_file->num_parts; i++) {
 		const BRDPart &part = m_file->parts[i];
 		if (!PartIsVisible(part)) {
@@ -576,9 +582,12 @@ int qsort_netstrings(const void *a, const void *b) {
 }
 
 void BoardView::SetFile(BRDFile *file) {
-	if (m_file)
+	if (m_file) {
 		delete m_file;
+		delete m_board;
+	}
 	m_file = file;
+	m_board = new BRDBoard(file);
 
 	// Generate sorted, uniqued list of nets:
 	m_nets.resize(0);

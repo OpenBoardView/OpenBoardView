@@ -27,6 +27,8 @@
     <ClInclude Include="platform.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="NetList.h" />
+    <ClInclude Include="Board.h" />
+    <ClInclude Include="BRDBoard.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="imgui\imgui.cpp">
@@ -50,6 +52,7 @@
     <ClCompile Include="BRDFile.cpp" />
     <ClCompile Include="BoardView.cpp" />
     <ClCompile Include="NetList.cpp" />
+    <ClCompile Include="BRDBoard.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="imgui">

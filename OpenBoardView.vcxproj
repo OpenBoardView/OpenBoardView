@@ -127,7 +127,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Board.h" />
     <ClInclude Include="BoardView.h" />
+    <ClInclude Include="BRDBoard.h" />
     <ClInclude Include="BRDFile.h" />
     <ClInclude Include="imgui\imconfig.h" />
     <ClInclude Include="imgui\imgui.h" />
@@ -142,6 +144,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BoardView.cpp" />
+    <ClCompile Include="BRDBoard.cpp" />
     <ClCompile Include="BRDFile.cpp" />
     <ClCompile Include="imgui\imgui.cpp" />
     <ClCompile Include="imgui\imgui_demo.cpp" />

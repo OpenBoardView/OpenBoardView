@@ -2,6 +2,7 @@
 
 #include <stdint.h>
 #include "imgui/imgui.h"
+#include "Board.h"
 
 struct BRDPart;
 struct BRDFile;
@@ -36,13 +37,15 @@ struct BitVec {
 };
 
 struct ColorScheme {
-	uint32_t backgroundColor =	0xa0000000;
-	uint32_t boxColor =			0xffcccccc;
-	uint32_t partTextColor =	0xff808000;
-	uint32_t boardOutline =		0xff00ffff;
+	uint32_t backgroundColor = 0xa0000000;
+	uint32_t boxColor = 0xffcccccc;
+	uint32_t partTextColor = 0xff808000;
+	uint32_t boardOutline = 0xff00ffff;
 
-	uint32_t pinHighlighted =	0xffffffff;
-	uint32_t pinSelected =		0xff00ff00;
+	uint32_t pinDefault = 0xff0000ff;
+	uint32_t pinHighlighted = 0xffffffff;
+	uint32_t pinSelected = 0xffeeeeee;
+	uint32_t pinGround = 0xff0000bb;
 };
 
 enum DrawChannel
@@ -50,11 +53,14 @@ enum DrawChannel
 	kChannelImages = 0,
 	kChannelPolylines = 1,
 	kChannelText = 2,
-	NUM_DRAW_CHANNELS = 3
+	kChannelAnnotations = 3,
+	NUM_DRAW_CHANNELS = 4
 };
 
 struct BoardView {
 	BRDFile *m_file;
+	Board *m_board;
+
 	int m_pinSelected;
 	BitVec m_pinHighlighted;
 	BitVec m_partHighlighted;
