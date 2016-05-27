@@ -1,8 +1,9 @@
 #pragma once
 
-#include <stdint.h>
 #include "imgui/imgui.h"
 #include "Board.h"
+#include <vector>
+#include <stdint.h>
 
 struct BRDPart;
 struct BRDFile;
@@ -46,6 +47,10 @@ struct ColorScheme {
 	uint32_t pinHighlighted = 0xffffffff;
 	uint32_t pinSelected = 0xffeeeeee;
 	uint32_t pinGround = 0xff0000bb;
+
+    uint32_t testPad = 0xff333333;
+
+    uint32_t annotationPartAlias = 0xcc00ffff;
 };
 
 enum DrawChannel
@@ -66,7 +71,7 @@ struct BoardView {
 	BitVec m_partHighlighted;
 	char m_cachedDrawList[sizeof(ImDrawList)];
 	ImVector<char> m_cachedDrawCommands;
-	ImVector<char *> m_nets;
+	std::vector<BRDNail> m_nets;
 	char m_search[128];
 	char m_netFilter[128];
 	char *m_lastFileOpenName;
@@ -88,6 +93,9 @@ struct BoardView {
 	// pinDiameter: diameter for all pins.  Unit scale: 1 = 0.025mm
 	int m_pinDiameter = 20;
 	bool m_flipVertically = true;
+
+    // Annotation layer specific
+    bool m_annotationsVisible = true;
 
 	// Do a hacky thing (memcpy the window draw list) to save us from rerendering the board
 	// The app will crash or break if this flag is not set when it should be.

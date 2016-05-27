@@ -1,4 +1,5 @@
 #include "NetList.h"
+
 #include "imgui\imgui.h"
 
 NetList::NetList(TcharStringCallback cbNetSelected)
@@ -9,7 +10,6 @@ NetList::NetList(TcharStringCallback cbNetSelected)
 NetList::~NetList()
 {
 }
-
 
 void NetList::Draw(const char* title, bool* p_open, Board* board) {
 	// TODO: export / fix dimensions & behaviour
@@ -28,24 +28,26 @@ void NetList::Draw(const char* title, bool* p_open, Board* board) {
 	ImGui::Separator();
 
 	if (board) {
-		vector<BRDNail> nails = board->getUniqueNetList();
+		std::vector<BRDNail> nails = board->UniqueNetNails();
 
 		ImGuiListClipper clipper(nails.size(), ImGui::GetTextLineHeight());
 		static int selected = -1;
 		char* net_name = "";
-		for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
-			net_name = nails[i].net;
-			if (ImGui::Selectable(net_name, selected == i,
-				ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowDoubleClick)) {
-				selected = i;
-				if (ImGui::IsMouseDoubleClicked(0)) {
-					m_cbNetSelected(net_name);
-				}
-			}
-			ImGui::NextColumn();
+        for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
+            net_name = nails[i].net;
+            if (ImGui::Selectable(net_name, selected == i,
+                ImGuiSelectableFlags_SpanAllColumns |
+                ImGuiSelectableFlags_AllowDoubleClick))
+            {
+                selected = i;
+                if (ImGui::IsMouseDoubleClicked(0)) {
+                    m_cbNetSelected(net_name);
+                }
+            }
+            ImGui::NextColumn();
 
-			//ImGui::Text("none"); ImGui::NextColumn();
-		}
+            //ImGui::Text("none"); ImGui::NextColumn();
+        }
 		clipper.End();
 	}
 	ImGui::Columns(1);

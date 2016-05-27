@@ -1,31 +1,9 @@
 #pragma once
 
+
+#include "Board.h"
 #include <stdlib.h>
 
-struct BRDPoint {
-	int x;
-	int y;
-};
-
-struct BRDPart {
-	char *name;
-	int type;
-	int end_of_pins;
-};
-
-struct BRDPin {
-	BRDPoint pos;
-	int probe;
-	int part;
-	char *net;
-};
-
-struct BRDNail {
-	int probe;
-	BRDPoint pos;
-	int side;
-	char *net;
-};
 
 struct BRDFile {
 	int num_format;

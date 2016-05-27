@@ -94,14 +94,14 @@ void BoardView::Update() {
 			                               !ImGui::IsAnyItemActive() && !ImGui::IsMouseClicked(0)))
 				ImGui::SetKeyboardFocusHere(-1);
 			int buttons_left = 10;
-			for (int i = 0; buttons_left && i < m_nets.Size; i++) {
-				if (utf8casestr(m_nets[i], m_search)) {
-					if (ImGui::Button(m_nets[i])) {
-						SetNetFilter(m_nets[i]);
+			for (int i = 0; buttons_left && i < m_nets.size(); i++) {
+				if (utf8casestr(m_nets[i].net, m_search)) {
+					if (ImGui::Button(m_nets[i].net)) {
+						SetNetFilter(m_nets[i].net);
 						ImGui::CloseCurrentPopup();
 					}
 					if (buttons_left == 10) {
-						first_button = m_nets[i];
+						first_button = m_nets[i].net;
 					}
 					buttons_left--;
 				}
@@ -375,9 +375,11 @@ void BoardView::RenderOverlay() {
 
 #pragma region Drawing
 void BoardView::DrawOutline(ImDrawList *draw) {
-	for (int i = 0; i < m_file->num_format - 1; i++) {
-		BRDPoint &pa = m_file->format[i];
-		BRDPoint &pb = m_file->format[i + 1];
+    std::vector<BRDPoint> outline = m_board->OutlinePoints();
+
+	for (int i = 0; i < outline.size()-1; i++) {
+		BRDPoint &pa = outline[i];
+		BRDPoint &pb = outline[i + 1];
 		if (pa.x == pb.x && pa.y == pb.y)
 			continue;
 		ImVec2 spa = CoordToScreen((float)pa.x, (float)pa.y);
@@ -390,18 +392,22 @@ void BoardView::DrawPins(ImDrawList *draw) {
 	//ImTextureID filled_circle_tex = TextureIDs[0];
 	ImTextureID empty_circle_tex = TextureIDs[1];
 
+    std::vector<BRDPin> pins = m_board->Pins();
+    std::vector<BRDPart> parts = m_board->Parts();
+
 	float psz = (float)m_pinDiameter * 0.5f * m_scale;
 
 	char pin_number[64];
 	int pin_idx = 0;
 	int part_idx = 1;
 	const BRDPin *selected_pin = nullptr;
-	if (m_pinSelected >= 0 && m_pinSelected < m_file->num_pins) {
-		selected_pin = &m_file->pins[m_pinSelected];
+	if (m_pinSelected >= 0 && m_pinSelected < pins.size()) {
+		selected_pin = &pins[m_pinSelected];
 	}
-	for (int i = 0; i < m_file->num_pins; i++) {
-		const BRDPin &pin = m_file->pins[i];
-		const BRDPart &part = m_file->parts[pin.part - 1];
+
+	for (int i = 0; i < pins.size(); i++) {
+		const BRDPin &pin = pins[i];
+		const BRDPart &part = parts[pin.part - 1];
 		++pin_idx;
 		if (pin.part != part_idx) {
 			part_idx = pin.part;
@@ -439,7 +445,7 @@ void BoardView::DrawPins(ImDrawList *draw) {
 			pins_on_part = part.end_of_pins;
 		}
 		else {
-			pins_on_part = part.end_of_pins - m_file->parts[pin.part - 2].end_of_pins;
+			pins_on_part = part.end_of_pins - parts[pin.part - 2].end_of_pins;
 		}
 		if (!show_text && selected_pin && !strcmp(selected_pin->net, pin.net)) {
 			color = 0xff99f8ff;
@@ -467,14 +473,17 @@ void BoardView::DrawPins(ImDrawList *draw) {
 void BoardView::DrawParts(ImDrawList *draw) {
 	float psz = (float)m_pinDiameter * 0.5f * m_scale;
 
+    std::vector<BRDPart> parts = m_board->Parts();
+    std::vector<BRDPin> pins = m_board->Pins();
+
 	int pin_idx = 0;
-	for (int i = 0; i < m_file->num_parts; i++) {
-		const BRDPart &part = m_file->parts[i];
+	for (int i = 0; i < parts.size(); i++) {
+		const BRDPart &part = parts[i];
 		if (!PartIsVisible(part)) {
 			pin_idx = part.end_of_pins;
 			continue;
 		}
-		const BRDPin &pin = m_file->pins[pin_idx];
+		const BRDPin &pin = pins[pin_idx];
 		++pin_idx;
 		int pin_count = 1;
 		int min_x = pin.pos.x;
@@ -482,7 +491,7 @@ void BoardView::DrawParts(ImDrawList *draw) {
 		int max_x = min_x;
 		int max_y = min_y;
 		while (pin_idx < part.end_of_pins) {
-			const BRDPin &pin = m_file->pins[pin_idx];
+			const BRDPin &pin = pins[pin_idx];
 			if (pin.pos.x > max_x)
 				max_x = pin.pos.x;
 			else if (pin.pos.x < min_x)
@@ -515,7 +524,7 @@ void BoardView::DrawParts(ImDrawList *draw) {
 		uint32_t color = m_colors.boxColor;
 		bool is_test_pad = false;
 		if (!strcmp(part.name, "...")) {
-			color = 0xff333333;
+			color = m_colors.testPad;
 			is_test_pad = true;
 		}
 		ImVec2 min = CoordToScreen((float)min_x, (float)min_y);
@@ -543,6 +552,17 @@ void BoardView::DrawParts(ImDrawList *draw) {
 			draw->ChannelsSetCurrent(kChannelText);
 			draw->AddText(pos, m_colors.partTextColor, part.name);
 		}
+
+        if (m_annotationsVisible && part.annotation) {
+            ImVec2 text_size = ImGui::CalcTextSize(part.annotation);
+
+            float mid_y = (min.y + max.y) * 0.5f - text_size.y * 0.5f;
+            ImVec2 pos = ImVec2((min.x + max.x) * 0.5f, mid_y);
+            pos.x -= text_size.x * 0.5f;
+
+            draw->ChannelsSetCurrent(kChannelAnnotations);
+            draw->AddText(pos, m_colors.annotationPartAlias, part.annotation);
+        }
 	}
 }
 
@@ -589,22 +609,7 @@ void BoardView::SetFile(BRDFile *file) {
 	m_file = file;
 	m_board = new BRDBoard(file);
 
-	// Generate sorted, uniqued list of nets:
-	m_nets.resize(0);
-	m_nets.reserve(m_file->num_pins);
-	for (int i = 0; i < m_file->num_pins; i++) {
-		m_nets.push_back(m_file->pins[i].net);
-	}
-	qsort(m_nets.Data, m_nets.Size, sizeof(char *), qsort_netstrings);
-	{
-		int i = 0, j = 0;
-		while (++i < m_nets.Size) {
-			if (strcmp(m_nets[i], m_nets[j])) {
-				m_nets[++j] = m_nets[i];
-			}
-		}
-		m_nets.Size = j;
-	}
+    m_nets = m_board->UniqueNetNails();
 
 	int min_x = 1000000, max_x = 0, min_y = 1000000, max_y = 0;
 	for (int i = 0; i < m_file->num_format; i++) {

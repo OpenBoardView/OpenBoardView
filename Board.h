@@ -1,14 +1,39 @@
 #pragma once
 
 #include <vector>
-#include "BRDFile.h"
 
 #define MAX_COMP_NAME_LENGTH 128
 
-enum BoardType {
+enum EBoardType {
 	UNKNOWN = 0,
 	BRD = 0x01,
 	BDV = 0x02
+};
+
+struct BRDPoint {
+    int x;
+    int y;
+};
+
+struct BRDPart {
+    char *name;
+    char *annotation;
+    int type;
+    int end_of_pins;
+};
+
+struct BRDPin {
+    BRDPoint pos;
+    int probe;
+    int part;
+    char *net;
+};
+
+struct BRDNail {
+    int probe;
+    BRDPoint pos;
+    int side;
+    char *net;
 };
 
 class Board
@@ -16,13 +41,14 @@ class Board
 public:
 	virtual ~Board() {}
 
-	virtual std::vector<BRDPart> getParts()=0;
-	virtual std::vector<BRDPin> getPins()=0;
-	virtual std::vector<BRDNail> getNails()=0;
+	virtual std::vector<BRDPart> Parts()=0;
+	virtual std::vector<BRDPin> Pins()=0;
+	virtual std::vector<BRDNail> Nails()=0;
+    virtual std::vector<BRDPoint> OutlinePoints()=0;
 
-	virtual std::vector<BRDNail> getUniqueNetList()=0;
+	virtual std::vector<BRDNail> UniqueNetNails()=0;
 	
-	BoardType getBoardType() {
+	EBoardType BoardType() {
 		return UNKNOWN;
 	}
 };
