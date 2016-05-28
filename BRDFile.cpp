@@ -192,6 +192,7 @@ BRDFile::BRDFile(const char *buf, size_t buffer_size) {
 			ENSURE(parts_idx < num_parts);
 			BRDPart *part = &parts[parts_idx++];
 			LOAD_STR(part->name);
+            part->annotation = ""; //TODO
 			LOAD_INT(part->type);
 			LOAD_INT(part->end_of_pins);
 			ENSURE(part->end_of_pins <= num_pins);

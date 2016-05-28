@@ -1,8 +1,12 @@
 #pragma once
 
 #include <vector>
+#include <functional>
+#include <string>
 
 #define MAX_COMP_NAME_LENGTH 128
+
+typedef std::function<void(char*)> TcharStringCallback;
 
 enum EBoardType {
 	UNKNOWN = 0,
@@ -17,7 +21,7 @@ struct BRDPoint {
 
 struct BRDPart {
     char *name;
-    char *annotation;
+    char* annotation;
     int type;
     int end_of_pins;
 };
@@ -34,6 +38,10 @@ struct BRDNail {
     BRDPoint pos;
     int side;
     char *net;
+};
+
+struct Component {
+    //BRD
 };
 
 class Board

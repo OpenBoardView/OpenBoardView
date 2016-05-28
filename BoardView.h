@@ -104,6 +104,7 @@ struct BoardView {
 	bool m_showNetfilterSearch;
 	bool m_showComponentSearch;
 	bool m_showNetList;
+    bool m_showPartList;
 	bool m_firstFrame = true;
 	bool m_lastFileOpenWasInvalid;
 	bool m_wantsQuit;
@@ -111,6 +112,7 @@ struct BoardView {
 	~BoardView();
 
 	void ShowNetList(bool * p_open);
+    void ShowPartList(bool * p_open);
 
 	void Update();
 	void HandleInput();

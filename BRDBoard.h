@@ -38,6 +38,8 @@ private:
         return nail.net;
     }
 
+    bool FetchPartAnnotations();
+
 	const BRDFile* m_file;
 
 	std::vector<BRDPart> m_parts;

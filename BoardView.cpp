@@ -8,6 +8,7 @@
 #include "imgui/imgui.h"
 
 #include "NetList.h"
+#include "PartList.h"
 
 #include "platform.h"
 
@@ -59,6 +60,9 @@ void BoardView::Update() {
 			if (ImGui::MenuItem("Net List", "l")) {
 				m_showNetList = m_showNetList ? false : true;
 			}
+            if (ImGui::MenuItem("Part List", "k")) {
+                m_showPartList = m_showPartList ? false : true;
+            }
 			ImGui::EndMenu();
 		}
 		if (ImGui::Button("Net")) {
@@ -355,14 +359,24 @@ void BoardView::HandleInput() {
 		if (ImGui::IsKeyPressed('L')) {
 			m_showNetList = m_showNetList ? false : true;
 		}
+
+        // Show Part List
+        if (ImGui::IsKeyPressed('K')) {
+            m_showPartList = m_showPartList ? false : true;
+        }
 	}
 }
 #pragma endregion
 
 #pragma region Overlay & Windows
-void BoardView::ShowNetList(bool* p_open) {
+void BoardView::ShowNetList(bool *p_open) {
 	static NetList netList(std::bind(&BoardView::SetNetFilter, this, _1));
 	netList.Draw("Net List", p_open, m_board);
+}
+
+void BoardView::ShowPartList(bool *p_open) {
+    static PartList partList(std::bind(&BoardView::FindComponent, this, _1));
+    partList.Draw("Part List", p_open, m_board);
 }
 
 void BoardView::RenderOverlay() {
@@ -370,6 +384,9 @@ void BoardView::RenderOverlay() {
 	if (m_showNetList) {
 		ShowNetList(&m_showNetList);
 	}
+    if (m_showPartList) {
+        ShowPartList(&m_showPartList);
+    }
 }
 #pragma endregion Showing UI floating above main workspace.
 
@@ -553,15 +570,16 @@ void BoardView::DrawParts(ImDrawList *draw) {
 			draw->AddText(pos, m_colors.partTextColor, part.name);
 		}
 
-        if (m_annotationsVisible && part.annotation) {
-            ImVec2 text_size = ImGui::CalcTextSize(part.annotation);
+        if (m_annotationsVisible && part.annotation && part.annotation[0]) {
+            char *annotation = part.annotation;
+            ImVec2 text_size = ImGui::CalcTextSize(annotation);
 
             float mid_y = (min.y + max.y) * 0.5f - text_size.y * 0.5f;
             ImVec2 pos = ImVec2((min.x + max.x) * 0.5f, mid_y);
             pos.x -= text_size.x * 0.5f;
 
             draw->ChannelsSetCurrent(kChannelAnnotations);
-            draw->AddText(pos, m_colors.annotationPartAlias, part.annotation);
+            draw->AddText(pos, m_colors.annotationPartAlias, annotation);
         }
 	}
 }
