@@ -6,6 +6,8 @@
 
 #define MAX_COMP_NAME_LENGTH 128
 
+#define EMPTY_STRING ""
+
 typedef std::function<void(char*)> TcharStringCallback;
 
 enum EBoardType {
@@ -21,7 +23,7 @@ struct BRDPoint {
 
 struct BRDPart {
     char *name;
-    char* annotation;
+    char *annotation;
     int type;
     int end_of_pins;
 };

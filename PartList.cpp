@@ -35,7 +35,13 @@ void PartList::Draw(const char* title, bool* p_open, Board* board) {
         char* part_name = "";
         for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
             part_name = parts[i].name;
-            char *part_annotation = parts[i].annotation;
+
+            char *part_annotation;
+            if (parts[i].annotation && parts[i].annotation) {
+                part_annotation = parts[i].annotation;
+            } else {
+                part_annotation = EMPTY_STRING;
+            }
 
             if (ImGui::Selectable(part_name, selected == i,
                 ImGuiSelectableFlags_AllowDoubleClick))

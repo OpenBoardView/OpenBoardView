@@ -12,8 +12,8 @@
 #include <string>
 #include <cerrno>
 
-//using namespace json11;
 using namespace std;
+using namespace json11;
 
 BRDBoard::BRDBoard(const BRDFile* boardFile) 
 	: m_file(boardFile)
@@ -25,13 +25,13 @@ BRDBoard::BRDBoard(const BRDFile* boardFile)
 
 	// sort NET names alphabetically and make vec unique
 	m_netUnique = m_nails;
-	std::sort(m_netUnique.begin(), m_netUnique.end(), &cmpAlphabetically);
+	sort(m_netUnique.begin(), m_netUnique.end(), &cmpAlphabetically);
 	m_netUnique.erase(
-		std::unique(m_netUnique.begin(), m_netUnique.end(), &equalNames),
+		unique(m_netUnique.begin(), m_netUnique.end(), &namesEqual),
 		m_netUnique.end());
 
     if (FetchPartAnnotations()) {
-        
+        // 
     }
 }
 
@@ -39,41 +39,49 @@ BRDBoard::~BRDBoard()
 {
 }
 
+//TODO: error handling
 bool BRDBoard::FetchPartAnnotations() {
-    
-    std::string error;
+    const char* fname = "annotations.json";
 
-    size_t buffer_size;
-    char *buffer = file_as_buffer(&buffer_size, "annotations.json");
-    if (buffer) {
-        buffer[buffer_size] = '\0';
+    // Read annotation source file.
+    ifstream json_file;
+    stringstream file_buf;
+    json_file.exceptions(ifstream::failbit | ifstream::badbit);
+    try {
+        json_file.open(fname);
+        file_buf << json_file.rdbuf();
+        json_file.close();
+    }
+    catch (ifstream::failure e) {
+        return false;
+    }
 
-        json11::Json json = json11::Json::parse((const char*)buffer, error);
+    // Parse JSON.
+    string json_str = file_buf.str();
+    string error;
+    Json json = Json::parse(json_str, error);
 
-        std::map<std::string, std::string> annotations;
-        for (auto part : json.object_items().at("part_annotations").array_items()) {
-            string pname = part.object_items().at("part").string_value();
-            string annot = part.object_items().at("name").string_value();
+    if (error.length() > 0)
+        return false;
 
-            annotations.insert(std::pair<std::string,std::string>(pname, annot));
-        }
+    map<string,string> annotations;
+    for (auto part : json["part_annotations"].array_items()) {
+        annotations[part["part"].string_value()] = part["name"].string_value();
+    }
 
-        //TODO: error handling
-
-        #pragma warning(disable : 4996)
-        for (auto& part : m_parts) {
-            string part_name(part.name);
-            if (annotations.count(part_name)) {
-                // FIXME: C++ify
-                char *buf = new char[MAX_COMP_NAME_LENGTH];
-                strcpy(buf, annotations.at(part_name).c_str());
-                part.annotation = buf;
-            }
-            // FIXME: free bufs
+    // Set / apply annotations.
+    #pragma warning(disable : 4996)
+    for (auto& part : m_parts) {
+        string part_name(part.name);
+        if (annotations.count(part_name)) {
+            delete[] part.annotation;
+            char *buf = new char[annotations[part_name].length()];
+            strcpy(buf, annotations[part_name].c_str());
+            part.annotation = buf;
         }
     }
 
-    return false;
+    return true;
 }
 
 std::vector<BRDPart> BRDBoard::Parts()

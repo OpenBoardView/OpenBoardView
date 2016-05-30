@@ -21,23 +21,20 @@ public:
 	std::vector<BRDNail> Nails();
     std::vector<BRDPoint> OutlinePoints();
 
-	// Uniquely named Net elements only.
+	/// Uniquely named Net elements only.
 	std::vector<BRDNail> UniqueNetNails();
 
 private:
-	static bool equalNames(BRDNail x, BRDNail y) {
-		return strcmp(x.net, y.net) == 0 ? true : false;
+	static bool namesEqual(BRDNail lhs, BRDNail rhs) {
+		return strcmp(lhs.net, rhs.net) == 0 ? true : false;
 	}
 
-	static bool cmpAlphabetically(BRDNail x, BRDNail y) {
+	static bool cmpAlphabetically(BRDNail lhs, BRDNail rhs) {
 		return std::char_traits<char>::
-			compare(x.net, y.net, MAX_COMP_NAME_LENGTH) < 0 ? true : false;
+			compare(lhs.net, rhs.net, MAX_COMP_NAME_LENGTH) < 0 ? true : false;
 	}
 
-    static char* getNetName(BRDNail nail) {
-        return nail.net;
-    }
-
+    /// Reading annotations for this board from json file.
     bool FetchPartAnnotations();
 
 	const BRDFile* m_file;
