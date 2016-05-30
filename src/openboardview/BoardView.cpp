@@ -1,6 +1,7 @@
 #define _CRT_SECURE_NO_WARNINGS 1
 #include <math.h>
 #include <stdio.h>
+#include <iostream>
 
 #include "BoardView.h"
 #include "BRDFile.h"
@@ -16,6 +17,10 @@ using namespace std::placeholders;
 
 #if _MSC_VER
 #define stricmp _stricmp
+#endif
+
+#ifndef _WIN32
+#define stricmp strcasecmp
 #endif
 
 BoardView::~BoardView() {
