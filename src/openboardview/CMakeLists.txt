@@ -18,6 +18,7 @@ include_directories(
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 add_executable(openboardview
+	MACOSX_BUNDLE
 	BoardView.cpp
 	BRDBoard.cpp
 	BRDFile.cpp
@@ -26,6 +27,7 @@ add_executable(openboardview
 	NetList.cpp
 	PartList.cpp
 	unix.cpp
+	${ASSETS}
 )
 
 target_link_libraries(openboardview
@@ -38,5 +40,5 @@ target_link_libraries(openboardview
 
 install(TARGETS
 	openboardview
-	RUNTIME DESTINATION ${INSTALL_RUNTIME_DIR})
-
+	RUNTIME DESTINATION ${INSTALL_RUNTIME_DIR}
+	BUNDLE DESTINATION ${INSTALL_BUNDLE_DIR})
