@@ -2,10 +2,10 @@
 #include "BoardView.h"
 
 #include <algorithm>
+#include <iostream>
 #include <math.h>
 #include <memory>
 #include <stdio.h>
-#include <iostream>
 
 #include "BRDBoard.h"
 #include "BRDFile.h"
@@ -39,8 +39,8 @@ void BoardView::Update() {
 	if (ImGui::IsKeyDown(17) && ImGui::IsKeyPressed('O', false)) {
 		open_file = true;
 		// the dialog will likely eat our WM_KEYUP message for CTRL and O:
-		ImGuiIO &io = ImGui::GetIO();
-		io.KeysDown[17] = false;
+		ImGuiIO &io      = ImGui::GetIO();
+		io.KeysDown[17]  = false;
 		io.KeysDown['O'] = false;
 	}
 	if (ImGui::BeginMainMenuBar()) {
@@ -103,8 +103,8 @@ void BoardView::Update() {
 				SetNetFilter(m_search);
 			}
 			const char *first_button = m_search;
-			if (ImGui::IsItemHovered() || (ImGui::IsRootWindowOrAnyChildFocused() &&
-			                               !ImGui::IsAnyItemActive() && !ImGui::IsMouseClicked(0)))
+			if (ImGui::IsItemHovered() ||
+			    (ImGui::IsRootWindowOrAnyChildFocused() && !ImGui::IsAnyItemActive() && !ImGui::IsMouseClicked(0)))
 				ImGui::SetKeyboardFocusHere(-1);
 
 			int buttons_left = 10;
@@ -134,8 +134,7 @@ void BoardView::Update() {
 			}
 			ImGui::EndPopup();
 		}
-		if (ImGui::BeginPopupModal("Search for Component", nullptr,
-		                           ImGuiWindowFlags_AlwaysAutoResize)) {
+		if (ImGui::BeginPopupModal("Search for Component", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
 			if (m_showComponentSearch) {
 				m_showComponentSearch = false;
 			}
@@ -143,8 +142,8 @@ void BoardView::Update() {
 				FindComponent(m_search);
 			}
 			const char *first_button = m_search;
-			if (ImGui::IsItemHovered() || (ImGui::IsRootWindowOrAnyChildFocused() &&
-			                               !ImGui::IsAnyItemActive() && !ImGui::IsMouseClicked(0)))
+			if (ImGui::IsItemHovered() ||
+			    (ImGui::IsRootWindowOrAnyChildFocused() && !ImGui::IsAnyItemActive() && !ImGui::IsMouseClicked(0)))
 				ImGui::SetKeyboardFocusHere(-1);
 			int buttons_left = 10;
 			for (int i = 0; buttons_left && i < m_file->num_parts; i++) {
@@ -238,16 +237,14 @@ void BoardView::Update() {
 		}
 	}
 
-	ImGuiWindowFlags flags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
-	                         ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar |
-	                         ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings;
-	ImGuiWindowFlags draw_surface_flags =
-	    flags | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoBringToFrontOnFocus;
+	ImGuiWindowFlags flags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
+	                         ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings;
+	ImGuiWindowFlags draw_surface_flags = flags | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoBringToFrontOnFocus;
 	ImGui::SetNextWindowPos(ImVec2{0, 0});
 	const ImGuiIO &io = ImGui::GetIO();
 	if (io.DisplaySize.x != m_lastWidth || io.DisplaySize.y != m_lastHeight) {
-		m_lastWidth = io.DisplaySize.x;
-		m_lastHeight = io.DisplaySize.y;
+		m_lastWidth   = io.DisplaySize.x;
+		m_lastHeight  = io.DisplaySize.y;
 		m_needsRedraw = true;
 	}
 	ImGui::SetNextWindowSize(io.DisplaySize);
@@ -276,8 +273,11 @@ void BoardView::Update() {
 	if (m_file && m_board && m_pinSelected) {
 		auto pin = m_pinSelected;
 		ImGui::Text("Part: %s   Pin: %d   Net: %s   Probe: %d   (%s.)",
-		            pin->component->name.c_str(), pin->number, pin->net->name.c_str(),
-		            pin->net->number, pin->component->mount_type_str().c_str());
+		            pin->component->name.c_str(),
+		            pin->number,
+		            pin->net->name.c_str(),
+		            pin->net->number,
+		            pin->component->mount_type_str().c_str());
 	}
 	ImGui::End();
 	ImGui::PopStyleVar();
@@ -296,23 +296,23 @@ void BoardView::HandleInput() {
 			m_dx += td.x;
 			m_dy += td.y;
 			m_draggingLastFrame = true;
-			m_needsRedraw = true;
+			m_needsRedraw       = true;
 		} else {
 			// Click to select pin:
 			if (m_file && m_board && ImGui::IsMouseReleased(0) && !m_draggingLastFrame) {
 				ImVec2 spos = ImGui::GetMousePos();
-				ImVec2 pos = ScreenToCoord(spos.x, spos.y);
+				ImVec2 pos  = ScreenToCoord(spos.x, spos.y);
 				// threshold to within a pin's diameter of the pin center
 				float min_dist = m_pinDiameter * 1.0f;
 				min_dist *= min_dist; // all distance squared
 				Pin *selection = nullptr;
 				for (auto &pin : m_board->Pins()) {
-					float dx = pin->position.x - pos.x;
-					float dy = pin->position.y - pos.y;
+					float dx   = pin->position.x - pos.x;
+					float dy   = pin->position.y - pos.y;
 					float dist = dx * dx + dy * dy;
 					if (dist < min_dist) {
 						selection = pin.get();
-						min_dist = dist;
+						min_dist  = dist;
 					}
 				}
 				m_pinSelected = selection;
@@ -325,7 +325,7 @@ void BoardView::HandleInput() {
 		float mwheel = io.MouseWheel;
 		if (mwheel != 0.0f) {
 			const ImVec2 &target = io.MousePos;
-			ImVec2 coord = ScreenToCoord(target.x, target.y);
+			ImVec2 coord         = ScreenToCoord(target.x, target.y);
 			mwheel *= 0.5f;
 			// Ctrl slows down the zoom speed:
 			if (ImGui::IsKeyDown(17)) {
@@ -334,7 +334,7 @@ void BoardView::HandleInput() {
 			m_scale = m_scale * powf(2.0f, mwheel);
 
 			ImVec2 dtarget = CoordToScreen(coord.x, coord.y);
-			ImVec2 td = ScreenToCoord(target.x - dtarget.x, target.y - dtarget.y, 0);
+			ImVec2 td      = ScreenToCoord(target.x - dtarget.x, target.y - dtarget.y, 0);
 			m_dx += td.x;
 			m_dy += td.y;
 			m_needsRedraw = true;
@@ -407,8 +407,7 @@ inline void BoardView::DrawOutline(ImDrawList *draw) {
 	for (int i = 0; i < outline.size() - 1; i++) {
 		Point &pa = *outline[i];
 		Point &pb = *outline[i + 1];
-		if (pa.x == pb.x && pa.y == pb.y)
-			continue;
+		if (pa.x == pb.x && pa.y == pb.y) continue;
 		ImVec2 spa = CoordToScreen(pa.x, pa.y);
 		ImVec2 spb = CoordToScreen(pb.x, pb.y);
 		draw->AddLine(spa, spb, m_colors.boardOutline);
@@ -417,7 +416,7 @@ inline void BoardView::DrawOutline(ImDrawList *draw) {
 
 inline void BoardView::DrawPins(ImDrawList *draw) {
 	ImTextureID filled_circle_tex = TextureIDs[0];
-	ImTextureID empty_circle_tex = TextureIDs[1];
+	ImTextureID empty_circle_tex  = TextureIDs[1];
 
 	// TODO: use pin->diameter
 	float psz = (float)m_pinDiameter * 0.5f * m_scale;
@@ -430,35 +429,32 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 		// continue if pin is not visible anyway
 		ImVec2 pos = CoordToScreen(pin->position.x, pin->position.y);
 		{
-			if (!ElementIsVisible(p_pin))
-				continue;
+			if (!ElementIsVisible(p_pin)) continue;
 
-			if (!IsVisibleScreen(pos.x, pos.y, psz, io))
-				continue;
+			if (!IsVisibleScreen(pos.x, pos.y, psz, io)) continue;
 		}
 
 		// color & text depending on app state & pin type
-		auto pin_texture = empty_circle_tex;
-		uint32_t color = m_colors.pinDefault;
+		auto pin_texture    = empty_circle_tex;
+		uint32_t color      = m_colors.pinDefault;
 		uint32_t text_color = color;
-		bool show_text = false;
+		bool show_text      = false;
 		{
 			if (contains(*pin, m_pinHighlighted)) {
 				text_color = color = m_colors.pinHighlighted;
-				show_text = true;
+				show_text          = true;
 			}
 
 			if (!pin->net || pin->type == Pin::kPinTypeNotConnected) {
 				color = m_colors.pinNotConnected;
 			} else {
-				if (pin->net->is_ground)
-					color = m_colors.pinGround;
+				if (pin->net->is_ground) color = m_colors.pinGround;
 			}
 
 			if (PartIsHighlighted(*pin->component)) {
 				if (!show_text) {
 					// TODO: not sure how to name this
-					color = 0xffff8000;
+					color      = 0xffff8000;
 					text_color = 0xff808000;
 				}
 				show_text = true;
@@ -477,32 +473,31 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 
 			// pin selected overwrites everything
 			if (p_pin == m_pinSelected) {
-				color = m_colors.pinSelected;
+				color      = m_colors.pinSelected;
 				text_color = m_colors.pinSelected;
-				show_text = true;
+				show_text  = true;
 			}
 
 			// don't show text if it doesn't make sense
-			if (pin->component->pins.size() <= 1 || pin->type == Pin::kPinTypeTestPad)
-				show_text = false;
+			if (pin->component->pins.size() <= 1 || pin->type == Pin::kPinTypeTestPad) show_text = false;
 		}
 
 		// Drawing
 		{
 			char pin_number[64];
 			draw->ChannelsSetCurrent(kChannelImages);
-			draw->AddImage(pin_texture, ImVec2(pos.x - psz, pos.y - psz),
-			               ImVec2(pos.x + psz, pos.y + psz), ImVec2(0, 0), ImVec2(1, 1), color);
+			draw->AddImage(
+			    pin_texture, ImVec2(pos.x - psz, pos.y - psz), ImVec2(pos.x + psz, pos.y + psz), ImVec2(0, 0), ImVec2(1, 1), color);
 			if (show_text) {
 				sprintf(pin_number, "%d", pin->number);
 
 				ImVec2 text_size = ImGui::CalcTextSize(pin_number);
-				ImVec2 pos_adj = ImVec2(pos.x - text_size.x * 0.5f, pos.y - text_size.y * 0.5f);
+				ImVec2 pos_adj   = ImVec2(pos.x - text_size.x * 0.5f, pos.y - text_size.y * 0.5f);
 				draw->ChannelsSetCurrent(kChannelPolylines);
-				draw->AddRectFilled(
-				    ImVec2(pos_adj.x - 2.0f, pos_adj.y - 1.0f),
-				    ImVec2(pos_adj.x + text_size.x + 2.0f, pos_adj.y + text_size.y + 1.0f),
-				    m_colors.backgroundColor, 3.0f);
+				draw->AddRectFilled(ImVec2(pos_adj.x - 2.0f, pos_adj.y - 1.0f),
+				                    ImVec2(pos_adj.x + text_size.x + 2.0f, pos_adj.y + text_size.y + 1.0f),
+				                    m_colors.backgroundColor,
+				                    3.0f);
 				draw->ChannelsSetCurrent(kChannelText);
 				draw->AddText(pos_adj, text_color, pin_number);
 			}
@@ -516,11 +511,9 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 	for (auto &part : m_board->Components()) {
 		auto p_part = part.get();
 
-		if (!ElementIsVisible(p_part))
-			continue;
+		if (!ElementIsVisible(p_part)) continue;
 
-		if (part->is_dummy())
-			continue;
+		if (part->is_dummy()) continue;
 
 		// scale box around pins
 		float min_x = part->pins[0]->position.x;
@@ -558,17 +551,16 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 		}
 
 		uint32_t color = m_colors.boxColor;
-		ImVec2 min = CoordToScreen(min_x, min_y);
-		ImVec2 max = CoordToScreen(max_x, max_y);
+		ImVec2 min     = CoordToScreen(min_x, min_y);
+		ImVec2 max     = CoordToScreen(max_x, max_y);
 		min.x -= 0.5f;
 		max.x += 0.5f;
 		draw->AddRect(min, max, color);
 		if (PartIsHighlighted(*part) && !part->is_dummy() && !part->name.empty()) {
-			ImVec2 text_size = ImGui::CalcTextSize(part->name.c_str());
-			float top_y = min.y;
-			if (max.y < top_y)
-				top_y = max.y;
-			ImVec2 pos = ImVec2((min.x + max.x) * 0.5f, top_y);
+			ImVec2 text_size         = ImGui::CalcTextSize(part->name.c_str());
+			float top_y              = min.y;
+			if (max.y < top_y) top_y = max.y;
+			ImVec2 pos               = ImVec2((min.x + max.x) * 0.5f, top_y);
 			if (bb_y_resized) {
 				pos.y -= text_size.y + 2.0f * psz;
 			} else {
@@ -578,7 +570,8 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 			draw->ChannelsSetCurrent(kChannelPolylines);
 			draw->AddRectFilled(ImVec2(pos.x - 2.0f, pos.y - 1.0f),
 			                    ImVec2(pos.x + text_size.x + 2.0f, pos.y + text_size.y + 1.0f),
-			                    m_colors.backgroundColor, 3.0f);
+			                    m_colors.backgroundColor,
+			                    3.0f);
 			draw->ChannelsSetCurrent(kChannelText);
 			draw->AddText(pos, m_colors.partTextColor, part->name.c_str());
 		}
@@ -586,8 +579,7 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 }
 
 void BoardView::DrawBoard() {
-	if (!m_file || !m_board)
-		return;
+	if (!m_file || !m_board) return;
 
 	ImDrawList *draw = ImGui::GetWindowDrawList();
 	if (!m_needsRedraw) {
@@ -625,35 +617,31 @@ void BoardView::SetFile(BRDFile *file) {
 	delete m_file;
 	delete m_board;
 
-	m_file = file;
+	m_file  = file;
 	m_board = new BRDBoard(file);
 
 	m_nets = m_board->Nets();
 
 	int min_x = 1000000, max_x = 0, min_y = 1000000, max_y = 0;
 	for (int i = 0; i < m_file->num_format; i++) {
-		BRDPoint &pa = m_file->format[i];
-		if (pa.x < min_x)
-			min_x = pa.x;
-		if (pa.y < min_y)
-			min_y = pa.y;
-		if (pa.x > max_x)
-			max_x = pa.x;
-		if (pa.y > max_y)
-			max_y = pa.y;
+		BRDPoint &pa            = m_file->format[i];
+		if (pa.x < min_x) min_x = pa.x;
+		if (pa.y < min_y) min_y = pa.y;
+		if (pa.x > max_x) max_x = pa.x;
+		if (pa.y > max_y) max_y = pa.y;
 	}
 
 	m_mx = (float)(min_x + max_x) / 2.0f;
 	m_my = (float)(min_y + max_y) / 2.0f;
 
 	ImVec2 view = ImGui::GetIO().DisplaySize;
-	float dx = 1.05f * (max_x - min_x);
-	float dy = 1.05f * (max_y - min_y);
-	float sx = dx > 0 ? view.x / dx : 1.0f;
-	float sy = dy > 0 ? view.y / dy : 1.0f;
+	float dx    = 1.05f * (max_x - min_x);
+	float dy    = 1.05f * (max_y - min_y);
+	float sx    = dx > 0 ? view.x / dx : 1.0f;
+	float sy    = dy > 0 ? view.y / dy : 1.0f;
 
-	m_scale = sx < sy ? sx : sy;
-	m_boardWidth = max_x - min_x;
+	m_scale       = sx < sy ? sx : sy;
+	m_boardWidth  = max_x - min_x;
 	m_boardHeight = max_y - min_y;
 	SetTarget(m_mx, m_my);
 
@@ -661,47 +649,43 @@ void BoardView::SetFile(BRDFile *file) {
 	m_partHighlighted.reserve(m_board->Components().size());
 	m_pinSelected = nullptr;
 
-	m_firstFrame = true;
+	m_firstFrame  = true;
 	m_needsRedraw = true;
 }
 
 ImVec2 BoardView::CoordToScreen(float x, float y, float w) {
 	float side = m_current_side ? -1.0f : 1.0f;
-	float tx = side * m_scale * (x + w * (m_dx - m_mx));
-	float ty = -1.0f * m_scale * (y + w * (m_dy - m_my));
+	float tx   = side * m_scale * (x + w * (m_dx - m_mx));
+	float ty   = -1.0f * m_scale * (y + w * (m_dy - m_my));
 	switch (m_rotation) {
-	case 0:
-		return ImVec2(tx, ty);
-	case 1:
-		return ImVec2(-ty, tx);
-	case 2:
-		return ImVec2(-tx, -ty);
-	default:
-		return ImVec2(ty, -tx);
+		case 0: return ImVec2(tx, ty);
+		case 1: return ImVec2(-ty, tx);
+		case 2: return ImVec2(-tx, -ty);
+		default: return ImVec2(ty, -tx);
 	}
 }
 
 ImVec2 BoardView::ScreenToCoord(float x, float y, float w) {
 	float tx, ty;
 	switch (m_rotation) {
-	case 0:
-		tx = x;
-		ty = y;
-		break;
-	case 1:
-		tx = y;
-		ty = -x;
-		break;
-	case 2:
-		tx = -x;
-		ty = -y;
-		break;
-	default:
-		tx = -y;
-		ty = x;
-		break;
+		case 0:
+			tx = x;
+			ty = y;
+			break;
+		case 1:
+			tx = y;
+			ty = -x;
+			break;
+		case 2:
+			tx = -x;
+			ty = -y;
+			break;
+		default:
+			tx = -y;
+			ty = x;
+			break;
 	}
-	float side = m_current_side ? -1.0f : 1.0f;
+	float side     = m_current_side ? -1.0f : 1.0f;
 	float invscale = 1.0f / m_scale;
 
 	tx = tx * side * invscale + w * (m_mx - m_dx);
@@ -714,8 +698,8 @@ void BoardView::Rotate(int count) {
 	// too lazy to do math
 	while (count > 0) {
 		m_rotation = (m_rotation + 1) & 3;
-		float dx = m_dx;
-		float dy = m_dy;
+		float dx   = m_dx;
+		float dy   = m_dy;
 		if (m_current_side == 0) {
 			m_dx = -dy;
 			m_dy = dx;
@@ -728,8 +712,8 @@ void BoardView::Rotate(int count) {
 	}
 	while (count < 0) {
 		m_rotation = (m_rotation - 1) & 3;
-		float dx = m_dx;
-		float dy = m_dy;
+		float dx   = m_dx;
+		float dy   = m_dy;
 		if (m_current_side == 1) {
 			m_dx = -dy;
 			m_dy = dx;
@@ -743,29 +727,24 @@ void BoardView::Rotate(int count) {
 }
 
 void BoardView::SetTarget(float x, float y) {
-	ImVec2 view = ImGui::GetIO().DisplaySize;
+	ImVec2 view  = ImGui::GetIO().DisplaySize;
 	ImVec2 coord = ScreenToCoord(view.x / 2.0f, view.y / 2.0f);
 	m_dx += coord.x - x;
 	m_dy += coord.y - y;
 }
 
 inline bool BoardView::ElementIsVisible(const BoardElement *element) {
-	if (!element)
-		return true; // no component? => no board side info
+	if (!element) return true; // no component? => no board side info
 
-	if (element->board_side == kBoardSideBoth)
-		return true;
+	if (element->board_side == kBoardSideBoth) return true;
 
-	if (element->board_side == m_current_side)
-		return true;
+	if (element->board_side == m_current_side) return true;
 
 	return false;
 }
 
 inline bool BoardView::IsVisibleScreen(float x, float y, float radius, const ImGuiIO &io) {
-	if (x < -radius || y < -radius || x - radius > io.DisplaySize.x ||
-	    y - radius > io.DisplaySize.y)
-		return false;
+	if (x < -radius || y < -radius || x - radius > io.DisplaySize.x || y - radius > io.DisplaySize.y) return false;
 	return true;
 }
 
@@ -773,16 +752,14 @@ bool BoardView::PartIsHighlighted(const Component &component) {
 	bool highlighted = contains(component, m_partHighlighted);
 
 	// is any pin of this part selected?
-	if (m_pinSelected)
-		highlighted |= m_pinSelected->component == &component;
+	if (m_pinSelected) highlighted |= m_pinSelected->component == &component;
 
 	return highlighted;
 }
 
 void BoardView::SetNetFilter(const char *net) {
 	strcpy(m_netFilter, net);
-	if (!m_file || !m_board)
-		return;
+	if (!m_file || !m_board) return;
 
 	m_pinHighlighted.clear();
 	m_partHighlighted.clear();
@@ -791,7 +768,7 @@ void BoardView::SetNetFilter(const char *net) {
 
 	if (!net_name.empty()) {
 		bool any_visible = false;
-		int count = 0;
+		int count        = 0;
 
 		for (auto &net : m_board->Nets()) {
 			if (is_prefix(net_name, net->name)) {
@@ -807,8 +784,7 @@ void BoardView::SetNetFilter(const char *net) {
 		}
 
 		if (m_pinHighlighted.size() > 0) {
-			if (!any_visible)
-				FlipBoard();
+			if (!any_visible) FlipBoard();
 			m_pinSelected = nullptr;
 		}
 	}
@@ -817,8 +793,7 @@ void BoardView::SetNetFilter(const char *net) {
 }
 
 void BoardView::FindComponent(const char *name) {
-	if (!m_file || !m_board)
-		return;
+	if (!m_file || !m_board) return;
 
 	m_pinHighlighted.clear();
 	m_partHighlighted.clear();
@@ -827,7 +802,7 @@ void BoardView::FindComponent(const char *name) {
 
 	if (!comp_name.empty()) {
 		Component *part_found = nullptr;
-		bool any_visible = false;
+		bool any_visible      = false;
 
 		for (auto &component : m_board->Components()) {
 			if (is_prefix(comp_name, component->name)) {
@@ -839,8 +814,7 @@ void BoardView::FindComponent(const char *name) {
 		}
 
 		if (part_found) {
-			if (!any_visible)
-				FlipBoard();
+			if (!any_visible) FlipBoard();
 			m_pinSelected = nullptr;
 
 			for (auto &pin : part_found->pins) {
@@ -871,9 +845,9 @@ BitVec::~BitVec() {
 
 void BitVec::Resize(uint32_t new_size) {
 	if (new_size > m_size) {
-		uint32_t bytelen = 4 * ((m_size + 31) / 32);
+		uint32_t bytelen     = 4 * ((m_size + 31) / 32);
 		uint32_t new_bytelen = 4 * ((new_size + 31) / 32);
-		uint32_t *new_bits = (uint32_t *)malloc(new_bytelen);
+		uint32_t *new_bits   = (uint32_t *)malloc(new_bytelen);
 		if (m_bits) {
 			memcpy(new_bits, m_bits, bytelen);
 			free(m_bits);

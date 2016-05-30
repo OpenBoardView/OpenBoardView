@@ -6,12 +6,11 @@ NetList::NetList(TcharStringCallback cbNetSelected) {
 	cbNetSelected_ = cbNetSelected;
 }
 
-NetList::~NetList() {
-}
+NetList::~NetList() {}
 
 void NetList::Draw(const char *title, bool *p_open, Board *board) {
 	// TODO: export / fix dimensions & behaviour
-	int width = 400;
+	int width  = 400;
 	int height = 640;
 
 	ImGui::SetNextWindowSize(ImVec2(width, height));
@@ -29,12 +28,11 @@ void NetList::Draw(const char *title, bool *p_open, Board *board) {
 
 		ImGuiListClipper clipper(nets.size(), ImGui::GetTextLineHeight());
 		static int selected = -1;
-		string net_name = "";
+		string net_name     = "";
 		for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
 			net_name = nets[i]->name;
-			if (ImGui::Selectable(net_name.c_str(), selected == i,
-			                      ImGuiSelectableFlags_SpanAllColumns |
-			                          ImGuiSelectableFlags_AllowDoubleClick)) {
+			if (ImGui::Selectable(
+			        net_name.c_str(), selected == i, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowDoubleClick)) {
 				selected = i;
 				if (ImGui::IsMouseDoubleClicked(0)) {
 					cbNetSelected_(net_name.c_str());

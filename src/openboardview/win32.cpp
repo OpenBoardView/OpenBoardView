@@ -3,12 +3,12 @@
 #define _CRT_SECURE_NO_WARNINGS 1
 #include "platform.h"
 #include "imgui/imgui.h"
-#include <stdint.h>
 #include <Windows.h>
 #include <assert.h>
+#include <stdint.h>
 
 wchar_t *utf8_to_wide(const char *s) {
-	size_t len = utf8len(s);
+	size_t len   = utf8len(s);
 	wchar_t *buf = (wchar_t *)malloc(sizeof(wchar_t) * (1 + len));
 	mbstowcs(buf, s, len);
 	buf[len] = 0;
@@ -42,8 +42,8 @@ char *wide_to_utf8(const wchar_t *s) {
 
 char *file_as_buffer(size_t *buffer_size, const char *utf8_filename) {
 	wchar_t *wide_filename = utf8_to_wide(utf8_filename);
-	HANDLE file = CreateFile(wide_filename, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL,
-	                         OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+	HANDLE file            = CreateFile(
+	    wide_filename, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 	free(wide_filename);
 	if (file == INVALID_HANDLE_VALUE) {
 		*buffer_size = 0;
@@ -56,7 +56,7 @@ char *file_as_buffer(size_t *buffer_size, const char *utf8_filename) {
 	assert(filesize.QuadPart == sz);
 	*buffer_size = sz;
 
-	char *buf = (char *)malloc(sz);
+	char *buf        = (char *)malloc(sz);
 	uint32_t numRead = 0;
 	ReadFile(file, buf, sz, (LPDWORD)&numRead, NULL);
 	assert(numRead == sz);
@@ -70,10 +70,10 @@ char *show_file_picker() {
 	filename[0] = 0;
 	memset(&ofn, 0, sizeof(ofn));
 	ofn.lStructSize = sizeof(ofn);
-	ofn.hwndOwner = (HWND)ImGui::GetIO().ImeWindowHandle;
+	ofn.hwndOwner   = (HWND)ImGui::GetIO().ImeWindowHandle;
 	ofn.lpstrFilter = L"All Files\0*.*\0\0";
-	ofn.lpstrFile = filename;
-	ofn.nMaxFile = 1024;
+	ofn.lpstrFile   = filename;
+	ofn.nMaxFile    = 1024;
 	if (GetOpenFileName(&ofn)) {
 		return wide_to_utf8(filename);
 	}
@@ -81,9 +81,9 @@ char *show_file_picker() {
 }
 
 unsigned char *LoadAsset(int *asset_size, int asset_id) {
-	HRSRC resinfo = FindResource(NULL, MAKEINTRESOURCE(asset_id), L"Asset");
-	HGLOBAL res = LoadResource(NULL, resinfo);
-	*asset_size = (int)SizeofResource(NULL, resinfo);
+	HRSRC resinfo       = FindResource(NULL, MAKEINTRESOURCE(asset_id), L"Asset");
+	HGLOBAL res         = LoadResource(NULL, resinfo);
+	*asset_size         = (int)SizeofResource(NULL, resinfo);
 	unsigned char *data = (unsigned char *)LockResource(res);
 	UnlockResource(res);
 	return data;
