@@ -174,12 +174,7 @@ IF(SDL2_LIBRARY_TEMP)
   SET(SDL2_FOUND "YES")
 
   # extract the major and minor version numbers from SDL2/SDL_version.h
-  # we have to handle framework a little bit differently :
-  if("${SDL2_INCLUDE_DIR}" MATCHES ".framework")
-    set(SDL2_VERSION_H_INPUT "${SDL2_INCLUDE_DIR}/Headers/SDL_version.h")
-  else()
-    set(SDL2_VERSION_H_INPUT "${SDL2_INCLUDE_DIR}/SDL_version.h")
-  endif()
+  set(SDL2_VERSION_H_INPUT "${SDL2_INCLUDE_DIR}/SDL_version.h")
   FILE(READ "${SDL2_VERSION_H_INPUT}" SDL2_VERSION_H_CONTENTS)
   STRING(REGEX REPLACE ".*#define[ \t]+SDL_MAJOR_VERSION[ \t]+([0-9]+).*#define[ \t]+SDL_MINOR_VERSION[ \t]+([0-9]+).*#define[ \t]+SDL_PATCHLEVEL[ \t]+([0-9]+).*"
                        "\\1.\\2.\\3" SDL2_VERSION "${SDL2_VERSION_H_CONTENTS}")
