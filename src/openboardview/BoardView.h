@@ -22,7 +22,7 @@ struct BitVec {
 
 	void Set(uint32_t index, bool val) {
 		uint32_t &slot = m_bits[index >> 5];
-		uint32_t bit = (1u << (index & 0x1f));
+		uint32_t bit   = (1u << (index & 0x1f));
 		slot &= ~bit;
 		if (val) {
 			slot |= bit;
@@ -39,30 +39,24 @@ struct BitVec {
 
 struct ColorScheme {
 	uint32_t backgroundColor = 0xa0000000;
-	uint32_t partTextColor = 0xff808000;
-	uint32_t boardOutline = 0xff0000ff;
+	uint32_t partTextColor   = 0xff808000;
+	uint32_t boardOutline    = 0xff0000ff;
 
 	uint32_t boxColor = 0xffcccccc;
 
-	uint32_t pinDefault = 0xffff0000;
-	uint32_t pinGround = 0xffdd0000;
+	uint32_t pinDefault      = 0xffff0000;
+	uint32_t pinGround       = 0xffdd0000;
 	uint32_t pinNotConnected = 0xffdd0000;
-	uint32_t pinTestPad = 0xff888888;
+	uint32_t pinTestPad      = 0xff888888;
 
-	uint32_t pinSelected = 0xff00ff00;
-	uint32_t pinHighlighted = 0xffffffff;
+	uint32_t pinSelected         = 0xff00ff00;
+	uint32_t pinHighlighted      = 0xffffffff;
 	uint32_t pinHighlightSameNet = 0xff99f8ff;
 
 	uint32_t annotationPartAlias = 0xcc00ffff;
 };
 
-enum DrawChannel {
-	kChannelImages = 0,
-	kChannelPolylines = 1,
-	kChannelText = 2,
-	kChannelAnnotations = 3,
-	NUM_DRAW_CHANNELS = 4
-};
+enum DrawChannel { kChannelImages = 0, kChannelPolylines = 1, kChannelText = 2, kChannelAnnotations = 3, NUM_DRAW_CHANNELS = 4 };
 
 struct BoardView {
 	BRDFile *m_file;
@@ -93,7 +87,7 @@ struct BoardView {
 
 	// TODO: save settings to disk
 	// pinDiameter: diameter for all pins.  Unit scale: 1 = 0.025mm
-	int m_pinDiameter = 20;
+	int m_pinDiameter     = 20;
 	bool m_flipVertically = true;
 
 	// Annotation layer specific

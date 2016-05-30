@@ -73,10 +73,15 @@ done:
 
 BRDFile::BRDFile(const char *buf, size_t buffer_size) {
 	memset(this, 0, sizeof(*this));
+//#define ENSURE(X)                                                                                  \
+//	assert(X);                                                                                     \
+//	if (!(X))                                                                                      \
+//		goto FAIL_LABEL;
 #define ENSURE(X)                                                                                  \
 	assert(X);                                                                                     \
 	if (!(X))                                                                                      \
-		goto FAIL_LABEL;
+              return; 
+
 #define FAIL_LABEL fail
 	ENSURE(buffer_size > 4);
 	size_t file_buf_size = 3 * (1 + buffer_size);
@@ -112,7 +117,8 @@ BRDFile::BRDFile(const char *buf, size_t buffer_size) {
 	int nails_idx = 0;
 	char **lines = stringfile(file_buf);
 	if (!lines)
-		goto fail;
+		return;
+//		goto fail;
 	char **lines_begin = lines;
 #undef FAIL_LABEL
 #define FAIL_LABEL fail_lines
