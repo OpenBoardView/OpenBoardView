@@ -30,7 +30,7 @@ char *file_as_buffer(size_t *buffer_size, const char *utf8_filename) {
 }
 
 char *show_file_picker() {
-	char *path;
+	char *path = nullptr;
 	GtkWidget *parent, *dialog;
 
 	if (!gtk_init_check(NULL, NULL)) return nullptr;
