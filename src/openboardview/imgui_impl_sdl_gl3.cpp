@@ -13,7 +13,11 @@
 #include <SDL.h>
 #include <SDL_syswm.h>
 #include <GL/gl3w.h>
+#ifdef __APPLE__
+#include <gl3ext.h>
+#else
 #include <GL/glext.h>
+#endif
 
 #include "platform.h"
 #include "TextureDDS.h"
