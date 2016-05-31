@@ -13,6 +13,10 @@
 #include <SDL.h>
 #include <SDL_syswm.h>
 #include <GL/gl3w.h>
+#include <GL/glext.h>
+
+#include "platform.h"
+#include "TextureDDS.h"
 
 // Data
 static double       g_Time = 0.0f;
@@ -195,6 +199,25 @@ void ImGui_ImplSdlGL3_CreateFontsTexture()
     glBindTexture(GL_TEXTURE_2D, last_texture);
 }
 
+static bool ImGui_ImplSdlGL3_CreateAssetTexture(int global_id, const char* filename) {
+    size_t size;
+    unsigned char *buf = (unsigned char*)file_as_buffer(&size, filename);
+    TextureDDS *texture = new TextureDDS(buf);
+
+    if(!texture->glLoad()) return false;
+    TextureIDs[global_id] = texture->get();
+
+    free(buf);
+    return true;
+}
+
+
+static bool ImGui_ImplSdlGL3_CreateCircleTexture() {
+    bool result = true;
+    result &= ImGui_ImplSdlGL3_CreateAssetTexture(1, "asset/empty_circle.dds");
+    return result;
+}
+
 bool ImGui_ImplSdlGL3_CreateDeviceObjects()
 {
     // Backup GL state
@@ -263,6 +286,7 @@ bool ImGui_ImplSdlGL3_CreateDeviceObjects()
 #undef OFFSETOF
 
     ImGui_ImplSdlGL3_CreateFontsTexture();
+    ImGui_ImplSdlGL3_CreateCircleTexture();
 
     // Restore modified GL state
     glBindTexture(GL_TEXTURE_2D, last_texture);

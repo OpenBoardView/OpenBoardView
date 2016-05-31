@@ -75,6 +75,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <AdditionalIncludeDirectories>$(ProjectDir)..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <AdditionalDependencies>d3d9.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -88,6 +89,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <AdditionalIncludeDirectories>$(ProjectDir)..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <AdditionalDependencies>d3d9.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -102,6 +104,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <AdditionalIncludeDirectories>$(ProjectDir)..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -118,6 +121,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <AdditionalIncludeDirectories>$(ProjectDir)..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -127,46 +131,52 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="Board.h" />
-    <ClInclude Include="BoardView.h" />
-    <ClInclude Include="BRDBoard.h" />
-    <ClInclude Include="BRDFile.h" />
-    <ClInclude Include="imgui\imconfig.h" />
-    <ClInclude Include="imgui\imgui.h" />
-    <ClInclude Include="imgui\imgui_internal.h" />
-    <ClInclude Include="imgui\stb_rect_pack.h" />
-    <ClInclude Include="imgui\stb_textedit.h" />
-    <ClInclude Include="imgui\stb_truetype.h" />
-    <ClInclude Include="imgui_impl_dx9.h" />
-    <ClInclude Include="json11\json11.hpp" />
-    <ClInclude Include="NetList.h" />
-    <ClInclude Include="PartList.h" />
-    <ClInclude Include="platform.h" />
-    <ClInclude Include="resource.h" />
+    <ClInclude Include="..\imgui\imconfig.h" />
+    <ClInclude Include="..\imgui\imgui.h" />
+    <ClInclude Include="..\imgui\imgui_internal.h" />
+    <ClInclude Include="..\imgui\stb_rect_pack.h" />
+    <ClInclude Include="..\imgui\stb_textedit.h" />
+    <ClInclude Include="..\imgui\stb_truetype.h" />
+    <ClInclude Include="..\json11\json11.hpp" />
+    <ClInclude Include="..\openboardview\Board.h" />
+    <ClInclude Include="..\openboardview\BoardView.h" />
+    <ClInclude Include="..\openboardview\BRDBoard.h" />
+    <ClInclude Include="..\openboardview\BRDFile.h" />
+    <ClInclude Include="..\openboardview\imgui_impl_dx9.h" />
+    <ClInclude Include="..\openboardview\NetList.h" />
+    <ClInclude Include="..\openboardview\PartList.h" />
+    <ClInclude Include="..\openboardview\platform.h" />
+    <ClInclude Include="..\openboardview\resource.h" />
+    <ClInclude Include="..\openboardview\TextureDDS.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="BoardView.cpp" />
-    <ClCompile Include="BRDBoard.cpp" />
-    <ClCompile Include="BRDFile.cpp" />
-    <ClCompile Include="imgui\imgui.cpp" />
-    <ClCompile Include="imgui\imgui_demo.cpp" />
-    <ClCompile Include="imgui\imgui_draw.cpp" />
-    <ClCompile Include="imgui_impl_dx9.cpp" />
-    <ClCompile Include="json11\json11.cpp" />
-    <ClCompile Include="main.cpp" />
-    <ClCompile Include="NetList.cpp" />
-    <ClCompile Include="PartList.cpp" />
-    <ClCompile Include="platform.cpp" />
+    <ClCompile Include="..\imgui\imgui.cpp" />
+    <ClCompile Include="..\imgui\imgui_draw.cpp" />
+    <ClCompile Include="..\json11\json11.cpp" />
+    <ClCompile Include="..\openboardview\BoardView.cpp" />
+    <ClCompile Include="..\openboardview\BRDBoard.cpp" />
+    <ClCompile Include="..\openboardview\BRDFile.cpp" />
+    <ClCompile Include="..\openboardview\imgui_impl_dx9.cpp" />
+    <ClCompile Include="..\openboardview\main_dx9.cpp" />
+    <ClCompile Include="..\openboardview\NetList.cpp" />
+    <ClCompile Include="..\openboardview\PartList.cpp" />
+    <ClCompile Include="..\openboardview\TextureDDS.cpp" />
+    <ClCompile Include="..\openboardview\win32.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="asset\brd.ico" />
-    <Image Include="asset\empty_circle.dds" />
+    <Image Include="..\..\asset\brd.ico" />
+    <Image Include="..\..\asset\empty_circle.dds" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="OpenBoardView.rc" />
+    <ResourceCompile Include="OpenBoardView.rc">
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectDir)..\..;$(ProjectDir)..\openboardview</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectDir)..\..;$(ProjectDir)..\openboardview</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)..\..;$(ProjectDir)..\openboardview</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)..\..;$(ProjectDir)..\openboardview</AdditionalIncludeDirectories>
+    </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <Font Include="asset\FiraSans-Medium.ttf" />
+    <Font Include="..\..\asset\FiraSans-Medium.ttf" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -1,62 +1,65 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClInclude Include="imgui\stb_truetype.h">
-      <Filter>imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="imgui\imconfig.h">
-      <Filter>imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="imgui\imgui.h">
-      <Filter>imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="imgui\imgui_internal.h">
-      <Filter>imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="imgui\stb_rect_pack.h">
-      <Filter>imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="imgui\stb_textedit.h">
-      <Filter>imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="imgui_impl_dx9.h">
+    <ClInclude Include="..\openboardview\imgui_impl_dx9.h">
       <Filter>win32</Filter>
     </ClInclude>
-    <ClInclude Include="BoardView.h" />
-    <ClInclude Include="BRDFile.h" />
-    <ClInclude Include="platform.h" />
-    <ClInclude Include="resource.h" />
-    <ClInclude Include="NetList.h" />
-    <ClInclude Include="Board.h" />
-    <ClInclude Include="BRDBoard.h" />
-    <ClInclude Include="PartList.h" />
-    <ClInclude Include="json11\json11.hpp" />
+    <ClInclude Include="..\openboardview\Board.h" />
+    <ClInclude Include="..\openboardview\BoardView.h" />
+    <ClInclude Include="..\openboardview\BRDBoard.h" />
+    <ClInclude Include="..\openboardview\BRDFile.h" />
+    <ClInclude Include="..\openboardview\NetList.h" />
+    <ClInclude Include="..\openboardview\PartList.h" />
+    <ClInclude Include="..\openboardview\platform.h" />
+    <ClInclude Include="..\openboardview\resource.h" />
+    <ClInclude Include="..\imgui\imconfig.h">
+      <Filter>imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\imgui\imgui.h">
+      <Filter>imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\imgui\imgui_internal.h">
+      <Filter>imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\imgui\stb_rect_pack.h">
+      <Filter>imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\imgui\stb_textedit.h">
+      <Filter>imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\imgui\stb_truetype.h">
+      <Filter>imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\json11\json11.hpp">
+      <Filter>json11</Filter>
+    </ClInclude>
+    <ClInclude Include="..\openboardview\TextureDDS.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="imgui\imgui.cpp">
-      <Filter>imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="imgui\imgui_demo.cpp">
-      <Filter>imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="imgui\imgui_draw.cpp">
-      <Filter>imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="imgui_impl_dx9.cpp">
+    <ClCompile Include="..\openboardview\imgui_impl_dx9.cpp">
       <Filter>win32</Filter>
     </ClCompile>
-    <ClCompile Include="main.cpp">
+    <ClCompile Include="..\openboardview\main_dx9.cpp">
       <Filter>win32</Filter>
     </ClCompile>
-    <ClCompile Include="platform.cpp">
+    <ClCompile Include="..\openboardview\win32.cpp">
       <Filter>win32</Filter>
     </ClCompile>
-    <ClCompile Include="BRDFile.cpp" />
-    <ClCompile Include="BoardView.cpp" />
-    <ClCompile Include="NetList.cpp" />
-    <ClCompile Include="BRDBoard.cpp" />
-    <ClCompile Include="PartList.cpp" />
-    <ClCompile Include="json11\json11.cpp" />
+    <ClCompile Include="..\openboardview\BoardView.cpp" />
+    <ClCompile Include="..\openboardview\BRDBoard.cpp" />
+    <ClCompile Include="..\openboardview\BRDFile.cpp" />
+    <ClCompile Include="..\openboardview\NetList.cpp" />
+    <ClCompile Include="..\openboardview\PartList.cpp" />
+    <ClCompile Include="..\imgui\imgui.cpp">
+      <Filter>imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\imgui\imgui_draw.cpp">
+      <Filter>imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\json11\json11.cpp">
+      <Filter>json11</Filter>
+    </ClCompile>
+    <ClCompile Include="..\openboardview\TextureDDS.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="imgui">
@@ -68,20 +71,23 @@
     <Filter Include="assets">
       <UniqueIdentifier>{b4435e3d-2332-4ff1-bb62-fbbe51cbc394}</UniqueIdentifier>
     </Filter>
+    <Filter Include="json11">
+      <UniqueIdentifier>{b7ecd7d3-056d-4ee1-88da-2194f0b6c5ca}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="asset\empty_circle.dds">
+    <Image Include="..\..\asset\brd.ico">
       <Filter>assets</Filter>
     </Image>
-    <Image Include="asset\brd.ico" />
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="OpenBoardView.rc">
+    <Image Include="..\..\asset\empty_circle.dds">
       <Filter>assets</Filter>
-    </ResourceCompile>
+    </Image>
   </ItemGroup>
   <ItemGroup>
-    <Font Include="asset\FiraSans-Medium.ttf">
+    <ResourceCompile Include="OpenBoardView.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Font Include="..\..\asset\FiraSans-Medium.ttf">
       <Filter>assets</Filter>
     </Font>
   </ItemGroup>
