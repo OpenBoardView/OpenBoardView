@@ -3,6 +3,9 @@ find_package(SDL2 REQUIRED)
 # Link with Cocoa on OS X and GTK3 on other Unix
 if(APPLE)
         find_library(COCOA_LIBRARY Cocoa)
+
+	find_package(OpenGL REQUIRED)
+	set(OPENGL_INCLUDE_DIR ${OPENGL_INCLUDE_DIR}/Headers)
 else()
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(GTK3 REQUIRED gtk+-3.0)
@@ -18,6 +21,7 @@ include_directories(
 	${CMAKE_CURRENT_SOURCE_DIR}/../gl3w/include
 	${SDL2_INCLUDE_DIR}
 	${GTK3_INCLUDE_DIRS}
+	${OPENGL_INCLUDE_DIR}
 )
 
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
