@@ -289,9 +289,9 @@ static bool ImGui_ImplDX9_CreateFontsTexture() {
 static bool ImGui_ImplDX9_CreateAssetTexture(int global_id, int asset_id) {
 	int size;
 	unsigned char *data = LoadAsset(&size, asset_id);
-	TextureDDS *texture = new TextureDDS(buf);
+	TextureDDS *texture = new TextureDDS(data);
 
-	if (!texture->glLoad()) return false;
+	if (!texture->dx9Load(g_pd3dDevice)) return false;
 	TextureIDs[global_id] = texture->get();
 	return true;
 }

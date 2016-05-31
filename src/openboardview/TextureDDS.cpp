@@ -32,7 +32,7 @@ bool TextureDDS::load() {
 }
 
 #ifdef _WIN32
-bool TextureDDS::dx9Load() {
+bool TextureDDS::dx9Load(LPDIRECT3DDEVICE9 g_pd3dDevice) {
 	if (g_pd3dDevice->CreateTexture(
 	        width, height, header->mipMapCount, D3DUSAGE_DYNAMIC, D3DFMT_DXT5, D3DPOOL_DEFAULT, &tex, NULL) < 0)
 		return false;

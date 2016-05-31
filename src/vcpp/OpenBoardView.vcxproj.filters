@@ -30,6 +30,7 @@
     <ClInclude Include="..\imgui\stb_truetype.h">
       <Filter>imgui</Filter>
     </ClInclude>
+    <ClInclude Include="..\openboardview\TextureDDS.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\openboardview\imgui_impl_dx9.cpp">
@@ -52,6 +53,7 @@
     <ClCompile Include="..\imgui\imgui_draw.cpp">
       <Filter>imgui</Filter>
     </ClCompile>
+    <ClCompile Include="..\openboardview\TextureDDS.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="imgui">
