@@ -18,6 +18,7 @@
 
 #include "resource.h"
 #include "platform.h"
+#include "TextureDDS.h"
 
 // Data
 static HWND g_hWnd = 0;
@@ -296,68 +297,13 @@ static bool ImGui_ImplDX9_CreateFontsTexture() {
 	return true;
 }
 
-typedef unsigned long u32;
-
-struct DDSPixelFormat {
-	u32 size;
-	u32 flags;
-	u32 fourCC;
-	u32 rgbBitCount;
-	u32 rBitMask;
-	u32 gBitMask;
-	u32 bBitMask;
-	u32 aBitMask;
-};
-
-struct DDSHeader {
-	u32 magic;
-	u32 size;
-	u32 flags;
-	u32 height;
-	u32 width;
-	u32 pitchOrLinearSize;
-	u32 depth;
-	u32 mipMapCount;
-	u32 reserved1[11];
-	DDSPixelFormat pf;
-	u32 caps;
-	u32 caps2;
-	u32 caps3;
-	u32 caps4;
-	u32 reserved2;
-};
-
 static bool ImGui_ImplDX9_CreateAssetTexture(int global_id, int asset_id) {
 	int size;
 	unsigned char *data = LoadAsset(&size, asset_id);
-	DDSHeader *header = (DDSHeader *)data;
+	TextureDDS *texture = new TextureDDS(buf);
 
-	LPDIRECT3DTEXTURE9 tex = NULL;
-	assert(header->pf.fourCC == D3DFMT_DXT5);
-	u32 width = header->width;
-	u32 height = header->height;
-	if (g_pd3dDevice->CreateTexture(width, height, header->mipMapCount, D3DUSAGE_DYNAMIC, D3DFMT_DXT5, D3DPOOL_DEFAULT, &tex, NULL) < 0)
-		return false;
-
-	D3DLOCKED_RECT tex_locked_rect;
-	data = data + sizeof(DDSHeader);
-	for (u32 i = 0; i < header->mipMapCount; i++) {
-		const u32 bytes_per_block = 16;
-		if (tex->LockRect(i, &tex_locked_rect, NULL, 0) != D3D_OK)
-			return false;
-		u32 num_blocks = ((width + 3) >> 2) * ((height + 3) >> 2);
-		u32 num_bytes = num_blocks * bytes_per_block;
-		memcpy(tex_locked_rect.pBits,
-			data, num_bytes);
-		tex->UnlockRect(i);
-
-		data += num_bytes;
-		width >>= 1;
-		height >>= 1;
-		if (!width) width = 1;
-		if (!height) height = 1;
-	}
-	TextureIDs[global_id] = tex;
+	if(!texture->glLoad()) return false;
+	TextureIDs[global_id] = texture->get();
 	return true;
 }
 

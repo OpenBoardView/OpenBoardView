@@ -26,6 +26,7 @@ add_executable(openboardview
 	main_opengl.cpp
 	NetList.cpp
 	PartList.cpp
+	TextureDDS.cpp
 	unix.cpp
 )
 
