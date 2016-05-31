@@ -44,7 +44,7 @@ class TextureDDS {
 public:
 	TextureDDS(unsigned char* data);
 #ifdef _WIN32
-	bool dx9Load();
+	bool dx9Load(LPDIRECT3DDEVICE9 g_pd3dDevice);
 #else
 	bool glLoad();
 #endif
@@ -56,6 +56,7 @@ private:
 	DDSHeader *header;
 #ifdef _WIN32
 	LPDIRECT3DTEXTURE9 tex = NULL;
+	D3DLOCKED_RECT tex_locked_rect;
 #else
 	GLuint textureID;
 #endif

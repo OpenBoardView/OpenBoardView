@@ -147,6 +147,7 @@
     <ClInclude Include="..\openboardview\PartList.h" />
     <ClInclude Include="..\openboardview\platform.h" />
     <ClInclude Include="..\openboardview\resource.h" />
+    <ClInclude Include="..\openboardview\TextureDDS.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\imgui\imgui.cpp" />
@@ -159,6 +160,7 @@
     <ClCompile Include="..\openboardview\main_dx9.cpp" />
     <ClCompile Include="..\openboardview\NetList.cpp" />
     <ClCompile Include="..\openboardview\PartList.cpp" />
+    <ClCompile Include="..\openboardview\TextureDDS.cpp" />
     <ClCompile Include="..\openboardview\win32.cpp" />
   </ItemGroup>
   <ItemGroup>

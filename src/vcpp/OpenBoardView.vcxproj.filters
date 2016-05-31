@@ -33,6 +33,7 @@
     <ClInclude Include="..\json11\json11.hpp">
       <Filter>json11</Filter>
     </ClInclude>
+    <ClInclude Include="..\openboardview\TextureDDS.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\openboardview\imgui_impl_dx9.cpp">
@@ -58,6 +59,7 @@
     <ClCompile Include="..\json11\json11.cpp">
       <Filter>json11</Filter>
     </ClCompile>
+    <ClCompile Include="..\openboardview\TextureDDS.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="imgui">
