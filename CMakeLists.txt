@@ -14,6 +14,8 @@ set(CPACK_BUNDLE_NAME OpenBoardView)
 set(CPACK_PACKAGE_NAME OpenBoardView)
 set(CPACK_PACKAGE_VERSION 1)
 
+# Warning with CMake 3.0 on OS X
+set(CMAKE_MACOSX_RPATH ON)
 
 set(CMAKE_MODULE_PATH 
         ${CMAKE_MODULE_PATH} 
