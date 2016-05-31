@@ -7,7 +7,10 @@
 #include <fstream>
 #include <stdint.h>
 #include <assert.h>
+
+#ifndef __APPLE__
 #include <gtk/gtk.h>
+#endif
 
 char *file_as_buffer(size_t *buffer_size, const char *utf8_filename) {
 	std::ifstream file;
@@ -29,6 +32,7 @@ char *file_as_buffer(size_t *buffer_size, const char *utf8_filename) {
 	return buf;
 }
 
+#ifndef __APPLE__
 char *show_file_picker() {
 	char *path = nullptr;
 	GtkWidget *parent, *dialog;
@@ -70,6 +74,7 @@ char *show_file_picker() {
 
 	return path;
 }
+#endif
 
 ImTextureID TextureIDs[NUM_GLOBAL_TEXTURES];
 

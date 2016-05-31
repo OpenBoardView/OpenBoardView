@@ -1,10 +1,15 @@
 find_package(SDL2 REQUIRED)
 
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(GTK3 REQUIRED gtk+-3.0)
+# Link with Cocoa on OS X and GTK3 on other Unix
+if(APPLE)
+        find_library(COCOA_LIBRARY Cocoa)
+else()
+	find_package(PkgConfig REQUIRED)
+	pkg_check_modules(GTK3 REQUIRED gtk+-3.0)
 
-link_directories(${GTK3_LIBRARY_DIRS})
-add_definitions(${GTK3_CFLAGS_OTHER})
+	link_directories(${GTK3_LIBRARY_DIRS})
+	add_definitions(${GTK3_CFLAGS_OTHER})
+endif()
 
 include_directories(
 	${CMAKE_CURRENT_SOURCE_DIR}
@@ -18,8 +23,7 @@ include_directories(
 
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
-add_executable(openboardview
-#	MACOSX_BUNDLE
+set(SOURCES
 	BoardView.cpp
 	BRDBoard.cpp
 	BRDFile.cpp
@@ -28,6 +32,17 @@ add_executable(openboardview
 	NetList.cpp
 	PartList.cpp
 	unix.cpp
+)
+
+if(APPLE)
+	set(SOURCES ${SOURCES}
+		osx.mm
+	)
+endif()
+
+add_executable(openboardview
+#	MACOSX_BUNDLE
+	${SOURCES}
 	${ASSETS}
 )
 
@@ -36,6 +51,7 @@ target_link_libraries(openboardview
 	imgui
 	gl3w
 	json11
+	${COCOA_LIBRARY}
 	${SDL2_LIBRARY}
 	${GTK3_LIBRARIES}
 )
