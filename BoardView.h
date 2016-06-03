@@ -39,16 +39,18 @@ struct BitVec {
 
 struct ColorScheme {
 	uint32_t backgroundColor = 0xa0000000;
-	uint32_t boxColor = 0xffcccccc;
 	uint32_t partTextColor = 0xff808000;
 	uint32_t boardOutline = 0xff00ffff;
 
+	uint32_t boxColor = 0xffcccccc;
+
 	uint32_t pinDefault = 0xff0000ff;
+	uint32_t pinGround = 0xff0000bb;
+    uint32_t pinNotConnected = 0xffcccccc;
+    uint32_t testPad = 0xff333333;
+
 	uint32_t pinHighlighted = 0xffffffff;
 	uint32_t pinSelected = 0xffeeeeee;
-	uint32_t pinGround = 0xff0000bb;
-
-    uint32_t testPad = 0xff333333;
 
     uint32_t annotationPartAlias = 0xcc00ffff;
 };
@@ -66,12 +68,12 @@ struct BoardView {
 	BRDFile *m_file;
 	Board *m_board;
 
-	int m_pinSelected;
-	BitVec m_pinHighlighted;
-	BitVec m_partHighlighted;
+	Pin* m_pinSelected = nullptr;
+	vector<Pin*> m_pinHighlighted;
+	vector<Component*> m_partHighlighted;
 	char m_cachedDrawList[sizeof(ImDrawList)];
 	ImVector<char> m_cachedDrawCommands;
-	std::vector<BRDNail> m_nets;
+	SharedVector<Net> m_nets;
 	char m_search[128];
 	char m_netFilter[128];
 	char *m_lastFileOpenName;
@@ -83,7 +85,7 @@ struct BoardView {
 	float m_lastWidth;
 	float m_lastHeight;
 	int m_rotation;
-	int m_side;
+	int m_current_side;
 	int m_boardWidth;
 	int m_boardHeight;
 
@@ -131,12 +133,13 @@ struct BoardView {
 	void SetTarget(float x, float y);
 
 	// Returns true if the part is shown on the currently displayed side of the board.
-	bool PartIsVisible(const BRDPart &part);
+	bool ComponentIsVisible(const Component *part);
+    bool IsVisibleScreen(float x, float y, float radius, const ImGuiIO &io);
 	// Returns true if the circle described by screen coordinates x, y, and radius is visible in the
 	// ImGuiIO screen rect.
-	bool IsVisibleScreen(float x, float y, float radius = 0.0f);
+	//bool IsVisibleScreen(float x, float y, float radius = 0.0f);
 
-	bool PartIsHighlighted(int part_idx);
+	bool PartIsHighlighted(const Component &component);
 	void SetNetFilter(const char *net);
 	void FindComponent(const char *name);
 	void SetLastFileOpenName(char *name);

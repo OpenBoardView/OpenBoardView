@@ -28,27 +28,27 @@ void PartList::Draw(const char* title, bool* p_open, Board* board) {
     ImGui::Separator();
 
     if (board) {
-        std::vector<BRDPart> parts = board->Parts();
+        auto parts = board->Components();
 
         ImGuiListClipper clipper(parts.size(), ImGui::GetTextLineHeight());
         static int selected = -1;
-        char* part_name = "";
+        string part_name = "";
         for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
-            part_name = parts[i].name;
+            part_name = parts[i]->name;
 
             char *part_annotation;
-            if (parts[i].annotation && parts[i].annotation) {
+            /*if (parts[i].annotation && parts[i].annotation) {
                 part_annotation = parts[i].annotation;
-            } else {
+            } else {*/
                 part_annotation = EMPTY_STRING;
-            }
+            //}
 
-            if (ImGui::Selectable(part_name, selected == i,
+            if (ImGui::Selectable(part_name.c_str(), selected == i,
                 ImGuiSelectableFlags_AllowDoubleClick))
             {
                 selected = i;
                 if (ImGui::IsMouseDoubleClicked(0)) {
-                    m_cbNetSelected(part_name);
+                    m_cbNetSelected(part_name.c_str());
                 }
             }
             ImGui::NextColumn();

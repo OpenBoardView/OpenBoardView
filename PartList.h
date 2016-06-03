@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Board.h"
+#include "BRDFile.h"
 
 class PartList
 {

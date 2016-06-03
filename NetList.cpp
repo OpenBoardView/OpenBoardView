@@ -28,20 +28,20 @@ void NetList::Draw(const char* title, bool* p_open, Board* board) {
 	ImGui::Separator();
 
 	if (board) {
-		std::vector<BRDNail> nails = board->UniqueNetNails();
+		auto nets = board->Nets();
 
-		ImGuiListClipper clipper(nails.size(), ImGui::GetTextLineHeight());
+		ImGuiListClipper clipper(nets.size(), ImGui::GetTextLineHeight());
 		static int selected = -1;
-		char* net_name = "";
+		string net_name = "";
         for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
-            net_name = nails[i].net;
-            if (ImGui::Selectable(net_name, selected == i,
+            net_name = nets[i]->name;
+            if (ImGui::Selectable(net_name.c_str(), selected == i,
                 ImGuiSelectableFlags_SpanAllColumns |
                 ImGuiSelectableFlags_AllowDoubleClick))
             {
                 selected = i;
                 if (ImGui::IsMouseDoubleClicked(0)) {
-                    m_cbNetSelected(net_name);
+                    m_cbNetSelected(net_name.c_str());
                 }
             }
             ImGui::NextColumn();
