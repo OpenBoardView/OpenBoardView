@@ -22,8 +22,8 @@ using namespace std::placeholders;
 #endif
 
 BoardView::~BoardView() {
-	if (m_file)
-		delete m_file;
+	delete m_file;
+    delete m_board;
 	free(m_lastFileOpenName);
 }
 
