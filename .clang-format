@@ -2,8 +2,17 @@ BasedOnStyle: LLVM
 PointerBindsToType: false
 AllowShortFunctionsOnASingleLine: false
 BreakBeforeBraces: Attach
+AlignAfterOpenBracket: DontAlign
 BreakConstructorInitializersBeforeComma: true
-IndentWidth: 4
-TabWidth: 4
-UseTab: ForIndentation
-ColumnLimit: 100
+BreakBeforeTernaryOperators: true
+
+AlignConsecutiveAssignments: true
+AlignConsecutiveDeclarations: false
+
+AlwaysBreakTemplateDeclarations: true
+
+IndentWidth: 2
+ContinuationIndentWidth: 4
+TabWidth: 2
+UseTab: Never
+ColumnLimit: 80

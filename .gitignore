@@ -17,3 +17,6 @@ imgui.ini
 *.cachefile
 *.VC.db
 *.VC.VC.opendb
+*.tags
+.idea/
+tags
