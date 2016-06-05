@@ -27,15 +27,7 @@ public:
 
 private:
     static const string kNetUnconnectedPrefix;
-
-	static bool namesEqual(BRDNail lhs, BRDNail rhs) {
-		return strcmp(lhs.net, rhs.net) == 0 ? true : false;
-	}
-
-	static bool cmpAlphabetically(BRDNail lhs, BRDNail rhs) {
-		return char_traits<char>::
-			compare(lhs.net, rhs.net, kBoardElementNameLength) < 0 ? true : false;
-	}
+    static const string kComponentDummyName;
 
     // Reading annotations for this board from json file.
     bool FetchPartAnnotations();

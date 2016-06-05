@@ -18,6 +18,7 @@ using namespace std::placeholders;
 using namespace json11;
 
 const string BRDBoard::kNetUnconnectedPrefix = "UNCONNECTED";
+const string BRDBoard::kComponentDummyName = "...";
 
 BRDBoard::BRDBoard(const BRDFile* const boardFile) 
 	: m_file(boardFile)
@@ -81,6 +82,10 @@ BRDBoard::BRDBoard(const BRDFile* const boardFile)
 
             comp->name = string(brd_part.name);
 
+            // is it some dummy component to indicate test pads?
+            if (is_prefix(kComponentDummyName, comp->name))
+                comp->component_type = Component::kComponentTypeDummy;
+
             // check what side the board is on (sorcery?)
             if (brd_part.type < 8 && brd_part.type >= 4) {
                 comp->board_side = kBoardSideTop;
@@ -101,6 +106,11 @@ BRDBoard::BRDBoard(const BRDFile* const boardFile)
 
     // Populate pins
     {
+        // generate dummy component as reference
+        auto comp_dummy = make_shared<Component>();
+        comp_dummy->name = kComponentDummyName;
+        comp_dummy->component_type = Component::kComponentTypeDummy;
+
         // NOTE: originally the pin diameter depended on part.name[0] == 'U' ?
         int pin_idx = 0;
         int part_idx = 1;
@@ -115,9 +125,18 @@ BRDBoard::BRDBoard(const BRDFile* const boardFile)
 
             auto pin = make_shared<Pin>();
 
-            // get component and add reference in component to pin
-            pin->component = comp;
-            comp->pins.push_back(pin.get());
+            if (comp->is_dummy()) {
+                // component is virtual, i.e. "...", pin is test pad
+                pin->type = Pin::kPinTypeTestPad;
+                pin->component = comp_dummy.get();
+                comp_dummy->pins.push_back(pin.get());
+            }
+            else {
+                // component is regular / not virtual
+                pin->type = Pin::kPinTypeComponent;
+                pin->component = comp;
+                comp->pins.push_back(pin.get());
+            }
 
             // determine pin number on part
             ++pin_idx;
@@ -167,12 +186,29 @@ BRDBoard::BRDBoard(const BRDFile* const boardFile)
 
             pins_.push_back(pin);
         }
+
+        // remove all dummy components from vector, add our official dummy
+        components_.erase(
+            remove_if(begin(components_), end(components_), 
+                [](shared_ptr<Component>& comp)
+                {
+                    return comp->is_dummy();
+                }),
+            end(components_));
+
+        components_.push_back(comp_dummy);
     }
 
     // Populate Net vector by using the map. (sorted by keys)
     for (auto& net : net_map) {
         nets_.push_back(net.second);
     }
+
+    // Sort components by name
+    sort(begin(components_), end(components_), 
+        [](shared_ptr<Component>& lhs, shared_ptr<Component>& rhs) {
+            return lhs->name < rhs->name;
+        });
 }
 
 BRDBoard::~BRDBoard()

@@ -100,18 +100,20 @@ void BoardView::Update() {
 			if (ImGui::IsItemHovered() || (ImGui::IsRootWindowOrAnyChildFocused() &&
 			                               !ImGui::IsAnyItemActive() && !ImGui::IsMouseClicked(0)))
 				ImGui::SetKeyboardFocusHere(-1);
-			int buttons_left = 10;
 
+			int buttons_left = 10;
             for (auto& net : m_nets) {
-                if (utf8casestr(net->name.c_str(), m_search)) {
-                    if (ImGui::Button(net->name.c_str())) {
-                        SetNetFilter(net->name.c_str());
-                        ImGui::CloseCurrentPopup();
+                if (buttons_left > 0) {
+                    if (utf8casestr(net->name.c_str(), m_search)) {
+                        if (ImGui::Button(net->name.c_str())) {
+                            SetNetFilter(net->name.c_str());
+                            ImGui::CloseCurrentPopup();
+                        }
+                        if (buttons_left == 10) {
+                            first_button = net->name.c_str();
+                        }
+                        buttons_left--;
                     }
-                    if (buttons_left == 10) {
-                        first_button = net->name.c_str();
-                    }
-                    buttons_left--;
                 }
             }
             
@@ -267,7 +269,7 @@ void BoardView::Update() {
         auto pin = m_pinSelected;
 		ImGui::Text("Part: %s   Pin: %d   Net: %s   Probe: %d   (%s.)", 
             pin->component->name.c_str(), pin->number, pin->net->name.c_str(), pin->net->number, 
-            (pin->component->mount_type == Component::kMountTypeSMD) ? "SMD" : "DIP");
+            pin->component->mount_type_str().c_str());
 	}
 	ImGui::End();
 	ImGui::PopStyleVar();
@@ -404,7 +406,7 @@ inline void BoardView::DrawOutline(ImDrawList * draw) {
 }
 
 inline void BoardView::DrawPins(ImDrawList * draw) {
-	//ImTextureID filled_circle_tex = TextureIDs[0];
+	ImTextureID filled_circle_tex = TextureIDs[0];
 	ImTextureID empty_circle_tex = TextureIDs[1];
     
     // TODO: use pin->diameter
@@ -413,81 +415,87 @@ inline void BoardView::DrawPins(ImDrawList * draw) {
     auto io = ImGui::GetIO();
 
 	for (auto& pin : m_board->Pins()) {
-        uint32_t color = m_colors.pinDefault;
-        uint32_t text_color = color;
-
         auto p_pin = pin.get();
 
-        if (!ComponentIsVisible(pin->component)) 
-            continue;
-
+        // continue if pin is not visible anyway
 		ImVec2 pos = CoordToScreen(pin->position.x, pin->position.y);
-		if (!IsVisibleScreen(pos.x, pos.y, psz, io))
-			continue;
+        {
+            if (!ComponentIsVisible(pin->component)) 
+                continue;
 
+		    if (!IsVisibleScreen(pos.x, pos.y, psz, io))
+			    continue;
+        }
+
+        // color & text depending on app state & pin type
+        auto pin_texture = empty_circle_tex;
+        uint32_t color = m_colors.pinDefault;
+        uint32_t text_color = color;
 		bool show_text = false;
-		if (element_in_collection(*pin, m_pinHighlighted)) {
-			text_color = color = m_colors.pinHighlighted;
-			show_text = true;
-		}
-		
-        if (!pin->net || pin->type == Pin::kPinTypeNotConnected) {
-            color = m_colors.pinNotConnected;
+        {
+            if (contains(*pin, m_pinHighlighted)) {
+                text_color = color = m_colors.pinHighlighted;
+                show_text = true;
+            }
+
+            if (!pin->net || pin->type == Pin::kPinTypeNotConnected) {
+                color = m_colors.pinNotConnected;
+            }
+            else {
+                if (pin->net->is_ground)
+                    color = m_colors.pinGround;
+            }
+
+            if (PartIsHighlighted(*pin->component)) {
+                if (!show_text) {
+                    color = 0xffff8000;
+                    text_color = 0xff808000;
+                }
+                show_text = true;
+            }
+
+            if (pin->type == Pin::kPinTypeTestPad) {
+                color = m_colors.pinTestPad;
+                //pin_texture = filled_circle_tex; // TODO
+                show_text = false;
+            }
+
+            // pin is on the same net as selected pin: highlight > rest
+            if (!show_text && m_pinSelected && pin->net == m_pinSelected->net) {
+                color = m_colors.pinHighlightSameNet;
+            }
+
+            // pin selected overwrites everything
+            if (p_pin == m_pinSelected) {
+                text_color = color = m_colors.pinSelected;
+                show_text = true;
+            }
+
+            // don't show text if it doesn't make sense
+            if (pin->component->pins.size() <= 1
+                || pin->type == Pin::kPinTypeTestPad)
+                show_text = false;
         }
-        else {
-            if (pin->net->is_ground)
-                color = m_colors.pinGround;
+
+        {
+            char pin_number[64];
+            draw->ChannelsSetCurrent(kChannelImages);
+            draw->AddImage(pin_texture, ImVec2(pos.x - psz, pos.y - psz),
+                ImVec2(pos.x + psz, pos.y + psz), ImVec2(0, 0), ImVec2(1, 1), color);
+            if (show_text) {
+                sprintf(pin_number, "%d", pin->number);
+
+                ImVec2 text_size = ImGui::CalcTextSize(pin_number);
+                ImVec2 pos_adj = ImVec2(pos.x - text_size.x * 0.5f, pos.y - text_size.y * 0.5f);
+                draw->ChannelsSetCurrent(kChannelPolylines);
+                draw->AddRectFilled(
+                    ImVec2(pos_adj.x - 2.0f, pos_adj.y - 1.0f),
+                    ImVec2(pos_adj.x + text_size.x + 2.0f, pos_adj.y + text_size.y + 1.0f),
+                    m_colors.backgroundColor, 3.0f);
+                draw->ChannelsSetCurrent(kChannelText);
+                draw->AddText(pos_adj, text_color, pin_number);
+            }
         }
-
-		if (p_pin == m_pinSelected) {
-			text_color = color = m_colors.pinSelected;
-			show_text = true;
-		}
-
-		if (PartIsHighlighted(*pin->component)) {
-			if (!show_text) {
-				color = 0xffff8000;
-				text_color = 0xff808000;
-			}
-			show_text = true;
-		}
-
-        // FIXME: figure this out, show no text if there's only one pin?
-        /*
-		int pins_on_part;
-		if (pin.component == 1) {
-			pins_on_part = pin.component->pins.size();
-		}
-		else {
-			pins_on_part = pin.component->pins.size() - parts[pin.component - 2].end_of_pins;
-		}
-		if (!show_text && selected_pin && !strcmp(selected_pin->net, pin.net)) {
-			color = 0xff99f8ff;
-		}
-        */
-
-		/*
-        if (pins_on_part == 1)
-			show_text = false;
-        */
-
-        char pin_number[64];
-
-		draw->ChannelsSetCurrent(kChannelImages);
-		draw->AddImage(empty_circle_tex, ImVec2(pos.x - psz, pos.y - psz),
-			ImVec2(pos.x + psz, pos.y + psz), ImVec2(0, 0), ImVec2(1, 1), color);
-		if (show_text) {
-			sprintf(pin_number, "%d", pin->number);
-			ImVec2 text_size = ImGui::CalcTextSize(pin_number);
-			ImVec2 pos_adj = ImVec2(pos.x - text_size.x * 0.5f, pos.y - text_size.y * 0.5f);
-			draw->ChannelsSetCurrent(kChannelPolylines);
-			draw->AddRectFilled(
-				ImVec2(pos_adj.x - 2.0f, pos_adj.y - 1.0f),
-				ImVec2(pos_adj.x + text_size.x + 2.0f, pos_adj.y + text_size.y + 1.0f),
-				m_colors.backgroundColor, 3.0f);
-			draw->ChannelsSetCurrent(kChannelText);
-			draw->AddText(pos_adj, text_color, pin_number);
-		}
 	}
 }
 
@@ -497,15 +505,20 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 	for (auto& part : m_board->Components()) {
         auto p_part = part.get();
 
-		if (!ComponentIsVisible(p_part))
-			continue;
+        {
+		    if (!ComponentIsVisible(p_part))
+			    continue;
+
+            if (part->is_dummy())
+                continue;
+        }
 
         // scale box around pins
         float min_x = part->pins[0]->position.x;
         float min_y = part->pins[0]->position.y;
         float max_x = min_x;
         float max_y = min_y;
-        for (auto& pin : part->pins) {
+        for (auto pin : part->pins) {
             if (pin->position.x > max_x)
                 max_x = pin->position.x;
             else if (pin->position.x < min_x)
@@ -516,7 +529,7 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
                 min_y = pin->position.y;
         }
 
-        // TODO: pin radius may be different on each pin
+        // TODO: pin radius is stored in Pin object
 		float pin_radius = m_pinDiameter / 2.0f;
 		min_x -= pin_radius;
 		max_x += pin_radius;
@@ -536,19 +549,12 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 		}
 
 		uint32_t color = m_colors.boxColor;
-        // TODO: export to BRDBoard
-		bool is_test_pad = false;
-		if (part->name == "...") {
-			color = m_colors.testPad;
-			is_test_pad = true;
-		}
-
-		ImVec2 min = CoordToScreen((float)min_x, (float)min_y);
-		ImVec2 max = CoordToScreen((float)max_x, (float)max_y);
+		ImVec2 min = CoordToScreen(min_x, min_y);
+		ImVec2 max = CoordToScreen(max_x, max_y);
 		min.x -= 0.5f;
 		max.x += 0.5f;
 		draw->AddRect(min, max, color);
-		if (PartIsHighlighted(*part) && !is_test_pad && !part->name.empty()) {
+		if (PartIsHighlighted(*part) && !part->is_dummy() && !part->name.empty()) {
 			ImVec2 text_size = ImGui::CalcTextSize(part->name.c_str());
 			float top_y = min.y;
 			if (max.y < top_y)
@@ -760,7 +766,7 @@ inline bool BoardView::IsVisibleScreen(float x, float y, float radius, const ImG
 }
 
 bool BoardView::PartIsHighlighted(const Component &component) {
-	bool highlighted = element_in_collection(component, m_partHighlighted);
+	bool highlighted = contains(component, m_partHighlighted);
 
     // is any pin of this part selected?
     if (m_pinSelected)
@@ -785,10 +791,11 @@ void BoardView::SetNetFilter(const char *net) {
 
         for (auto& net : m_board->Nets()) {
             if (is_prefix(net_name, net->name)) {
-                for (auto& pin : net->pins) {
+                for (auto pin : net->pins) {
                     any_visible |= ComponentIsVisible(pin->component);
                     m_pinHighlighted.push_back(pin);
-                    if (!element_in_collection(*pin->component, m_partHighlighted)) {
+                    // highlighting all components that belong to this net
+                    if (!contains(*pin->component, m_partHighlighted)) {
                         m_partHighlighted.push_back(pin->component);
                     }
                 }

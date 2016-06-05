@@ -52,7 +52,12 @@ inline static bool is_prefix(string prefix, string base) {
 }
 
 template <class T>
-inline static bool element_in_collection(const T &element, vector<T*> &v) {
+inline static bool contains(const T &element, vector<T*> &v) {
+    return find(begin(v), end(v), &element) != end(v);
+}
+
+template <class T>
+inline static bool contains(T &element, vector<T*> &v) {
     return find(begin(v), end(v), &element) != end(v);
 }
 
@@ -84,6 +89,14 @@ struct Net : BoardElement {
 
     vector<Pin*> pins;
 
+    bool operator < (const Net& rhs) const {
+        return (this->name < rhs.name);
+    }
+
+    bool operator > (const Net& rhs) const {
+        return (this->name > rhs.name);
+    }
+
     string UniqueId() const {
         return kBoardNetPrefix + name;
     }
@@ -97,7 +110,7 @@ struct Pin : BoardElement {
         kPinTypeNotConnected,
         kPinTypeComponent,
         kPinTypeVia,
-        kPinTypeTestPoint,
+        kPinTypeTestPad,
     };
 
     // Type of Contact, e.g. pin, via, probe/test point.
@@ -133,6 +146,7 @@ struct Component : BoardElement {
 
     enum EComponentType {
         kComponentTypeUnknown = 0,
+        kComponentTypeDummy,
         kComponentTypeConnector,
         kComponentTypeIC,
         kComponentTypeJellyBean
@@ -142,7 +156,6 @@ struct Component : BoardElement {
     EMountType mount_type = kMountTypeUnknown;
 
     // Type of component, eg. resistor, cap, etc.
-    // TODO: export to annotations
     EComponentType component_type = kComponentTypeUnknown;
 
     // Part name as stored in board file.
@@ -150,10 +163,36 @@ struct Component : BoardElement {
 
     // Pins belonging to this component.
     vector<Pin*> pins;
+
+    // Mount type as readable string.
+    string mount_type_str() {
+        switch (mount_type)
+        {   
+        case Component::kMountTypeSMD:
+            return "SMD";
+        case Component::kMountTypeDIP:
+            return "DIP";
+        default:
+            return "UNKNOWN";
+        }
+    }
+
+    // true if component is not representing a real/physical component.
+    bool is_dummy() {
+        return component_type == kComponentTypeDummy;
+    }
+
+    bool operator < (const Component& rhs) const {
+        return (this->name < rhs.name);
+    }
+
+    bool operator > (const Component& rhs) const {
+        return (this->name > rhs.name);
+    }
     
     string UniqueId() const {
         return kBoardComponentPrefix + name;
-    };
+    }
 };
 
 class Board

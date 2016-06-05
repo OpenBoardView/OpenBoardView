@@ -46,11 +46,12 @@ struct ColorScheme {
 
 	uint32_t pinDefault = 0xff0000ff;
 	uint32_t pinGround = 0xff0000bb;
-    uint32_t pinNotConnected = 0xffcccccc;
-    uint32_t testPad = 0xff333333;
+    uint32_t pinNotConnected = 0xffff0000;
+    uint32_t pinTestPad = 0xff888888;
 
-	uint32_t pinHighlighted = 0xffffffff;
 	uint32_t pinSelected = 0xffeeeeee;
+	uint32_t pinHighlighted = 0xffffffff;
+    uint32_t pinHighlightSameNet = 0xff99f8ff;
 
     uint32_t annotationPartAlias = 0xcc00ffff;
 };
