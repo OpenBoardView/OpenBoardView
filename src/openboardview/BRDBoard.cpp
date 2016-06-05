@@ -1,7 +1,7 @@
 #include "BRDFile.h"
 
 #include "BRDBoard.h"
-#include "json11\json11.hpp"
+#include "json11/json11.hpp"
 #include "platform.h"
 
 #include <algorithm>

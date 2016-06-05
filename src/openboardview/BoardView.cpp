@@ -3,6 +3,7 @@
 #include <math.h>
 #include <memory>
 #include <stdio.h>
+#include <iostream>
 
 #include "BRDBoard.h"
 #include "BRDFile.h"
@@ -19,6 +20,10 @@ using namespace std::placeholders;
 
 #if _MSC_VER
 #define stricmp _stricmp
+#endif
+
+#ifndef _WIN32
+#define stricmp strcasecmp
 #endif
 
 BoardView::~BoardView() {

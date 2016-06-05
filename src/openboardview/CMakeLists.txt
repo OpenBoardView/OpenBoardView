@@ -1,0 +1,67 @@
+find_package(SDL2 REQUIRED)
+
+# Link with Cocoa on OS X and GTK3 on other Unix
+if(APPLE)
+        find_library(COCOA_LIBRARY Cocoa)
+
+	find_package(OpenGL REQUIRED)
+	set(OPENGL_INCLUDE_DIR ${OPENGL_INCLUDE_DIR}/Headers)
+else()
+	find_package(PkgConfig REQUIRED)
+	pkg_check_modules(GTK3 REQUIRED gtk+-3.0)
+
+	link_directories(${GTK3_LIBRARY_DIRS})
+	add_definitions(${GTK3_CFLAGS_OTHER})
+endif()
+
+include_directories(
+	${CMAKE_CURRENT_SOURCE_DIR}
+	${CMAKE_CURRENT_SOURCE_DIR}/..
+	${CMAKE_CURRENT_SOURCE_DIR}/../imgui
+	${CMAKE_CURRENT_SOURCE_DIR}/../json11
+	${CMAKE_CURRENT_SOURCE_DIR}/../gl3w/include
+	${SDL2_INCLUDE_DIR}
+	${GTK3_INCLUDE_DIRS}
+	${OPENGL_INCLUDE_DIR}
+)
+
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+
+set(SOURCES
+	BoardView.cpp
+	BRDBoard.cpp
+	BRDFile.cpp
+	imgui_impl_sdl_gl3.cpp
+	main_opengl.cpp
+	NetList.cpp
+	PartList.cpp
+	TextureDDS.cpp
+	unix.cpp
+)
+
+if(APPLE)
+	set(SOURCES ${SOURCES}
+		osx.mm
+	)
+endif()
+
+add_executable(openboardview
+#	MACOSX_BUNDLE
+	${SOURCES}
+	${ASSETS}
+)
+
+target_link_libraries(openboardview
+	dl
+	imgui
+	gl3w
+	json11
+	${COCOA_LIBRARY}
+	${SDL2_LIBRARY}
+	${GTK3_LIBRARIES}
+)
+
+install(TARGETS
+	openboardview
+	RUNTIME DESTINATION ${INSTALL_RUNTIME_DIR}
+	BUNDLE DESTINATION ${INSTALL_BUNDLE_DIR})
