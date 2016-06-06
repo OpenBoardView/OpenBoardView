@@ -4,9 +4,14 @@ set(CMAKE_INSTALL_PREFIX ${PROJECT_SOURCE_DIR})
 
 cmake_minimum_required(VERSION 2.6.2)
 
-set(INSTALL_LIBRARY_DIR lib)
-set(INSTALL_ARCHIVE_DIR lib)
 set(INSTALL_RUNTIME_DIR bin)
+if (MINGW)
+    # just put libs in the same directory as the .exe
+    set(INSTALL_LIBRARY_DIR ${INSTALL_RUNTIME_DIR})
+else ()
+    set(INSTALL_LIBRARY_DIR lib)
+endif()
+set(INSTALL_ARCHIVE_DIR lib)
 set(INSTALL_ASSET_DIR asset)
 set(INSTALL_BUNDLE_DIR .)
 

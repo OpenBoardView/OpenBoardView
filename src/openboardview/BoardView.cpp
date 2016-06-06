@@ -1,4 +1,6 @@
 #define _CRT_SECURE_NO_WARNINGS 1
+#include "BoardView.h"
+
 #include <algorithm>
 #include <math.h>
 #include <memory>
@@ -7,7 +9,6 @@
 
 #include "BRDBoard.h"
 #include "BRDFile.h"
-#include "BoardView.h"
 #include "imgui/imgui.h"
 
 #include "NetList.h"
@@ -421,7 +422,7 @@ void BoardView::RenderOverlay() {
 inline void BoardView::DrawOutline(ImDrawList *draw) {
   auto &outline = m_board->OutlinePoints();
 
-  for (int i = 0; i < outline.size() - 1; i++) {
+  for (size_t i = 0; i < outline.size() - 1; i++) {
     Point &pa = *outline[i];
     Point &pb = *outline[i + 1];
     if (pa.x == pb.x && pa.y == pb.y)
@@ -673,6 +674,8 @@ void BoardView::SetFile(BRDFile *file) {
       max_y = pa.y;
   }
 
+  ImVec2 view = ImGui::GetIO().DisplaySize;
+
   m_mx = (float)(min_x + max_x) / 2.0f;
   m_my = (float)(min_y + max_y) / 2.0f;
 
@@ -681,7 +684,6 @@ void BoardView::SetFile(BRDFile *file) {
   float sx = dx > 0 ? view.x / dx : 1.0f;
   float sy = dy > 0 ? view.y / dy : 1.0f;
 
-  ImVec2 view   = ImGui::GetIO().DisplaySize;
   m_scale       = sx < sy ? sx : sy;
   m_boardWidth  = max_x - min_x;
   m_boardHeight = max_y - min_y;
@@ -822,7 +824,6 @@ void BoardView::SetNetFilter(const char *net) {
 
   if (!net_name.empty()) {
     bool any_visible = false;
-    int count        = 0;
 
     for (auto &net : m_board->Nets()) {
       if (is_prefix(net_name, net->name)) {

@@ -208,7 +208,9 @@ static bool ImGui_ImplSdlGL3_CreateAssetTexture(int global_id, const char* filen
     unsigned char *buf = (unsigned char*)file_as_buffer(&size, filename);
     TextureDDS *texture = new TextureDDS(buf);
 
+#ifndef _WIN32
     if(!texture->glLoad()) return false;
+#endif
     TextureIDs[global_id] = texture->get();
 
     free(buf);
