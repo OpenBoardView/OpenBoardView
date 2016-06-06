@@ -127,7 +127,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Board.h" />
     <ClInclude Include="BoardView.h" />
+    <ClInclude Include="BRDBoard.h" />
     <ClInclude Include="BRDFile.h" />
     <ClInclude Include="imgui\imconfig.h" />
     <ClInclude Include="imgui\imgui.h" />
@@ -136,17 +138,22 @@
     <ClInclude Include="imgui\stb_textedit.h" />
     <ClInclude Include="imgui\stb_truetype.h" />
     <ClInclude Include="imgui_impl_dx9.h" />
+    <ClInclude Include="NetList.h" />
+    <ClInclude Include="PartList.h" />
     <ClInclude Include="platform.h" />
     <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BoardView.cpp" />
+    <ClCompile Include="BRDBoard.cpp" />
     <ClCompile Include="BRDFile.cpp" />
     <ClCompile Include="imgui\imgui.cpp" />
     <ClCompile Include="imgui\imgui_demo.cpp" />
     <ClCompile Include="imgui\imgui_draw.cpp" />
     <ClCompile Include="imgui_impl_dx9.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="NetList.cpp" />
+    <ClCompile Include="PartList.cpp" />
     <ClCompile Include="platform.cpp" />
   </ItemGroup>
   <ItemGroup>
