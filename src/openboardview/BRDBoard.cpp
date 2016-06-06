@@ -1,7 +1,6 @@
-#include "BRDFile.h"
+#include "BRDBoard.h"
 
 #include "platform.h"
-#include "BRDBoard.h"
 
 #include <algorithm>
 #include <cerrno>
@@ -112,11 +111,10 @@ BRDBoard::BRDBoard(const BRDFile *const boardFile)
 		auto pins    = m_pins;
 		auto parts   = m_parts;
 
-		for (int i = 0; i < pins.size(); i++) {
+		for (size_t i = 0; i < pins.size(); i++) {
 			// (originally from BoardView::DrawPins)
-			const BRDPin &brd_pin   = pins[i];
-			const BRDPart &brd_part = parts[brd_pin.part - 1];
-			Component *comp         = components_[brd_pin.part - 1].get();
+			const BRDPin &brd_pin = pins[i];
+			Component *comp       = components_[brd_pin.part - 1].get();
 
 			auto pin = make_shared<Pin>();
 

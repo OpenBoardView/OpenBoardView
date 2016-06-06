@@ -404,7 +404,7 @@ void BoardView::RenderOverlay() {
 inline void BoardView::DrawOutline(ImDrawList *draw) {
 	auto &outline = m_board->OutlinePoints();
 
-	for (int i = 0; i < outline.size() - 1; i++) {
+	for (size_t i = 0; i < outline.size() - 1; i++) {
 		Point &pa = *outline[i];
 		Point &pb = *outline[i + 1];
 		if (pa.x == pb.x && pa.y == pb.y) continue;
@@ -768,7 +768,6 @@ void BoardView::SetNetFilter(const char *net) {
 
 	if (!net_name.empty()) {
 		bool any_visible = false;
-		int count        = 0;
 
 		for (auto &net : m_board->Nets()) {
 			if (is_prefix(net_name, net->name)) {

@@ -1,9 +1,8 @@
 find_package(SDL2 REQUIRED)
 
-# Link with Cocoa on OS X and GTK3 on other Unix
+# Link with Cocoa on OS X and GTK3 on other Unix (or MinGW)
 if(APPLE)
         find_library(COCOA_LIBRARY Cocoa)
-
 	find_package(OpenGL REQUIRED)
 	set(OPENGL_INCLUDE_DIR ${OPENGL_INCLUDE_DIR}/Headers)
 else()
@@ -25,6 +24,10 @@ include_directories(
 )
 
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+if(MINGW)
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DUNICODE -D_UNICODE")
+endif()
+
 
 set(SOURCES
 	BoardView.cpp
@@ -35,12 +38,18 @@ set(SOURCES
 	NetList.cpp
 	PartList.cpp
 	TextureDDS.cpp
-	unix.cpp
 )
 
 if(APPLE)
 	set(SOURCES ${SOURCES}
 		osx.mm
+		unix.cpp
+	)
+endif()
+
+if (MINGW)
+	set(SOURCES ${SOURCES}
+		win32.cpp
 	)
 endif()
 
@@ -63,3 +72,13 @@ install(TARGETS
 	openboardview
 	RUNTIME DESTINATION ${INSTALL_RUNTIME_DIR}
 	BUNDLE DESTINATION ${INSTALL_BUNDLE_DIR})
+
+if (MINGW)
+	install(DIRECTORY ${PROJECT_SOURCE_DIR}/${INSTALL_ASSET_DIR} DESTINATION ${INSTALL_RUNTIME_DIR})
+endif ()
+
+
+add_custom_target(install_obv
+	${CMAKE_MAKE_PROGRAM} install
+	DEPENDS openboardview
+	COMMENT "Installing ${PROJECT_NAME}")
