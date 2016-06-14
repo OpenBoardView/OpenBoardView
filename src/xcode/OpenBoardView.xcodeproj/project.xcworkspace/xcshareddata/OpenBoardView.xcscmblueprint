@@ -1,0 +1,30 @@
+{
+  "DVTSourceControlWorkspaceBlueprintPrimaryRemoteRepositoryKey" : "67A9FCB5E019D9B2C64B369FC8E0D3EFAB25399F",
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyRepositoryLocationsKey" : {
+
+  },
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyStatesKey" : {
+    "67A9FCB5E019D9B2C64B369FC8E0D3EFAB25399F" : 0,
+    "B08156DDD97AB15A5D356D4D56FBF652F9A3C89E" : 0
+  },
+  "DVTSourceControlWorkspaceBlueprintIdentifierKey" : "B4462D07-E687-4F6D-8DE2-84DAA904CE3C",
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyPathsKey" : {
+    "67A9FCB5E019D9B2C64B369FC8E0D3EFAB25399F" : "OpenBoardView\/",
+    "B08156DDD97AB15A5D356D4D56FBF652F9A3C89E" : "OpenBoardView\/src\/json11\/"
+  },
+  "DVTSourceControlWorkspaceBlueprintNameKey" : "OpenBoardView",
+  "DVTSourceControlWorkspaceBlueprintVersion" : 204,
+  "DVTSourceControlWorkspaceBlueprintRelativePathToProjectKey" : "src\/xcode\/OpenBoardView.xcodeproj",
+  "DVTSourceControlWorkspaceBlueprintRemoteRepositoriesKey" : [
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/piernov\/OpenBoardView",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "67A9FCB5E019D9B2C64B369FC8E0D3EFAB25399F"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/dropbox\/json11.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "B08156DDD97AB15A5D356D4D56FBF652F9A3C89E"
+    }
+  ]
+}

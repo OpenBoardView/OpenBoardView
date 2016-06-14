@@ -1,0 +1,451 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		1FD7C7DD1D09D2B800B7D3D6 /* SDL2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FD7C7DC1D09D2B800B7D3D6 /* SDL2.framework */; };
+		1FD7C7DE1D09D3BA00B7D3D6 /* SDL2.framework in Resources */ = {isa = PBXBuildFile; fileRef = 1FD7C7DC1D09D2B800B7D3D6 /* SDL2.framework */; };
+		1FD7C7F51D09D42B00B7D3D6 /* BoardView.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1FD7C7E21D09D42B00B7D3D6 /* BoardView.cpp */; };
+		1FD7C7F61D09D42B00B7D3D6 /* BRDBoard.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1FD7C7E41D09D42B00B7D3D6 /* BRDBoard.cpp */; };
+		1FD7C7F71D09D42B00B7D3D6 /* BRDFile.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1FD7C7E61D09D42B00B7D3D6 /* BRDFile.cpp */; };
+		1FD7C7F81D09D42B00B7D3D6 /* imgui_impl_sdl_gl3.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1FD7C7E81D09D42B00B7D3D6 /* imgui_impl_sdl_gl3.cpp */; };
+		1FD7C7F91D09D42B00B7D3D6 /* main_opengl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1FD7C7EA1D09D42B00B7D3D6 /* main_opengl.cpp */; };
+		1FD7C7FA1D09D42B00B7D3D6 /* NetList.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1FD7C7EB1D09D42B00B7D3D6 /* NetList.cpp */; };
+		1FD7C7FB1D09D42B00B7D3D6 /* osx.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1FD7C7ED1D09D42B00B7D3D6 /* osx.mm */; };
+		1FD7C7FC1D09D42B00B7D3D6 /* PartList.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1FD7C7EE1D09D42B00B7D3D6 /* PartList.cpp */; };
+		1FD7C7FD1D09D42B00B7D3D6 /* TextureDDS.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1FD7C7F21D09D42B00B7D3D6 /* TextureDDS.cpp */; };
+		1FD7C7FE1D09D42B00B7D3D6 /* unix.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1FD7C7F41D09D42B00B7D3D6 /* unix.cpp */; };
+		1FD7C80B1D09D46000B7D3D6 /* imgui_draw.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1FD7C8041D09D46000B7D3D6 /* imgui_draw.cpp */; };
+		1FD7C80C1D09D46000B7D3D6 /* imgui.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1FD7C8061D09D46000B7D3D6 /* imgui.cpp */; };
+		1FD7C8111D09D47700B7D3D6 /* gl3w.c in Sources */ = {isa = PBXBuildFile; fileRef = 1FD7C8101D09D47700B7D3D6 /* gl3w.c */; };
+		1FD7C8191D09D4B300B7D3D6 /* json11.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1FD7C8171D09D4B300B7D3D6 /* json11.cpp */; };
+		1FD7C81E1D09D6CB00B7D3D6 /* FiraSans-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 1FD7C81D1D09D6CB00B7D3D6 /* FiraSans-Medium.ttf */; };
+		1FD7C8201D09DDF800B7D3D6 /* empty_circle.dds in Resources */ = {isa = PBXBuildFile; fileRef = 1FD7C81F1D09DDF800B7D3D6 /* empty_circle.dds */; };
+		1FD7D42C1D09D07C0092E863 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FD7D42B1D09D07C0092E863 /* Cocoa.framework */; };
+		1FD7D42E1D09D0940092E863 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FD7D42D1D09D0940092E863 /* OpenGL.framework */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		1FD7C7DC1D09D2B800B7D3D6 /* SDL2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL2.framework; path = ../../../../../../Library/Frameworks/SDL2.framework; sourceTree = "<group>"; };
+		1FD7C7E11D09D42B00B7D3D6 /* Board.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Board.h; path = ../../openboardview/Board.h; sourceTree = "<group>"; };
+		1FD7C7E21D09D42B00B7D3D6 /* BoardView.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = BoardView.cpp; path = ../../openboardview/BoardView.cpp; sourceTree = "<group>"; };
+		1FD7C7E31D09D42B00B7D3D6 /* BoardView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BoardView.h; path = ../../openboardview/BoardView.h; sourceTree = "<group>"; };
+		1FD7C7E41D09D42B00B7D3D6 /* BRDBoard.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = BRDBoard.cpp; path = ../../openboardview/BRDBoard.cpp; sourceTree = "<group>"; };
+		1FD7C7E51D09D42B00B7D3D6 /* BRDBoard.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BRDBoard.h; path = ../../openboardview/BRDBoard.h; sourceTree = "<group>"; };
+		1FD7C7E61D09D42B00B7D3D6 /* BRDFile.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = BRDFile.cpp; path = ../../openboardview/BRDFile.cpp; sourceTree = "<group>"; };
+		1FD7C7E71D09D42B00B7D3D6 /* BRDFile.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BRDFile.h; path = ../../openboardview/BRDFile.h; sourceTree = "<group>"; };
+		1FD7C7E81D09D42B00B7D3D6 /* imgui_impl_sdl_gl3.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = imgui_impl_sdl_gl3.cpp; path = ../../openboardview/imgui_impl_sdl_gl3.cpp; sourceTree = "<group>"; };
+		1FD7C7E91D09D42B00B7D3D6 /* imgui_impl_sdl_gl3.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = imgui_impl_sdl_gl3.h; path = ../../openboardview/imgui_impl_sdl_gl3.h; sourceTree = "<group>"; };
+		1FD7C7EA1D09D42B00B7D3D6 /* main_opengl.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = main_opengl.cpp; path = ../../openboardview/main_opengl.cpp; sourceTree = "<group>"; };
+		1FD7C7EB1D09D42B00B7D3D6 /* NetList.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = NetList.cpp; path = ../../openboardview/NetList.cpp; sourceTree = "<group>"; };
+		1FD7C7EC1D09D42B00B7D3D6 /* NetList.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = NetList.h; path = ../../openboardview/NetList.h; sourceTree = "<group>"; };
+		1FD7C7ED1D09D42B00B7D3D6 /* osx.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = osx.mm; path = ../../openboardview/osx.mm; sourceTree = "<group>"; };
+		1FD7C7EE1D09D42B00B7D3D6 /* PartList.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PartList.cpp; path = ../../openboardview/PartList.cpp; sourceTree = "<group>"; };
+		1FD7C7EF1D09D42B00B7D3D6 /* PartList.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PartList.h; path = ../../openboardview/PartList.h; sourceTree = "<group>"; };
+		1FD7C7F01D09D42B00B7D3D6 /* platform.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = platform.h; path = ../../openboardview/platform.h; sourceTree = "<group>"; };
+		1FD7C7F11D09D42B00B7D3D6 /* resource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = resource.h; path = ../../openboardview/resource.h; sourceTree = "<group>"; };
+		1FD7C7F21D09D42B00B7D3D6 /* TextureDDS.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TextureDDS.cpp; path = ../../openboardview/TextureDDS.cpp; sourceTree = "<group>"; };
+		1FD7C7F31D09D42B00B7D3D6 /* TextureDDS.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TextureDDS.h; path = ../../openboardview/TextureDDS.h; sourceTree = "<group>"; };
+		1FD7C7F41D09D42B00B7D3D6 /* unix.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = unix.cpp; path = ../../openboardview/unix.cpp; sourceTree = "<group>"; };
+		1FD7C8031D09D46000B7D3D6 /* imconfig.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = imconfig.h; path = ../imgui/imconfig.h; sourceTree = "<group>"; };
+		1FD7C8041D09D46000B7D3D6 /* imgui_draw.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = imgui_draw.cpp; path = ../imgui/imgui_draw.cpp; sourceTree = "<group>"; };
+		1FD7C8051D09D46000B7D3D6 /* imgui_internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = imgui_internal.h; path = ../imgui/imgui_internal.h; sourceTree = "<group>"; };
+		1FD7C8061D09D46000B7D3D6 /* imgui.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = imgui.cpp; path = ../imgui/imgui.cpp; sourceTree = "<group>"; };
+		1FD7C8071D09D46000B7D3D6 /* imgui.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = imgui.h; path = ../imgui/imgui.h; sourceTree = "<group>"; };
+		1FD7C8081D09D46000B7D3D6 /* stb_rect_pack.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = stb_rect_pack.h; path = ../imgui/stb_rect_pack.h; sourceTree = "<group>"; };
+		1FD7C8091D09D46000B7D3D6 /* stb_textedit.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = stb_textedit.h; path = ../imgui/stb_textedit.h; sourceTree = "<group>"; };
+		1FD7C80A1D09D46000B7D3D6 /* stb_truetype.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = stb_truetype.h; path = ../imgui/stb_truetype.h; sourceTree = "<group>"; };
+		1FD7C8101D09D47700B7D3D6 /* gl3w.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = gl3w.c; path = ../gl3w/src/gl3w.c; sourceTree = "<group>"; };
+		1FD7C8171D09D4B300B7D3D6 /* json11.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = json11.cpp; path = ../json11/json11.cpp; sourceTree = "<group>"; };
+		1FD7C8181D09D4B300B7D3D6 /* json11.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = json11.hpp; path = ../json11/json11.hpp; sourceTree = "<group>"; };
+		1FD7C81A1D09D4C200B7D3D6 /* gl3w.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = gl3w.h; path = ../gl3w/include/GL/gl3w.h; sourceTree = "<group>"; };
+		1FD7C81B1D09D4C200B7D3D6 /* glcorearb.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = glcorearb.h; path = ../gl3w/include/GL/glcorearb.h; sourceTree = "<group>"; };
+		1FD7C81D1D09D6CB00B7D3D6 /* FiraSans-Medium.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = "FiraSans-Medium.ttf"; path = "../../asset/FiraSans-Medium.ttf"; sourceTree = "<group>"; };
+		1FD7C81F1D09DDF800B7D3D6 /* empty_circle.dds */ = {isa = PBXFileReference; lastKnownFileType = file; name = empty_circle.dds; path = ../../asset/empty_circle.dds; sourceTree = "<group>"; };
+		1FD7D4171D09D03D0092E863 /* OpenBoardView.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = OpenBoardView.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		1FD7D4251D09D03D0092E863 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		1FD7D42B1D09D07C0092E863 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
+		1FD7D42D1D09D0940092E863 /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		1FD7D4141D09D03D0092E863 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1FD7C7DD1D09D2B800B7D3D6 /* SDL2.framework in Frameworks */,
+				1FD7D42E1D09D0940092E863 /* OpenGL.framework in Frameworks */,
+				1FD7D42C1D09D07C0092E863 /* Cocoa.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		1FD7C7FF1D09D44000B7D3D6 /* Libraries */ = {
+			isa = PBXGroup;
+			children = (
+				1FD7C8161D09D4A900B7D3D6 /* json11 */,
+				1FD7C8021D09D45000B7D3D6 /* imgui */,
+				1FD7C8001D09D44500B7D3D6 /* gl3w */,
+			);
+			name = Libraries;
+			sourceTree = "<group>";
+		};
+		1FD7C8001D09D44500B7D3D6 /* gl3w */ = {
+			isa = PBXGroup;
+			children = (
+				1FD7C81A1D09D4C200B7D3D6 /* gl3w.h */,
+				1FD7C81B1D09D4C200B7D3D6 /* glcorearb.h */,
+				1FD7C8101D09D47700B7D3D6 /* gl3w.c */,
+			);
+			name = gl3w;
+			sourceTree = "<group>";
+		};
+		1FD7C8021D09D45000B7D3D6 /* imgui */ = {
+			isa = PBXGroup;
+			children = (
+				1FD7C8031D09D46000B7D3D6 /* imconfig.h */,
+				1FD7C8041D09D46000B7D3D6 /* imgui_draw.cpp */,
+				1FD7C8051D09D46000B7D3D6 /* imgui_internal.h */,
+				1FD7C8061D09D46000B7D3D6 /* imgui.cpp */,
+				1FD7C8071D09D46000B7D3D6 /* imgui.h */,
+				1FD7C8081D09D46000B7D3D6 /* stb_rect_pack.h */,
+				1FD7C8091D09D46000B7D3D6 /* stb_textedit.h */,
+				1FD7C80A1D09D46000B7D3D6 /* stb_truetype.h */,
+			);
+			name = imgui;
+			sourceTree = "<group>";
+		};
+		1FD7C8161D09D4A900B7D3D6 /* json11 */ = {
+			isa = PBXGroup;
+			children = (
+				1FD7C8171D09D4B300B7D3D6 /* json11.cpp */,
+				1FD7C8181D09D4B300B7D3D6 /* json11.hpp */,
+			);
+			name = json11;
+			sourceTree = "<group>";
+		};
+		1FD7C81C1D09D6BD00B7D3D6 /* Assets */ = {
+			isa = PBXGroup;
+			children = (
+				1FD7C81F1D09DDF800B7D3D6 /* empty_circle.dds */,
+				1FD7C81D1D09D6CB00B7D3D6 /* FiraSans-Medium.ttf */,
+			);
+			name = Assets;
+			sourceTree = "<group>";
+		};
+		1FD7D40E1D09D03D0092E863 = {
+			isa = PBXGroup;
+			children = (
+				1FD7C81C1D09D6BD00B7D3D6 /* Assets */,
+				1FD7C7FF1D09D44000B7D3D6 /* Libraries */,
+				1FD7C7DC1D09D2B800B7D3D6 /* SDL2.framework */,
+				1FD7D42D1D09D0940092E863 /* OpenGL.framework */,
+				1FD7D42B1D09D07C0092E863 /* Cocoa.framework */,
+				1FD7D4191D09D03D0092E863 /* OpenBoardView */,
+				1FD7D4181D09D03D0092E863 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		1FD7D4181D09D03D0092E863 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				1FD7D4171D09D03D0092E863 /* OpenBoardView.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		1FD7D4191D09D03D0092E863 /* OpenBoardView */ = {
+			isa = PBXGroup;
+			children = (
+				1FD7C7E11D09D42B00B7D3D6 /* Board.h */,
+				1FD7C7E21D09D42B00B7D3D6 /* BoardView.cpp */,
+				1FD7C7E31D09D42B00B7D3D6 /* BoardView.h */,
+				1FD7C7E41D09D42B00B7D3D6 /* BRDBoard.cpp */,
+				1FD7C7E51D09D42B00B7D3D6 /* BRDBoard.h */,
+				1FD7C7E61D09D42B00B7D3D6 /* BRDFile.cpp */,
+				1FD7C7E71D09D42B00B7D3D6 /* BRDFile.h */,
+				1FD7C7E81D09D42B00B7D3D6 /* imgui_impl_sdl_gl3.cpp */,
+				1FD7C7E91D09D42B00B7D3D6 /* imgui_impl_sdl_gl3.h */,
+				1FD7C7EA1D09D42B00B7D3D6 /* main_opengl.cpp */,
+				1FD7C7EB1D09D42B00B7D3D6 /* NetList.cpp */,
+				1FD7C7EC1D09D42B00B7D3D6 /* NetList.h */,
+				1FD7C7ED1D09D42B00B7D3D6 /* osx.mm */,
+				1FD7C7EE1D09D42B00B7D3D6 /* PartList.cpp */,
+				1FD7C7EF1D09D42B00B7D3D6 /* PartList.h */,
+				1FD7C7F01D09D42B00B7D3D6 /* platform.h */,
+				1FD7C7F11D09D42B00B7D3D6 /* resource.h */,
+				1FD7C7F21D09D42B00B7D3D6 /* TextureDDS.cpp */,
+				1FD7C7F31D09D42B00B7D3D6 /* TextureDDS.h */,
+				1FD7C7F41D09D42B00B7D3D6 /* unix.cpp */,
+				1FD7D4251D09D03D0092E863 /* Info.plist */,
+				1FD7D41D1D09D03D0092E863 /* Supporting Files */,
+			);
+			path = OpenBoardView;
+			sourceTree = "<group>";
+		};
+		1FD7D41D1D09D03D0092E863 /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		1FD7D4161D09D03D0092E863 /* OpenBoardView */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1FD7D4281D09D03D0092E863 /* Build configuration list for PBXNativeTarget "OpenBoardView" */;
+			buildPhases = (
+				1FD7D4131D09D03D0092E863 /* Sources */,
+				1FD7D4141D09D03D0092E863 /* Frameworks */,
+				1FD7D4151D09D03D0092E863 /* Resources */,
+				1FD7C8281D09E5D100B7D3D6 /* ShellScript */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = OpenBoardView;
+			productName = OpenBoardView;
+			productReference = 1FD7D4171D09D03D0092E863 /* OpenBoardView.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		1FD7D40F1D09D03D0092E863 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0730;
+				ORGANIZATIONNAME = piernov;
+				TargetAttributes = {
+					1FD7D4161D09D03D0092E863 = {
+						CreatedOnToolsVersion = 7.3.1;
+					};
+				};
+			};
+			buildConfigurationList = 1FD7D4121D09D03D0092E863 /* Build configuration list for PBXProject "OpenBoardView" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 1FD7D40E1D09D03D0092E863;
+			productRefGroup = 1FD7D4181D09D03D0092E863 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				1FD7D4161D09D03D0092E863 /* OpenBoardView */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		1FD7D4151D09D03D0092E863 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1FD7C8201D09DDF800B7D3D6 /* empty_circle.dds in Resources */,
+				1FD7C81E1D09D6CB00B7D3D6 /* FiraSans-Medium.ttf in Resources */,
+				1FD7C7DE1D09D3BA00B7D3D6 /* SDL2.framework in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		1FD7C8281D09E5D100B7D3D6 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "echo build dir = $TARGET_BUILD_DIR\ncd \"$TARGET_BUILD_DIR\"\n\n#ensure old package is gone\nrm -f OpenBoardView.dmg\n\n#make the directory which our disk image will be made of\n#use /tmp as a destination because copying ourself (xcode folder) whilst compiling causes the dog to chase its tail\nOBV=`mktemp -d /tmp/obv.XXXXXX` || exit 1\n\n#leave indicator of where temp directory is in case things break\nln -sf \"$OBV\" \"$TARGET_BUILD_DIR/obv\"\n\n#copy executable\nCpMac -r \"$TARGET_BUILD_DIR/OpenBoardView.app\" \"$OBV/OpenBoardView.app\"\n\n#finally make a disk image out of the stuff\necho creating dmg\nhdiutil create -srcfolder \"$OBV\" -volname OpenBoardView OpenBoardView.dmg\nhdiutil internet-enable -yes OpenBoardView.dmg\n\n#cleanup\nrm -rf \"$OBV\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		1FD7D4131D09D03D0092E863 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1FD7C7FC1D09D42B00B7D3D6 /* PartList.cpp in Sources */,
+				1FD7C7F51D09D42B00B7D3D6 /* BoardView.cpp in Sources */,
+				1FD7C7FA1D09D42B00B7D3D6 /* NetList.cpp in Sources */,
+				1FD7C8191D09D4B300B7D3D6 /* json11.cpp in Sources */,
+				1FD7C7FE1D09D42B00B7D3D6 /* unix.cpp in Sources */,
+				1FD7C7FB1D09D42B00B7D3D6 /* osx.mm in Sources */,
+				1FD7C80C1D09D46000B7D3D6 /* imgui.cpp in Sources */,
+				1FD7C7F91D09D42B00B7D3D6 /* main_opengl.cpp in Sources */,
+				1FD7C80B1D09D46000B7D3D6 /* imgui_draw.cpp in Sources */,
+				1FD7C7F61D09D42B00B7D3D6 /* BRDBoard.cpp in Sources */,
+				1FD7C7FD1D09D42B00B7D3D6 /* TextureDDS.cpp in Sources */,
+				1FD7C7F81D09D42B00B7D3D6 /* imgui_impl_sdl_gl3.cpp in Sources */,
+				1FD7C8111D09D47700B7D3D6 /* gl3w.c in Sources */,
+				1FD7C7F71D09D42B00B7D3D6 /* BRDFile.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		1FD7D4261D09D03D0092E863 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		1FD7D4271D09D03D0092E863 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		1FD7D4291D09D03D0092E863 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(LOCAL_LIBRARY_DIR)/Frameworks",
+				);
+				HEADER_SEARCH_PATHS = (
+					..,
+					../gl3w/include,
+					SDL2,
+				);
+				INFOPLIST_FILE = OpenBoardView/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = org.piernov.OpenBoardView;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		1FD7D42A1D09D03D0092E863 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(LOCAL_LIBRARY_DIR)/Frameworks",
+				);
+				HEADER_SEARCH_PATHS = (
+					..,
+					../gl3w/include,
+					SDL2,
+				);
+				INFOPLIST_FILE = OpenBoardView/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = org.piernov.OpenBoardView;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		1FD7D4121D09D03D0092E863 /* Build configuration list for PBXProject "OpenBoardView" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1FD7D4261D09D03D0092E863 /* Debug */,
+				1FD7D4271D09D03D0092E863 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		1FD7D4281D09D03D0092E863 /* Build configuration list for PBXNativeTarget "OpenBoardView" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1FD7D4291D09D03D0092E863 /* Debug */,
+				1FD7D42A1D09D03D0092E863 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 1FD7D40F1D09D03D0092E863 /* Project object */;
+}
