@@ -19,4 +19,11 @@ char *show_file_picker() {
 	return path;
 }
 
+std::string get_asset_path(const char* asset) {
+	std::string path = std::string([[[NSBundle mainBundle] resourcePath] UTF8String]);
+	path += "/";
+	path += asset;
+	return path;
+}
+
 #endif

@@ -239,8 +239,9 @@ static bool ImGui_ImplSdlGL3_CreateAssetTexture(int global_id, const char *filen
 }
 
 static bool ImGui_ImplSdlGL3_CreateCircleTexture() {
-	bool result = true;
-	result &= ImGui_ImplSdlGL3_CreateAssetTexture(1, "asset/empty_circle.dds");
+	bool result      = true;
+	std::string path = get_asset_path("empty_circle.dds");
+	result &= ImGui_ImplSdlGL3_CreateAssetTexture(1, path.c_str());
 	return result;
 }
 

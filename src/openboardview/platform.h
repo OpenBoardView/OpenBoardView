@@ -2,6 +2,7 @@
 
 #include "imgui/imgui.h"
 #include "utf8/utf8.h"
+#include <string>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -35,6 +36,7 @@ char *show_file_picker();
 #define ASSET_EMPTY_CIRCLE 110
 
 unsigned char *LoadAsset(int *asset_size, int asset_id);
+std::string get_asset_path(const char *asset);
 
 #define NUM_GLOBAL_TEXTURES 10
 extern ImTextureID TextureIDs[NUM_GLOBAL_TEXTURES];
