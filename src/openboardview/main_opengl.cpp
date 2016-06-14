@@ -7,7 +7,7 @@
 #include "imgui_impl_sdl_gl3.h"
 #include "resource.h"
 #include <GL/gl3w.h>
-#include <SDL.h>
+#include <SDL2/SDL.h>
 #include <stdio.h>
 #include <sys/stat.h>
 #include <sys/types.h>

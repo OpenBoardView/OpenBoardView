@@ -4,7 +4,7 @@ typedef unsigned long u32;
 #else
 #include <GL/gl3w.h>
 #ifdef __APPLE__
-#include <gl3ext.h>
+#include <OpenGL/gl3ext.h>
 #else
 #include <GL/glext.h>
 #endif

@@ -12,10 +12,10 @@
 
 // SDL,GL3W
 #include <GL/gl3w.h>
-#include <SDL.h>
-#include <SDL_syswm.h>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_syswm.h>
 #ifdef __APPLE__
-#include <gl3ext.h>
+#include <OpenGL/gl3ext.h>
 #else
 #include <GL/glext.h>
 #endif
