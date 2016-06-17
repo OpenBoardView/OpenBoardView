@@ -366,7 +366,7 @@ void BoardView::HandleInput() {
 
     // Rotate board: R and period rotate clockwise; comma rotates
     // counter-clockwise
-    if (ImGui::IsKeyPressed('R') || ImGui::IsKeyPressed(190)) {
+    if (ImGui::IsKeyPressed('R') || ImGui::IsKeyPressed('r') || ImGui::IsKeyPressed(190)) {
       Rotate(1);
     }
     if (ImGui::IsKeyPressed(188)) {
@@ -374,22 +374,22 @@ void BoardView::HandleInput() {
     }
 
     // Search for net
-    if (ImGui::IsKeyPressed('N')) {
+    if (ImGui::IsKeyPressed('N')||ImGui::IsKeyPressed('n')) {
       m_showNetfilterSearch = true;
     }
 
     // Search for component
-    if (ImGui::IsKeyPressed('C')) {
+    if (ImGui::IsKeyPressed('C')||ImGui::IsKeyPressed('c')) {
       m_showComponentSearch = true;
     }
 
     // Show Net List
-    if (ImGui::IsKeyPressed('L')) {
+    if (ImGui::IsKeyPressed('L')||ImGui::IsKeyPressed('l')) {
       m_showNetList = m_showNetList ? false : true;
     }
 
     // Show Part List
-    if (ImGui::IsKeyPressed('K')) {
+    if (ImGui::IsKeyPressed('K')||ImGui::IsKeyPressed('k')) {
       m_showPartList = m_showPartList ? false : true;
     }
   }
