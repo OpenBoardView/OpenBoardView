@@ -1,13 +1,15 @@
 ## COMMON ##
-if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+if(APPLE)
     find_library(coreFoundation CoreFoundation)
     set(PLATFORM_TARGET_LIBS ${coreFoundation})
-elseif(MINGW)
+elseif(MINGW) # Should this check for WIN32?
     set(PLATFORM_TARGET_LIBS libopengl32.a imm32.lib)
+elseif(UNIX)
+    set(PLATFORM_TARGET_LIBS ) # Emply for now
 else()
     message(WARNING
             "Make sure you set `PLATFORM_TARGET_LIBS` for your platform. \
-            See: " ${CMAKE_CURRENT_LIST_FILE})
+          See:  ${CMAKE_CURRENT_LIST_FILE}")
 endif()
 
 ## gl3w ##

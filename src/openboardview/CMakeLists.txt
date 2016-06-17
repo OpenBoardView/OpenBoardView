@@ -1,17 +1,19 @@
 find_package(SDL2 REQUIRED)
 
 # Link with Cocoa on OS X and GTK3 on other Unix (or MinGW)
-if(APPLE)
-	find_library(COCOA_LIBRARY Cocoa)
-	find_package(OpenGL REQUIRED)
-	set(OPENGL_INCLUDE_DIR ${OPENGL_INCLUDE_DIR}/Headers)
-else()
-	find_package(PkgConfig REQUIRED)
-	pkg_check_modules(GTK3 REQUIRED gtk+-3.0)
+if(UNIX)
+	if(APPLE)
+		find_library(COCOA_LIBRARY Cocoa)
+		find_package(OpenGL REQUIRED)
+		set(OPENGL_INCLUDE_DIR ${OPENGL_INCLUDE_DIR}/Headers)
+	else(APPLE)
+		find_package(PkgConfig REQUIRED)
+		pkg_check_modules(GTK3 REQUIRED gtk+-3.0)
 
-	link_directories(${GTK3_LIBRARY_DIRS})
-	add_definitions(${GTK3_CFLAGS_OTHER})
-endif()
+		link_directories(${GTK3_LIBRARY_DIRS})
+		add_definitions(${GTK3_CFLAGS_OTHER})
+	endif(APPLE)
+endif(UNIX)
 
 include_directories(
 	${CMAKE_CURRENT_SOURCE_DIR}
@@ -41,18 +43,22 @@ set(SOURCES
 	TextureDDS.cpp
 )
 
-if(APPLE)
+if(UNIX)
+	if(APPLE)
+		set(SOURCES ${SOURCES}
+			osx.mm
+		)
+	endif ()
 	set(SOURCES ${SOURCES}
-		osx.mm
 		unix.cpp
 	)
-endif()
-
-if (MINGW)
+elseif (MINGW) # Should this just be WIN32?
 	set(SOURCES ${SOURCES}
 		win32.cpp
 	)
 endif()
+
+
 
 add_executable(openboardview
 #	MACOSX_BUNDLE
