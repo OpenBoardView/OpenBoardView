@@ -334,6 +334,39 @@ void BoardView::HandleInput() {
 			target.y *= 0.5f;
 			ChangeZoom(target, 0.5f);
 		}
+
+		//Arrow keys or WASD to move viewport by a percentage of the screen width/height
+		{
+			ImVec2 delta(0.0f, 0.0f);
+			
+			float dist = 0.25f;
+
+			// Ctrl slows down the movement speed
+			if (ImGui::IsKeyDown(17)) {
+				dist *= 0.1f;
+			}
+
+			if (ImGui::IsKeyPressed('W') || ImGui::IsKeyPressed(38))
+				delta.y = dist;
+			if (ImGui::IsKeyPressed('S') || ImGui::IsKeyPressed(40))
+				delta.y = -dist;
+			if (ImGui::IsKeyPressed('A') || ImGui::IsKeyPressed(37))
+				delta.x = dist;
+			if (ImGui::IsKeyPressed('D') || ImGui::IsKeyPressed(39))
+				delta.x = -dist;
+
+			if (delta.x != 0.0f || delta.y != 0.0f) {
+
+				//Account for zoom level by using screen coordinates (TODO easier using m_scale?)
+				ImVec2 dims = ImGui::GetWindowSize();
+				ImVec2 dimc = ScreenToCoord(dims.x, dims.y, 0);
+				ImVec2 c = ScreenToCoord(0.0f, 0.0f, 0);
+				ImVec2 motion((dimc.x-c.x)*delta.x, (dimc.y-c.y)*delta.y);
+				m_dx += motion.x;
+				m_dy += motion.y;
+				m_needsRedraw = true;
+			}
+		}
 		
 		// Flip board:
 		if (ImGui::IsKeyPressed(' ')) {
