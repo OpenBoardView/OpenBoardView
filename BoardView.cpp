@@ -255,6 +255,20 @@ void BoardView::Update() {
 	ImGui::PopStyleVar();
 }
 
+
+void BoardView::ChangeZoom(ImVec2 target, float factor) {
+	//Zoom in on the screen-space point given by target
+
+	ImVec2 coord = ScreenToCoord(target.x, target.y);
+	m_scale = m_scale * factor;
+	ImVec2 dtarget = CoordToScreen(coord.x, coord.y);
+	ImVec2 td = ScreenToCoord(target.x - dtarget.x, target.y - dtarget.y, 0);
+	m_dx += td.x;
+	m_dy += td.y;
+	m_needsRedraw = true;
+
+}
+
 void BoardView::HandleInput() {
 	const ImGuiIO &io = ImGui::GetIO();
 	if (ImGui::IsWindowFocused()) {
@@ -296,21 +310,31 @@ void BoardView::HandleInput() {
 		float mwheel = io.MouseWheel;
 		if (mwheel != 0.0f) {
 			const ImVec2 &target = io.MousePos;
-			ImVec2 coord = ScreenToCoord(target.x, target.y);
 			mwheel *= 0.5f;
 			// Ctrl slows down the zoom speed:
 			if (ImGui::IsKeyDown(17)) {
 				mwheel *= 0.1f;
 			}
-			m_scale = m_scale * powf(2.0f, mwheel);
-			ImVec2 dtarget = CoordToScreen(coord.x, coord.y);
-			ImVec2 td = ScreenToCoord(target.x - dtarget.x, target.y - dtarget.y, 0);
-			m_dx += td.x;
-			m_dy += td.y;
-			m_needsRedraw = true;
+			float factor = powf(2.0f, mwheel);
+			ChangeZoom(target, factor);
 		}
 	}
 	if (!io.WantCaptureKeyboard) {
+
+		// (I/+) and (O/-) keys as alternate zoom. Will zoom on the centre of the viewport, not on the mouse.
+		if (ImGui::IsKeyPressed('I') || ImGui::IsKeyPressed(187)) {
+			ImVec2 target = ImGui::GetWindowSize();
+			target.x *= 0.5f;
+			target.y *= 0.5f;
+			ChangeZoom(target, 2.0f);
+		}
+		if (ImGui::IsKeyPressed('O') || ImGui::IsKeyPressed(189)) {
+			ImVec2 target = ImGui::GetWindowSize();
+			target.x *= 0.5f;
+			target.y *= 0.5f;
+			ChangeZoom(target, 0.5f);
+		}
+		
 		// Flip board:
 		if (ImGui::IsKeyPressed(' ')) {
 			FlipBoard();

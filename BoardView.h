@@ -76,6 +76,7 @@ struct BoardView {
 	~BoardView();
 
 	void Update();
+	void ChangeZoom(ImVec2 coord, float scale);
 	void HandleInput();
 	void DrawBoard();
 	void SetFile(BRDFile *file);
