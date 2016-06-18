@@ -202,6 +202,7 @@ void BoardView::Update() {
 					delete file;
 				}
 				free(buffer);
+				m_wantsTitleChange = true;
 			}
 		}
 	}

@@ -177,6 +177,19 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 			PostMessage(hwnd, WM_QUIT, 0, 0);
 		}
 
+		if (app.m_wantsTitleChange) {
+			app.m_wantsTitleChange = false;
+
+			TCHAR title[MAX_PATH + 100];
+			TCHAR filename[MAX_PATH + 10];
+			
+			//Convert character encoding if required, and format the window title
+			mbstowcs_s(NULL, filename, _countof(filename), app.m_lastFileOpenName, strlen(app.m_lastFileOpenName));
+			_stprintf_s(title, _countof(title), L"%s - Open Board Viewer", filename);
+
+			SetWindowText(hwnd, title);
+		}
+
 		// Rendering
 		g_pd3dDevice->SetRenderState(D3DRS_ZENABLE, false);
 		g_pd3dDevice->SetRenderState(D3DRS_ALPHABLENDENABLE, false);

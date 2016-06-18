@@ -72,6 +72,7 @@ struct BoardView {
 	bool m_firstFrame = true;
 	bool m_lastFileOpenWasInvalid;
 	bool m_wantsQuit;
+	bool m_wantsTitleChange;
 
 	~BoardView();
 
