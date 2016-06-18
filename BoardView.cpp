@@ -756,6 +756,7 @@ void BoardView::OpenFile(char * filename)
 		BRDFile *file = new BRDFile(buffer, buffer_size);
 		if (file->valid) {
 			SetFile(file);
+			m_wantsTitleChange = true;
 		}
 		else {
 			m_lastFileOpenWasInvalid = true;
