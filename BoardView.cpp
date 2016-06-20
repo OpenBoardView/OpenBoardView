@@ -190,19 +190,7 @@ void BoardView::Update() {
 	if (open_file) {
 		char *filename = show_file_picker();
 		if (filename) {
-			SetLastFileOpenName(filename);
-			size_t buffer_size;
-			char *buffer = file_as_buffer(&buffer_size, filename);
-			if (buffer) {
-				BRDFile *file = new BRDFile(buffer, buffer_size);
-				if (file->valid) {
-					SetFile(file);
-				} else {
-					m_lastFileOpenWasInvalid = true;
-					delete file;
-				}
-				free(buffer);
-			}
+			OpenFile(filename);
 		}
 	}
 
@@ -814,6 +802,25 @@ void BoardView::FlipBoard() {
 		Rotate(2);
 	}
 	m_needsRedraw = true;
+}
+
+void BoardView::OpenFile(char * filename)
+{
+	SetLastFileOpenName(filename);
+	size_t buffer_size;
+	char *buffer = file_as_buffer(&buffer_size, filename);
+	if (buffer) {
+		BRDFile *file = new BRDFile(buffer, buffer_size);
+		if (file->valid) {
+			SetFile(file);
+			m_wantsTitleChange = true;
+		}
+		else {
+			m_lastFileOpenWasInvalid = true;
+			delete file;
+		}
+		free(buffer);
+	}
 }
 
 BitVec::~BitVec() {
