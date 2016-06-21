@@ -442,7 +442,7 @@ void BoardView::HandleInput() {
 			ImVec2 coord         = ScreenToCoord(target.x, target.y);
 			mwheel *= 0.5f;
 			// Ctrl slows down the zoom speed:
-			if (ImGui::IsKeyDown(17)) {
+			if (ImGui::IsKeyDown(SDL_SCANCODE_LCTRL) || ImGui::IsKeyDown(SDL_SCANCODE_RCTRL) || ImGui::IsKeyDown(17)) {
 				mwheel *= 0.1f;
 			}
 			m_scale = m_scale * powf(2.0f, mwheel);
