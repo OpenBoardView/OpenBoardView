@@ -18,3 +18,11 @@ the [DirectX 9.0c End-user Runtime](https://www.microsoft.com/en-us/download/det
 - Ctrl-O: Open a .brd file
 - N: Search by power net
 - C: Search by component name
+
+- 5/Numpad-5: Reset zoom and center 
+- <space>: Flip board
+- R|.: Rotate clockwise
+- ,: Rotate counter-clockwise
+- L: Show net list
+- K: Show part list
+
