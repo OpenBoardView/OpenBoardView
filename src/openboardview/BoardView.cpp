@@ -1,6 +1,7 @@
 #define _CRT_SECURE_NO_WARNINGS 1
 #include "BoardView.h"
 
+#include <SDL.h>
 #include <algorithm>
 #include <iostream>
 #include <math.h>
@@ -33,9 +34,98 @@ BoardView::~BoardView() {
 	free(m_lastFileOpenName);
 }
 
+int BoardView::History_set_filename(char *f) {
+	snprintf(history.fname, HISTORY_FNAME_LEN_MAX - 1, "%s", f);
+	return 0;
+}
+
+int BoardView::History_load(void) {
+	if (history.fname) {
+		FILE *f;
+
+		fprintf(stderr, "Loading history...");
+		f             = fopen(history.fname, "r");
+		history.count = 0;
+		if (!f) return 0;
+
+		while (history.count < HISTORY_COUNT_MAX) {
+			char *r;
+
+			r = fgets(history.history[history.count], HISTORY_FNAME_LEN_MAX, f);
+			if (r) {
+				history.count++;
+
+				/// strip off the trailing line break
+				while (*r) {
+					if ((*r == '\r') || (*r == '\n')) {
+						*r = '\0';
+						break;
+					}
+					r++;
+				}
+
+			} else {
+				break;
+			}
+		}
+		fclose(f);
+		fprintf(stderr, "done\n");
+	} else {
+		return -1;
+	}
+
+	return history.count;
+}
+
+int BoardView::History_prepend_save(char *newfile) {
+	if (history.fname) {
+		FILE *f;
+		f = fopen(history.fname, "w");
+		if (f) {
+			int i;
+
+			fprintf(stderr, "Adding new file to history (%s)\n", newfile);
+			fprintf(f, "%s\n", newfile);
+			for (i = 0; i < history.count; i++) {
+				// Don't create duplicate entries, so check each one against the newfile
+				if (strcmp(newfile, history.history[i])) {
+					fprintf(f, "%s\n", history.history[i]);
+				}
+			}
+			fclose(f);
+
+			History_load();
+		}
+	}
+
+	return 0;
+}
+
+/**
+  * Only displays the tail end of the filename path, where
+  * 'stops' indicates how many paths up to truncate at
+  *
+  * PLD20160618-1729
+  */
+char *BoardView::History_trim_filename(char *s, int stops) {
+
+	int l   = strlen(s);
+	char *p = s + l - 1;
+
+	while ((stops) && (p > s)) {
+		if ((*p == '/') || (*p == '\\')) stops--;
+		p--;
+	}
+	if (!stops) p += 2;
+
+	return p;
+}
+
 #pragma region Update Logic
 void BoardView::Update() {
-	bool open_file = false;
+	bool open_file        = false;
+	char *preset_filename = NULL;
+
 	if (ImGui::IsKeyDown(17) && ImGui::IsKeyPressed('O', false)) {
 		open_file = true;
 		// the dialog will likely eat our WM_KEYUP message for CTRL and O:
@@ -48,6 +138,18 @@ void BoardView::Update() {
 			if (ImGui::MenuItem("Open", "Ctrl+O")) {
 				open_file = true;
 			}
+
+			/// Generate file history - PLD20160618-2028
+			{
+				int i;
+				for (i = 0; i < history.count; i++) {
+					if (ImGui::MenuItem(History_trim_filename(history.history[i], 2))) {
+						open_file       = true;
+						preset_filename = history.history[i];
+					}
+				}
+			}
+
 			if (ImGui::MenuItem("Quit")) {
 				m_wantsQuit = true;
 			}
@@ -63,6 +165,10 @@ void BoardView::Update() {
 			if (ImGui::MenuItem("Rotate CCW", ",")) {
 				Rotate(-1);
 			}
+			if (ImGui::MenuItem("Reset View", "5")) { // actually want this to be numpad 5
+				CenterView();
+			}
+
 			ImGui::EndMenu();
 		}
 		if (ImGui::BeginMenu("Windows")) {
@@ -219,7 +325,15 @@ void BoardView::Update() {
 	}
 
 	if (open_file) {
-		char *filename = show_file_picker();
+		char *filename;
+
+		if (preset_filename) {
+			filename        = strdup(preset_filename);
+			preset_filename = NULL;
+		} else {
+			filename = show_file_picker();
+		}
+
 		if (filename) {
 			SetLastFileOpenName(filename);
 			size_t buffer_size;
@@ -228,6 +342,9 @@ void BoardView::Update() {
 				BRDFile *file = new BRDFile(buffer, buffer_size);
 				if (file->valid) {
 					SetFile(file);
+					History_prepend_save(filename);
+					history_file_has_changed = 1; // used by main to know when to update the window title
+
 				} else {
 					m_lastFileOpenWasInvalid = true;
 					delete file;
@@ -348,30 +465,35 @@ void BoardView::HandleInput() {
 
 		// Rotate board: R and period rotate clockwise; comma rotates
 		// counter-clockwise
-		if (ImGui::IsKeyPressed('R') || ImGui::IsKeyPressed(190)) {
+		if (ImGui::IsKeyPressed('R') || ImGui::IsKeyPressed('r') || ImGui::IsKeyPressed(190)) {
 			Rotate(1);
 		}
 		if (ImGui::IsKeyPressed(188)) {
 			Rotate(-1);
 		}
 
+		// Center and reset zoom
+		if (ImGui::IsKeyPressed('5') || ImGui::IsKeyPressed(SDL_SCANCODE_KP_5)) {
+			CenterView();
+		}
+
 		// Search for net
-		if (ImGui::IsKeyPressed('N')) {
+		if (ImGui::IsKeyPressed('N') || ImGui::IsKeyPressed('n')) {
 			m_showNetfilterSearch = true;
 		}
 
 		// Search for component
-		if (ImGui::IsKeyPressed('C')) {
+		if (ImGui::IsKeyPressed('C') || ImGui::IsKeyPressed('c')) {
 			m_showComponentSearch = true;
 		}
 
 		// Show Net List
-		if (ImGui::IsKeyPressed('L')) {
+		if (ImGui::IsKeyPressed('L') || ImGui::IsKeyPressed('l')) {
 			m_showNetList = m_showNetList ? false : true;
 		}
 
 		// Show Part List
-		if (ImGui::IsKeyPressed('K')) {
+		if (ImGui::IsKeyPressed('K') || ImGui::IsKeyPressed('k')) {
 			m_showPartList = m_showPartList ? false : true;
 		}
 	}
@@ -611,6 +733,28 @@ int qsort_netstrings(const void *a, const void *b) {
 	const char *sa = *(const char **)a;
 	const char *sb = *(const char **)b;
 	return strcmp(sa, sb);
+}
+
+/**
+  * CenterView
+  *
+  * Resets the scale and transformation back to original.
+  * Does NOT change the rotation (yet?)
+  *
+  * PLD20160621-1715
+  *
+  */
+void BoardView::CenterView(void) {
+	ImVec2 view = ImGui::GetIO().DisplaySize;
+
+	float dx = 1.05f * (m_boardWidth);
+	float dy = 1.05f * (m_boardHeight);
+	float sx = dx > 0 ? view.x / dx : 1.0f;
+	float sy = dy > 0 ? view.y / dy : 1.0f;
+
+	m_scale = sx < sy ? sx : sy;
+	SetTarget(m_mx, m_my);
+	m_needsRedraw = true;
 }
 
 void BoardView::SetFile(BRDFile *file) {

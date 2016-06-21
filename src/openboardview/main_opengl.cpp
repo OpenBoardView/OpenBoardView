@@ -9,6 +9,7 @@
 #include <GL/gl3w.h>
 #include <SDL.h>
 #include <stdio.h>
+#include <unistd.h>
 
 int main(int, char **) {
 	// Setup SDL
@@ -40,6 +41,9 @@ int main(int, char **) {
 	io.Fonts->AddFontFromFileTTF("asset/FiraSans-Medium.ttf", 20.0f);
 
 	BoardView app{};
+	app.History_set_filename("openboardview.history");
+	app.History_load();
+
 	ImVec4 clear_color = ImColor(20, 20, 30);
 
 	// Main loop
@@ -50,12 +54,26 @@ int main(int, char **) {
 			ImGui_ImplSdlGL3_ProcessEvent(&event);
 			if (event.type == SDL_QUIT) done = true;
 		}
+
+		if (SDL_GetWindowFlags(window) & (SDL_WINDOW_MINIMIZED | SDL_WINDOW_HIDDEN)) {
+			usleep(50000);
+			continue;
+		} // stops OVB/SDL consuming masses of CPU when it should be idling.
+
 		ImGui_ImplSdlGL3_NewFrame(window);
 		app.Update();
 		if (app.m_wantsQuit) {
 			SDL_Event sdlevent;
 			sdlevent.type = SDL_QUIT;
 			SDL_PushEvent(&sdlevent);
+		}
+
+		// Update the title of the SDL app if the board filename has changed. - PLD20160618
+		if (app.history_file_has_changed) {
+			char scratch[1024];
+			snprintf(scratch, sizeof(scratch), "Open Board Viewer - %s", app.history.history[0]);
+			SDL_SetWindowTitle(window, scratch);
+			app.history_file_has_changed = 0;
 		}
 
 		// Rendering
