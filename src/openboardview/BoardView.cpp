@@ -744,8 +744,8 @@ int qsort_netstrings(const void *a, const void *b) {
 void BoardView::CenterView(void) {
 	ImVec2 view = ImGui::GetIO().DisplaySize;
 
-	float dx = 1.05f * (m_boardWidth);
-	float dy = 1.05f * (m_boardHeight);
+	float dx = 1.1f * (m_boardWidth);
+	float dy = 1.1f * (m_boardHeight);
 	float sx = dx > 0 ? view.x / dx : 1.0f;
 	float sy = dy > 0 ? view.y / dy : 1.0f;
 
@@ -776,8 +776,8 @@ void BoardView::SetFile(BRDFile *file) {
 	m_my = (float)(min_y + max_y) / 2.0f;
 
 	ImVec2 view = ImGui::GetIO().DisplaySize;
-	float dx    = 1.05f * (max_x - min_x);
-	float dy    = 1.05f * (max_y - min_y);
+	float dx    = 1.1f * (max_x - min_x);
+	float dy    = 1.1f * (max_y - min_y);
 	float sx    = dx > 0 ? view.x / dx : 1.0f;
 	float sy    = dy > 0 ? view.y / dy : 1.0f;
 
