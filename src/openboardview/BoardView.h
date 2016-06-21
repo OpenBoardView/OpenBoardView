@@ -135,6 +135,7 @@ struct BoardView {
 	void DrawParts(ImDrawList *draw);
 	void DrawBoard();
 	void SetFile(BRDFile *file);
+	int LoadFile(char *filename);
 	ImVec2 CoordToScreen(float x, float y, float w = 1.0f);
 	ImVec2 ScreenToCoord(float x, float y, float w = 1.0f);
 	// void Move(float x, float y);

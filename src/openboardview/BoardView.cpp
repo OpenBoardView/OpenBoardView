@@ -118,6 +118,31 @@ char *BoardView::History_trim_filename(char *s, int stops) {
 	return p;
 }
 
+int BoardView::LoadFile(char *filename) {
+	if (filename) {
+		SetLastFileOpenName(filename);
+		size_t buffer_size;
+		char *buffer = file_as_buffer(&buffer_size, filename);
+		if (buffer) {
+			BRDFile *file = new BRDFile(buffer, buffer_size);
+			if (file->valid) {
+				SetFile(file);
+				History_prepend_save(filename);
+				history_file_has_changed = 1; // used by main to know when to update the window title
+
+			} else {
+				m_lastFileOpenWasInvalid = true;
+				delete file;
+			}
+			free(buffer);
+		}
+	} else {
+		return 1;
+	}
+
+	return 0;
+}
+
 #pragma region Update Logic
 void BoardView::Update() {
 	bool open_file        = false;
@@ -332,22 +357,7 @@ void BoardView::Update() {
 		}
 
 		if (filename) {
-			SetLastFileOpenName(filename);
-			size_t buffer_size;
-			char *buffer = file_as_buffer(&buffer_size, filename);
-			if (buffer) {
-				BRDFile *file = new BRDFile(buffer, buffer_size);
-				if (file->valid) {
-					SetFile(file);
-					History_prepend_save(filename);
-					history_file_has_changed = 1; // used by main to know when to update the window title
-
-				} else {
-					m_lastFileOpenWasInvalid = true;
-					delete file;
-				}
-				free(buffer);
-			}
+			LoadFile(filename);
 		}
 	}
 

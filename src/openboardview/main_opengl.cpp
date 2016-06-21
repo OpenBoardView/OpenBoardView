@@ -11,7 +11,7 @@
 #include <stdio.h>
 #include <unistd.h>
 
-int main(int, char **) {
+int main(int argc, char **argv) {
 	// Setup SDL
 	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) != 0) {
 		printf("Error: %s\n", SDL_GetError());
@@ -44,10 +44,13 @@ int main(int, char **) {
 	app.History_set_filename("openboardview.history");
 	app.History_load();
 
+	fprintf(stderr, "%d parameters", argc);
+
 	ImVec4 clear_color = ImColor(20, 20, 30);
 
 	// Main loop
-	bool done = false;
+	bool done             = false;
+	bool preload_required = (argc == 2) ? true : false;
 	while (!done) {
 		SDL_Event event;
 		while (SDL_PollEvent(&event)) {
@@ -61,6 +64,10 @@ int main(int, char **) {
 		} // stops OVB/SDL consuming masses of CPU when it should be idling.
 
 		ImGui_ImplSdlGL3_NewFrame(window);
+		if (preload_required) {
+			app.LoadFile(strdup(argv[1]));
+			preload_required = false;
+		}
 		app.Update();
 		if (app.m_wantsQuit) {
 			SDL_Event sdlevent;
