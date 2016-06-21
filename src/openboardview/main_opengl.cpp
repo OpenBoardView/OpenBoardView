@@ -44,8 +44,6 @@ int main(int argc, char **argv) {
 	app.History_set_filename("openboardview.history");
 	app.History_load();
 
-	fprintf(stderr, "%d parameters", argc);
-
 	ImVec4 clear_color = ImColor(20, 20, 30);
 
 	// Main loop
