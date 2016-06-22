@@ -1,17 +1,17 @@
 ## Open Board Viewer
 
-Software for viewing .brd files, intended as a drop-in replacement for the
+Linux SDL/ImGui edition software for viewing .brd files, intended as a drop-in replacement for the
 "Test_Link" software.
 
-[![Demo Video](https://github.com/chloridite/OpenBoardView/raw/master/asset/screenshot.png)](https://www.youtube.com/watch?v=1Pi5RGC-rJw)
+
+[![Demo Video](https://github.com/inflex/OpenBoardView/blob/inflex-ui-features/asset/screenshot.png)](https://www.youtube.com/watch?v=1Pi5RGC-rJw)
 
 ### Installation
 
-Downloadable an executable from the [Releases page](https://github.com/chloridite/OpenBoardView/releases)
-and run it.
+Run ./build.sh followed by ./openboardview.sh
 
-If you run into any issues starting the executable, you may need to install
-the [DirectX 9.0c End-user Runtime](https://www.microsoft.com/en-us/download/details.aspx?id=8109).
+If you get issues with json11 not compiling then you will need to link in a copy manually to the ./src/json11 folder
+
 
 ### Usage
 
@@ -19,8 +19,10 @@ the [DirectX 9.0c End-user Runtime](https://www.microsoft.com/en-us/download/det
 - N: Search by power net
 - C: Search by component name
 
-- 5/Numpad-5: Reset zoom and center 
-- <space>: Flip board
+- Numeric pad up/down/left/right: pan viewport over board
+- Numeric pad +/-: zoom board
+- Numeric pad 5: Reset zoom and center 
+- Space: Flip board
 - R|.: Rotate clockwise
 - ,: Rotate counter-clockwise
 - L: Show net list
