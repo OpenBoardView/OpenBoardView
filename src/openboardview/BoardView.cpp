@@ -433,6 +433,10 @@ void BoardView::HandleInput() {
 		// Pan:
 		if (ImGui::IsMouseDragging()) {
 			ImVec2 delta = ImGui::GetMouseDragDelta();
+			if ((abs(delta.x) > 500) || (abs(delta.y) > 500)) {
+				delta.x = 0;
+				delta.y = 0;
+			} // If the delta values are crazy just drop them (happens when panning off screen). 500 arbritary chosen
 			ImGui::ResetMouseDragDelta();
 			ImVec2 td = ScreenToCoord(delta.x, delta.y, 0);
 			m_dx += td.x;
@@ -732,6 +736,7 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 		float max_x = min_x;
 		float max_y = min_y;
 		for (auto pin : part->pins) {
+
 			if (pin->position.x > max_x)
 				max_x = pin->position.x;
 			else if (pin->position.x < min_x)
@@ -744,6 +749,7 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 
 		// TODO: pin radius is stored in Pin object
 		float pin_radius = m_pinDiameter / 2.0f;
+		// float pin_radius = pin->diameter *m_scale *20.0f;
 		min_x -= pin_radius;
 		max_x += pin_radius;
 		min_y -= pin_radius;
