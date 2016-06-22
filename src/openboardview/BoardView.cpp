@@ -190,7 +190,6 @@ void BoardView::Update() {
 			if (ImGui::MenuItem("Reset View", "5")) { // actually want this to be numpad 5
 				CenterView();
 			}
-
 			ImGui::EndMenu();
 		}
 		if (ImGui::BeginMenu("Windows")) {
@@ -694,9 +693,18 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 		// Drawing
 		{
 			char pin_number[64];
+			int segments;
 			draw->ChannelsSetCurrent(kChannelImages);
-			draw->AddImage(
-			    pin_texture, ImVec2(pos.x - psz, pos.y - psz), ImVec2(pos.x + psz, pos.y + psz), ImVec2(0, 0), ImVec2(1, 1), color);
+
+			segments                    = trunc(psz);
+			if (segments < 8) segments  = 8;
+			if (segments > 32) segments = 32;
+
+			switch (pin->type) {
+				case Pin::kPinTypeTestPad: draw->AddCircleFilled(ImVec2(pos.x, pos.y), psz, color, segments); break;
+				default: draw->AddCircle(ImVec2(pos.x, pos.y), psz, color, segments);
+			}
+
 			if (show_text) {
 				sprintf(pin_number, "%d", pin->number);
 
