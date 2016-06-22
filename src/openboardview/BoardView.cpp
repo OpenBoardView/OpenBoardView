@@ -466,9 +466,8 @@ void BoardView::HandleInput() {
 		// Zoom:
 		float mwheel = io.MouseWheel;
 		if (mwheel != 0.0f) {
-			const ImVec2 &target = io.MousePos;
-			ImVec2 coord         = ScreenToCoord(target.x, target.y);
 			mwheel *= 0.5f;
+
 			// Ctrl slows down the zoom speed:
 			if (ImGui::IsKeyDown(SDL_SCANCODE_LCTRL) || ImGui::IsKeyDown(SDL_SCANCODE_RCTRL) || ImGui::IsKeyDown(17)) {
 				mwheel *= 0.1f;
@@ -623,16 +622,12 @@ inline void BoardView::DrawOutline(ImDrawList *draw) {
 }
 
 inline void BoardView::DrawPins(ImDrawList *draw) {
-	ImTextureID filled_circle_tex = TextureIDs[0];
-	ImTextureID empty_circle_tex  = TextureIDs[1];
-
-	// TODO: use pin->diameter
-	float psz = (float)m_pinDiameter * 0.5f * m_scale;
 
 	auto io = ImGui::GetIO();
 
 	for (auto &pin : m_board->Pins()) {
 		auto p_pin = pin.get();
+		float psz  = pin->diameter * m_scale * 20.0f;
 
 		// continue if pin is not visible anyway
 		ImVec2 pos = CoordToScreen(pin->position.x, pin->position.y);
@@ -643,7 +638,6 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 		}
 
 		// color & text depending on app state & pin type
-		auto pin_texture    = empty_circle_tex;
 		uint32_t color      = m_colors.pinDefault;
 		uint32_t text_color = color;
 		bool show_text      = false;
