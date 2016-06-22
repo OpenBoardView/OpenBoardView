@@ -77,6 +77,7 @@ struct BoardView {
 	int History_load(void);
 	int History_prepend_save(char *newfile);
 	void CenterView(void);
+	void Zoom(float osd_x, float osd_y, float zoom);
 
 	Pin *m_pinSelected = nullptr;
 	vector<Pin *> m_pinHighlighted;
@@ -87,16 +88,16 @@ struct BoardView {
 	char m_search[128];
 	char m_netFilter[128];
 	char *m_lastFileOpenName;
-	float m_dx;
+	float m_dx; // display top-right coordinate?
 	float m_dy;
-	float m_mx;
+	float m_mx; // board *maxiumum* size? scaled relative to m_boardwidth/height
 	float m_my;
 	float m_scale = 1.0f;
-	float m_lastWidth;
+	float m_lastWidth; // previously checked on-screen window size; use to redraw when window is resized?
 	float m_lastHeight;
-	int m_rotation;
+	int m_rotation; // set to 0 for original orientation [0-4]
 	int m_current_side;
-	int m_boardWidth;
+	int m_boardWidth; // board size in what coordinates? thou?
 	int m_boardHeight;
 
 	ColorScheme m_colors;

@@ -409,6 +409,25 @@ void BoardView::Update() {
 	ImGui::PopStyleVar();
 }
 
+void BoardView::Zoom(float osd_x, float osd_y, float zoom) {
+	ImVec2 target;
+	ImVec2 coord;
+
+	target.x = osd_x;
+	target.y = osd_y;
+	coord    = ScreenToCoord(target.x, target.y);
+
+	// Adjust the scale of the whole view, then get the new coordinates ( as CoordToScreen utilises m_scale )
+	m_scale        = m_scale * powf(2.0f, zoom);
+	ImVec2 dtarget = CoordToScreen(coord.x, coord.y);
+
+	//		fprintf(stderr,"coord: %f(%f) %f(%f)\n", target.x, coord.x, target.y, coord.y);
+	ImVec2 td = ScreenToCoord(target.x - dtarget.x, target.y - dtarget.y, 0);
+	m_dx += td.x;
+	m_dy += td.y;
+	m_needsRedraw = true;
+}
+
 void BoardView::HandleInput() {
 	const ImGuiIO &io = ImGui::GetIO();
 	if (ImGui::IsWindowFocused()) {
@@ -455,13 +474,7 @@ void BoardView::HandleInput() {
 			if (ImGui::IsKeyDown(SDL_SCANCODE_LCTRL) || ImGui::IsKeyDown(SDL_SCANCODE_RCTRL) || ImGui::IsKeyDown(17)) {
 				mwheel *= 0.1f;
 			}
-			m_scale = m_scale * powf(2.0f, mwheel);
-
-			ImVec2 dtarget = CoordToScreen(coord.x, coord.y);
-			ImVec2 td      = ScreenToCoord(target.x - dtarget.x, target.y - dtarget.y, 0);
-			m_dx += td.x;
-			m_dy += td.y;
-			m_needsRedraw = true;
+			Zoom(io.MousePos.x, io.MousePos.y, mwheel);
 		}
 	}
 	if (!io.WantCaptureKeyboard) {
@@ -477,6 +490,73 @@ void BoardView::HandleInput() {
 		}
 		if (ImGui::IsKeyPressed(188)) {
 			Rotate(-1);
+		}
+
+		if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_0)) {
+			// Use this as a debug button
+			fprintf(stderr,
+			        "m_dxy: %f %f, m_mxy: %f %f, board: %d %d, lastW/H: %f %f, scale: %f\n",
+			        m_dx,
+			        m_dy,
+			        m_mx,
+			        m_my,
+			        m_boardWidth,
+			        m_boardHeight,
+			        m_lastWidth,
+			        m_lastHeight,
+			        m_scale);
+		}
+
+		if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_PLUS)) {
+			if (ImGui::IsKeyDown(SDL_SCANCODE_LCTRL) || ImGui::IsKeyDown(SDL_SCANCODE_RCTRL)) {
+				Zoom(m_lastWidth / 2, m_lastHeight / 2, 0.01f);
+			} else {
+				Zoom(m_lastWidth / 2, m_lastHeight / 2, 0.1f);
+			}
+		}
+
+		if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_MINUS)) {
+			if (ImGui::IsKeyDown(SDL_SCANCODE_LCTRL) || ImGui::IsKeyDown(SDL_SCANCODE_RCTRL)) {
+				Zoom(m_lastWidth / 2, m_lastHeight / 2, -0.01f);
+			} else {
+				Zoom(m_lastWidth / 2, m_lastHeight / 2, -0.1f);
+			}
+		}
+
+		if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_2)) {
+			if (ImGui::IsKeyDown(SDL_SCANCODE_LCTRL) || ImGui::IsKeyDown(SDL_SCANCODE_RCTRL))
+				m_dy += 10;
+			else
+				m_dy += 100;
+			m_draggingLastFrame = true;
+			m_needsRedraw       = true;
+		}
+
+		if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_8)) {
+			if (ImGui::IsKeyDown(SDL_SCANCODE_LCTRL) || ImGui::IsKeyDown(SDL_SCANCODE_RCTRL))
+				m_dy -= 10;
+			else
+				m_dy -= 100;
+			m_draggingLastFrame = true;
+			m_needsRedraw       = true;
+		}
+
+		if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_4)) {
+			if (ImGui::IsKeyDown(SDL_SCANCODE_LCTRL) || ImGui::IsKeyDown(SDL_SCANCODE_RCTRL))
+				m_dx += 10;
+			else
+				m_dx += 100;
+			m_draggingLastFrame = true;
+			m_needsRedraw       = true;
+		}
+
+		if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_6)) {
+			if (ImGui::IsKeyDown(SDL_SCANCODE_LCTRL) || ImGui::IsKeyDown(SDL_SCANCODE_RCTRL))
+				m_dx -= 10;
+			else
+				m_dx -= 100;
+			m_draggingLastFrame = true;
+			m_needsRedraw       = true;
 		}
 
 		// Center and reset zoom
@@ -759,6 +839,7 @@ void BoardView::CenterView(void) {
 	float sx = dx > 0 ? view.x / dx : 1.0f;
 	float sy = dy > 0 ? view.y / dy : 1.0f;
 
+	//  m_rotation = 0;
 	m_scale = sx < sy ? sx : sy;
 	SetTarget(m_mx, m_my);
 	m_needsRedraw = true;
