@@ -720,11 +720,29 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 	}
 }
 
+void BoardView::Rotate(double *px, double *py, double ox, double oy, double theta) {
+
+	double tx, ty, ttx, tty;
+
+	tx = *px - ox;
+	ty = *py - oy;
+
+	// With not a lot of parts on the boards, we can get away with using the precision trig functions, might have to change to LUT
+	// based later.
+	ttx = tx * cos(theta) - ty * sin(theta);
+	tty = tx * sin(theta) + ty * cos(theta);
+
+	*px = ttx + ox;
+	*py = tty + oy;
+}
+
 inline void BoardView::DrawParts(ImDrawList *draw) {
 	float psz = (float)m_pinDiameter * 0.5f * m_scale;
+	double angle;
 
 	for (auto &part : m_board->Components()) {
-		auto p_part = part.get();
+		int part_is_orthagonal = 0;
+		auto p_part            = part.get();
 
 		if (!ElementIsVisible(p_part)) continue;
 
@@ -735,6 +753,7 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 		float min_y = part->pins[0]->position.y;
 		float max_x = min_x;
 		float max_y = min_y;
+
 		for (auto pin : part->pins) {
 
 			if (pin->position.x > max_x)
@@ -747,32 +766,82 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 				min_y = pin->position.y;
 		}
 
+		// Test to see if the part is strictly horizontal or vertical
+		part_is_orthagonal = 1;
+		if ((min_y < max_y) && (min_x < max_x)) {
+			if (((max_y - min_y) > 2) && ((max_x - min_x) > 2)) {
+				part_is_orthagonal = 0;
+			}
+		}
+
 		// TODO: pin radius is stored in Pin object
 		float pin_radius = m_pinDiameter / 2.0f;
-		// float pin_radius = pin->diameter *m_scale *20.0f;
 		min_x -= pin_radius;
 		max_x += pin_radius;
 		min_y -= pin_radius;
 		max_y += pin_radius;
 		bool bb_y_resized = false;
-		if (p_part->name[0] == 'U') {
-			if (min_x < max_x - 4 * m_pinDiameter) {
-				min_x += m_pinDiameter;
-				max_x -= m_pinDiameter;
-			}
-			if (min_y < max_y - 4 * m_pinDiameter) {
-				min_y += m_pinDiameter;
-				max_y -= m_pinDiameter;
-				bb_y_resized = true;
-			}
-		}
+
+		// If the part is prefixed with 'U', meaning an IC, then retract the box inwards
+		/*
+		   if (p_part->name[0] == 'U') {
+		       if (min_x < max_x - 4 * m_pinDiameter) {
+		   min_x += m_pinDiameter/2;
+		   max_x -= m_pinDiameter/2;
+		       }
+		       if (min_y < max_y - 4 * m_pinDiameter) {
+		   min_y += m_pinDiameter/2;
+		   max_y -= m_pinDiameter/2;
+		           bb_y_resized = true;
+		       }
+		   }
+		*/
 
 		uint32_t color = m_colors.boxColor;
 		ImVec2 min     = CoordToScreen(min_x, min_y);
 		ImVec2 max     = CoordToScreen(max_x, max_y);
 		min.x -= 0.5f;
 		max.x += 0.5f;
-		draw->AddRect(min, max, color);
+
+		// If we have a rotated part that is a C or R, hopefully with 2 pins ?
+		if ((!part_is_orthagonal) && (((p_part->name[0] == 'C') || (p_part->name[0] == 'R')))) {
+			ImVec2 a, b, c, d;
+			double dx, dy;
+			double tx, ty;
+			double arm;
+
+			dx    = part->pins[1]->position.x - part->pins[0]->position.x;
+			dy    = part->pins[1]->position.y - part->pins[0]->position.y;
+			angle = atan2(dy, dx);
+
+			arm = m_pinDiameter / 2;
+
+			tx = part->pins[0]->position.x - arm;
+			ty = part->pins[0]->position.y - arm;
+			Rotate(&tx, &ty, part->pins[0]->position.x, part->pins[0]->position.y, angle);
+			a = CoordToScreen(tx, ty);
+
+			tx = part->pins[0]->position.x - arm;
+			ty = part->pins[0]->position.y + arm;
+			Rotate(&tx, &ty, part->pins[0]->position.x, part->pins[0]->position.y, angle);
+			b = CoordToScreen(tx, ty);
+
+			tx = part->pins[1]->position.x + arm;
+			ty = part->pins[1]->position.y + arm;
+			Rotate(&tx, &ty, part->pins[1]->position.x, part->pins[1]->position.y, angle);
+			c = CoordToScreen(tx, ty);
+
+			tx = part->pins[1]->position.x + arm;
+			ty = part->pins[1]->position.y - arm;
+			Rotate(&tx, &ty, part->pins[1]->position.x, part->pins[1]->position.y, angle);
+			d = CoordToScreen(tx, ty);
+			draw->AddQuad(a, b, c, d, color);
+
+		} else {
+			// by default, fall back to doing just a box around the pins
+			draw->AddRect(min, max, color);
+		}
+
 		if (PartIsHighlighted(*part) && !part->is_dummy() && !part->name.empty()) {
 			ImVec2 text_size         = ImGui::CalcTextSize(part->name.c_str());
 			float top_y              = min.y;
