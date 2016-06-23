@@ -736,11 +736,81 @@ void BoardView::Rotate(double *px, double *py, double ox, double oy, double thet
 	*py = tty + oy;
 }
 
+// To find orientation of ordered triplet (p, q, r).
+// The function returns following values
+// 0 --> p, q and r are colinear
+// 1 --> Clockwise
+// 2 --> Counterclockwise
+int BoardView::ConvexHullOrientation(ImVec2 p, ImVec2 q, ImVec2 r) {
+
+	int val = trunc(((q.y - p.y) * (r.x - q.x) - (q.x - p.x) * (r.y - q.y)));
+
+	if (val == 0) return 0;   // colinear
+	return (val > 0) ? 1 : 2; // clock or counterclock wise
+}
+
+// Prints convex hull of a set of n points. returns how many points
+int BoardView::ConvexHull(ImVec2 hull[], ImVec2 points[], int n) {
+
+	int hpc = 0;
+
+	//	fprintf(stderr,"Making hull...\n");
+	// There must be at least 3 points
+	if (n < 3) return 0;
+	if (n > 999) n = 999;
+
+	// Find the leftmost point
+	int l = 0;
+	for (int i                           = 1; i < n; i++)
+		if (points[i].x < points[l].x) l = i;
+
+	// Start from leftmost point, keep moving counterclockwise
+	// until reach the start point again.  This loop runs O(h)
+	// times where h is number of points in result or output.
+	int p = l, q;
+	do {
+		// Add current point to result
+		hull[hpc] = CoordToScreen(points[p].x, points[p].y);
+		hpc++;
+
+		// hull.push_back(points[p]);
+
+		// Search for a point 'q' such that orientation(p, x,
+		// q) is counterclockwise for all points 'x'. The idea
+		// is to keep track of last visited most counterclock-
+		// wise point in q. If any point 'i' is more counterclock-
+		// wise than q, then update q.
+		q = (p + 1) % n;
+		for (int i = 0; i < n; i++) {
+			// If i is more counterclockwise than current q, then
+			// update q
+			if (ConvexHullOrientation(points[p], points[i], points[q]) == 2) q = i;
+		}
+
+		// Now q is the most counterclockwise with respect to p
+		// Set p as q for next iteration, so that q is added to
+		// result 'hull'
+		p = q;
+
+	} while (p != l); // While we don't come to first point
+
+	// Print Result
+	//    for (int i = 0; i < hull.size(); i++) {
+	//		 fprintf(stderr,"%0.1f %0.1f, ", hull[i].x, hull[i].y);
+	//	 }
+	//	 fprintf(stderr,"\n");
+	return hpc;
+}
+
 inline void BoardView::DrawParts(ImDrawList *draw) {
 	float psz = (float)m_pinDiameter * 0.5f * m_scale;
 	double angle;
+	double distance = 0;
+	struct ImVec2 pva[1000], *ppp;
+	uint32_t color = m_colors.boxColor;
 
 	for (auto &part : m_board->Components()) {
+		int pincount           = 0;
 		int part_is_orthagonal = 0;
 		auto p_part            = part.get();
 
@@ -748,13 +818,21 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 
 		if (part->is_dummy()) continue;
 
-		// scale box around pins
+		// scale box around pins as a fallback, else either use polygon or convex hull for better shape fidelity
 		float min_x = part->pins[0]->position.x;
 		float min_y = part->pins[0]->position.y;
 		float max_x = min_x;
 		float max_y = min_y;
 
+		ppp = &pva[0];
 		for (auto pin : part->pins) {
+			pincount++;
+
+			if (pincount < 1000) {
+				ppp->x = pin->position.x;
+				ppp->y = pin->position.y;
+				ppp++;
+			}
 
 			if (pin->position.x > max_x)
 				max_x = pin->position.x;
@@ -766,6 +844,11 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 				min_y = pin->position.y;
 		}
 
+		if (min_x < max_x)
+			distance = max_y - min_y;
+		else
+			distance = max_x - min_x;
+
 		// Test to see if the part is strictly horizontal or vertical
 		part_is_orthagonal = 1;
 		if ((min_y < max_y) && (min_x < max_x)) {
@@ -773,9 +856,76 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 				part_is_orthagonal = 0;
 			}
 		}
+		distance = sqrt((max_x - min_x) * (max_x - min_x) + (max_y - min_y) * (max_y - min_y));
+
+		float pin_radius = m_pinDiameter / 2.0f;
+
+		if ((pincount < 4) && (part->name[0] != 'U') && (part->name[0] != 'Q')) {
+			if ((distance > 52) && (distance < 57)) {
+				// 0603
+				pin_radius = 15;
+				for (auto pin : part->pins) {
+					pin->diameter = pin_radius * 0.05;
+				}
+
+			} else if ((distance > 247) && (distance < 253)) {
+				// SMC diode?
+				pin_radius = 50;
+				for (auto pin : part->pins) {
+					pin->diameter = pin_radius * 0.05;
+				}
+
+			} else if ((distance > 195) && (distance < 199)) {
+				// Inductor?
+				pin_radius = 50;
+				for (auto pin : part->pins) {
+					pin->diameter = pin_radius * 0.05;
+				}
+
+			} else if ((distance > 165) && (distance < 169)) {
+				// SMB diode?
+				pin_radius = 35;
+				for (auto pin : part->pins) {
+					pin->diameter = pin_radius * 0.05;
+				}
+
+			} else if ((distance > 101) && (distance < 109)) {
+				// SMA diode / tant cap
+				pin_radius = 30;
+				for (auto pin : part->pins) {
+					pin->diameter = pin_radius * 0.05;
+				}
+
+			} else if ((distance > 108) && (distance < 112)) {
+				// 1206
+				pin_radius = 30;
+				for (auto pin : part->pins) {
+					pin->diameter = pin_radius * 0.05;
+				}
+
+			} else if ((distance > 64) && (distance < 68)) {
+				// 0805
+				pin_radius = 25;
+				for (auto pin : part->pins) {
+					pin->diameter = pin_radius * 0.05;
+				}
+
+			} else if ((distance > 18) && (distance < 22)) {
+				// 0201 cap/resistor?
+				pin_radius = 5;
+				for (auto pin : part->pins) {
+					pin->diameter = pin_radius * 0.05;
+				}
+			} else if ((distance > 28) && (distance < 32)) {
+				// 0402 cap/resistor
+				pin_radius = 10;
+				for (auto pin : part->pins) {
+					pin->diameter = pin_radius * 0.05;
+				}
+			}
+		}
 
 		// TODO: pin radius is stored in Pin object
-		float pin_radius = m_pinDiameter / 2.0f;
 		min_x -= pin_radius;
 		max_x += pin_radius;
 		min_y -= pin_radius;
@@ -797,14 +947,15 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 		   }
 		*/
 
-		uint32_t color = m_colors.boxColor;
-		ImVec2 min     = CoordToScreen(min_x, min_y);
-		ImVec2 max     = CoordToScreen(max_x, max_y);
-		min.x -= 0.5f;
-		max.x += 0.5f;
+		ImVec2 min = CoordToScreen(min_x, min_y);
+		ImVec2 max = CoordToScreen(max_x, max_y);
+		//    min.x -= 0.5f;
+		//  max.x += 0.5f;
 
+		//	 fprintf(stdout,"Distance:%0.2f (%s)\n", distance, part->name.c_str());
 		// If we have a rotated part that is a C or R, hopefully with 2 pins ?
-		if ((!part_is_orthagonal) && (((p_part->name[0] == 'C') || (p_part->name[0] == 'R')))) {
+		if ((!part_is_orthagonal) &&
+		    (((p_part->name[0] == 'C') || (p_part->name[0] == 'R') || (p_part->name[0] == 'L') || (p_part->name[0] == 'D')))) {
 			ImVec2 a, b, c, d;
 			double dx, dy;
 			double tx, ty;
@@ -814,7 +965,7 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 			dy    = part->pins[1]->position.y - part->pins[0]->position.y;
 			angle = atan2(dy, dx);
 
-			arm = m_pinDiameter / 2;
+			arm = pin_radius;
 
 			tx = part->pins[0]->position.x - arm;
 			ty = part->pins[0]->position.y - arm;
@@ -839,7 +990,19 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 
 		} else {
 			// by default, fall back to doing just a box around the pins
-			draw->AddRect(min, max, color);
+			if ((pincount > 4) && (part->name[0] == 'J')) {
+				ImVec2 hull[100];
+				int hpc;
+
+				hpc = ConvexHull(hull, pva, pincount);
+				if (hpc)
+					draw->AddPolyline(hull, hpc, color, true, 1.0f, false);
+				else
+					draw->AddRect(min, max, color);
+
+			} else {
+				draw->AddRect(min, max, color);
+			}
 		}
 
 		if (PartIsHighlighted(*part) && !part->is_dummy() && !part->name.empty()) {
@@ -879,8 +1042,8 @@ void BoardView::DrawBoard() {
 	draw->ChannelsSetCurrent(kChannelPolylines);
 
 	DrawOutline(draw);
-	DrawPins(draw);
 	DrawParts(draw);
+	DrawPins(draw);
 
 	draw->ChannelsMerge();
 
