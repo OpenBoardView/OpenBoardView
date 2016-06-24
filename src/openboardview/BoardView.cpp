@@ -667,8 +667,7 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 			}
 
 			if (pin->type == Pin::kPinTypeTestPad) {
-				color = m_colors.pinTestPad;
-				// pin_texture = filled_circle_tex; // TODO
+				color     = m_colors.pinTestPad;
 				show_text = false;
 			}
 
@@ -736,6 +735,20 @@ void BoardView::Rotate(double *px, double *py, double ox, double oy, double thet
 	*py = tty + oy;
 }
 
+ImVec2 BoardView::Rotate(ImVec2 v, ImVec2 o, double theta) {
+	double tx, ty, ttx, tty;
+
+	tx = v.x - o.x;
+	ty = v.y - o.y;
+
+	// With not a lot of parts on the boards, we can get away with using the precision trig functions, might have to change to LUT
+	// based later.
+	ttx = tx * cos(theta) - ty * sin(theta);
+	tty = tx * sin(theta) + ty * cos(theta);
+
+	return ImVec2(ttx + o.x, tty + o.y);
+}
+
 ImVec2 BoardView::Rotate(ImVec2 v, double theta) {
 
 	double nx, ny;
@@ -746,56 +759,95 @@ ImVec2 BoardView::Rotate(ImVec2 v, double theta) {
 	return ImVec2(nx, ny);
 }
 
+#define PI 3.14159
 double BoardView::AngleToX(ImVec2 a, ImVec2 b) {
+	//	if ( b.x < a.x ) return atan2( (b.y -a.y), (a.x - b.x) ) +PI/2;
 	return atan2((b.y - a.y), (b.x - a.x));
 }
 
-void BoardView::MBBCalculate(ImVec2 box[], ImVec2 *hull, int n) {
+void BoardView::MBBCalculate(ImDrawList *draw, uint32_t color, ImVec2 box[], ImVec2 hull[], int n, double psz) {
+	// void BoardView::MBBCalculate(ImVec2 box[], ImVec2 *hull, int n, double psz ) {
 
-	double mbAngle = 0;
-	double area = -1, mbArea = -1; // fake area to initialise
-	ImVec2 bbl, btr, mbb, mba;     // Box bottom left, box top right
+	double mbAngle = 0, ca = 0;
+	double mbArea = -1;      // fake area to initialise
+	ImVec2 mbb, mba, origin; // Box bottom left, box top right
 	int i;
 
+	origin = hull[0];
+
+	//	fprintf(stderr,"MBB Calculate\n");
 	for (i = 0; i < n; i++) {
 		int ni = i + 1;
 		double area;
+		ImVec2 tb[4]; // debugging box
 
 		ImVec2 current = hull[i];
 		ImVec2 next    = hull[ni % n];
 
 		double angle = AngleToX(current, next); // angle formed between current and next hull points;
+		ca += angle;
+		/*
+		fprintf(stderr,"MBB: ORG[%0.0f, %0.0f] (current(%0.0f %0.0f - %0.0f %0.0f) => Delta( %0.0f %0.0f ) A[%d]=%0.2f, cumulative
+		angle = %0.2f "
+		        , hull[0].x, hull[0].y
+		        , current.x, current.y
+		        , next.x, next.y
+		        , (next.x -current.x)
+		        , (next.y -current.y)
+		        , i, angle, ca);
+		        */
 
-		double t, b, l, r; // bounding rect limits
-		t = r = -1000000;
-		b = l = 1000000;
+		double top, bot, left, right; // bounding rect limits
+		top = right = -100000000;
+		bot = left = +100000000;
 
 		int x;
 		for (x = 0; x < n; x++) {
-			ImVec2 rp = Rotate(hull[x], angle);
+			ImVec2 rp = Rotate(hull[x], origin, -angle);
+			//			ImVec2 rp = Rotate( hull[x], origin, angle );
 
-			if (rp.y > t) t = rp.y;
-			if (rp.y < b) b = rp.y;
-			if (rp.x > r) r = rp.x;
-			if (rp.x < l) l = rp.x;
+			hull[x] = rp;
+
+			if (rp.y > top) top     = rp.y;
+			if (rp.y < bot) bot     = rp.y;
+			if (rp.x > right) right = rp.x;
+			if (rp.x < left) left   = rp.x;
 		}
+		//		fprintf(stderr," (%0.2f %0.2f) - (%0.2f %0.2f) ", left, bot,  right, top );
 
-		bbl  = ImVec2(l, b);
-		btr  = ImVec2(r, t);
-		area = (r - l) * (t - b);
+		// This is just to show the progressive rectangles that are evaluated for debugging
+		//		tb[0] = Rotate(ImVec2(left, bot), origin,  +ca);
+		//		tb[1] = Rotate(ImVec2(right, bot), origin,  +ca);
+		//		tb[2] = Rotate(ImVec2(right, top), origin,  +ca);
+		//		tb[3] = Rotate(ImVec2(left, top), origin, +ca);
+		//		fprintf(stderr,"Drawing test poly...(%0.2f %0.2f)", tb[0].x, tb[0].y);
+
+		area = (right - left) * (top - bot);
+		//		fprintf(stderr, "Area=%0.2f ",area);
+		//			draw->AddPolyline( tb, 4, color+i*10,  true, 1.0f, false);
+
 		if ((mbArea < 0) || (mbArea > area)) {
+			//			fprintf(stderr,"SMALLER!");
 			mbArea  = area;
-			mbAngle = angle;
-			mba     = bbl;
-			mbb     = btr;
+			mbAngle = ca; // angle;
+			mba     = ImVec2(left, bot);
+			mbb     = ImVec2(right, top);
 		}
+		//		fprintf(stderr,"\n");
 	} // for all points on hull
+	  //	fprintf(stderr,"DONE\n");
+
+	// expand by pin size
+	mba.x -= psz;
+	mba.y -= psz;
+	mbb.x += psz;
+	mbb.y += psz;
 
 	// Form our rectangle, has to be all 4 points as it's a polygon now that'll be rotated
-	box[0] = Rotate(mba, -mbAngle);
-	box[1] = Rotate(ImVec2(mbb.x, mba.y), -mbAngle);
-	box[2] = Rotate(mbb, -mbAngle);
-	box[3] = Rotate(ImVec2(mba.x, mbb.y), -mbAngle);
+	box[0] = Rotate(mba, origin, +mbAngle);
+	box[1] = Rotate(ImVec2(mbb.x, mba.y), origin, +mbAngle);
+	box[2] = Rotate(mbb, origin, +mbAngle);
+	box[3] = Rotate(ImVec2(mba.x, mbb.y), origin, +mbAngle);
 }
 
 // To find orientation of ordered triplet (p, q, r).
@@ -863,6 +915,76 @@ int BoardView::ConvexHull(ImVec2 hull[], ImVec2 points[], int n) {
 	//	 fprintf(stderr,"\n");
 	return hpc;
 }
+
+int BoardView::TightenHull(ImVec2 hull[], int n, double threshold) {
+	// theory: circle the hull, compare 3 points at a time, if the mid point is sub-angular then make it equal the first point and
+	// move to the 3rd.
+	int i, ni;
+	ImVec2 *a, *b, *c;
+	double a1, a2, ad;
+	// First cycle, we look for sub-threshold 2-segment runs
+	for (i = 0; i < n; i++) {
+		a = &(hull[i]);
+		b = &(hull[(i + 1) % n]);
+		c = &(hull[(i + 2) % n]);
+
+		a1 = AngleToX(*a, *b);
+		a2 = AngleToX(*b, *c);
+		if (a1 > a2)
+			ad = a1 - a2;
+		else
+			ad = a2 - a1;
+
+		if (ad < threshold) {
+			//			fprintf(stderr,"angle below threshold (%0.2f)\n", ad);
+			*b = *a;
+		}
+	} // end first cycle
+
+	// Second cycle, we compact the hull
+	int output_index = 0;
+	i                = 0;
+	while (i < n) {
+		ni = (i + 1) % n;
+		if ((hull[i].x == hull[ni].x) && (hull[i].y == hull[ni].y)) {
+			// match found, discard one
+			i++;
+			continue;
+		}
+
+		hull[output_index] = hull[i];
+		output_index++;
+		i++;
+	}
+
+	return output_index;
+}
+
+#ifdef LREGRESSION
+/*** Linear regression method of trying to find a suitable perimeter box **/
+double slope(InVec2 a[], int n) {
+
+	int i;
+	double ax, ay;
+	double numerator   = 0.0;
+	double denominator = 0.0;
+
+	ax = 0.0;
+	ay = 0.0;
+
+	for (i = 0; i < n; i++) {
+		ax += a[i].x;
+		ay += a[i].y;
+	}
+
+	for (int i = 0; i < n; i++) {
+		numerator += (a[i].x - avgX) * (a[i].y - avgY);
+		denominator += (a[i].x - avgX) * (a[i].x - avgX);
+	}
+
+	return numerator / denominator;
+}
+#endif
 
 inline void BoardView::DrawParts(ImDrawList *draw) {
 	float psz = (float)m_pinDiameter * 0.5f * m_scale;
@@ -1016,7 +1138,7 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 
 		//	 fprintf(stdout,"Distance:%0.2f (%s)\n", distance, part->name.c_str());
 		// If we have a rotated part that is a C or R, hopefully with 2 pins ?
-		if ((!part_is_orthagonal) &&
+		if ((!part_is_orthagonal) && (pincount < 4) &&
 		    (((p_part->name[0] == 'C') || (p_part->name[0] == 'R') || (p_part->name[0] == 'L') || (p_part->name[0] == 'D')))) {
 			ImVec2 a, b, c, d;
 			double dx, dy;
@@ -1059,9 +1181,16 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 				hpc = ConvexHull(hull, pva, pincount);
 				if (hpc) {
 					ImVec2 bbox[4];
+
+					// first, tighten the hull
+					//				fprintf(stderr,"%s %d points. ",part->name.c_str(), hpc);
 					//				 draw->AddPolyline(hull, hpc, color, true, 1.0f, false);
-					MBBCalculate(bbox, hull, hpc);
-					draw->AddPolyline(bbox, 4, color, true, 1.0f, false);
+					hpc = TightenHull(hull, hpc, 0.1f);
+					//				fprintf(stderr,"tightened to %d points.\n", hpc);
+					//				 draw->AddPolyline(hull, hpc, color+200, true, 1.0f, false);
+					// MBBCalculate(bbox, hull, hpc, pin_radius *m_scale);
+					MBBCalculate(draw, color, bbox, hull, hpc, pin_radius * m_scale);
+					draw->AddPolyline(bbox, 4, color, true, 1.0f, true);
 				}
 
 				else
