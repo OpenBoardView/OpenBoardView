@@ -31,6 +31,7 @@ int main(int argc, char **argv) {
 	SDL_Window *window = SDL_CreateWindow(
 	    "Open Board Viewer", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1280, 720, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
 	SDL_GLContext glcontext = SDL_GL_CreateContext(window);
+	SDL_EventState(SDL_DROPFILE, SDL_ENABLE);
 	gl3wInit();
 
 	// Setup ImGui binding
@@ -53,6 +54,12 @@ int main(int argc, char **argv) {
 		SDL_Event event;
 		while (SDL_PollEvent(&event)) {
 			ImGui_ImplSdlGL3_ProcessEvent(&event);
+
+			if (event.type == SDL_DROPFILE) {
+				app.LoadFile(strdup(event.drop.file));
+				fprintf(stdout, "%s\n", event.drop.file);
+			}
+
 			if (event.type == SDL_QUIT) done = true;
 		}
 
