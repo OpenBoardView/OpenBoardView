@@ -8,8 +8,9 @@ Linux SDL/ImGui edition software for viewing .brd files, intended as a drop-in r
 
 ### Installation
 
-To pull this specific branch;
-  git clone -b inflex-ui-features https://github.com/inflex/OpenBoardView.git
+To clone this specific branch;
+
+git clone -b inflex-ui-features https://github.com/inflex/OpenBoardView.git
 
 Run ./build.sh followed by ./openboardview.sh
 
