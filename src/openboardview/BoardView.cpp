@@ -736,6 +736,68 @@ void BoardView::Rotate(double *px, double *py, double ox, double oy, double thet
 	*py = tty + oy;
 }
 
+ImVec2 BoardView::Rotate(ImVec2 v, double theta) {
+
+	double nx, ny;
+
+	nx = v.x * cos(theta) - v.y * sin(theta);
+	ny = v.x * sin(theta) + v.y * cos(theta);
+
+	return ImVec2(nx, ny);
+}
+
+double BoardView::AngleToX(ImVec2 a, ImVec2 b) {
+	return atan2((b.y - a.y), (b.x - a.x));
+}
+
+void BoardView::MBBCalculate(ImVec2 box[], ImVec2 *hull, int n) {
+
+	double mbAngle = 0;
+	double area = -1, mbArea = -1; // fake area to initialise
+	ImVec2 bbl, btr, mbb, mba;     // Box bottom left, box top right
+	int i;
+
+	for (i = 0; i < n; i++) {
+		int ni = i + 1;
+		double area;
+
+		ImVec2 current = hull[i];
+		ImVec2 next    = hull[ni % n];
+
+		double angle = AngleToX(current, next); // angle formed between current and next hull points;
+
+		double t, b, l, r; // bounding rect limits
+		t = r = -1000000;
+		b = l = 1000000;
+
+		int x;
+		for (x = 0; x < n; x++) {
+			ImVec2 rp = Rotate(hull[x], angle);
+
+			if (rp.y > t) t = rp.y;
+			if (rp.y < b) b = rp.y;
+			if (rp.x > r) r = rp.x;
+			if (rp.x < l) l = rp.x;
+		}
+
+		bbl  = ImVec2(l, b);
+		btr  = ImVec2(r, t);
+		area = (r - l) * (t - b);
+		if ((mbArea < 0) || (mbArea > area)) {
+			mbArea  = area;
+			mbAngle = angle;
+			mba     = bbl;
+			mbb     = btr;
+		}
+	} // for all points on hull
+
+	// Form our rectangle, has to be all 4 points as it's a polygon now that'll be rotated
+	box[0] = Rotate(mba, -mbAngle);
+	box[1] = Rotate(ImVec2(mbb.x, mba.y), -mbAngle);
+	box[2] = Rotate(mbb, -mbAngle);
+	box[3] = Rotate(ImVec2(mba.x, mbb.y), -mbAngle);
+}
+
 // To find orientation of ordered triplet (p, q, r).
 // The function returns following values
 // 0 --> p, q and r are colinear
@@ -995,8 +1057,13 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 				int hpc;
 
 				hpc = ConvexHull(hull, pva, pincount);
-				if (hpc)
-					draw->AddPolyline(hull, hpc, color, true, 1.0f, false);
+				if (hpc) {
+					ImVec2 bbox[4];
+					//				 draw->AddPolyline(hull, hpc, color, true, 1.0f, false);
+					MBBCalculate(bbox, hull, hpc);
+					draw->AddPolyline(bbox, 4, color, true, 1.0f, false);
+				}
+
 				else
 					draw->AddRect(min, max, color);
 

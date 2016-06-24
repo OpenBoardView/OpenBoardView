@@ -79,8 +79,11 @@ struct BoardView {
 	void CenterView(void);
 	void Zoom(float osd_x, float osd_y, float zoom);
 	void Rotate(double *px, double *py, double ox, double oy, double theta);
+	ImVec2 Rotate(ImVec2 v, double theta);
+	double AngleToX(ImVec2 a, ImVec2 b);
 	int ConvexHullOrientation(ImVec2 p, ImVec2 q, ImVec2 r);
 	int ConvexHull(ImVec2 hull[], ImVec2 points[], int n);
+	void MBBCalculate(ImVec2 box[], ImVec2 *hull, int n);
 
 	Pin *m_pinSelected = nullptr;
 	vector<Pin *> m_pinHighlighted;
