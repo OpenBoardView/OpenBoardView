@@ -6,6 +6,22 @@ Linux SDL/ImGui edition software for viewing .brd files, intended as a drop-in r
 
 [![Demo Video](https://github.com/inflex/OpenBoardView/blob/inflex-ui-features/asset/screenshot.png)](https://www.youtube.com/watch?v=1Pi5RGC-rJw)
 
+### Features
+
+- Part and pin sizes better represented
+- Better outlining of irregular objects (such as connectors)
+- Drag and drop
+- Recently used file history
+- Non-orthagonally orientated caps/resistors/diodes now drawn more realistically
+- Works with multiple concurrent instances
+
+### TODO
+
+- Decode more board formats
+- Adjustable colours
+- Compound project/file format
+- Configuration file
+
 ### Installation
 
 To clone this specific branch;
