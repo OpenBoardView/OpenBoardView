@@ -32,6 +32,8 @@ Run ./build.sh followed by ./openboardview.sh
 
 If you get issues with json11 not compiling then you will need to link in a copy manually to the ./src/json11 folder
 
+Discussion on IRC at Freenode #openboardview
+
 
 ### Usage
 
