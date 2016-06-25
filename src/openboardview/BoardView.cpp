@@ -420,7 +420,6 @@ void BoardView::Zoom(float osd_x, float osd_y, float zoom) {
 	m_scale        = m_scale * powf(2.0f, zoom);
 	ImVec2 dtarget = CoordToScreen(coord.x, coord.y);
 
-	//		fprintf(stderr,"coord: %f(%f) %f(%f)\n", target.x, coord.x, target.y, coord.y);
 	ImVec2 td = ScreenToCoord(target.x - dtarget.x, target.y - dtarget.y, 0);
 	m_dx += td.x;
 	m_dy += td.y;
@@ -526,19 +525,33 @@ void BoardView::HandleInput() {
 		}
 
 		if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_2)) {
-			if (ImGui::IsKeyDown(SDL_SCANCODE_LCTRL) || ImGui::IsKeyDown(SDL_SCANCODE_RCTRL))
-				m_dy += 10;
-			else
-				m_dy += 100;
+			if (ImGui::IsKeyDown(SDL_SCANCODE_LCTRL) || ImGui::IsKeyDown(SDL_SCANCODE_RCTRL)) {
+				if (m_current_side)
+					m_dy -= 10;
+				else
+					m_dy += 10;
+			} else {
+				if (m_current_side)
+					m_dy -= 100;
+				else
+					m_dy += 100;
+			}
 			m_draggingLastFrame = true;
 			m_needsRedraw       = true;
 		}
 
 		if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_8)) {
-			if (ImGui::IsKeyDown(SDL_SCANCODE_LCTRL) || ImGui::IsKeyDown(SDL_SCANCODE_RCTRL))
-				m_dy -= 10;
-			else
-				m_dy -= 100;
+			if (ImGui::IsKeyDown(SDL_SCANCODE_LCTRL) || ImGui::IsKeyDown(SDL_SCANCODE_RCTRL)) {
+				if (m_current_side)
+					m_dy += 10;
+				else
+					m_dy -= 10;
+			} else {
+				if (m_current_side)
+					m_dy += 100;
+				else
+					m_dy -= 100;
+			}
 			m_draggingLastFrame = true;
 			m_needsRedraw       = true;
 		}
@@ -626,7 +639,6 @@ inline void BoardView::DrawOutline(ImDrawList *draw) {
 }
 
 inline void BoardView::DrawPins(ImDrawList *draw) {
-
 	auto io = ImGui::GetIO();
 
 	for (auto &pin : m_board->Pins()) {
@@ -693,6 +705,7 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 			int segments;
 			draw->ChannelsSetCurrent(kChannelImages);
 
+			// for the round pin representations, choose how many circle segments need based on the pin size
 			segments                    = trunc(psz);
 			if (segments < 8) segments  = 8;
 			if (segments > 32) segments = 32;
@@ -720,7 +733,6 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 }
 
 void BoardView::Rotate(double *px, double *py, double ox, double oy, double theta) {
-
 	double tx, ty, ttx, tty;
 
 	tx = *px - ox;
@@ -750,7 +762,6 @@ ImVec2 BoardView::Rotate(ImVec2 v, ImVec2 o, double theta) {
 }
 
 ImVec2 BoardView::Rotate(ImVec2 v, double theta) {
-
 	double nx, ny;
 
 	nx = v.x * cos(theta) - v.y * sin(theta);
@@ -759,43 +770,28 @@ ImVec2 BoardView::Rotate(ImVec2 v, double theta) {
 	return ImVec2(nx, ny);
 }
 
-#define PI 3.14159
 double BoardView::AngleToX(ImVec2 a, ImVec2 b) {
-	//	if ( b.x < a.x ) return atan2( (b.y -a.y), (a.x - b.x) ) +PI/2;
 	return atan2((b.y - a.y), (b.x - a.x));
 }
 
-void BoardView::MBBCalculate(ImDrawList *draw, uint32_t color, ImVec2 box[], ImVec2 hull[], int n, double psz) {
-	// void BoardView::MBBCalculate(ImVec2 box[], ImVec2 *hull, int n, double psz ) {
+void BoardView::MBBCalculate(ImVec2 box[], ImVec2 *hull, int n, double psz) {
 
-	double mbAngle = 0, ca = 0;
+	double mbAngle = 0, cumulative_angle = 0;
 	double mbArea = -1;      // fake area to initialise
 	ImVec2 mbb, mba, origin; // Box bottom left, box top right
 	int i;
 
 	origin = hull[0];
 
-	//	fprintf(stderr,"MBB Calculate\n");
 	for (i = 0; i < n; i++) {
 		int ni = i + 1;
 		double area;
-		ImVec2 tb[4]; // debugging box
 
 		ImVec2 current = hull[i];
 		ImVec2 next    = hull[ni % n];
 
 		double angle = AngleToX(current, next); // angle formed between current and next hull points;
-		ca += angle;
-		/*
-		fprintf(stderr,"MBB: ORG[%0.0f, %0.0f] (current(%0.0f %0.0f - %0.0f %0.0f) => Delta( %0.0f %0.0f ) A[%d]=%0.2f, cumulative
-		angle = %0.2f "
-		        , hull[0].x, hull[0].y
-		        , current.x, current.y
-		        , next.x, next.y
-		        , (next.x -current.x)
-		        , (next.y -current.y)
-		        , i, angle, ca);
-		        */
+		cumulative_angle += angle;
 
 		double top, bot, left, right; // bounding rect limits
 		top = right = -100000000;
@@ -804,7 +800,6 @@ void BoardView::MBBCalculate(ImDrawList *draw, uint32_t color, ImVec2 box[], ImV
 		int x;
 		for (x = 0; x < n; x++) {
 			ImVec2 rp = Rotate(hull[x], origin, -angle);
-			//			ImVec2 rp = Rotate( hull[x], origin, angle );
 
 			hull[x] = rp;
 
@@ -813,29 +808,15 @@ void BoardView::MBBCalculate(ImDrawList *draw, uint32_t color, ImVec2 box[], ImV
 			if (rp.x > right) right = rp.x;
 			if (rp.x < left) left   = rp.x;
 		}
-		//		fprintf(stderr," (%0.2f %0.2f) - (%0.2f %0.2f) ", left, bot,  right, top );
-
-		// This is just to show the progressive rectangles that are evaluated for debugging
-		//		tb[0] = Rotate(ImVec2(left, bot), origin,  +ca);
-		//		tb[1] = Rotate(ImVec2(right, bot), origin,  +ca);
-		//		tb[2] = Rotate(ImVec2(right, top), origin,  +ca);
-		//		tb[3] = Rotate(ImVec2(left, top), origin, +ca);
-		//		fprintf(stderr,"Drawing test poly...(%0.2f %0.2f)", tb[0].x, tb[0].y);
-
 		area = (right - left) * (top - bot);
-		//		fprintf(stderr, "Area=%0.2f ",area);
-		//			draw->AddPolyline( tb, 4, color+i*10,  true, 1.0f, false);
 
 		if ((mbArea < 0) || (mbArea > area)) {
-			//			fprintf(stderr,"SMALLER!");
 			mbArea  = area;
-			mbAngle = ca; // angle;
+			mbAngle = cumulative_angle; // total angle we've had to rotate the board to get to this orientation;
 			mba     = ImVec2(left, bot);
 			mbb     = ImVec2(right, top);
 		}
-		//		fprintf(stderr,"\n");
 	} // for all points on hull
-	  //	fprintf(stderr,"DONE\n");
 
 	// expand by pin size
 	mba.x -= psz;
@@ -868,15 +849,16 @@ int BoardView::ConvexHull(ImVec2 hull[], ImVec2 points[], int n) {
 
 	int hpc = 0;
 
-	//	fprintf(stderr,"Making hull...\n");
 	// There must be at least 3 points
 	if (n < 3) return 0;
-	if (n > 999) n = 999;
 
 	// Find the leftmost point
 	int l = 0;
-	for (int i                           = 1; i < n; i++)
-		if (points[i].x < points[l].x) l = i;
+	for (int i = 1; i < n; i++) {
+		if (points[i].x < points[l].x) {
+			l = i;
+		}
+	}
 
 	// Start from leftmost point, keep moving counterclockwise
 	// until reach the start point again.  This loop runs O(h)
@@ -887,8 +869,6 @@ int BoardView::ConvexHull(ImVec2 hull[], ImVec2 points[], int n) {
 		hull[hpc] = CoordToScreen(points[p].x, points[p].y);
 		hpc++;
 
-		// hull.push_back(points[p]);
-
 		// Search for a point 'q' such that orientation(p, x,
 		// q) is counterclockwise for all points 'x'. The idea
 		// is to keep track of last visited most counterclock-
@@ -896,9 +876,10 @@ int BoardView::ConvexHull(ImVec2 hull[], ImVec2 points[], int n) {
 		// wise than q, then update q.
 		q = (p + 1) % n;
 		for (int i = 0; i < n; i++) {
-			// If i is more counterclockwise than current q, then
-			// update q
-			if (ConvexHullOrientation(points[p], points[i], points[q]) == 2) q = i;
+			// If i is more counterclockwise than current q, then update q
+			if (ConvexHullOrientation(points[p], points[i], points[q]) == 2) {
+				q = i;
+			}
 		}
 
 		// Now q is the most counterclockwise with respect to p
@@ -908,11 +889,6 @@ int BoardView::ConvexHull(ImVec2 hull[], ImVec2 points[], int n) {
 
 	} while (p != l); // While we don't come to first point
 
-	// Print Result
-	//    for (int i = 0; i < hull.size(); i++) {
-	//		 fprintf(stderr,"%0.1f %0.1f, ", hull[i].x, hull[i].y);
-	//	 }
-	//	 fprintf(stderr,"\n");
 	return hpc;
 }
 
@@ -1117,7 +1093,9 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 		bool bb_y_resized = false;
 
 		// If the part is prefixed with 'U', meaning an IC, then retract the box inwards
-		/*
+		/* -- commented out by Inflex, there's as much chance the IC legs out vs BGA, so
+		    really this could go either way
+
 		   if (p_part->name[0] == 'U') {
 		       if (min_x < max_x - 4 * m_pinDiameter) {
 		   min_x += m_pinDiameter/2;
@@ -1136,7 +1114,6 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 		//    min.x -= 0.5f;
 		//  max.x += 0.5f;
 
-		//	 fprintf(stdout,"Distance:%0.2f (%s)\n", distance, part->name.c_str());
 		// If we have a rotated part that is a C or R, hopefully with 2 pins ?
 		if ((!part_is_orthagonal) && (pincount < 4) &&
 		    (((p_part->name[0] == 'C') || (p_part->name[0] == 'R') || (p_part->name[0] == 'L') || (p_part->name[0] == 'D')))) {
@@ -1151,6 +1128,7 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 
 			arm = pin_radius;
 
+			// TODO: Compact this bit of code, maybe. It works at least.
 			tx = part->pins[0]->position.x - arm;
 			ty = part->pins[0]->position.y - arm;
 			Rotate(&tx, &ty, part->pins[0]->position.x, part->pins[0]->position.y, angle);
@@ -1173,28 +1151,31 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 			draw->AddQuad(a, b, c, d, color);
 
 		} else {
-			// by default, fall back to doing just a box around the pins
-			if ((pincount > 4) && (part->name[0] == 'J')) {
-				ImVec2 hull[100];
+
+			// If we have (typically) a connector with a non uniform pin distribution
+			// then we can try use the minimal bounding box algorithm to give it a
+			// more sane outline
+			if ((pincount > 4) && ((part->name[0] == 'J'))) {
+				ImVec2 *hull;
 				int hpc;
 
-				hpc = ConvexHull(hull, pva, pincount);
-				if (hpc) {
-					ImVec2 bbox[4];
+				hull = (ImVec2 *)malloc(sizeof(ImVec2) *
+				                        pincount); // massive overkill since our hull will only require the perimeter points
+				if (hull) {
+					hpc = ConvexHull(hull, pva, pincount); // (hpc = hull pin count)
+					if (hpc) {
+						ImVec2 bbox[4];
 
-					// first, tighten the hull
-					//				fprintf(stderr,"%s %d points. ",part->name.c_str(), hpc);
-					//				 draw->AddPolyline(hull, hpc, color, true, 1.0f, false);
-					hpc = TightenHull(hull, hpc, 0.1f);
-					//				fprintf(stderr,"tightened to %d points.\n", hpc);
-					//				 draw->AddPolyline(hull, hpc, color+200, true, 1.0f, false);
-					// MBBCalculate(bbox, hull, hpc, pin_radius *m_scale);
-					MBBCalculate(draw, color, bbox, hull, hpc, pin_radius * m_scale);
-					draw->AddPolyline(bbox, 4, color, true, 1.0f, true);
-				}
-
-				else
+						// first, tighten the hull, removes any small angle segments, such as a sequence of pins in a line
+						hpc = TightenHull(hull, hpc, 0.1f); // tighten the hull a bit more, this might be an overkill
+						MBBCalculate(bbox, hull, hpc, pin_radius * m_scale);
+						draw->AddPolyline(bbox, 4, color, true, 1.0f, true);
+					}
+					free(hull);
+				} else {
+					fprintf(stderr, "ERROR: Cannot allocate memory for convex hull generation (%s)", strerror(errno));
 					draw->AddRect(min, max, color);
+				}
 
 			} else {
 				draw->AddRect(min, max, color);
@@ -1237,6 +1218,8 @@ void BoardView::DrawBoard() {
 	draw->ChannelsSplit(NUM_DRAW_CHANNELS);
 	draw->ChannelsSetCurrent(kChannelPolylines);
 
+	// We draw the Parts before the Pins so that we can ascertain the needed pin
+	// size for the parts based on the part/pad geometry and spacing. -Inflex
 	DrawOutline(draw);
 	DrawParts(draw);
 	DrawPins(draw);
