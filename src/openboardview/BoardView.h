@@ -85,8 +85,7 @@ struct BoardView {
 	int ConvexHullOrientation(ImVec2 p, ImVec2 q, ImVec2 r);
 	int ConvexHull(ImVec2 hull[], ImVec2 points[], int n);
 	int TightenHull(ImVec2 hull[], int n, double threshold);
-	// void MBBCalculate( ImVec2 box[], ImVec2 *hull, int n, double psz );
-	void MBBCalculate(ImDrawList *draw, uint32_t color, ImVec2 box[], ImVec2 *hull, int n, double psz);
+	void MBBCalculate(ImVec2 box[], ImVec2 *hull, int n, double psz);
 
 	Pin *m_pinSelected = nullptr;
 	vector<Pin *> m_pinHighlighted;
@@ -112,7 +111,7 @@ struct BoardView {
 	ColorScheme m_colors;
 
 	// TODO: save settings to disk
-	// pinDiameter: diameter for all pins.  Unit scale: 1 = 0.025mm
+	// pinDiameter: diameter for all pins.  Unit scale: 1 = 0.025mm, boards are done in "thou" (1/1000" = 0.0254mm)
 	int m_pinDiameter     = 20;
 	bool m_flipVertically = true;
 

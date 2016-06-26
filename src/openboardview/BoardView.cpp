@@ -181,10 +181,10 @@ void BoardView::Update() {
 			if (ImGui::MenuItem("Flip board", "<Space>")) {
 				FlipBoard();
 			}
-			if (ImGui::MenuItem("Rotate CW", ".")) {
+			if (ImGui::MenuItem("Rotate CW")) {
 				Rotate(1);
 			}
-			if (ImGui::MenuItem("Rotate CCW", ",")) {
+			if (ImGui::MenuItem("Rotate CCW")) {
 				Rotate(-1);
 			}
 			if (ImGui::MenuItem("Reset View", "5")) { // actually want this to be numpad 5
@@ -486,27 +486,18 @@ void BoardView::HandleInput() {
 
 		// Rotate board: R and period rotate clockwise; comma rotates
 		// counter-clockwise
-		if (ImGui::IsKeyPressed('R') || ImGui::IsKeyPressed('r') || ImGui::IsKeyPressed(190)) {
+		if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_0) || ImGui::IsKeyPressed('R') || ImGui::IsKeyPressed('r')) {
 			Rotate(1);
 		}
-		if (ImGui::IsKeyPressed(188)) {
+		if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_PERIOD)) {
 			Rotate(-1);
 		}
 
-		if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_0)) {
-			// Use this as a debug button
-			fprintf(stderr,
-			        "m_dxy: %f %f, m_mxy: %f %f, board: %d %d, lastW/H: %f %f, scale: %f\n",
-			        m_dx,
-			        m_dy,
-			        m_mx,
-			        m_my,
-			        m_boardWidth,
-			        m_boardHeight,
-			        m_lastWidth,
-			        m_lastHeight,
-			        m_scale);
-		}
+		//	 if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_0)) {
+		// Use this as a debug button
+		//		  fprintf(stderr,"m_dxy: %f %f, m_mxy: %f %f, board: %d %d, lastW/H: %f %f, scale: %f\n", m_dx, m_dy, m_mx, m_my,
+		// m_boardWidth, m_boardHeight, m_lastWidth, m_lastHeight, m_scale);
+		//	 }
 
 		if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_PLUS)) {
 			if (ImGui::IsKeyDown(SDL_SCANCODE_LCTRL) || ImGui::IsKeyDown(SDL_SCANCODE_RCTRL)) {
@@ -935,32 +926,6 @@ int BoardView::TightenHull(ImVec2 hull[], int n, double threshold) {
 
 	return output_index;
 }
-
-#ifdef LREGRESSION
-/*** Linear regression method of trying to find a suitable perimeter box **/
-double slope(InVec2 a[], int n) {
-
-	int i;
-	double ax, ay;
-	double numerator   = 0.0;
-	double denominator = 0.0;
-
-	ax = 0.0;
-	ay = 0.0;
-
-	for (i = 0; i < n; i++) {
-		ax += a[i].x;
-		ay += a[i].y;
-	}
-
-	for (int i = 0; i < n; i++) {
-		numerator += (a[i].x - avgX) * (a[i].y - avgY);
-		denominator += (a[i].x - avgX) * (a[i].x - avgX);
-	}
-
-	return numerator / denominator;
-}
-#endif
 
 inline void BoardView::DrawParts(ImDrawList *draw) {
 	float psz = (float)m_pinDiameter * 0.5f * m_scale;
