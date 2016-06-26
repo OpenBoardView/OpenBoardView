@@ -32,6 +32,7 @@ endif()
 
 
 set(SOURCES
+	BDVFile.cpp
 	BoardView.cpp
 	BRDBoard.cpp
 	BRDFile.cpp

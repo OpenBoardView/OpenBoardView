@@ -8,6 +8,7 @@
 #include <memory>
 #include <stdio.h>
 
+#include "BDVFile.h"
 #include "BRDBoard.h"
 #include "BRDFile.h"
 #include "imgui/imgui.h"
@@ -120,12 +121,19 @@ char *BoardView::History_trim_filename(char *s, int stops) {
 
 int BoardView::LoadFile(char *filename) {
 	if (filename) {
+		char *ext = strrchr(filename, '.');
+		for (int i = 0; ext[i]; i++) ext[i] = tolower(ext[i]); // Convert extension to lowercase
 		SetLastFileOpenName(filename);
 		size_t buffer_size;
 		char *buffer = file_as_buffer(&buffer_size, filename);
 		if (buffer) {
-			BRDFile *file = new BRDFile(buffer, buffer_size);
-			if (file->valid) {
+			BRDFile *file = nullptr;
+			if (!strcmp(ext, ".brd")) // Recognize file format using filename extension
+				file = new BRDFile(buffer, buffer_size);
+			else if (!strcmp(ext, ".bdv"))
+				file = new BDVFile(buffer, buffer_size);
+
+			if (file && file->valid) {
 				SetFile(file);
 				History_prepend_save(filename);
 				history_file_has_changed = 1; // used by main to know when to update the window title
