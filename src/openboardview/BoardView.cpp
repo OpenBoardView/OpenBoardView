@@ -768,7 +768,7 @@ double BoardView::AngleToX(ImVec2 a, ImVec2 b) {
 void BoardView::MBBCalculate(ImVec2 box[], ImVec2 *hull, int n, double psz) {
 
 	double mbAngle = 0, cumulative_angle = 0;
-	double mbArea = -1;      // fake area to initialise
+	double mbArea = DBL_MAX; // fake area to initialise
 	ImVec2 mbb, mba, origin; // Box bottom left, box top right
 	int i;
 
@@ -785,8 +785,8 @@ void BoardView::MBBCalculate(ImVec2 box[], ImVec2 *hull, int n, double psz) {
 		cumulative_angle += angle;
 
 		double top, bot, left, right; // bounding rect limits
-		top = right = -100000000;
-		bot = left = +100000000;
+		top = right = DBL_MIN;
+		bot = left = DBL_MAX;
 
 		int x;
 		for (x = 0; x < n; x++) {
@@ -801,7 +801,7 @@ void BoardView::MBBCalculate(ImVec2 box[], ImVec2 *hull, int n, double psz) {
 		}
 		area = (right - left) * (top - bot);
 
-		if ((mbArea < 0) || (mbArea > area)) {
+		if (area < mbArea) {
 			mbArea  = area;
 			mbAngle = cumulative_angle; // total angle we've had to rotate the board to get to this orientation;
 			mba     = ImVec2(left, bot);
