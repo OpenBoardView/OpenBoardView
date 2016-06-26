@@ -8,7 +8,7 @@
 
 #include "BRDBoard.h"
 #include "BRDFile.h"
-#include "imgui/imgui.h"
+#include "imgui.h"
 
 #include "NetList.h"
 #include "PartList.h"
