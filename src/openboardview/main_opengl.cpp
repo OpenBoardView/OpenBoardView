@@ -51,7 +51,16 @@ int main(int argc, char **argv) {
 
 	// Main loop
 	bool done             = false;
-	bool preload_required = (argc == 2) ? true : false;
+	bool preload_required = false;
+
+	if (argc == 2) {
+		struct stat buffer;
+		fprintf(stderr, "checking argv[1]=%s\n", argv[1]);
+		if ((stat(argv[1], &buffer) == 0)) {
+			preload_required = true;
+		}
+	}
+
 	while (!done) {
 		SDL_Event event;
 		while (SDL_PollEvent(&event)) {
