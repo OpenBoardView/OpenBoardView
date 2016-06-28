@@ -55,7 +55,6 @@ int main(int argc, char **argv) {
 
 	if (argc == 2) {
 		struct stat buffer;
-		fprintf(stderr, "checking argv[1]=%s\n", argv[1]);
 		if ((stat(argv[1], &buffer) == 0)) {
 			preload_required = true;
 		}
