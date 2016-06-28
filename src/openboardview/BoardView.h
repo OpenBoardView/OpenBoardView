@@ -86,7 +86,7 @@ struct BoardView {
 	int ConvexHull(ImVec2 hull[], ImVec2 points[], int n);
 	int TightenHull(ImVec2 hull[], int n, double threshold);
 	void MBBCalculate(ImVec2 box[], ImVec2 *hull, int n, double psz);
-	int PointCount(int upto, double x, double y);
+	void Pan(int direction, int amount);
 
 	Pin *m_pinSelected = nullptr;
 	vector<Pin *> m_pinHighlighted;

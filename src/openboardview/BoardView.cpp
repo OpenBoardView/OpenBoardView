@@ -438,6 +438,38 @@ void BoardView::Zoom(float osd_x, float osd_y, float zoom) {
 	m_needsRedraw = true;
 }
 
+void BoardView::Pan(int direction, int amount) {
+#define DIR_UP 1
+#define DIR_DOWN 2
+#define DIR_LEFT 3
+#define DIR_RIGHT 4
+
+	if (ImGui::IsKeyDown(SDL_SCANCODE_LCTRL) || ImGui::IsKeyDown(SDL_SCANCODE_RCTRL)) amount /= 10;
+
+	switch (direction) {
+		case DIR_UP: amount = -amount;
+		case DIR_DOWN:
+			if ((m_current_side) && (m_rotation % 2)) amount = -amount;
+			switch (m_rotation) {
+				case 0: m_dy += amount; break;
+				case 1: m_dx -= amount; break;
+				case 2: m_dy -= amount; break;
+				case 3: m_dx += amount; break;
+			}
+			break;
+		case DIR_LEFT: amount = -amount;
+		case DIR_RIGHT:
+			if ((m_current_side) && ((m_rotation % 2) == 0)) amount = -amount;
+			switch (m_rotation) {
+				case 0: m_dx -= amount; break;
+				case 1: m_dy -= amount; break;
+				case 2: m_dx += amount; break;
+				case 3: m_dy += amount; break;
+			}
+			break;
+	}
+}
+
 void BoardView::HandleInput() {
 	const ImGuiIO &io = ImGui::GetIO();
 	if (ImGui::IsWindowFocused()) {
@@ -528,51 +560,25 @@ void BoardView::HandleInput() {
 		}
 
 		if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_2)) {
-			if (ImGui::IsKeyDown(SDL_SCANCODE_LCTRL) || ImGui::IsKeyDown(SDL_SCANCODE_RCTRL)) {
-				if (m_current_side)
-					m_dy -= 10;
-				else
-					m_dy += 10;
-			} else {
-				if (m_current_side)
-					m_dy -= 100;
-				else
-					m_dy += 100;
-			}
+			Pan(DIR_DOWN, 100);
 			m_draggingLastFrame = true;
 			m_needsRedraw       = true;
 		}
 
 		if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_8)) {
-			if (ImGui::IsKeyDown(SDL_SCANCODE_LCTRL) || ImGui::IsKeyDown(SDL_SCANCODE_RCTRL)) {
-				if (m_current_side)
-					m_dy += 10;
-				else
-					m_dy -= 10;
-			} else {
-				if (m_current_side)
-					m_dy += 100;
-				else
-					m_dy -= 100;
-			}
+			Pan(DIR_UP, 100);
 			m_draggingLastFrame = true;
 			m_needsRedraw       = true;
 		}
 
 		if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_4)) {
-			if (ImGui::IsKeyDown(SDL_SCANCODE_LCTRL) || ImGui::IsKeyDown(SDL_SCANCODE_RCTRL))
-				m_dx += 10;
-			else
-				m_dx += 100;
+			Pan(DIR_LEFT, 100);
 			m_draggingLastFrame = true;
 			m_needsRedraw       = true;
 		}
 
 		if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_6)) {
-			if (ImGui::IsKeyDown(SDL_SCANCODE_LCTRL) || ImGui::IsKeyDown(SDL_SCANCODE_RCTRL))
-				m_dx -= 10;
-			else
-				m_dx -= 100;
+			Pan(DIR_RIGHT, 100);
 			m_draggingLastFrame = true;
 			m_needsRedraw       = true;
 		}
