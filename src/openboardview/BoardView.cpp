@@ -409,6 +409,10 @@ void BoardView::Update() {
 		            pin->net->name.c_str(),
 		            pin->net->number,
 		            pin->component->mount_type_str().c_str());
+	} else {
+		ImVec2 spos = ImGui::GetMousePos();
+		ImVec2 pos  = ScreenToCoord(spos.x, spos.y);
+		ImGui::Text("Position: %0.3f\", %0.3f\" (%0.2f, %0.2f)mm", pos.x / 1000, pos.y / 1000, pos.x * 0.0254, pos.y * 0.0254);
 	}
 	ImGui::End();
 	ImGui::PopStyleVar();
@@ -625,16 +629,37 @@ void BoardView::RenderOverlay() {
 
 #pragma region Drawing
 inline void BoardView::DrawOutline(ImDrawList *draw) {
+	int jump = 1;
+	Point fp;
+
 	auto &outline = m_board->OutlinePoints();
+
+	// set our initial draw point, so we can detect when we encounter it again
+	fp = *outline[0];
 
 	for (size_t i = 0; i < outline.size() - 1; i++) {
 		Point &pa = *outline[i];
 		Point &pb = *outline[i + 1];
+
+		// jump double/dud points
 		if (pa.x == pb.x && pa.y == pb.y) continue;
+
+		// if we encounter our hull/poly start point, then we've now created the closed
+		// hull, jump the next segment and reset the first-point
+		if ((!jump) && (fp.x == pb.x) && (fp.y == pb.y)) {
+			if (i < outline.size() - 2) {
+				fp   = *outline[i + 2];
+				jump = 1;
+				i++;
+			}
+		} else {
+			jump = 0;
+		}
+
 		ImVec2 spa = CoordToScreen(pa.x, pa.y);
 		ImVec2 spb = CoordToScreen(pb.x, pb.y);
 		draw->AddLine(spa, spb, m_colors.boardOutline);
-	}
+	} // for
 }
 
 inline void BoardView::DrawPins(ImDrawList *draw) {
@@ -731,7 +756,7 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 	}
 }
 
-void BoardView::Rotate(double *px, double *py, double ox, double oy, double theta) {
+void BoardView::RotateV(double *px, double *py, double ox, double oy, double theta) {
 	double tx, ty, ttx, tty;
 
 	tx = *px - ox;
@@ -746,7 +771,7 @@ void BoardView::Rotate(double *px, double *py, double ox, double oy, double thet
 	*py = tty + oy;
 }
 
-ImVec2 BoardView::Rotate(ImVec2 v, ImVec2 o, double theta) {
+ImVec2 BoardView::RotateV(ImVec2 v, ImVec2 o, double theta) {
 	double tx, ty, ttx, tty;
 
 	tx = v.x - o.x;
@@ -760,7 +785,7 @@ ImVec2 BoardView::Rotate(ImVec2 v, ImVec2 o, double theta) {
 	return ImVec2(ttx + o.x, tty + o.y);
 }
 
-ImVec2 BoardView::Rotate(ImVec2 v, double theta) {
+ImVec2 BoardView::RotateV(ImVec2 v, double theta) {
 	double nx, ny;
 
 	nx = v.x * cos(theta) - v.y * sin(theta);
@@ -798,7 +823,7 @@ void BoardView::MBBCalculate(ImVec2 box[], ImVec2 *hull, int n, double psz) {
 
 		int x;
 		for (x = 0; x < n; x++) {
-			ImVec2 rp = Rotate(hull[x], origin, -angle);
+			ImVec2 rp = RotateV(hull[x], origin, -angle);
 
 			hull[x] = rp;
 
@@ -824,10 +849,10 @@ void BoardView::MBBCalculate(ImVec2 box[], ImVec2 *hull, int n, double psz) {
 	mbb.y += psz;
 
 	// Form our rectangle, has to be all 4 points as it's a polygon now that'll be rotated
-	box[0] = Rotate(mba, origin, +mbAngle);
-	box[1] = Rotate(ImVec2(mbb.x, mba.y), origin, +mbAngle);
-	box[2] = Rotate(mbb, origin, +mbAngle);
-	box[3] = Rotate(ImVec2(mba.x, mbb.y), origin, +mbAngle);
+	box[0] = RotateV(mba, origin, +mbAngle);
+	box[1] = RotateV(ImVec2(mbb.x, mba.y), origin, +mbAngle);
+	box[2] = RotateV(mbb, origin, +mbAngle);
+	box[3] = RotateV(ImVec2(mba.x, mbb.y), origin, +mbAngle);
 }
 
 // To find orientation of ordered triplet (p, q, r).
@@ -996,6 +1021,7 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 		float pin_radius = m_pinDiameter / 2.0f;
 
 		if ((pincount < 4) && (part->name[0] != 'U') && (part->name[0] != 'Q')) {
+
 			if ((distance > 52) && (distance < 57)) {
 				// 0603
 				pin_radius = 15;
@@ -1106,22 +1132,22 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 			// TODO: Compact this bit of code, maybe. It works at least.
 			tx = part->pins[0]->position.x - arm;
 			ty = part->pins[0]->position.y - arm;
-			Rotate(&tx, &ty, part->pins[0]->position.x, part->pins[0]->position.y, angle);
+			RotateV(&tx, &ty, part->pins[0]->position.x, part->pins[0]->position.y, angle);
 			a = CoordToScreen(tx, ty);
 
 			tx = part->pins[0]->position.x - arm;
 			ty = part->pins[0]->position.y + arm;
-			Rotate(&tx, &ty, part->pins[0]->position.x, part->pins[0]->position.y, angle);
+			RotateV(&tx, &ty, part->pins[0]->position.x, part->pins[0]->position.y, angle);
 			b = CoordToScreen(tx, ty);
 
 			tx = part->pins[1]->position.x + arm;
 			ty = part->pins[1]->position.y + arm;
-			Rotate(&tx, &ty, part->pins[1]->position.x, part->pins[1]->position.y, angle);
+			RotateV(&tx, &ty, part->pins[1]->position.x, part->pins[1]->position.y, angle);
 			c = CoordToScreen(tx, ty);
 
 			tx = part->pins[1]->position.x + arm;
 			ty = part->pins[1]->position.y - arm;
-			Rotate(&tx, &ty, part->pins[1]->position.x, part->pins[1]->position.y, angle);
+			RotateV(&tx, &ty, part->pins[1]->position.x, part->pins[1]->position.y, angle);
 			d = CoordToScreen(tx, ty);
 			draw->AddQuad(a, b, c, d, color);
 
