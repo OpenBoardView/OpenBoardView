@@ -444,6 +444,8 @@ void BoardView::Pan(int direction, int amount) {
 #define DIR_LEFT 3
 #define DIR_RIGHT 4
 
+	amount = amount / m_scale;
+
 	if (ImGui::IsKeyDown(SDL_SCANCODE_LCTRL) || ImGui::IsKeyDown(SDL_SCANCODE_RCTRL)) amount /= 10;
 
 	switch (direction) {
@@ -473,7 +475,6 @@ void BoardView::Pan(int direction, int amount) {
 void BoardView::HandleInput() {
 	const ImGuiIO &io = ImGui::GetIO();
 	if (ImGui::IsWindowFocused()) {
-		// Pan:
 		if (ImGui::IsMouseDragging()) {
 			ImVec2 delta = ImGui::GetMouseDragDelta();
 			if ((abs(delta.x) > 500) || (abs(delta.y) > 500)) {
@@ -560,25 +561,25 @@ void BoardView::HandleInput() {
 		}
 
 		if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_2)) {
-			Pan(DIR_DOWN, 100);
+			Pan(DIR_DOWN, 30);
 			m_draggingLastFrame = true;
 			m_needsRedraw       = true;
 		}
 
 		if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_8)) {
-			Pan(DIR_UP, 100);
+			Pan(DIR_UP, 30);
 			m_draggingLastFrame = true;
 			m_needsRedraw       = true;
 		}
 
 		if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_4)) {
-			Pan(DIR_LEFT, 100);
+			Pan(DIR_LEFT, 30);
 			m_draggingLastFrame = true;
 			m_needsRedraw       = true;
 		}
 
 		if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_6)) {
-			Pan(DIR_RIGHT, 100);
+			Pan(DIR_RIGHT, 30);
 			m_draggingLastFrame = true;
 			m_needsRedraw       = true;
 		}
