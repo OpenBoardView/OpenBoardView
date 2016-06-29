@@ -517,7 +517,7 @@ void BoardView::HandleInput() {
 			mwheel *= 0.5f;
 
 			// Ctrl slows down the zoom speed:
-			if (ImGui::IsKeyDown(SDL_SCANCODE_LCTRL) || ImGui::IsKeyDown(SDL_SCANCODE_RCTRL) || ImGui::IsKeyDown(17)) {
+			if (ImGui::IsKeyDown(SDL_SCANCODE_LCTRL) || ImGui::IsKeyDown(SDL_SCANCODE_RCTRL)) {
 				mwheel *= 0.1f;
 			}
 			Zoom(io.MousePos.x, io.MousePos.y, mwheel);
@@ -811,8 +811,23 @@ void BoardView::MBBCalculate(ImVec2 box[], ImVec2 *hull, int n, double psz) {
 	double mbArea = DBL_MAX; // fake area to initialise
 	ImVec2 mbb, mba, origin; // Box bottom left, box top right
 	int i;
+	int lowest_i;
+	double lowest;
 
-	origin = hull[0];
+	// Find the lowest hull point, if it's below the x-axis just bring it up to compensate
+	// NOTE: we're not modifying the actual hull point, just a copy
+	lowest   = DBL_MAX;
+	lowest_i = 0;
+	for (i = 0; i < n; i++) {
+		if (hull[i].y < lowest) {
+			lowest_i = i;
+			lowest   = hull[i].y;
+		}
+	}
+	origin = hull[lowest_i];
+	if (lowest < 0) {
+		origin.y -= lowest;
+	}
 
 	for (i = 0; i < n; i++) {
 		int ni = i + 1;
@@ -1176,6 +1191,7 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 
 						// first, tighten the hull, removes any small angle segments, such as a sequence of pins in a line
 						hpc = TightenHull(hull, hpc, 0.1f); // tighten the hull a bit more, this might be an overkill
+						                                    // draw->AddPolyline(hull, hpc, color, true, 1.0f, true );
 						MBBCalculate(bbox, hull, hpc, pin_radius * m_scale);
 						draw->AddPolyline(bbox, 4, color, true, 1.0f, true);
 					} else {
