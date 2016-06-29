@@ -544,7 +544,7 @@ void BoardView::HandleInput() {
 		// m_boardWidth, m_boardHeight, m_lastWidth, m_lastHeight, m_scale);
 		//	 }
 
-		if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_PLUS)) {
+		if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_PLUS) || ImGui::IsKeyPressed('=')) {
 			if (ImGui::IsKeyDown(SDL_SCANCODE_LCTRL) || ImGui::IsKeyDown(SDL_SCANCODE_RCTRL)) {
 				Zoom(m_lastWidth / 2, m_lastHeight / 2, 0.01f);
 			} else {
@@ -552,7 +552,7 @@ void BoardView::HandleInput() {
 			}
 		}
 
-		if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_MINUS)) {
+		if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_MINUS) || ImGui::IsKeyPressed('-')) {
 			if (ImGui::IsKeyDown(SDL_SCANCODE_LCTRL) || ImGui::IsKeyDown(SDL_SCANCODE_RCTRL)) {
 				Zoom(m_lastWidth / 2, m_lastHeight / 2, -0.01f);
 			} else {
@@ -560,32 +560,32 @@ void BoardView::HandleInput() {
 			}
 		}
 
-		if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_2)) {
+		if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_2) || ImGui::IsKeyPressed('s')) {
 			Pan(DIR_DOWN, 30);
 			m_draggingLastFrame = true;
 			m_needsRedraw       = true;
 		}
 
-		if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_8)) {
+		if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_8) || ImGui::IsKeyPressed('w')) {
 			Pan(DIR_UP, 30);
 			m_draggingLastFrame = true;
 			m_needsRedraw       = true;
 		}
 
-		if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_4)) {
+		if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_4) || ImGui::IsKeyPressed('a')) {
 			Pan(DIR_LEFT, 30);
 			m_draggingLastFrame = true;
 			m_needsRedraw       = true;
 		}
 
-		if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_6)) {
+		if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_6) || ImGui::IsKeyPressed('d')) {
 			Pan(DIR_RIGHT, 30);
 			m_draggingLastFrame = true;
 			m_needsRedraw       = true;
 		}
 
 		// Center and reset zoom
-		if (ImGui::IsKeyPressed('5') || ImGui::IsKeyPressed(SDL_SCANCODE_KP_5)) {
+		if (ImGui::IsKeyPressed('5') || ImGui::IsKeyPressed(SDL_SCANCODE_KP_5) || ImGui::IsKeyPressed('x')) {
 			CenterView();
 		}
 
