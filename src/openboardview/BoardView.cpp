@@ -987,6 +987,7 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 	double distance = 0;
 	struct ImVec2 pva[1000], *ppp;
 	uint32_t color = m_colors.boxColor;
+	int rendered   = 0;
 
 	for (auto &part : m_board->Components()) {
 		int pincount           = 0;
@@ -1115,63 +1116,57 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 		max_y += pin_radius;
 		bool bb_y_resized = false;
 
-		// If the part is prefixed with 'U', meaning an IC, then retract the box inwards
-		/* -- commented out by Inflex, there's as much chance the IC legs out vs BGA, so
-		    really this could go either way
-
-		   if (p_part->name[0] == 'U') {
-		       if (min_x < max_x - 4 * m_pinDiameter) {
-		   min_x += m_pinDiameter/2;
-		   max_x -= m_pinDiameter/2;
-		       }
-		       if (min_y < max_y - 4 * m_pinDiameter) {
-		   min_y += m_pinDiameter/2;
-		   max_y -= m_pinDiameter/2;
-		           bb_y_resized = true;
-		       }
-		   }
-		*/
-
 		ImVec2 min = CoordToScreen(min_x, min_y);
 		ImVec2 max = CoordToScreen(max_x, max_y);
-		//    min.x -= 0.5f;
-		//  max.x += 0.5f;
 
 		// If we have a rotated part that is a C or R, hopefully with 2 pins ?
-		if ((!part_is_orthagonal) && (pincount < 3) &&
+		// if ((!part_is_orthagonal) && (pincount < 3) && ( ((p_part->name[0] == 'C')||(p_part->name[0] == 'R')||(p_part->name[0] ==
+		// 'L')||(p_part->name[0] == 'D')) ) ) {
+		if ((pincount < 3) &&
 		    (((p_part->name[0] == 'C') || (p_part->name[0] == 'R') || (p_part->name[0] == 'L') || (p_part->name[0] == 'D')))) {
 			ImVec2 a, b, c, d;
 			double dx, dy;
 			double tx, ty;
-			double arm;
+			double armx, army;
 
 			dx    = part->pins[1]->position.x - part->pins[0]->position.x;
 			dy    = part->pins[1]->position.y - part->pins[0]->position.y;
 			angle = atan2(dy, dx);
 
-			arm = pin_radius;
+			if ((p_part->name[0] == 'L') && (distance > 30)) {
+				pin_radius = 30;
+				for (auto pin : part->pins) {
+					pin->diameter = pin_radius * 0.05;
+				}
+				army = distance / 2;
+				armx = pin_radius;
+			} else {
+				armx = army = pin_radius;
+			}
 
 			// TODO: Compact this bit of code, maybe. It works at least.
-			tx = part->pins[0]->position.x - arm;
-			ty = part->pins[0]->position.y - arm;
+			tx = part->pins[0]->position.x - armx;
+			ty = part->pins[0]->position.y - army;
 			RotateV(&tx, &ty, part->pins[0]->position.x, part->pins[0]->position.y, angle);
 			a = CoordToScreen(tx, ty);
 
-			tx = part->pins[0]->position.x - arm;
-			ty = part->pins[0]->position.y + arm;
+			tx = part->pins[0]->position.x - armx;
+			ty = part->pins[0]->position.y + army;
 			RotateV(&tx, &ty, part->pins[0]->position.x, part->pins[0]->position.y, angle);
 			b = CoordToScreen(tx, ty);
 
-			tx = part->pins[1]->position.x + arm;
-			ty = part->pins[1]->position.y + arm;
+			tx = part->pins[1]->position.x + armx;
+			ty = part->pins[1]->position.y + army;
 			RotateV(&tx, &ty, part->pins[1]->position.x, part->pins[1]->position.y, angle);
 			c = CoordToScreen(tx, ty);
 
-			tx = part->pins[1]->position.x + arm;
-			ty = part->pins[1]->position.y - arm;
+			tx = part->pins[1]->position.x + armx;
+			ty = part->pins[1]->position.y - army;
 			RotateV(&tx, &ty, part->pins[1]->position.x, part->pins[1]->position.y, angle);
 			d = CoordToScreen(tx, ty);
 			draw->AddQuad(a, b, c, d, color);
+
+			rendered = 1;
 
 		} else {
 
@@ -1190,23 +1185,33 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 						ImVec2 bbox[4];
 
 						// first, tighten the hull, removes any small angle segments, such as a sequence of pins in a line
-						hpc = TightenHull(hull, hpc, 0.1f); // tighten the hull a bit more, this might be an overkill
-						                                    // draw->AddPolyline(hull, hpc, color, true, 1.0f, true );
+						// hpc = TightenHull(hull, hpc, 0.1f); // tighten the hull a bit more, this might be an overkill
+						draw->AddPolyline(hull, hpc, ImColor(128, 128, 128, 128), true, 1.0f, false);
 						MBBCalculate(bbox, hull, hpc, pin_radius * m_scale);
-						draw->AddPolyline(bbox, 4, color, true, 1.0f, true);
+						draw->AddPolyline(bbox, 4, color, true, 1.0f, false);
+						rendered = 1;
 					} else {
 						draw->AddRect(min, max, color);
+						rendered = 1;
 					}
 
 					free(hull);
 				} else {
 					fprintf(stderr, "ERROR: Cannot allocate memory for convex hull generation (%s)", strerror(errno));
 					draw->AddRect(min, max, color);
+					rendered = 1;
 				}
 
 			} else {
+				// if it wasn't at an odd angle, or wasn't large, or wasn't a connector, just an ordinary
+				// type part, then this is where we'll likely end up
 				draw->AddRect(min, max, color);
+				rendered = 1;
 			}
+		}
+
+		if (rendered == 0) {
+			fprintf(stderr, "Part wasn't rendered (%s)\n", part->name.c_str());
 		}
 
 		if (PartIsHighlighted(*part) && !part->is_dummy() && !part->name.empty()) {
