@@ -1133,8 +1133,8 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 			dy    = part->pins[1]->position.y - part->pins[0]->position.y;
 			angle = atan2(dy, dx);
 
-			if ((p_part->name[0] == 'L') && (distance > 30)) {
-				pin_radius = 30;
+			if ((p_part->name[0] == 'L') && (distance > 50)) {
+				pin_radius = 15;
 				for (auto pin : part->pins) {
 					pin->diameter = pin_radius * 0.05;
 				}
