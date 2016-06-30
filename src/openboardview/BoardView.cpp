@@ -1039,6 +1039,7 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 				part_is_orthagonal = 0;
 			}
 		}
+
 		distance = sqrt((max_x - min_x) * (max_x - min_x) + (max_y - min_y) * (max_y - min_y));
 
 		float pin_radius = m_pinDiameter / 2.0f;
@@ -1140,6 +1141,28 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 				}
 				army = distance / 2;
 				armx = pin_radius;
+			} else if ((p_part->name[0] == 'C') && (distance > 90)) {
+				double mpx, mpy;
+				int segments;
+				ImVec2 mp;
+
+				pin_radius = 15;
+				for (auto pin : part->pins) {
+					pin->diameter = pin_radius * 0.05;
+				}
+				army = distance / 2 - distance / 4;
+				armx = pin_radius;
+
+				mpx = dx / 2 + part->pins[0]->position.x;
+				mpy = dy / 2 + part->pins[0]->position.y;
+				RotateV(&mpx, &mpy, dx / 2 + part->pins[0]->position.x, dy / 2 + part->pins[0]->position.y, angle);
+				mp = CoordToScreen(mpx, mpy);
+				// for the round pin representations, choose how many circle segments need based on the pin size
+				segments                    = trunc(distance);
+				if (segments < 8) segments  = 8;
+				if (segments > 36) segments = 36;
+				draw->AddCircle(mp, (distance / 3) * m_scale, ImColor(210, 210, 210, 128), segments);
+
 			} else {
 				armx = army = pin_radius;
 			}
