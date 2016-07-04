@@ -2,12 +2,12 @@
 #include "BoardView.h"
 
 #include <algorithm>
+#include <cmath>
 #include <iostream>
-#include <math.h>
 #include <memory>
 #include <stdio.h>
 #ifndef _WIN32 // SDL not used on Windows
-#include <SDL.h>
+#include <SDL2/SDL.h>
 #endif
 
 #include "BDVFile.h"
