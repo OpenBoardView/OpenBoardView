@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdlib.h>
+#include <string>
 #include <vector>
 
 #define LOAD_INT(var) var    = strtol(p, &p, 10)
@@ -28,6 +29,12 @@ struct BRDPin {
 	int probe;
 	int part;
 	char *net;
+	char *snum = nullptr;
+
+	bool operator<(const BRDPin &p) const // For sorting the vector
+	{
+		return part == p.part ? (std::string(snum) < std::string(p.snum)) : (part < p.part); // sort by part number then pin number
+	}
 };
 
 struct BRDNail {

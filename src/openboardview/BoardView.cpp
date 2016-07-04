@@ -407,9 +407,9 @@ void BoardView::Update() {
 	ImGui::Begin("status", nullptr, flags);
 	if (m_file && m_board && m_pinSelected) {
 		auto pin = m_pinSelected;
-		ImGui::Text("Part: %s   Pin: %d   Net: %s   Probe: %d   (%s.)",
+		ImGui::Text("Part: %s   Pin: %s   Net: %s   Probe: %d   (%s.)",
 		            pin->component->name.c_str(),
-		            pin->number,
+		            pin->number.c_str(),
 		            pin->net->name.c_str(),
 		            pin->net->number,
 		            pin->component->mount_type_str().c_str());
@@ -736,7 +736,6 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 
 		// Drawing
 		{
-			char pin_number[64];
 			int segments;
 			draw->ChannelsSetCurrent(kChannelImages);
 
@@ -751,7 +750,7 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 			}
 
 			if (show_text) {
-				snprintf(pin_number, sizeof(pin_number), "%d", pin->number);
+				const char *pin_number = pin->number.c_str();
 
 				ImVec2 text_size = ImGui::CalcTextSize(pin_number);
 				ImVec2 pos_adj   = ImVec2(pos.x - text_size.x * 0.5f, pos.y - text_size.y * 0.5f);

@@ -137,7 +137,10 @@ BRDBoard::BRDBoard(const BRDFile *const boardFile)
 				part_idx = brd_pin.part;
 				pin_idx  = 1;
 			}
-			pin->number = pin_idx;
+			if (brd_pin.snum)
+				pin->number = brd_pin.snum;
+			else
+				pin->number = std::to_string(pin_idx);
 
 			// copy position
 			pin->position = Point(brd_pin.pos.x, brd_pin.pos.y);
