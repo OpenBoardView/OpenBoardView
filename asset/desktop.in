@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=${PROJECT_NAME}
+Exec=/usr/${INSTALL_BIN_DIR}/${PROJECT_NAME}
+Icon=${PROJECT_NAME}
+Type=Application
+Categories=Utility;
+MimeType=application/x-brd-board

@@ -1,0 +1,16 @@
+hicolor icons for freedesktop.org systems, including most Linux and BSD distros.
+
+This file will not be included in the installation.
+
+ - App icons should have the same name as the executable and be prefixed with "size/apps/".
+ - Filetype icons should be named after the MimeType and be prefixed with "size/mimetypes".
+
+The icon in 48x48/apps/ will also be added to /usr/share/pixmaps for extra compatibility.
+
+Common size names include:
+
+  scalable, 16x16, 20x20, 22x22,
+  24x24, 32x32, 36x36, 40x40,
+  48x48, 64x64, 72x72, 96x96,
+  128x128, 192x192, 256x256, 384x384,
+  512x512, 1024x1024

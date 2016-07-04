@@ -1,7 +1,6 @@
 #include "BRDFile.h"
 
 #include "BRDBoard.h"
-#include "platform.h"
 
 #include <algorithm>
 #include <cerrno>

@@ -156,3 +156,5 @@ struct BoardView {
 
 	void OpenFile(char *filename);
 };
+
+extern BoardView app;

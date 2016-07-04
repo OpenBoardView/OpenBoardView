@@ -1,5 +1,4 @@
 // MS Visual C++ resource script.
-#include "resource.h"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -8,4 +7,4 @@
 
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
-IDI_ICON1               ICON                    "brd.ico"
+GLFW_ICON               ICON                    "brd.ico"

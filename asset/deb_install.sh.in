@@ -1,0 +1,6 @@
+#!/bin/sh
+
+# We want to update the system mimetypes after installing or uninstalling.
+update-mime-database /usr/@INSTALL_SHARE_DIR@/mime
+# And the desktop db too
+update-desktop-database /usr/@INSTALL_SHARE_DIR@/applications

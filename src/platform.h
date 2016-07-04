@@ -5,9 +5,6 @@
 #include <string>
 #include <vector>
 
-// Windows .rc definitions
-#include "resource.h"
-
 // Loads an entire file in to memory.  The returned buffer must be later freed by the caller.
 char *file_as_buffer(size_t *buffer_size, const char *utf8_filename);
 

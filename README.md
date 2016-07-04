@@ -1,6 +1,6 @@
 ## Open Board Viewer
 
-AppVeyor Windows build: [![Build status](https://ci.appveyor.com/api/projects/status/avgn60acyn0cqyw4/branch/master?svg=true)](https://ci.appveyor.com/project/OpenBoardView/openboardview/branch/master)
+AppVeyor Windows build: [![Build status](https://ci.appveyor.com/api/projects/status/avgn60acyn0cqyw4/branch/master?svg=true)](https://ci.appveyor.com/project/OpenBoardView/openboardview/branch/master) Travis Unix builds: [![Build Status](https://travis-ci.org/OpenBoardView/OpenBoardView.svg?branch=master)](https://travis-ci.org/OpenBoardView/OpenBoardView)
 
 Software for viewing .brd files, intended as a drop-in replacement for the
 "Test_Link" software.
@@ -12,8 +12,7 @@ Software for viewing .brd files, intended as a drop-in replacement for the
 Downloadable an executable from the [Releases page](https://github.com/chloridite/OpenBoardView/releases)
 and run it.
 
-If you run into any issues starting the executable, you may need to install
-the [DirectX 9.0c End-user Runtime](https://www.microsoft.com/en-us/download/details.aspx?id=8109).
+If you run into any issues starting the executable, you may need to install [OpenGL](https://www.opengl.org/wiki/Getting_Started).
 
 ### Usage
 

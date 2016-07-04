@@ -13,6 +13,9 @@
 #include "NetList.h"
 #include "PartList.h"
 
+// Need this for keycodes
+#include <GLFW/glfw3.h>
+
 #include "platform.h"
 
 using namespace std;
@@ -21,6 +24,8 @@ using namespace std::placeholders;
 #if _MSC_VER
 #define stricmp _stricmp
 #endif
+
+BoardView app{};
 
 BoardView::~BoardView() {
 	delete m_file;
@@ -120,11 +125,11 @@ void BoardView::Update() {
 			}
 
 			// Enter and Esc close the search:
-			if (ImGui::IsKeyPressed(13)) {
+			if (ImGui::IsKeyPressed(GLFW_KEY_ENTER)) {
 				SetNetFilter(first_button);
 				ImGui::CloseCurrentPopup();
 			}
-			if (ImGui::Button("Clear") || ImGui::IsKeyPressed(27)) {
+			if (ImGui::Button("Clear") || ImGui::IsKeyPressed(GLFW_KEY_ESCAPE)) {
 				SetNetFilter("");
 				ImGui::CloseCurrentPopup();
 			}
@@ -157,11 +162,11 @@ void BoardView::Update() {
 				}
 			}
 			// Enter and Esc close the search:
-			if (ImGui::IsKeyPressed(13)) {
+			if (ImGui::IsKeyPressed(GLFW_KEY_ENTER)) {
 				FindComponent(first_button);
 				ImGui::CloseCurrentPopup();
 			}
-			if (ImGui::Button("Clear") || ImGui::IsKeyPressed(27)) {
+			if (ImGui::Button("Clear") || ImGui::IsKeyPressed(GLFW_KEY_ESCAPE)) {
 				FindComponent("");
 				ImGui::CloseCurrentPopup();
 			}
@@ -170,7 +175,7 @@ void BoardView::Update() {
 		if (ImGui::BeginPopupModal("About", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
 			ImGui::Text("OpenBoardView");
 			ImGui::Text("https://github.com/chloridite/OpenBoardView");
-			if (ImGui::Button("Close") || ImGui::IsKeyPressed(27)) {
+			if (ImGui::Button("Close") || ImGui::IsKeyPressed(GLFW_KEY_ESCAPE)) {
 				ImGui::CloseCurrentPopup();
 			}
 			ImGui::Indent();
@@ -348,40 +353,42 @@ void BoardView::HandleInput() {
 		// Shortcuts
 
 		// Ctrl+O to open a file
-		if (io.KeyCtrl && ImGui::IsKeyPressed('O', false)) {
+		if (io.KeyCtrl && ImGui::IsKeyPressed(GLFW_KEY_O, false)) {
 			m_open_file = true;
 			// the dialog will likely eat our WM_KEYUP message for CTRL and O:
-			io.KeysDown[17] = false;
-			io.KeysDown['O'] = false;
+			io.KeyCtrl = false;
+			io.KeysDown[GLFW_KEY_LEFT_CONTROL] = false;
+			io.KeysDown[GLFW_KEY_RIGHT_CONTROL] = false;
+			io.KeysDown[GLFW_KEY_O] = false;
 			return;
 		}
 
 		// Ctrl+Q as alternative quit shortcut (Alt-F4 is already handled by Windows)
-		if (io.KeyCtrl && ImGui::IsKeyPressed('Q')) {
+		if (io.KeyCtrl && ImGui::IsKeyPressed(GLFW_KEY_Q)) {
 			m_wantsQuit = true;
 			return;
 		}
 
 		// Search for net
-		if (ImGui::IsKeyPressed('N')) {
+		if (ImGui::IsKeyPressed(GLFW_KEY_N)) {
 			m_showNetfilterSearch = true;
 			return;
 		}
 
 		// Search for component
-		if (ImGui::IsKeyPressed('C')) {
+		if (ImGui::IsKeyPressed(GLFW_KEY_C)) {
 			m_showComponentSearch = true;
 			return;
 		}
 
 		// Show Net List
-		if (ImGui::IsKeyPressed('L')) {
+		if (ImGui::IsKeyPressed(GLFW_KEY_L)) {
 			m_showNetList = m_showNetList ? false : true;
 			return;
 		}
 
 		// Show Part List
-		if (ImGui::IsKeyPressed('K')) {
+		if (ImGui::IsKeyPressed(GLFW_KEY_K)) {
 			m_showPartList = m_showPartList ? false : true;
 			return;
 		}
@@ -391,30 +398,29 @@ void BoardView::HandleInput() {
 		// Zoom; Will zoom on the centre of the viewport, not on the mouse:
 
 		// I, + or PgUp to zoom in
-		if (ImGui::IsKeyPressed('I') || ImGui::IsKeyPressed(187) ||
-		    ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_PageUp)) || ImGui::IsKeyPressed(0x6B)) {
+		if (ImGui::IsKeyPressed(GLFW_KEY_I) || ImGui::IsKeyPressed(GLFW_KEY_EQUAL) ||
+		    ImGui::IsKeyPressed(GLFW_KEY_KP_ADD) || ImGui::IsKeyPressed(GLFW_KEY_PAGE_UP)) {
 			ImVec2 target = ImGui::GetWindowSize();
 			target.x *= 0.5f;
 			target.y *= 0.5f;
 
 			float zoom = 0.3f;
 			// We don't apply speed modifier to I or O as Ctrl+O clashes with Open
-			if (!ImGui::IsKeyPressed('I'))
+			if (!ImGui::IsKeyPressed(GLFW_KEY_I))
 				zoom *= speed;
 
 			ChangeZoom(target, zoom);
 		}
 
 		// O, - or PgDn to zoom out
-		if (ImGui::IsKeyPressed('O') || ImGui::IsKeyPressed(189) ||
-		    ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_PageDown)) ||
-		    ImGui::IsKeyPressed(0x6D)) {
+		if (ImGui::IsKeyPressed(GLFW_KEY_O) || ImGui::IsKeyPressed(GLFW_KEY_MINUS) ||
+		    ImGui::IsKeyPressed(GLFW_KEY_KP_SUBTRACT) || ImGui::IsKeyPressed(GLFW_KEY_PAGE_DOWN)) {
 			ImVec2 target = ImGui::GetWindowSize();
 			target.x *= 0.5f;
 			target.y *= 0.5f;
 
 			float zoom = -0.3f;
-			if (!ImGui::IsKeyPressed('O'))
+			if (!ImGui::IsKeyPressed(GLFW_KEY_O))
 				zoom *= speed;
 
 			ChangeZoom(target, zoom);
@@ -427,17 +433,17 @@ void BoardView::HandleInput() {
 
 			float dist = 0.125f * speed;
 
-			if (ImGui::IsKeyPressed('W') || ImGui::IsKeyPressed(0x68) ||
-			    ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_UpArrow)))
+			if (ImGui::IsKeyPressed(GLFW_KEY_W) || ImGui::IsKeyPressed(GLFW_KEY_UP) ||
+			    ImGui::IsKeyPressed(GLFW_KEY_KP_8))
 				delta.y = dist;
-			if (ImGui::IsKeyPressed('S') || ImGui::IsKeyPressed(0x62) ||
-			    ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_DownArrow)))
+			if (ImGui::IsKeyPressed(GLFW_KEY_S) || ImGui::IsKeyPressed(GLFW_KEY_DOWN) ||
+			    ImGui::IsKeyPressed(GLFW_KEY_KP_2))
 				delta.y = -dist;
-			if (ImGui::IsKeyPressed('A') || ImGui::IsKeyPressed(0x64) ||
-			    ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_LeftArrow)))
+			if (ImGui::IsKeyPressed(GLFW_KEY_A) || ImGui::IsKeyPressed(GLFW_KEY_LEFT) ||
+			    ImGui::IsKeyPressed(GLFW_KEY_KP_4))
 				delta.x = dist;
-			if (ImGui::IsKeyPressed('D') || ImGui::IsKeyPressed(0x66) ||
-			    ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_RightArrow)))
+			if (ImGui::IsKeyPressed(GLFW_KEY_D) || ImGui::IsKeyPressed(GLFW_KEY_RIGHT) ||
+			    ImGui::IsKeyPressed(GLFW_KEY_KP_6))
 				delta.x = -dist;
 
 			if (delta.x != 0.0f || delta.y != 0.0f) {
@@ -454,18 +460,18 @@ void BoardView::HandleInput() {
 		}
 
 		// Flip board:
-		if (ImGui::IsKeyPressed(' ')) {
+		if (ImGui::IsKeyPressed(GLFW_KEY_SPACE)) {
 			FlipBoard();
 		}
 
 		// Rotate board:
 
 		// R and period rotate clockwise
-		if (ImGui::IsKeyPressed('R') || ImGui::IsKeyPressed(190)) {
+		if (ImGui::IsKeyPressed(GLFW_KEY_R) || ImGui::IsKeyPressed(GLFW_KEY_PERIOD)) {
 			Rotate(1);
 		}
 		// comma rotates counter-clockwise
-		if (ImGui::IsKeyPressed(188)) {
+		if (ImGui::IsKeyPressed(GLFW_KEY_COMMA)) {
 			Rotate(-1);
 		}
 	}

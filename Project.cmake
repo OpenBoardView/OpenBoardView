@@ -8,11 +8,11 @@
 project("OpenBoardView" LANGUAGES CXX VERSION "0.3.0")
 set(PRETTY_NAME "Open Board View")
 
-set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Software for viewing .brd files, intended as a drop-in replacement for the
-\"Test_Link\" software.")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Software for viewing .brd files.")
 
 # Owner
 set(CPACK_PACKAGE_VENDOR "Chloridite")
+set(CPACK_PACKAGE_CONTACT "Chloridite <chloridite@gmail.com>")
 
 # Ensure CPack uses the same data as CMake
 set(CPACK_PACKAGE_NAME ${PROJECT_NAME})
@@ -35,9 +35,17 @@ if(WIN32)
 	CACHE PATH "Directory created in install prefix to contain instalation")
 
 	# Install binaries in the root of the install directory
-	set(INSTALL_BIN_DIR "/" CACHE PATH "Where to place binaries in the instalation")
+	set(INSTALL_BIN_DIR "/" CACHE PATH "Where to place binaries in the instalation. Will be appended to CPACK_PACKAGE_INSTALL_DIRECTORY.")
+elseif(APPLE)
+	# Used for any non-bundle executables (none currently)
+	set(INSTALL_BIN_DIR "/usr/bin")
+	# Bundles will go in "/Aplications"
+	if(NOT CONFIGURED)
+		set(CMAKE_INSTALL_PREFIX "/Applications" CACHE PATH "" FORCE)
+	endif()
 else()
-	set(INSTALL_BIN_DIR "bin" CACHE PATH "Where to place binaries in the instalation")
+	set(INSTALL_BIN_DIR "bin" CACHE PATH "Where to place binaries in the instalation. Relative paths will be appended to the PREFIX")
+	set(INSTALL_SHARE_DIR "share" CACHE PATH "Where to install \"shared\" directories like icon and applications. Relative paths will be appended to the PREFIX")
 endif()
 
 
@@ -59,6 +67,22 @@ if(WIN32)
 	# Which packages should we generate when installing "package" target
 	# or running CPack without specifying a generator
 	set(CPACK_GENERATOR  WIX ZIP CACHE STRING "List of generators to build packages with")
+elseif(APPLE)
+	set(CPACK_GENERATOR  DragNDrop ZIP STGZ  CACHE STRING "List of generators to build packages with")
+else()
+	# Debian
+	set(CPACK_DEBIAN_PACKAGE_SECTION "electronics")
+	set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "amd64" CACHE STRING "The arch to label the debian package.")
+	set_property(CACHE CPACK_DEBIAN_PACKAGE_ARCHITECTURE PROPERTY STRINGS "i386" "amd64" "arm64" "armel" "armhf" "mips" "mipsel" "powerpc" "ppc64el" "s390x")
+	#set(CPACK_DEBIAN_PACKAGE_DEPENDS ) # debian/ubuntu dependancies
+
+	# RPM
+	set(CPACK_RPM_PACKAGE_LICENSE "MIT")
+	set(CPACK_RPM_PACKAGE_GROUP "Applications/Engineering")
+	#set(CPACK_RPM_PACKAGE_REQUIRES ) # rpm/fedora dependancies
+
+	# CPack can make DEB and .tar.gz packages its self, but needs rpmbuild to make RPMs
+	set(CPACK_GENERATOR   DEB TGZ STGZ   CACHE STRING "List of generators to build packages with")
 endif()
 
 ## Text files (like LICENCE.txt) are added from asset/CMakeLists.txt

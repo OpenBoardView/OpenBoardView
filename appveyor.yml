@@ -1,6 +1,6 @@
 ### appveyor.yml
 #
-# This file is used by the AppVeyor to automatically build
+# This file is used by AppVeyor to automatically build
 # OpenBoardView on any changes or PRs.
 #
 

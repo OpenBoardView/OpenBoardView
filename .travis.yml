@@ -1,0 +1,69 @@
+### .travis.yml
+#
+# This file is used by Travis CI to automatically build
+# OpenBoardView on any changes or PRs.
+#
+
+language: cpp
+
+matrix:
+  include:
+    - os: linux
+      dist: trusty
+      sudo: required
+      compiler:
+        - gcc
+      before_install:
+        - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test   # For gcc v4.8 - v6
+        - sudo add-apt-repository -y ppa:george-edison55/cmake-3.x # For cmake
+        - sudo apt-get update
+      install:
+        - sudo apt-get install -y gcc-5 g++-5 cmake libgtk-3-0 libgtk-3-dev rpm tree
+        - export CC=gcc-5
+        - export CXX=g++-5
+      before_script:
+        - mkdir build; cd build
+        - export GENERATORS="DEB;RPM;TGZ;STGZ"
+    - os: osx
+      osx_image: xcode7.3
+      compiler:
+        - gcc
+      install:
+        - brew update
+        - brew install tree # Using tree for viewing build dir
+      before_script:
+        - mkdir build; cd build
+        - export GENERATORS="DragNDrop;ZIP;STGZ"
+
+script:
+  - cmake .. -DCMAKE_BUILD_TYPE=Release -DUSE_SYSTEM_GLFW=OFF -DCMAKE_INSTALL_PREFIX="$(pwd)" -DCPACK_GENERATOR="${GENERATORS}"
+  - make package
+
+before_deploy:
+  - export PROJECT_NAME=$(cat ./PROJECT_NAME)
+  - export PROJECT_VERSION=$(cat ./PROJECT_VERSION)
+
+deploy:
+  - provider: releases
+    skip_cleanup: true
+    file_glob: true
+    file: ${PROJECT_NAME}-*
+    on:
+      tags: true
+    api_key:
+      secure: fEfqBb5gTueI0CIskifkJ9O476XzQSA3L22y8alhMZZ82dOcFQIn6VBbcQm2ACZcUMIyb/sVYeUYlLQKNAe0vVPjwR1vDaQPUOJU9A0oBgakGZ+guKLQZ/rjWdeWuvG0ouTppOpI0EXsEtpAfbBHjWTO39aXxDG39IuzRYhz2nFJtMMTqyTncbsmyNcNgJD4SdIKTb5aMy+e7eLmxBN2yPPLzXmlJxc886AhVZebU3vqTIe5I2I5LOAoVZ448XlrbgpaY8jdeKFfiHyHv7MbZjikppZJKjM4SA9fn4F6pN5FVrGvKD9Vt4ITg6IfhfRBcwY7aHArn1ytj0RlJKTR9Urrqea7VXx7kcOguyPWL4q6ADn8hPfqociJ9vdcqM5lQMl4UnBOG10rRoGgTyrdnQs+YfoFjx4A1h7ZKfYaCuL0Co4TpzC6SeDox8capXFzJ5/4ZAoTCzgZEf5tHMHCVAtpVmoSOlZzGcrfKmsVleP9thu14FfXKQzw/77MjZAxpO5kZNdO693YBLFFgNZaczk3MrdZBehM7hQvRr56h5j0LtpXmWTFQ7mw8Qf1drgV7kkWSp1+W2LjTQjDoAYN6iqmEKlIRZAy34Mi6XUJTS08IbXnN4nRLZMzS3X1RsySsExZp6SA7Iqj5FpAkH57PVOL9tD1m6xPsMNEzrsdJnA=
+#  - provider: launchpad
+#    slug: "~openboardview/openboardview/master"
+#    oauth_token:
+#      secure: "YOUR OAUTH_TOKEN"
+#    oauth_token_secret:
+#      secure: "YOUR OAUTH_TOKEN_SECRET"
+#    on:
+#      branch: master
+
+after_script:
+  # Print out the directory structure, excluding pattern -I
+  - tree . --dirsfirst -C -I "CMakeFiles|*.cmake|CMakeCache.txt|install_manifest.txt|Makefile|lib"
+
+#notifications:
+#  irc: "chat.freenode.net#openboardview"
