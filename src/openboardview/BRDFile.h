@@ -29,8 +29,8 @@ struct BRDPin {
 	int probe;
 	int part;
 	char *net;
-	double radius;
-	char *snum = nullptr;
+	double radius = 0.5f;
+	char *snum    = nullptr;
 
 	bool operator<(const BRDPin &p) const // For sorting the vector
 	{
