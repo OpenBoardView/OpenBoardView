@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1F9260A31D2AFCBD003EA5EA /* FZFile.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F9260A11D2AFCBD003EA5EA /* FZFile.cpp */; };
+		1F9260A51D2AFDB7003EA5EA /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F9260A41D2AFDB7003EA5EA /* libz.tbd */; };
 		1FD7C7DD1D09D2B800B7D3D6 /* SDL2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FD7C7DC1D09D2B800B7D3D6 /* SDL2.framework */; };
 		1FD7C7DE1D09D3BA00B7D3D6 /* SDL2.framework in Resources */ = {isa = PBXBuildFile; fileRef = 1FD7C7DC1D09D2B800B7D3D6 /* SDL2.framework */; };
 		1FD7C7F51D09D42B00B7D3D6 /* BoardView.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1FD7C7E21D09D42B00B7D3D6 /* BoardView.cpp */; };
@@ -31,6 +33,9 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		1F9260A11D2AFCBD003EA5EA /* FZFile.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = FZFile.cpp; path = ../../openboardview/FZFile.cpp; sourceTree = "<group>"; };
+		1F9260A21D2AFCBD003EA5EA /* FZFile.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = FZFile.h; path = ../../openboardview/FZFile.h; sourceTree = "<group>"; };
+		1F9260A41D2AFDB7003EA5EA /* libz.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.tbd; path = usr/lib/libz.tbd; sourceTree = SDKROOT; };
 		1FD7C7DC1D09D2B800B7D3D6 /* SDL2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL2.framework; path = ../../../../../../Library/Frameworks/SDL2.framework; sourceTree = "<group>"; };
 		1FD7C7E11D09D42B00B7D3D6 /* Board.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Board.h; path = ../../openboardview/Board.h; sourceTree = "<group>"; };
 		1FD7C7E21D09D42B00B7D3D6 /* BoardView.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = BoardView.cpp; path = ../../openboardview/BoardView.cpp; sourceTree = "<group>"; };
@@ -80,6 +85,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1F9260A51D2AFDB7003EA5EA /* libz.tbd in Frameworks */,
 				1FD7C7DD1D09D2B800B7D3D6 /* SDL2.framework in Frameworks */,
 				1FD7D42E1D09D0940092E863 /* OpenGL.framework in Frameworks */,
 				1FD7D42C1D09D07C0092E863 /* Cocoa.framework in Frameworks */,
@@ -145,6 +151,7 @@
 		1FD7D40E1D09D03D0092E863 = {
 			isa = PBXGroup;
 			children = (
+				1F9260A41D2AFDB7003EA5EA /* libz.tbd */,
 				1FD7C81C1D09D6BD00B7D3D6 /* Assets */,
 				1FD7C7FF1D09D44000B7D3D6 /* Libraries */,
 				1FD7C7DC1D09D2B800B7D3D6 /* SDL2.framework */,
@@ -166,6 +173,8 @@
 		1FD7D4191D09D03D0092E863 /* OpenBoardView */ = {
 			isa = PBXGroup;
 			children = (
+				1F9260A11D2AFCBD003EA5EA /* FZFile.cpp */,
+				1F9260A21D2AFCBD003EA5EA /* FZFile.h */,
 				1FDF2DF11D2AC26000DB8A6C /* BDVFile.cpp */,
 				1FDF2DF21D2AC26000DB8A6C /* BDVFile.h */,
 				1FD7C7E11D09D42B00B7D3D6 /* Board.h */,
@@ -314,6 +323,7 @@
 				1FD7C80B1D09D46000B7D3D6 /* imgui_draw.cpp in Sources */,
 				1FD7C7F61D09D42B00B7D3D6 /* BRDBoard.cpp in Sources */,
 				1FD7C7FD1D09D42B00B7D3D6 /* TextureDDS.cpp in Sources */,
+				1F9260A31D2AFCBD003EA5EA /* FZFile.cpp in Sources */,
 				1FDF2DF31D2AC26000DB8A6C /* BDVFile.cpp in Sources */,
 				1FD7C7F81D09D42B00B7D3D6 /* imgui_impl_sdl_gl3.cpp in Sources */,
 				1FD7C8111D09D47700B7D3D6 /* gl3w.c in Sources */,
