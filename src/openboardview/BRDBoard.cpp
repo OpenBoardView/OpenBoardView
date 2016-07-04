@@ -172,8 +172,9 @@ BRDBoard::BRDBoard(const BRDFile *const boardFile)
 					}
 				} else {
 					// not sure this can happen -> no info
-					pin->net  = nullptr;
-					pin->type = Pin::kPinTypeUnkown;
+					// It does happen in .fz apparently and produces a SEGFAULT… Use unconnected net.
+					pin->net  = net_map[kNetUnconnectedPrefix].get();
+					pin->type = Pin::kPinTypeNotConnected;
 				}
 			}
 

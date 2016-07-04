@@ -36,6 +36,7 @@ set(SOURCES
 	BoardView.cpp
 	BRDBoard.cpp
 	BRDFile.cpp
+	FZFile.cpp
 	imgui_impl_sdl_gl3.cpp
 	main_opengl.cpp
 	NetList.cpp
@@ -70,6 +71,7 @@ target_link_libraries(openboardview
 	dl
 	imgui
 	gl3w
+	z
 	${COCOA_LIBRARY}
 	${SDL2_LIBRARY}
 	${GTK3_LIBRARIES}
