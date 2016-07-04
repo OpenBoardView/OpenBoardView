@@ -178,7 +178,10 @@ BRDBoard::BRDBoard(const BRDFile *const boardFile)
 			}
 
 			// TODO: should either depend on file specs or type etc
-			pin->diameter = 0.5f;
+			if (brd_pin.radius)
+				pin->diameter = brd_pin.radius; // some format (.fz) contains a radius field
+			else
+				pin->diameter = 0.5f;
 
 			pin->net->pins.push_back(pin.get());
 			pins_.push_back(pin);
