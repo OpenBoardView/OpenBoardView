@@ -24,4 +24,15 @@ target_link_libraries(imgui ${PLATFORM_TARGET_LIBS})
 install(TARGETS imgui DESTINATION ${INSTALL_LIBRARY_DIR})
 
 
+## zlib ##
+find_package(ZLIB)
+if(NOT ZLIB_FOUND)
+	set(SKIP_INSTALL_FILES YES)
+	set(SKIP_INSTALL_HEADERS YES)
+	add_subdirectory(zlib)
+
+	set(ZLIB_LIBRARIES z CACHE INTERNAL "zlib library")
+	set(ZLIB_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/zlib)
+endif()
+
 add_subdirectory(openboardview)
