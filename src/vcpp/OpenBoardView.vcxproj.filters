@@ -32,6 +32,7 @@
     </ClInclude>
     <ClInclude Include="..\openboardview\TextureDDS.h" />
     <ClInclude Include="..\openboardview\BDVFile.h" />
+    <ClInclude Include="..\openboardview\FZFile.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\openboardview\imgui_impl_dx9.cpp">
@@ -56,6 +57,7 @@
     </ClCompile>
     <ClCompile Include="..\openboardview\TextureDDS.cpp" />
     <ClCompile Include="..\openboardview\BDVFile.cpp" />
+    <ClCompile Include="..\openboardview\FZFile.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="imgui">
@@ -66,6 +68,12 @@
     </Filter>
     <Filter Include="assets">
       <UniqueIdentifier>{b4435e3d-2332-4ff1-bb62-fbbe51cbc394}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="zlib">
+      <UniqueIdentifier>{f118c824-66f3-47df-9172-189a4b988b08}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="zlib">
+      <UniqueIdentifier>{f118c824-66f3-47df-9172-189a4b988b08}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
