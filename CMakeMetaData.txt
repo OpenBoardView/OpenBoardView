@@ -1,0 +1,76 @@
+### CMakeMetaData.txt ###
+#
+# Included from CMakeLists.txt
+#
+
+# List of package generators to use
+if (WIN32)
+  set(CPACK_GENERATOR "WIX"
+    CACHE STRING "CPack Generator to use to build installer"
+  )
+  set_property(CACHE CPACK_GENERATOR PROPERTY STRINGS
+    "NSIS" # .exe windows installer
+    "WIX"  # .msi windows installer
+  )
+endif()
+
+set(CPACK_PACKAGE_NAME "OpenBoardView")
+
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Software for viewing .brd files, intended as a drop-in replacement for the
+\"Test_Link\" software.")
+
+# Version
+set(CPACK_PACKAGE_VERSION_MAJOR "0")
+set(CPACK_PACKAGE_VERSION_MINOR "3")
+set(CPACK_PACKAGE_VERSION_PATCH "0")
+
+# Owner
+set(CPACK_PACKAGE_VENDOR "Chloridite")
+
+# Add the license to supported installers
+set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE.txt")
+set(CPACK_RESOURCE_FILE_WELCOME "${CMAKE_CURRENT_SOURCE_DIR}/Installer_Welcome.txt")
+
+# Name out install directory; goes under CMAKE_INSTALL_PREFIX
+set(CPACK_PACKAGE_INSTALL_DIRECTORY "${CPACK_PACKAGE_NAME} - ${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}")
+
+# Used for Windows and OSX shortcuts; ${PROJECT_NAME} is a console command,
+# "Open Board View" is the pretty text
+set(CPACK_PACKAGE_EXECUTABLES ${PROJECT_NAME} "Open Board View")
+
+if(WIN32)
+  # There is a bug in NSI that does not handle full unix paths properly. Make
+  # sure there is at least one set of four (4) backlasshes.
+
+  # WiX MD5 Hash, used for checking whether to upgrade an installed package,
+  # or install a new one
+  #    hash generated manually using `echo "openboardview" | md5sum` on unix
+  set(CPACK_WIX_UPGRADE_GUID "e10554b8-a9ce-9f67-8a09-68fbc9474a7a"
+      CACHE STRING "Dash separated MD5 hash, used by WiX to perform updates.")
+  mark_as_advanced(FORCE CPACK_WIX_UPGRADE_GUID)
+
+  # Pretty name, used by Windows "Add/Remove Programs" for example
+  set(CPACK_NSIS_DISPLAY_NAME ${CPACK_PACKAGE_NAME})
+
+  # Ask to run OBV on the finish page (NSIS installer)
+  set(CPACK_NSIS_MUI_FINISHPAGE_RUN ON)
+
+  # NSIS Installer images
+  set(CPACK_NSIS_MUI_ICON "${CMAKE_CURRENT_SOURCE_DIR}\\\\asset\\\\brd.ico") # installer
+  set(CPACK_NSIS_MUI_UNIICON ${CPACK_NSIS_MUI_ICON}) # uninstaller
+  set(CPACK_PACKAGE_ICON "${CMAKE_CURRENT_SOURCE_DIR}\\\\asset\\\\installer_nsis.bmp") #  150x57 header image
+
+  # WiX Installer images
+  set(CPACK_WIX_PRODUCT_ICON ${CPACK_NSIS_MUI_ICON}) # icon for Add/Remove with WiX installer
+  set(CPACK_WIX_UI_BANNER "${CMAKE_CURRENT_SOURCE_DIR}\\\\asset\\\\installer_wix_banner.bmp") # 493x58px bmp top banner for WiX installer
+  set(CPACK_WIX_UI_DIALOG "${CMAKE_CURRENT_SOURCE_DIR}\\\\asset\\\\installer_wix_bg.bmp") # 493x312 bmp background image for WiX Welcome/Completion page
+
+  #CPACK_WIX_UPGRADE_GUID - Important hash thingy
+
+  # exe with embedded icon (for shortcuts?)
+  set(CPACK_NSIS_INSTALLED_ICON_NAME "bin\\\\OpenBoardView.exe")
+
+  # Help
+  set(CPACK_NSIS_URL_INFO_ABOUT "https:\\\\\\\\github.com/chloridite/OpenBoardView")
+  set(CPACK_NSIS_CONTACT "chloridite@gmail.com")
+endif()

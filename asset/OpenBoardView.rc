@@ -1,0 +1,21 @@
+// MS Visual C++ resource script.
+// Origionally a MSVS generated file
+//
+#include "resource.h"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// ASSET
+//
+
+ASSET_FIRA_SANS              ASSET              "FiraSans-Medium.ttf"
+ASSET_EMPTY_CIRCLE           ASSET              "empty_circle.dds"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_ICON1               ICON                    "brd.ico"
