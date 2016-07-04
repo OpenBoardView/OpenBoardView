@@ -1,12 +1,14 @@
 #define _CRT_SECURE_NO_WARNINGS 1
 #include "BoardView.h"
 
-#include <SDL.h>
 #include <algorithm>
 #include <iostream>
 #include <math.h>
 #include <memory>
 #include <stdio.h>
+#ifndef _WIN32 // SDL not used on Windows
+#include <SDL.h>
+#endif
 
 #include "BDVFile.h"
 #include "BRDBoard.h"

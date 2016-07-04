@@ -137,6 +137,7 @@
     <ClInclude Include="..\imgui\stb_rect_pack.h" />
     <ClInclude Include="..\imgui\stb_textedit.h" />
     <ClInclude Include="..\imgui\stb_truetype.h" />
+    <ClInclude Include="..\openboardview\BDVFile.h" />
     <ClInclude Include="..\openboardview\Board.h" />
     <ClInclude Include="..\openboardview\BoardView.h" />
     <ClInclude Include="..\openboardview\BRDBoard.h" />
@@ -151,6 +152,7 @@
   <ItemGroup>
     <ClCompile Include="..\imgui\imgui.cpp" />
     <ClCompile Include="..\imgui\imgui_draw.cpp" />
+    <ClCompile Include="..\openboardview\BDVFile.cpp" />
     <ClCompile Include="..\openboardview\BoardView.cpp" />
     <ClCompile Include="..\openboardview\BRDBoard.cpp" />
     <ClCompile Include="..\openboardview\BRDFile.cpp" />
