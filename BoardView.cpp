@@ -177,7 +177,7 @@ void BoardView::Update() {
 			ImGui::Unindent();
 			ImGui::Separator();
 			ImGui::Text("OpenBoardView is MIT Licensed");
-			ImGui::Text("Copyright (c) 2016 Chloridite");
+			ImGui::Text("Copyright (c) 2016 Chloridite and OpenBoardView contributors");
 			ImGui::Spacing();
 			ImGui::Text("ImGui is MIT Licensed");
 			ImGui::Text("Copyright (c) 2014-2015 Omar Cornut and ImGui contributors");
