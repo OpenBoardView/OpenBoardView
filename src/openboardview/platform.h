@@ -6,6 +6,7 @@
 
 #ifdef _WIN32
 #include <windows.h>
+#define SDLK_ESCAPE VK_ESCAPE
 #define SDL_SCANCODE_LCTRL VK_CONTROL
 #define SDL_SCANCODE_RCTRL VK_CONTROL
 #define SDL_SCANCODE_KP_0 VK_NUMPAD0
