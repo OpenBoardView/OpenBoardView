@@ -419,7 +419,7 @@ void BoardView::Update() {
 	} else {
 		ImVec2 spos = ImGui::GetMousePos();
 		ImVec2 pos  = ScreenToCoord(spos.x, spos.y);
-		ImGui::Text("Position: %0.3f\", %0.3f\" (%0.2f, %0.2f)mm", pos.x / 1000, pos.y / 1000, pos.x * 0.0254, pos.y * 0.0254);
+		ImGui::Text("Position: %0.3f\", %0.3f\" (%0.2f, %0.2fmm)", pos.x / 1000, pos.y / 1000, pos.x * 0.0254, pos.y * 0.0254);
 	}
 	ImGui::End();
 	ImGui::PopStyleVar();
