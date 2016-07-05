@@ -423,6 +423,10 @@
 					"$(inherited)",
 					"$(LOCAL_LIBRARY_DIR)/Frameworks",
 				);
+				"GCC_PREPROCESSOR_DEFINITIONS[arch=*]" = (
+					"\"ImDrawIdx=unsigned int\"",
+					"$(inherited)",
+				);
 				HEADER_SEARCH_PATHS = (
 					..,
 					../gl3w/include,
@@ -443,6 +447,7 @@
 					"$(inherited)",
 					"$(LOCAL_LIBRARY_DIR)/Frameworks",
 				);
+				"GCC_PREPROCESSOR_DEFINITIONS[arch=*]" = "\"ImDrawIdx=unsigned int\"";
 				HEADER_SEARCH_PATHS = (
 					..,
 					../gl3w/include,
