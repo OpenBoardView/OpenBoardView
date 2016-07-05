@@ -7,3 +7,7 @@
 [submodule "src/zlib"]
 	path = src/zlib
 	url = https://github.com/madler/zlib.git
+[submodule "src/utf8"]
+	path = src/utf8
+	url = https://github.com/OpenBoardView/utf8.h.git
+	branch = casestr
