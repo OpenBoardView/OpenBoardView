@@ -4,7 +4,7 @@ Linux SDL/ImGui edition software for viewing .brd files, intended as a drop-in
 replacement for the "Test_Link" software.
 
 
-[![Demo Video](https://github.com/inflex/OpenBoardView/blob/inflex-ui-features/asset/screenshot.png)](https://www.youtube.com/watch?v=1Pi5RGC-rJw)
+[![Demo Video](https://github.com/inflex/OpenBoardView/blob/inflex-ui-features/asset/screenshot.png)](https://youtu.be/hR-3xZU3xQE)
 
 
 ### Features
