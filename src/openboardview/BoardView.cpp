@@ -315,7 +315,7 @@ void BoardView::Update() {
 		if (ImGui::BeginPopupModal("About", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
 			ImGui::Text("OpenBoardView - Inflex fork");
 			ImGui::Text("https://github.com/inflex/OpenBoardView");
-			if (ImGui::Button("Close") || ImGui::IsKeyPressed(27)) {
+			if (ImGui::Button("Close") || ImGui::IsKeyPressed(SDLK_ESCAPE)) {
 				ImGui::CloseCurrentPopup();
 			}
 			ImGui::Indent();
