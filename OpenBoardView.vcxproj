@@ -147,7 +147,7 @@
     <ClCompile Include="imgui\imgui_draw.cpp" />
     <ClCompile Include="imgui_impl_dx9.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="platform.cpp" />
+    <ClCompile Include="platform_win32.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="asset\brd.ico" />

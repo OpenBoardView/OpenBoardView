@@ -43,7 +43,7 @@
     <ClCompile Include="main.cpp">
       <Filter>win32</Filter>
     </ClCompile>
-    <ClCompile Include="platform.cpp">
+    <ClCompile Include="platform_win32.cpp">
       <Filter>win32</Filter>
     </ClCompile>
     <ClCompile Include="BRDFile.cpp" />
