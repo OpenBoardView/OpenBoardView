@@ -520,8 +520,14 @@ void BoardView::HandleInput() {
 			m_draggingLastFrame = true;
 			m_needsRedraw       = true;
 		} else {
-			// Click to select pin:
-			if (m_file && m_board && ImGui::IsMouseReleased(0) && !m_draggingLastFrame) {
+
+			// Conext menu
+			if (m_file && m_board && ImGui::IsMouseReleased(1) && !m_draggingLastFrame) {
+				// Build context menu here, for annotations and inspection
+				// fprintf(stderr,"Context menu select\n");
+
+				// Else, click to select pin
+			} else if (m_file && m_board && ImGui::IsMouseReleased(0) && !m_draggingLastFrame) {
 				ImVec2 spos = ImGui::GetMousePos();
 				ImVec2 pos  = ScreenToCoord(spos.x, spos.y);
 				// threshold to within a pin's diameter of the pin center
