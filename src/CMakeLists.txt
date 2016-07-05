@@ -29,9 +29,16 @@ execute_process(
 	COMMAND git submodule update --init src/imgui
 	WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
 )
+add_definitions("-DImDrawIdx=unsigned int") # short is not enough for us
 add_library(imgui SHARED imgui/imgui.cpp imgui/imgui_draw.cpp)
 target_link_libraries(imgui ${PLATFORM_TARGET_LIBS})
 install(TARGETS imgui DESTINATION ${INSTALL_LIBRARY_DIR})
+
+## utf8.h ##
+#execute_process(
+#	COMMAND git submodule update --init src/utf8
+#	WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+#)
 
 ## zlib ##
 find_package(ZLIB)
