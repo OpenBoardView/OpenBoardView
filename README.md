@@ -42,6 +42,8 @@ replacement for the "Test_Link" software.
 - N: Search by power net
 - C: Search by component name
 
+- w/a/s/d: pan viewport over board
+- x: Reset zoom and center
 - Numeric pad up/down/left/right: pan viewport over board
 - Numeric pad +/-: zoom board
 - Numeric pad 5: Reset zoom and center
