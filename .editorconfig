@@ -1,0 +1,19 @@
+# EditorConfig is awesome: http://EditorConfig.org
+
+# Download a plugin for your editor at http://EditorConfig.org/#download
+
+# top-most EditorConfig file
+root = true
+
+# All files
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+
+# Code files
+[{*.{h,c,cc,cpp,mm},CMakeLists.txt}]
+indent_style = tab
+indent_size = 4
