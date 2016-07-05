@@ -154,7 +154,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="NetList.cpp" />
     <ClCompile Include="PartList.cpp" />
-    <ClCompile Include="platform.cpp" />
+    <ClCompile Include="platform_win32.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="asset\brd.ico" />
