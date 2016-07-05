@@ -313,8 +313,8 @@ void BoardView::Update() {
 			ImGui::EndPopup();
 		}
 		if (ImGui::BeginPopupModal("About", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
-			ImGui::Text("OpenBoardView");
-			ImGui::Text("https://github.com/chloridite/OpenBoardView");
+			ImGui::Text("OpenBoardView - Inflex fork");
+			ImGui::Text("https://github.com/inflex/OpenBoardView");
 			if (ImGui::Button("Close") || ImGui::IsKeyPressed(27)) {
 				ImGui::CloseCurrentPopup();
 			}
