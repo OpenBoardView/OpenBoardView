@@ -997,8 +997,7 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 	char p0, p1; // first two characters of the part name, code-writing convenience more than anything else
 
 	for (auto &part : m_board->Components()) {
-		int pincount           = 0;
-		int part_is_orthagonal = 0;
+		int pincount = 0;
 		double min_x, min_y, max_x, max_y;
 		auto p_part = part.get();
 
@@ -1038,14 +1037,6 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 			distance = max_y - min_y;
 		else
 			distance = max_x - min_x;
-
-		// Test to see if the part is strictly horizontal or vertical
-		part_is_orthagonal = 1;
-		if ((min_y < max_y) && (min_x < max_x)) {
-			if (((max_y - min_y) > 2) && ((max_x - min_x) > 2)) {
-				part_is_orthagonal = 0;
-			}
-		}
 
 		distance = sqrt((max_x - min_x) * (max_x - min_x) + (max_y - min_y) * (max_y - min_y));
 
@@ -1130,11 +1121,10 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 		p0 = p_part->name[0];
 		p1 = p_part->name[1];
 
-		// If we have a rotated part that is a C or R, hopefully with 2 pins ?
-		// if ((!part_is_orthagonal) && (pincount < 3) && ( ((p_part->name[0] == 'C')||(p_part->name[0] == 'R')||(p_part->name[0] ==
-		// 'L')||(p_part->name[0] == 'D')) ) ) {
-		if ((pincount < 3) && ((strchr("CRLD", p0) || (strchr("CRLD", p1))))) {
-			//	 (p0 == 'C')||(p0 == 'R')||(p0 == 'L')||(p0 == 'D')) ) ) {
+		/** Draw all 2~3 pin devices as if they're not orthagonal.  It's a bit more CPU
+		 * overhead but it keeps the code simpler and saves us replicating things.
+		 */
+		if ((pincount < 4) && ((strchr("CRLD", p0) || (strchr("CRLD", p1))))) {
 			ImVec2 a, b, c, d;
 			double dx, dy;
 			double tx, ty;
