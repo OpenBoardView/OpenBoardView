@@ -26,6 +26,10 @@
     <ClInclude Include="BRDFile.h" />
     <ClInclude Include="platform.h" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="NetList.h" />
+    <ClInclude Include="Board.h" />
+    <ClInclude Include="BRDBoard.h" />
+    <ClInclude Include="PartList.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="imgui\imgui.cpp">
@@ -43,11 +47,14 @@
     <ClCompile Include="main.cpp">
       <Filter>win32</Filter>
     </ClCompile>
-    <ClCompile Include="platform.cpp">
+    <ClCompile Include="platform_win32.cpp">
       <Filter>win32</Filter>
     </ClCompile>
     <ClCompile Include="BRDFile.cpp" />
     <ClCompile Include="BoardView.cpp" />
+    <ClCompile Include="NetList.cpp" />
+    <ClCompile Include="BRDBoard.cpp" />
+    <ClCompile Include="PartList.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="imgui">
