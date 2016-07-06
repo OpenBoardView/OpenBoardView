@@ -51,6 +51,11 @@ char *show_file_picker() {
 					"_Open", GTK_RESPONSE_ACCEPT,
 					NULL );
 
+	// Filter file types
+	GtkFileFilter *filter = gtk_file_filter_new();
+	gtk_file_filter_add_pattern(filter, "*.brd");
+	gtk_file_chooser_add_filter(dialog, filter);
+
 	if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_ACCEPT) {
 		char *filename = nullptr;
 
