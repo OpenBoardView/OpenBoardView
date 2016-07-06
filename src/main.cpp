@@ -73,6 +73,7 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	LPDIRECT3D9 pD3D;
 	if ((pD3D = Direct3DCreate9(D3D_SDK_VERSION)) == NULL) {
 		UnregisterClass(class_name, wc.hInstance);
+		MessageBox(hwnd, L"Failed to initialise Direct3D", NULL, 0);
 		return 0;
 	}
 	ZeroMemory(&g_d3dpp, sizeof(g_d3dpp));
@@ -88,6 +89,7 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	                       D3DCREATE_HARDWARE_VERTEXPROCESSING, &g_d3dpp, &g_pd3dDevice) < 0) {
 		pD3D->Release();
 		UnregisterClass(class_name, wc.hInstance);
+		MessageBox(hwnd, L"Failed to create Direct3D device", NULL, 0);
 		return 0;
 	}
 
