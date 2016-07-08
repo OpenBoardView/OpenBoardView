@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <cmath>
 #include <iostream>
+#include <limits.h>
 #include <memory>
 #include <stdio.h>
 #ifndef _WIN32 // SDL not used on Windows
@@ -1382,7 +1383,7 @@ void BoardView::SetFile(BRDFile *file) {
 
 	m_nets = m_board->Nets();
 
-	int min_x = 1000000, max_x = 0, min_y = 1000000, max_y = 0;
+	int min_x = INT_MAX, max_x = INT_MIN, min_y = INT_MAX, max_y = INT_MIN;
 	for (int i = 0; i < m_file->num_format; i++) {
 		BRDPoint &pa            = m_file->format[i];
 		if (pa.x < min_x) min_x = pa.x;
