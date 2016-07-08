@@ -181,7 +181,12 @@ int BoardView::LoadFile(char *filename) {
 	return 0;
 }
 
-#pragma region Update Logic
+/** UPDATE Logic region
+ *
+ *
+ *
+ *
+ */
 void BoardView::Update() {
 	bool open_file        = false;
 	char *preset_filename = NULL;
@@ -531,6 +536,8 @@ void BoardView::HandleInput() {
 			if (m_file && m_board && ImGui::IsMouseReleased(1) && !m_draggingLastFrame) {
 				// Build context menu here, for annotations and inspection
 				// fprintf(stderr,"Context menu select\n");
+				//
+				Rotate(1);
 
 				// Flip the board with the middle click
 			} else if (m_file && m_board && ImGui::IsMouseReleased(2)) {
@@ -654,9 +661,13 @@ void BoardView::HandleInput() {
 		}
 	}
 }
-#pragma endregion
 
-#pragma region Overlay &Windows
+/* END UPDATE REGION */
+
+/** Overlay and Windows
+ *
+ *
+ */
 void BoardView::ShowNetList(bool *p_open) {
 	static NetList netList(bind(&BoardView::SetNetFilter, this, _1));
 	netList.Draw("Net List", p_open, m_board);
@@ -676,9 +687,15 @@ void BoardView::RenderOverlay() {
 		ShowPartList(&m_showPartList);
 	}
 }
-#pragma endregion Showing UI floating above main workspace.
 
-#pragma region Drawing
+/** End overlay & windows region **/
+
+/**
+ * Drawing region
+ *
+ *
+ *
+ */
 inline void BoardView::DrawOutline(ImDrawList *draw) {
 	int jump = 1;
 	Point fp;
@@ -1325,7 +1342,7 @@ void BoardView::DrawBoard() {
 	memcpy(m_cachedDrawCommands.Data, draw->CmdBuffer.Data, cmds_size);
 	m_needsRedraw = false;
 }
-#pragma endregion
+/** end of drawing region **/
 
 int qsort_netstrings(const void *a, const void *b) {
 	const char *sa = *(const char **)a;

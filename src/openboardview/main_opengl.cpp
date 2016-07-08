@@ -49,6 +49,10 @@ int main(int argc, char **argv) {
 	std::string fontpath = get_asset_path("FiraSans-Medium.ttf");
 	io.Fonts->AddFontFromFileTTF(fontpath.c_str(), 20.0f);
 #endif
+	ImGuiIO &io          = ImGui::GetIO();
+	std::string fontpath = get_asset_path("DroidSans.ttf");
+	io.Fonts->AddFontFromFileTTF(fontpath.c_str(), 16.0f);
+	//	io.Fonts->AddFontDefault();
 
 	BoardView app{};
 	//	 app.History_set_filename("openboardview.history");
