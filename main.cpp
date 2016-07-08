@@ -70,10 +70,14 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	    CreateWindow(class_name, _T("Open Board Viewer"), WS_OVERLAPPEDWINDOW, CW_USEDEFAULT,
 	                 CW_USEDEFAULT, 1280, 800, NULL, NULL, wc.hInstance, NULL);
 
+	DragAcceptFiles(hwnd, true);
+
+
 	// Initialize Direct3D
 	LPDIRECT3D9 pD3D;
 	if ((pD3D = Direct3DCreate9(D3D_SDK_VERSION)) == NULL) {
 		UnregisterClass(class_name, wc.hInstance);
+		MessageBox(hwnd, L"Failed to initialise Direct3D", NULL, 0);
 		return 0;
 	}
 	ZeroMemory(&g_d3dpp, sizeof(g_d3dpp));
@@ -89,6 +93,7 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	                       D3DCREATE_HARDWARE_VERTEXPROCESSING, &g_d3dpp, &g_pd3dDevice) < 0) {
 		pD3D->Release();
 		UnregisterClass(class_name, wc.hInstance);
+		MessageBox(hwnd, L"Failed to create Direct3D device", NULL, 0);
 		return 0;
 	}
 
@@ -139,6 +144,31 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 			continue;
 		}
 		ImGui_ImplDX9_NewFrame();
+
+		if (msg.message == WM_DROPFILES) {
+
+			HDROP hDrop = (HDROP)msg.wParam;
+			TCHAR *lpszFile = new TCHAR[MAX_PATH];
+			UINT uFile = 0;
+
+			uFile = DragQueryFile(hDrop, 0xFFFFFFFF, NULL, NULL);
+
+			if (uFile > 1) {
+				app.ShowError("Multiple files not supported");
+			}
+			else {
+				lpszFile[0] = '\0';
+				if (DragQueryFile(hDrop, 0, lpszFile, MAX_PATH))
+				{
+					char *fileAsChar = new char[MAX_PATH];
+					wcstombs_s(NULL, fileAsChar, MAX_PATH, lpszFile, wcslen(lpszFile) + 1);
+					app.OpenFile(fileAsChar);
+				}
+			}
+
+			DragFinish(hDrop);
+		}
+
 #if 0
 		// 1. Show a simple window
 		// Tip: if we don't call ImGui::Begin()/ImGui::End() the widgets appears in a window
@@ -177,6 +207,19 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 			PostMessage(hwnd, WM_QUIT, 0, 0);
 		}
 
+		if (app.m_wantsTitleChange) {
+			app.m_wantsTitleChange = false;
+
+			TCHAR title[MAX_PATH + 100];
+			TCHAR filename[MAX_PATH + 10];
+			
+			//Convert character encoding if required, and format the window title
+			mbstowcs_s(NULL, filename, _countof(filename), app.m_lastFileOpenName, strlen(app.m_lastFileOpenName));
+			_stprintf_s(title, _countof(title), L"%s - Open Board Viewer", filename);
+
+			SetWindowText(hwnd, title);
+		}
+
 		// Rendering
 		g_pd3dDevice->SetRenderState(D3DRS_ZENABLE, false);
 		g_pd3dDevice->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
@@ -198,6 +241,8 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	if (pD3D)
 		pD3D->Release();
 	UnregisterClass(class_name, wc.hInstance);
+
+	DragAcceptFiles(hwnd, false);
 
 	return 0;
 }
