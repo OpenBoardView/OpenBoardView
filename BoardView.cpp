@@ -334,38 +334,58 @@ void BoardView::HandleInput() {
 	}
 	if (!io.WantCaptureKeyboard) {
 
-		// (I/+) and (O/-) keys as alternate zoom. Will zoom on the centre of the viewport, not on the mouse.
-		if (ImGui::IsKeyPressed('I') || ImGui::IsKeyPressed(187)) {
-			ImVec2 target = ImGui::GetWindowSize();
-			target.x *= 0.5f;
-			target.y *= 0.5f;
-			ChangeZoom(target, 2.0f);
+		//Ctrl-Q as alternative quit shortcut (Alt-F4 is already handled by Windows)
+		if (ImGui::IsKeyPressed('Q') && ImGui::IsKeyDown(17)) {
+			m_wantsQuit = true;
 		}
-		if (ImGui::IsKeyPressed('O') || ImGui::IsKeyPressed(189)) {
+
+		// (I/+/PgUp) and (O/-/PgDn) keys as alternate zoom. Will zoom on the centre of the viewport, not on the mouse.
+		
+		//TODO numpad +/- scancodes
+		if ( ImGui::IsKeyPressed('I')
+			|| ImGui::IsKeyPressed(187)
+			|| ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_PageUp))
+			)
+		{
 			ImVec2 target = ImGui::GetWindowSize();
 			target.x *= 0.5f;
 			target.y *= 0.5f;
-			ChangeZoom(target, 0.5f);
+
+			float zoom = 2.0f;
+			ChangeZoom(target, zoom);
+		}
+
+		if ( ImGui::IsKeyPressed('O') 
+			|| ImGui::IsKeyPressed(189)
+			|| ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_PageDown))
+			)
+		{
+			ImVec2 target = ImGui::GetWindowSize();
+			target.x *= 0.5f;
+			target.y *= 0.5f;
+			
+			float zoom = 0.5f;
+			ChangeZoom(target, zoom);
 		}
 
 		//Arrow keys or WASD to move viewport by a percentage of the screen width/height
 		{
 			ImVec2 delta(0.0f, 0.0f);
 			
-			float dist = 0.25f;
+			float dist = 0.125f;
 
 			// Ctrl slows down the movement speed
 			if (ImGui::IsKeyDown(17)) {
 				dist *= 0.1f;
 			}
 
-			if (ImGui::IsKeyPressed('W') || ImGui::IsKeyPressed(38))
+			if (ImGui::IsKeyPressed('W') || ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_UpArrow)))
 				delta.y = dist;
-			if (ImGui::IsKeyPressed('S') || ImGui::IsKeyPressed(40))
+			if (ImGui::IsKeyPressed('S') || ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_DownArrow)))
 				delta.y = -dist;
-			if (ImGui::IsKeyPressed('A') || ImGui::IsKeyPressed(37))
+			if (ImGui::IsKeyPressed('A') || ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_LeftArrow)))
 				delta.x = dist;
-			if (ImGui::IsKeyPressed('D') || ImGui::IsKeyPressed(39))
+			if (ImGui::IsKeyPressed('D') || ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_RightArrow)))
 				delta.x = -dist;
 
 			if (delta.x != 0.0f || delta.y != 0.0f) {
