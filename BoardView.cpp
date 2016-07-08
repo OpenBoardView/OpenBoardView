@@ -348,7 +348,8 @@ void BoardView::HandleInput() {
 		//TODO numpad +/- scancodes
 		if ( ImGui::IsKeyPressed('I')
 			|| ImGui::IsKeyPressed(187)
-			|| ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_PageUp))
+			|| ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_PageUp)
+			|| ImGui::IsKeyPressed(0x6B) )
 			)
 		{
 			ImVec2 target = ImGui::GetWindowSize();
@@ -361,7 +362,8 @@ void BoardView::HandleInput() {
 
 		if ( ImGui::IsKeyPressed('O') 
 			|| ImGui::IsKeyPressed(189)
-			|| ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_PageDown))
+			|| ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_PageDown)
+			|| ImGui::IsKeyPressed(0x6D) )
 			)
 		{
 			ImVec2 target = ImGui::GetWindowSize();
@@ -383,13 +385,13 @@ void BoardView::HandleInput() {
 				dist *= 0.1f;
 			}
 
-			if (ImGui::IsKeyPressed('W') || ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_UpArrow)))
+			if (ImGui::IsKeyPressed('W') || ImGui::IsKeyPressed(0x68) || ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_UpArrow)))
 				delta.y = dist;
-			if (ImGui::IsKeyPressed('S') || ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_DownArrow)))
+			if (ImGui::IsKeyPressed('S') || ImGui::IsKeyPressed(0x62) || ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_DownArrow)))
 				delta.y = -dist;
-			if (ImGui::IsKeyPressed('A') || ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_LeftArrow)))
+			if (ImGui::IsKeyPressed('A') || ImGui::IsKeyPressed(0x64) || ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_LeftArrow)))
 				delta.x = dist;
-			if (ImGui::IsKeyPressed('D') || ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_RightArrow)))
+			if (ImGui::IsKeyPressed('D') || ImGui::IsKeyPressed(0x66) || ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_RightArrow)))
 				delta.x = -dist;
 
 			if (delta.x != 0.0f || delta.y != 0.0f) {
