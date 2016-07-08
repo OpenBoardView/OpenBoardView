@@ -43,12 +43,12 @@ replacement for the "Test_Link" software.
 - C: Search by component name
 
 - w/a/s/d: pan viewport over board
-- -/=: Zoom out/in
+- Mouse scroll, -/=: Zoom out/in
 - x: Reset zoom and center
-- Numeric pad up/down/left/right: pan viewport over board
+- Mouse click-hold-drag, Numeric pad up/down/left/right: pan viewport over board
 - Numeric pad +/-: zoom board
 - Numeric pad 5: Reset zoom and center
-- Space: Flip board
+- Space, Middle mouse click: Flip board
 - R|.: Rotate clockwise
 - ,: Rotate counter-clockwise
 - L: Show net list

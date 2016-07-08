@@ -532,6 +532,10 @@ void BoardView::HandleInput() {
 				// Build context menu here, for annotations and inspection
 				// fprintf(stderr,"Context menu select\n");
 
+				// Flip the board with the middle click
+			} else if (m_file && m_board && ImGui::IsMouseReleased(2)) {
+				FlipBoard();
+
 				// Else, click to select pin
 			} else if (m_file && m_board && ImGui::IsMouseReleased(0) && !m_draggingLastFrame) {
 				ImVec2 spos = ImGui::GetMousePos();
