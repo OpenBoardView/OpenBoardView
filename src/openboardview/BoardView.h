@@ -25,9 +25,9 @@ struct annotations {
 #define HISTORY_COUNT_MAX 20
 #define HISTORY_FNAME_LEN_MAX 2048
 struct file_history {
-	char history[HISTORY_COUNT_MAX][HISTORY_FNAME_LEN_MAX]; // Array of files in the history
-	int count;                                              // How many entries in the history array
-	char fname[HISTORY_FNAME_LEN_MAX];                      // File name where histories are stored
+	char history[HISTORY_COUNT_MAX][HISTORY_FNAME_LEN_MAX];      // Array of files in the history
+	int count;                                                   // How many entries in the history array
+	char fname[HISTORY_FNAME_LEN_MAX] = "openboardview.history"; // File name where histories are stored
 };
 
 struct BRDPart;

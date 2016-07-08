@@ -186,6 +186,7 @@ void BoardView::Update() {
 	bool open_file        = false;
 	char *preset_filename = NULL;
 
+	// if ((ImGui::IsKeyDown(SDLK_RCTRL)||ImGui::IsKeyDown(SDLK_LCTRL)) && ImGui::IsKeyPressed('O', false)) {
 	if (ImGui::IsKeyDown(17) && ImGui::IsKeyPressed('O', false)) {
 		open_file = true;
 		// the dialog will likely eat our WM_KEYUP message for CTRL and O:
@@ -193,6 +194,7 @@ void BoardView::Update() {
 		io.KeysDown[17]  = false;
 		io.KeysDown['O'] = false;
 	}
+
 	if (ImGui::BeginMainMenuBar()) {
 		if (ImGui::BeginMenu("File")) {
 			if (ImGui::MenuItem("Open", "Ctrl+O")) {
@@ -291,11 +293,11 @@ void BoardView::Update() {
 			}
 
 			// Enter and Esc close the search:
-			if (ImGui::IsKeyPressed(13)) {
+			if (ImGui::IsKeyPressed(SDLK_RETURN)) {
 				SetNetFilter(first_button);
 				ImGui::CloseCurrentPopup();
 			}
-			if (ImGui::Button("Clear") || ImGui::IsKeyPressed(27)) {
+			if (ImGui::Button("Clear") || ImGui::IsKeyPressed(SDLK_ESCAPE)) {
 				SetNetFilter("");
 				ImGui::CloseCurrentPopup();
 			}
@@ -327,11 +329,11 @@ void BoardView::Update() {
 				}
 			}
 			// Enter and Esc close the search:
-			if (ImGui::IsKeyPressed(13)) {
+			if (ImGui::IsKeyPressed(SDLK_RETURN)) {
 				FindComponent(first_button);
 				ImGui::CloseCurrentPopup();
 			}
-			if (ImGui::Button("Clear") || ImGui::IsKeyPressed(27)) {
+			if (ImGui::Button("Clear") || ImGui::IsKeyPressed(SDLK_ESCAPE)) {
 				FindComponent("");
 				ImGui::CloseCurrentPopup();
 			}
@@ -569,7 +571,7 @@ void BoardView::HandleInput() {
 
 		// Rotate board: R and period rotate clockwise; comma rotates
 		// counter-clockwise
-		if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_0) || ImGui::IsKeyPressed('R') || ImGui::IsKeyPressed('r')) {
+		if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_0) || ImGui::IsKeyPressed('R')) {
 			Rotate(1);
 		}
 		if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_PERIOD)) {
@@ -598,52 +600,52 @@ void BoardView::HandleInput() {
 			}
 		}
 
-		if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_2) || ImGui::IsKeyPressed('s')) {
+		if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_2) || ImGui::IsKeyPressed('S')) {
 			Pan(DIR_DOWN, 30);
 			m_draggingLastFrame = true;
 			m_needsRedraw       = true;
 		}
 
-		if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_8) || ImGui::IsKeyPressed('w')) {
+		if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_8) || ImGui::IsKeyPressed('W')) {
 			Pan(DIR_UP, 30);
 			m_draggingLastFrame = true;
 			m_needsRedraw       = true;
 		}
 
-		if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_4) || ImGui::IsKeyPressed('a')) {
+		if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_4) || ImGui::IsKeyPressed('A')) {
 			Pan(DIR_LEFT, 30);
 			m_draggingLastFrame = true;
 			m_needsRedraw       = true;
 		}
 
-		if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_6) || ImGui::IsKeyPressed('d')) {
+		if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_6) || ImGui::IsKeyPressed('D')) {
 			Pan(DIR_RIGHT, 30);
 			m_draggingLastFrame = true;
 			m_needsRedraw       = true;
 		}
 
 		// Center and reset zoom
-		if (ImGui::IsKeyPressed('5') || ImGui::IsKeyPressed(SDL_SCANCODE_KP_5) || ImGui::IsKeyPressed('x')) {
+		if (ImGui::IsKeyPressed('5') || ImGui::IsKeyPressed(SDL_SCANCODE_KP_5) || ImGui::IsKeyPressed('X')) {
 			CenterView();
 		}
 
 		// Search for net
-		if (ImGui::IsKeyPressed('N') || ImGui::IsKeyPressed('n')) {
+		if (ImGui::IsKeyPressed('N')) {
 			m_showNetfilterSearch = true;
 		}
 
 		// Search for component
-		if (ImGui::IsKeyPressed('C') || ImGui::IsKeyPressed('c')) {
+		if (ImGui::IsKeyPressed('C')) {
 			m_showComponentSearch = true;
 		}
 
 		// Show Net List
-		if (ImGui::IsKeyPressed('L') || ImGui::IsKeyPressed('l')) {
+		if (ImGui::IsKeyPressed('L')) {
 			m_showNetList = m_showNetList ? false : true;
 		}
 
 		// Show Part List
-		if (ImGui::IsKeyPressed('K') || ImGui::IsKeyPressed('k')) {
+		if (ImGui::IsKeyPressed('K')) {
 			m_showPartList = m_showPartList ? false : true;
 		}
 	}

@@ -36,6 +36,15 @@ char *file_as_buffer(size_t *buffer_size, const char *utf8_filename) {
 char *show_file_picker() {
 	char *path = nullptr;
 	GtkWidget *parent, *dialog;
+	GtkFileFilter *filter            = gtk_file_filter_new();
+	GtkFileFilter *filter_everything = gtk_file_filter_new();
+	gtk_file_filter_set_name(filter, "Boards");
+	gtk_file_filter_add_pattern(filter, "*.brd");
+	gtk_file_filter_add_pattern(filter, "*.bdv");
+	gtk_file_filter_add_pattern(filter, "*.fz");
+
+	gtk_file_filter_set_name(filter_everything, "All");
+	gtk_file_filter_add_pattern(filter_everything, "*");
 
 	if (!gtk_init_check(NULL, NULL)) return nullptr;
 
@@ -49,6 +58,9 @@ char *show_file_picker() {
 	                                     "_Open",
 	                                     GTK_RESPONSE_ACCEPT,
 	                                     NULL);
+
+	gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(dialog), filter);
+	gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(dialog), filter_everything);
 
 	if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_ACCEPT) {
 		char *filename;
