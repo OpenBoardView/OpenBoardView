@@ -10,7 +10,6 @@
 #include <tchar.h>
 #include "crtdbg.h"
 #include "platform.h"
-#include "resource.h"
 
 // Data
 static LPDIRECT3DDEVICE9 g_pd3dDevice = NULL;

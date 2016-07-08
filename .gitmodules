@@ -1,6 +1,6 @@
 [submodule "utf8"]
-	path = utf8
+	path = lib/utf8
 	url = https://github.com/sheredom/utf8.h.git
 [submodule "imgui"]
-	path = imgui
+	path = lib/imgui
 	url = https://github.com/ocornut/imgui.git

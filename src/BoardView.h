@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Board.h"
-#include "imgui/imgui.h"
+#include "imgui.h"
 #include <stdint.h>
 #include <vector>
 

@@ -1,0 +1,5 @@
+Thank you for installing Open Board View.
+
+Open Board View is Free and Open Source Software used for viewing .brd files.
+
+It is intended as a drop-in replacement for the "Test_Link" software.

@@ -1,0 +1,76 @@
+### appveyor.yml
+#
+# This file is used by the AppVeyor to automatically build
+# OpenBoardView on any changes or PRs.
+#
+
+## Metadata and config
+version: appveyor-build-{build}
+configuration: Release
+platform: x86
+#TODO: Set CMake Generator based on platform
+# "Visual Studio 14 2015" vs "Visual Studio 14 2015 Win64"
+
+clone_depth: 5 # No need to clone the entire history
+
+## Run this first
+init:
+  # appveyor has a naming conflict with CPack and choco pack
+  # so move CMake's directory to the begining of %PATH%
+  - cmd: set PATH=C:\Program Files (x86)\CMake\bin\;%PATH%
+
+## Install dependancies
+#install:
+
+## Configure build
+before_build:
+  # Prep build directory
+  - cmd: md build
+  - cmd: cd build
+  # Configure build
+  - cmd: cmake ..
+  # Extract some lovely variables
+  - cmd: set /p PROJECT_NAME=<PROJECT_NAME
+  - cmd: set /p PROJECT_VERSION=<PROJECT_VERSION
+
+## Build
+build_script:
+  - cmd: cmake --build . --target OpenBoardView --config %CONFIGURATION%
+
+## After build
+after_build:
+  - cmd: cpack -C %CONFIGURATION%
+
+#before_test:
+#test_script:
+#after_test:
+
+artifacts:
+  - path: build\OpenBoardView-*.zip
+    name: package-zip
+  - path: build\OpenBoardView-*.msi
+    name: package-msi
+  - path: build\OpenBoardView-*.exe
+    name: package-exe
+
+#before_deploy:
+deploy:
+  # Deploy to GitHub Releases
+  - provider: GitHub
+    release: $(PROJECT_VERSION)
+    tag: $(appveyor_repo_tag_name)  # Set release tag to match the commit tag
+    description: 'Release $(appveyor_repo_tag_name). AppVeyor build $(appveyor_build_version).'
+    artifact: package-*             # Upload files weve tagged ass package- in artifacts
+    draft: true                     # Give us a chance to amend release details via GitHub
+    force_update: true              # If files we're uploading conflict, replace the old ones
+    on:
+      branch: master                # release from master branch only
+      appveyor_repo_tag: true       # deploy on tag push only
+    auth_token:
+      secure: 7E9MWPkeNfJfs+0Cl9yXLEWKEex7p8NDvQ2Fm5JanVNVU/ahwDkjx0fusIPvbrc+
+#after_deploy:
+
+## Final scripts
+#on_success:
+#on_faliure:
+#on_finish:
