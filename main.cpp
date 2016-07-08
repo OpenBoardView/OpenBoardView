@@ -154,7 +154,7 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 			uFile = DragQueryFile(hDrop, 0xFFFFFFFF, NULL, NULL);
 
 			if (uFile > 1) {
-				MessageBox(hwnd, _T("Dropping multiple files is not supported."), NULL, MB_ICONERROR);
+				app.ShowError("Multiple files not supported");
 			}
 			else {
 				lpszFile[0] = '\0';

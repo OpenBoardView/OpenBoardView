@@ -77,6 +77,7 @@ struct BoardView {
 	char m_search[128];
 	char m_netFilter[128];
 	char *m_lastFileOpenName;
+	char *m_lastErrorMsg;
 	float m_dx;
 	float m_dy;
 	float m_mx;
@@ -109,11 +110,13 @@ struct BoardView {
 	bool m_showNetList;
 	bool m_showPartList;
 	bool m_firstFrame = true;
-	bool m_lastFileOpenWasInvalid;
+	bool m_showError;
 	bool m_wantsQuit;
 	bool m_wantsTitleChange;
 
 	~BoardView();
+
+	void ShowError(char * msg);
 
 	void ShowNetList(bool *p_open);
 	void ShowPartList(bool *p_open);
