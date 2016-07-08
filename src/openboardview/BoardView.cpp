@@ -600,47 +600,47 @@ void BoardView::HandleInput() {
 			}
 		}
 
-		if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_2) || ImGui::IsKeyPressed('S')) {
+		if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_2) || ImGui::IsKeyPressed('s')) {
 			Pan(DIR_DOWN, 30);
 			m_draggingLastFrame = true;
 			m_needsRedraw       = true;
 		}
 
-		if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_8) || ImGui::IsKeyPressed('W')) {
+		if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_8) || ImGui::IsKeyPressed('w')) {
 			Pan(DIR_UP, 30);
 			m_draggingLastFrame = true;
 			m_needsRedraw       = true;
 		}
 
-		if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_4) || ImGui::IsKeyPressed('A')) {
+		if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_4) || ImGui::IsKeyPressed('a')) {
 			Pan(DIR_LEFT, 30);
 			m_draggingLastFrame = true;
 			m_needsRedraw       = true;
 		}
 
-		if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_6) || ImGui::IsKeyPressed('D')) {
+		if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_6) || ImGui::IsKeyPressed('d')) {
 			Pan(DIR_RIGHT, 30);
 			m_draggingLastFrame = true;
 			m_needsRedraw       = true;
 		}
 
 		// Center and reset zoom
-		if (ImGui::IsKeyPressed('5') || ImGui::IsKeyPressed(SDL_SCANCODE_KP_5) || ImGui::IsKeyPressed('X')) {
+		if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_5) || ImGui::IsKeyPressed('x')) {
 			CenterView();
 		}
 
 		// Search for net
-		if (ImGui::IsKeyPressed('N')) {
+		if (ImGui::IsKeyPressed('n')) {
 			m_showNetfilterSearch = true;
 		}
 
 		// Search for component
-		if (ImGui::IsKeyPressed('C')) {
+		if (ImGui::IsKeyPressed('c')) {
 			m_showComponentSearch = true;
 		}
 
 		// Show Net List
-		if (ImGui::IsKeyPressed('L')) {
+		if (ImGui::IsKeyPressed('l')) {
 			m_showNetList = m_showNetList ? false : true;
 		}
 
