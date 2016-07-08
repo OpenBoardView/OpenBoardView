@@ -340,7 +340,7 @@ void BoardView::Update() {
 			ImGui::EndPopup();
 		}
 		if (ImGui::BeginPopupModal("About", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
-			ImGui::Text("OpenBoardView - Inflex fork");
+			ImGui::Text("OpenFlex Board View");
 			ImGui::Text("https://github.com/inflex/OpenBoardView");
 			if (ImGui::Button("Close") || ImGui::IsKeyPressed(SDLK_ESCAPE)) {
 				ImGui::CloseCurrentPopup();
@@ -351,6 +351,7 @@ void BoardView::Update() {
 			ImGui::Separator();
 			ImGui::Text("OpenBoardView is MIT Licensed");
 			ImGui::Text("Copyright (c) 2016 Chloridite and OpenBoardView contributors");
+			ImGui::Text("Copyright (c) 2016 Paul Daniels (Inflex Additions)");
 			ImGui::Spacing();
 			ImGui::Text("ImGui is MIT Licensed");
 			ImGui::Text("Copyright (c) 2014-2015 Omar Cornut and ImGui contributors");
@@ -504,6 +505,9 @@ void BoardView::Pan(int direction, int amount) {
 			}
 			break;
 	}
+
+	m_draggingLastFrame = true;
+	m_needsRedraw       = true;
 }
 
 void BoardView::HandleInput() {
@@ -563,6 +567,7 @@ void BoardView::HandleInput() {
 			Zoom(io.MousePos.x, io.MousePos.y, mwheel);
 		}
 	}
+
 	if (!io.WantCaptureKeyboard) {
 		// Flip board:
 		if (ImGui::IsKeyPressed(' ')) {
@@ -574,6 +579,7 @@ void BoardView::HandleInput() {
 		if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_0) || ImGui::IsKeyPressed('R')) {
 			Rotate(1);
 		}
+
 		if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_PERIOD)) {
 			Rotate(-1);
 		}
@@ -600,28 +606,22 @@ void BoardView::HandleInput() {
 			}
 		}
 
+#define PAN_AMOUNT 30
+
 		if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_2) || ImGui::IsKeyPressed('s')) {
-			Pan(DIR_DOWN, 30);
-			m_draggingLastFrame = true;
-			m_needsRedraw       = true;
+			Pan(DIR_DOWN, PAN_AMOUNT);
 		}
 
 		if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_8) || ImGui::IsKeyPressed('w')) {
-			Pan(DIR_UP, 30);
-			m_draggingLastFrame = true;
-			m_needsRedraw       = true;
+			Pan(DIR_UP, PAN_AMOUNT);
 		}
 
 		if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_4) || ImGui::IsKeyPressed('a')) {
-			Pan(DIR_LEFT, 30);
-			m_draggingLastFrame = true;
-			m_needsRedraw       = true;
+			Pan(DIR_LEFT, PAN_AMOUNT);
 		}
 
 		if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_6) || ImGui::IsKeyPressed('d')) {
-			Pan(DIR_RIGHT, 30);
-			m_draggingLastFrame = true;
-			m_needsRedraw       = true;
+			Pan(DIR_RIGHT, PAN_AMOUNT);
 		}
 
 		// Center and reset zoom
@@ -645,7 +645,7 @@ void BoardView::HandleInput() {
 		}
 
 		// Show Part List
-		if (ImGui::IsKeyPressed('K')) {
+		if (ImGui::IsKeyPressed('k')) {
 			m_showPartList = m_showPartList ? false : true;
 		}
 	}

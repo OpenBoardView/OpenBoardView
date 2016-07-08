@@ -30,8 +30,12 @@ int main(int argc, char **argv) {
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
 	SDL_DisplayMode current;
 	SDL_GetCurrentDisplayMode(0, &current);
-	SDL_Window *window = SDL_CreateWindow(
-	    "Open Board Viewer", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1280, 720, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
+	SDL_Window *window = SDL_CreateWindow("OpenFlex Board Viewer",
+	                                      SDL_WINDOWPOS_CENTERED,
+	                                      SDL_WINDOWPOS_CENTERED,
+	                                      1280,
+	                                      720,
+	                                      SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
 	SDL_GLContext glcontext = SDL_GL_CreateContext(window);
 	SDL_EventState(SDL_DROPFILE, SDL_ENABLE);
 	gl3wInit();
@@ -39,10 +43,12 @@ int main(int argc, char **argv) {
 	// Setup ImGui binding
 	ImGui_ImplSdlGL3_Init(window);
 
+#ifdef CUSTOM_FONT
 	// Load Fonts
-	ImGuiIO &io = ImGui::GetIO();
-	//    std::string fontpath = get_asset_path("FiraSans-Medium.ttf");
-	//   io.Fonts->AddFontFromFileTTF(fontpath.c_str(), 20.0f);
+	ImGuiIO &io          = ImGui::GetIO();
+	std::string fontpath = get_asset_path("FiraSans-Medium.ttf");
+	io.Fonts->AddFontFromFileTTF(fontpath.c_str(), 20.0f);
+#endif
 
 	BoardView app{};
 	//	 app.History_set_filename("openboardview.history");
@@ -100,7 +106,7 @@ int main(int argc, char **argv) {
 		// Update the title of the SDL app if the board filename has changed. - PLD20160618
 		if (app.history_file_has_changed) {
 			char scratch[1024];
-			snprintf(scratch, sizeof(scratch), "Open Board Viewer - %s", app.history.history[0]);
+			snprintf(scratch, sizeof(scratch), "OpenFlex Board Viewer - %s", app.history.history[0]);
 			SDL_SetWindowTitle(window, scratch);
 			app.history_file_has_changed = 0;
 		}
