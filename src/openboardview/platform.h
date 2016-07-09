@@ -30,9 +30,9 @@
 
 #define SDLK_r 0x52
 
-#define SDLK_EQUALS '='
-#define SDLK_SPACE ' '
-#define SDLK_MINUS '-'
+#define SDLK_EQUALS VK_OEM_PLUS
+#define SDLK_SPACE VK_SPACE
+#define SDLK_MINUS VK_OEM_MINUS
 
 //#define SDL_SCANCODE_KP_2 VK_NUMPAD2
 //#define SDL_SCANCODE_KP_4 VK_NUMPAD4
