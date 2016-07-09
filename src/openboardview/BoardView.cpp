@@ -494,7 +494,9 @@ void BoardView::Pan(int direction, int amount) {
 #define DIR_DOWN 2
 #define DIR_LEFT 3
 #define DIR_RIGHT 4
-#ifndef _WIN32
+#ifdef _WIN32
+#define KM(x) (x)
+#else
 #define KM(x) (((x)&0xFF) | 0x100)
 #endif
 
