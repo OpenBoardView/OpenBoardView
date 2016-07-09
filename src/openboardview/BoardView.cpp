@@ -593,10 +593,10 @@ void BoardView::HandleInput() {
 	if (!io.WantCaptureKeyboard) {
 #define PAN_AMOUNT 30
 		// Flip board:
-		if (ImGui::IsKeyPressed(' ')) {
+		if (ImGui::IsKeyPressed(SDLK_SPACE)) {
 			FlipBoard();
 
-		} else if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_0) || ImGui::IsKeyPressed('R')) {
+		} else if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_0) || ImGui::IsKeyPressed(SDLK_r)) {
 			// Rotate board: R and period rotate clockwise; comma rotates
 			// counter-clockwise
 			Rotate(1);
@@ -604,48 +604,48 @@ void BoardView::HandleInput() {
 		} else if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_PERIOD)) {
 			Rotate(-1);
 
-		} else if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_PLUS) || ImGui::IsKeyPressed('=')) {
+		} else if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_PLUS) || ImGui::IsKeyPressed(SDLK_EQUALS)) {
 			if (ImGui::IsKeyDown(SDL_SCANCODE_LCTRL) || ImGui::IsKeyDown(SDL_SCANCODE_RCTRL)) {
 				Zoom(m_lastWidth / 2, m_lastHeight / 2, 0.01f);
 			} else {
 				Zoom(m_lastWidth / 2, m_lastHeight / 2, 0.1f);
 			}
-		} else if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_MINUS) || ImGui::IsKeyPressed('-')) {
+		} else if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_MINUS) || ImGui::IsKeyPressed(SDLK_MINUS)) {
 			if (ImGui::IsKeyDown(SDL_SCANCODE_LCTRL) || ImGui::IsKeyDown(SDL_SCANCODE_RCTRL)) {
 				Zoom(m_lastWidth / 2, m_lastHeight / 2, -0.01f);
 			} else {
 				Zoom(m_lastWidth / 2, m_lastHeight / 2, -0.1f);
 			}
 
-		} else if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_2) || ImGui::IsKeyPressed('S')) {
+		} else if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_2) || ImGui::IsKeyPressed(SDLK_s)) {
 			Pan(DIR_DOWN, PAN_AMOUNT);
 
-		} else if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_8) || ImGui::IsKeyPressed('W')) {
+		} else if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_8) || ImGui::IsKeyPressed(SDLK_w)) {
 			Pan(DIR_UP, PAN_AMOUNT);
 
-		} else if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_4) || ImGui::IsKeyPressed('A')) {
+		} else if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_4) || ImGui::IsKeyPressed(SDLK_a)) {
 			Pan(DIR_LEFT, PAN_AMOUNT);
 
-		} else if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_6) || ImGui::IsKeyPressed('D')) {
+		} else if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_6) || ImGui::IsKeyPressed(SDLK_d)) {
 			Pan(DIR_RIGHT, PAN_AMOUNT);
 
-		} else if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_5) || ImGui::IsKeyPressed('X')) {
+		} else if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_5) || ImGui::IsKeyPressed(SDLK_x)) {
 			// Center and reset zoom
 			CenterView();
 
-		} else if (ImGui::IsKeyPressed('N')) {
+		} else if (ImGui::IsKeyPressed(SDLK_n)) {
 			// Search for net
 			m_showNetfilterSearch = true;
 
-		} else if (ImGui::IsKeyPressed('C')) {
+		} else if (ImGui::IsKeyPressed(SDLK_c)) {
 			// Search for component
 			m_showComponentSearch = true;
 
-		} else if (ImGui::IsKeyPressed('L')) {
+		} else if (ImGui::IsKeyPressed(SDLK_l)) {
 			// Show Net List
 			m_showNetList = m_showNetList ? false : true;
 
-		} else if (ImGui::IsKeyPressed('K')) {
+		} else if (ImGui::IsKeyPressed(SDLK_k)) {
 			// Show Part List
 			m_showPartList = m_showPartList ? false : true;
 		}
