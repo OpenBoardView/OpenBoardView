@@ -402,6 +402,11 @@ void BoardView::Update() {
 			preset_filename = NULL;
 		} else {
 			filename = show_file_picker();
+
+			ImGuiIO &io           = ImGui::GetIO();
+			io.MouseDown[0]       = false;
+			io.MouseClicked[0]    = false;
+			io.MouseClickedPos[0] = ImVec2(0, 0);
 		}
 
 		if (filename) {
@@ -620,19 +625,19 @@ void BoardView::HandleInput() {
 
 #define PAN_AMOUNT 30
 
-		if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_2) || ImGui::IsKeyPressed('s')) {
+		if (ImGui::IsKeyPressed(ImGuiKey_DownArrow) || ImGui::IsKeyPressed('s')) {
 			Pan(DIR_DOWN, PAN_AMOUNT);
 		}
 
-		if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_8) || ImGui::IsKeyPressed('w')) {
+		if (ImGui::IsKeyPressed(ImGuiKey_UpArrow) || ImGui::IsKeyPressed('w')) {
 			Pan(DIR_UP, PAN_AMOUNT);
 		}
 
-		if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_4) || ImGui::IsKeyPressed('a')) {
+		if (ImGui::IsKeyPressed(ImGuiKey_LeftArrow) || ImGui::IsKeyPressed('a')) {
 			Pan(DIR_LEFT, PAN_AMOUNT);
 		}
 
-		if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_6) || ImGui::IsKeyPressed('d')) {
+		if (ImGui::IsKeyPressed(ImGuiKey_RightArrow) || ImGui::IsKeyPressed('d')) {
 			Pan(DIR_RIGHT, PAN_AMOUNT);
 		}
 
