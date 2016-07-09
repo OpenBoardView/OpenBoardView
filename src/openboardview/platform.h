@@ -36,6 +36,7 @@
 #define SDL_SCANCODE_KP_PERIOD VK_DECIMAL
 #define SDL_SCANCODE_KP_PLUS VK_ADD
 #define SDL_SCANCODE_KP_MINUS VK_SUBTRACT
+
 #endif
 
 #ifdef _MSC_VER // Visual Studio prefixes non-standard C functions with _

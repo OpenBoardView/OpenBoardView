@@ -494,10 +494,13 @@ void BoardView::Pan(int direction, int amount) {
 #define DIR_DOWN 2
 #define DIR_LEFT 3
 #define DIR_RIGHT 4
+#ifndef _WIN32
+#define KM(x) (((x)&0xFF) | 0x100)
+#endif
 
 	amount = amount / m_scale;
 
-	if (ImGui::IsKeyDown(SDL_SCANCODE_LCTRL) || ImGui::IsKeyDown(SDL_SCANCODE_RCTRL)) amount /= 10;
+	if (ImGui::IsKeyDown(KM(SDL_SCANCODE_LCTRL)) || ImGui::IsKeyDown(KM(SDL_SCANCODE_RCTRL))) amount /= 10;
 
 	switch (direction) {
 		case DIR_UP: amount = -amount;
@@ -583,7 +586,7 @@ void BoardView::HandleInput() {
 			mwheel *= 0.5f;
 
 			// Ctrl slows down the zoom speed:
-			if (ImGui::IsKeyDown(SDL_SCANCODE_LCTRL) || ImGui::IsKeyDown(SDL_SCANCODE_RCTRL)) {
+			if (ImGui::IsKeyDown(KM(SDL_SCANCODE_LCTRL)) || ImGui::IsKeyDown(KM(SDL_SCANCODE_RCTRL))) {
 				mwheel *= 0.1f;
 			}
 			Zoom(io.MousePos.x, io.MousePos.y, mwheel);
@@ -592,6 +595,7 @@ void BoardView::HandleInput() {
 
 	if (!io.WantCaptureKeyboard) {
 #define PAN_AMOUNT 30
+		//		fprintf(stderr,"DEL/. = %d,  c = %d\n", SDL_SCANCODE_KP_PERIOD, SDLK_c);
 		if (ImGui::IsKeyPressed(SDLK_n)) {
 			// Search for net
 			m_showNetfilterSearch = true;
@@ -612,40 +616,40 @@ void BoardView::HandleInput() {
 			// Flip board:
 			FlipBoard();
 
-		} else if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_0) || ImGui::IsKeyPressed(SDLK_r)) {
+		} else if (ImGui::IsKeyPressed(KM(SDLK_KP_PERIOD)) || ImGui::IsKeyPressed(SDLK_r) || ImGui::IsKeyPressed(SDLK_PERIOD)) {
 			// Rotate board: R and period rotate clockwise; comma rotates
 			// counter-clockwise
 			Rotate(1);
 
-			//		} else if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_DECIMAL)) {
-			//			Rotate(-1);
+		} else if (ImGui::IsKeyPressed(KM(SDLK_KP_0)) || ImGui::IsKeyPressed(SDLK_COMMA)) {
+			Rotate(-1);
 
-		} else if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_PLUS) || ImGui::IsKeyPressed(SDLK_EQUALS)) {
-			if (ImGui::IsKeyDown(SDL_SCANCODE_LCTRL) || ImGui::IsKeyDown(SDL_SCANCODE_RCTRL)) {
+		} else if (ImGui::IsKeyPressed(KM(SDL_SCANCODE_KP_PLUS)) || ImGui::IsKeyPressed(SDLK_EQUALS)) {
+			if (ImGui::IsKeyDown(KM(SDL_SCANCODE_LCTRL)) || ImGui::IsKeyDown(KM(SDL_SCANCODE_RCTRL))) {
 				Zoom(m_lastWidth / 2, m_lastHeight / 2, 0.01f);
 			} else {
 				Zoom(m_lastWidth / 2, m_lastHeight / 2, 0.1f);
 			}
-		} else if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_MINUS) || ImGui::IsKeyPressed(SDLK_MINUS)) {
-			if (ImGui::IsKeyDown(SDL_SCANCODE_LCTRL) || ImGui::IsKeyDown(SDL_SCANCODE_RCTRL)) {
+		} else if (ImGui::IsKeyPressed(KM(SDL_SCANCODE_KP_MINUS)) || ImGui::IsKeyPressed(SDLK_MINUS)) {
+			if (ImGui::IsKeyDown(KM(SDL_SCANCODE_LCTRL)) || ImGui::IsKeyDown(KM(SDL_SCANCODE_RCTRL))) {
 				Zoom(m_lastWidth / 2, m_lastHeight / 2, -0.01f);
 			} else {
 				Zoom(m_lastWidth / 2, m_lastHeight / 2, -0.1f);
 			}
 
-		} else if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_2) || ImGui::IsKeyPressed(SDLK_s)) {
+		} else if (ImGui::IsKeyPressed(KM(SDL_SCANCODE_KP_2)) || ImGui::IsKeyPressed(SDLK_s)) {
 			Pan(DIR_DOWN, PAN_AMOUNT);
 
-		} else if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_8) || ImGui::IsKeyPressed(SDLK_w)) {
+		} else if (ImGui::IsKeyPressed(KM(SDL_SCANCODE_KP_8)) || ImGui::IsKeyPressed(SDLK_w)) {
 			Pan(DIR_UP, PAN_AMOUNT);
 
-		} else if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_4) || ImGui::IsKeyPressed(SDLK_a)) {
+		} else if (ImGui::IsKeyPressed(KM(SDL_SCANCODE_KP_4)) || ImGui::IsKeyPressed(SDLK_a)) {
 			Pan(DIR_LEFT, PAN_AMOUNT);
 
-		} else if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_6) || ImGui::IsKeyPressed(SDLK_d)) {
+		} else if (ImGui::IsKeyPressed(KM(SDL_SCANCODE_KP_6)) || ImGui::IsKeyPressed(SDLK_d)) {
 			Pan(DIR_RIGHT, PAN_AMOUNT);
 
-		} else if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_5) || ImGui::IsKeyPressed(SDLK_x)) {
+		} else if (ImGui::IsKeyPressed(KM(SDL_SCANCODE_KP_5)) || ImGui::IsKeyPressed(SDLK_x)) {
 			// Center and reset zoom
 			CenterView();
 		}

@@ -186,7 +186,13 @@ bool ImGui_ImplSdlGL3_ProcessEvent(SDL_Event *event) {
 		}
 		case SDL_KEYDOWN:
 		case SDL_KEYUP: {
-			int key          = event->key.keysym.sym & ~SDLK_SCANCODE_MASK;
+			// int key = event->key.keysym.sym & ~SDLK_SCANCODE_MASK;
+			int key = event->key.keysym.sym & ~SDLK_SCANCODE_MASK;
+			if (event->key.keysym.sym & (1 << 30)) {
+				key |= 0x100;
+				//					fprintf(stderr,"SDL Highbit remask %x -> %x\n", event->key.keysym.sym, key);
+			}
+
 			io.KeysDown[key] = (event->type == SDL_KEYDOWN);
 			io.KeyShift      = ((SDL_GetModState() & KMOD_SHIFT) != 0);
 			io.KeyCtrl       = ((SDL_GetModState() & KMOD_CTRL) != 0);
