@@ -193,13 +193,18 @@ void BoardView::Update() {
 	char *preset_filename = NULL;
 
 	// if ((ImGui::IsKeyDown(SDLK_RCTRL)||ImGui::IsKeyDown(SDLK_LCTRL)) && ImGui::IsKeyPressed('O', false)) {
+	/**
+	 * ** FIXME
+	 * This should be handled in the keyboard section, not here
+	 *
 	if (ImGui::IsKeyDown(17) && ImGui::IsKeyPressed('O', false)) {
-		open_file = true;
-		// the dialog will likely eat our WM_KEYUP message for CTRL and O:
-		ImGuiIO &io      = ImGui::GetIO();
-		io.KeysDown[17]  = false;
-		io.KeysDown['O'] = false;
+	    open_file = true;
+	    // the dialog will likely eat our WM_KEYUP message for CTRL and O:
+	    ImGuiIO &io = ImGui::GetIO();
+	    io.KeysDown[17] = false;
+	    io.KeysDown['O'] = false;
 	}
+	**/
 
 	if (ImGui::BeginMainMenuBar()) {
 		if (ImGui::BeginMenu("File")) {
@@ -586,83 +591,62 @@ void BoardView::HandleInput() {
 	}
 
 	if (!io.WantCaptureKeyboard) {
+#define PAN_AMOUNT 30
 		// Flip board:
 		if (ImGui::IsKeyPressed(' ')) {
 			FlipBoard();
-		}
 
-		// Rotate board: R and period rotate clockwise; comma rotates
-		// counter-clockwise
-		if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_0) || ImGui::IsKeyPressed('R')) {
+		} else if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_0) || ImGui::IsKeyPressed('R')) {
+			// Rotate board: R and period rotate clockwise; comma rotates
+			// counter-clockwise
 			Rotate(1);
-		}
 
-		if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_PERIOD)) {
+		} else if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_PERIOD)) {
 			Rotate(-1);
-		}
 
-		//	 if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_0)) {
-		// Use this as a debug button
-		//		  fprintf(stderr,"m_dxy: %f %f, m_mxy: %f %f, board: %d %d, lastW/H: %f %f, scale: %f\n", m_dx, m_dy, m_mx, m_my,
-		// m_boardWidth, m_boardHeight, m_lastWidth, m_lastHeight, m_scale);
-		//	 }
-
-		if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_PLUS) || ImGui::IsKeyPressed('=')) {
+		} else if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_PLUS) || ImGui::IsKeyPressed('=')) {
 			if (ImGui::IsKeyDown(SDL_SCANCODE_LCTRL) || ImGui::IsKeyDown(SDL_SCANCODE_RCTRL)) {
 				Zoom(m_lastWidth / 2, m_lastHeight / 2, 0.01f);
 			} else {
 				Zoom(m_lastWidth / 2, m_lastHeight / 2, 0.1f);
 			}
-		}
-
-		if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_MINUS) || ImGui::IsKeyPressed('-')) {
+		} else if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_MINUS) || ImGui::IsKeyPressed('-')) {
 			if (ImGui::IsKeyDown(SDL_SCANCODE_LCTRL) || ImGui::IsKeyDown(SDL_SCANCODE_RCTRL)) {
 				Zoom(m_lastWidth / 2, m_lastHeight / 2, -0.01f);
 			} else {
 				Zoom(m_lastWidth / 2, m_lastHeight / 2, -0.1f);
 			}
-		}
 
-#define PAN_AMOUNT 30
-
-		if (ImGui::IsKeyPressed(ImGuiKey_DownArrow) || ImGui::IsKeyPressed('s')) {
+		} else if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_2) || ImGui::IsKeyPressed('s')) {
 			Pan(DIR_DOWN, PAN_AMOUNT);
-		}
 
-		if (ImGui::IsKeyPressed(ImGuiKey_UpArrow) || ImGui::IsKeyPressed('w')) {
+		} else if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_8) || ImGui::IsKeyPressed('w')) {
 			Pan(DIR_UP, PAN_AMOUNT);
-		}
 
-		if (ImGui::IsKeyPressed(ImGuiKey_LeftArrow) || ImGui::IsKeyPressed('a')) {
+		} else if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_4) || ImGui::IsKeyPressed('a')) {
 			Pan(DIR_LEFT, PAN_AMOUNT);
-		}
 
-		if (ImGui::IsKeyPressed(ImGuiKey_RightArrow) || ImGui::IsKeyPressed('d')) {
+		} else if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_6) || ImGui::IsKeyPressed('d')) {
 			Pan(DIR_RIGHT, PAN_AMOUNT);
-		}
 
-		// Center and reset zoom
-		if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_5) || ImGui::IsKeyPressed('x')) {
+		} else if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_5) || ImGui::IsKeyPressed('x')) {
+			// Center and reset zoom
 			CenterView();
-		}
 
-		// Search for net
-		if (ImGui::IsKeyPressed('n')) {
+		} else if (ImGui::IsKeyPressed('n')) {
+			// Search for net
 			m_showNetfilterSearch = true;
-		}
 
-		// Search for component
-		if (ImGui::IsKeyPressed('c')) {
+		} else if (ImGui::IsKeyPressed('c')) {
+			// Search for component
 			m_showComponentSearch = true;
-		}
 
-		// Show Net List
-		if (ImGui::IsKeyPressed('l')) {
+		} else if (ImGui::IsKeyPressed('l')) {
+			// Show Net List
 			m_showNetList = m_showNetList ? false : true;
-		}
 
-		// Show Part List
-		if (ImGui::IsKeyPressed('k')) {
+		} else if (ImGui::IsKeyPressed('k')) {
+			// Show Part List
 			m_showPartList = m_showPartList ? false : true;
 		}
 	}
