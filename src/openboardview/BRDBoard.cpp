@@ -116,6 +116,8 @@ BRDBoard::BRDBoard(const BRDFile *const boardFile)
 			const BRDPin &brd_pin = pins[i];
 			Component *comp       = components_[brd_pin.part - 1].get();
 
+			if (!comp) continue;
+
 			auto pin = make_shared<Pin>();
 
 			if (comp->is_dummy()) {

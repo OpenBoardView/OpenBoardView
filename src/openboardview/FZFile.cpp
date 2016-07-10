@@ -311,9 +311,11 @@ FZFile::FZFile(const char *buf, size_t buffer_size) {
 		}
 	}
 
-	std::sort(pins.begin(), pins.end());                               // sort vector by part num then pin num
-	for (std::vector<int>::size_type i      = 0; i < pins.size(); i++) // update end_of_pins field
-		parts[pins[i].part - 1].end_of_pins = i;
+	std::sort(pins.begin(), pins.end()); // sort vector by part num then pin num
+	for (std::vector<int>::size_type i = 0; i < pins.size(); i++) {
+		// update end_of_pins field
+		if (pins[i].part > 0) parts[pins[i].part - 1].end_of_pins = i;
+	}
 
 	gen_outline();
 
