@@ -64,8 +64,8 @@ int BoardView::Annotations_update(int index, char *annotation) {
 	return 0;
 }
 
-int BoardView::History_set_filename(char *f) {
-	snprintf(history.fname, HISTORY_FNAME_LEN_MAX - 1, "%s", f);
+int BoardView::History_set_filename(const char *f) {
+	history.fname = strdup(f);
 	return 0;
 }
 
