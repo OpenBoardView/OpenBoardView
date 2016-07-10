@@ -34,10 +34,10 @@ int FHistory::Load(void) {
 		count = 0;
 		if (!f) return 0;
 
-		while (count < HISTORY_COUNT_MAX) {
+		while (count < FHISTORY_COUNT_MAX) {
 			char *r;
 
-			r = fgets(history[count], HISTORY_FNAME_LEN_MAX, f);
+			r = fgets(history[count], FHISTORY_FNAME_LEN_MAX, f);
 			if (r) {
 				count++;
 

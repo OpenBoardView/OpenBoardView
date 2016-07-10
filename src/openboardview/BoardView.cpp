@@ -59,7 +59,7 @@ int BoardView::LoadFile(char *filename) {
 
 			if (file && file->valid) {
 				SetFile(file);
-				history.Prepend_save(filename);
+				fhistory.Prepend_save(filename);
 				history_file_has_changed = 1; // used by main to know when to update the window title
 
 			} else {
@@ -109,10 +109,10 @@ void BoardView::Update() {
 			ImGui::Separator();
 			{
 				int i;
-				for (i = 0; i < history.count; i++) {
-					if (ImGui::MenuItem(history.Trim_filename(history.history[i], 2))) {
+				for (i = 0; i < fhistory.count; i++) {
+					if (ImGui::MenuItem(fhistory.Trim_filename(fhistory.history[i], 2))) {
 						open_file       = true;
-						preset_filename = history.history[i];
+						preset_filename = fhistory.history[i];
 					}
 				}
 			}
