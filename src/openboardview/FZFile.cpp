@@ -262,7 +262,7 @@ FZFile::FZFile(const char *buf, size_t buffer_size) {
 				LOAD_STR(pin.net);
 				char *part;
 				LOAD_STR(part);
-				pin.part = parts_id[part];
+				pin.part = parts_id.at(part);
 				LOAD_STR(pin.snum);
 
 				char *name;
