@@ -46,13 +46,6 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 	return DefWindowProc(hWnd, msg, wParam, lParam);
 }
 
-string ExePath() {
-	char buffer[MAX_PATH];
-	GetModuleFileName(NULL, buffer, MAX_PATH);
-	string::size_type pos = string(buffer).find_last_of("\\/");
-	return string(buffer).substr(0, pos);
-}
-
 int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
 	// Initialize comctl
 	CoInitializeEx(NULL, COINIT_MULTITHREADED);
@@ -129,11 +122,8 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 #endif
 
 	BoardView app{};
-	{
-		char hpath[MAX_PATH];
-		snprintf(hpath, sizeof(hpath), "%s/obvhistory.log", ExePath.c_str());
-		app.History_load();
-	}
+	app.history.set_fname("c:\\obvhistory.log");
+	app.history.load();
 
 	bool show_test_window    = true;
 	bool show_another_window = false;

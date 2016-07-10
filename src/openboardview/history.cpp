@@ -14,15 +14,16 @@ History::~History() {
 }
 
 int History::Set_filename(const char *f) {
-	fname = strdup(f);
+	fname = _strdup(f);
 	return 0;
 }
 
 int History::Load(void) {
 	if (fname) {
 		FILE *f;
+		errno_t e;
 
-		f     = fopen(fname, "r");
+		e     = fopen_s(&f, fname, "r");
 		count = 0;
 		if (!f) return 0;
 
@@ -57,7 +58,9 @@ int History::Load(void) {
 int History::Prepend_save(char *newfile) {
 	if (fname) {
 		FILE *f;
-		f = fopen(fname, "w");
+		errno_t e;
+
+		e = fopen_s(&f, fname, "w");
 		if (f) {
 			int i;
 
