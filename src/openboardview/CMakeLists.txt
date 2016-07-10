@@ -33,6 +33,7 @@ endif()
 
 
 set(SOURCES
+	vectorhulls.cpp
 	history.cpp
 	BDVFile.cpp
 	BoardView.cpp

@@ -20,6 +20,7 @@
 
 #include "NetList.h"
 #include "PartList.h"
+#include "vectorhulls.h"
 
 #include "platform.h"
 
@@ -711,224 +712,6 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 	}
 }
 
-void BoardView::RotateV(double *px, double *py, double ox, double oy, double theta) {
-	double tx, ty, ttx, tty;
-
-	tx = *px - ox;
-	ty = *py - oy;
-
-	// With not a lot of parts on the boards, we can get away with using the precision trig functions, might have to change to LUT
-	// based later.
-	ttx = tx * cos(theta) - ty * sin(theta);
-	tty = tx * sin(theta) + ty * cos(theta);
-
-	*px = ttx + ox;
-	*py = tty + oy;
-}
-
-ImVec2 BoardView::RotateV(ImVec2 v, ImVec2 o, double theta) {
-	double tx, ty, ttx, tty;
-
-	tx = v.x - o.x;
-	ty = v.y - o.y;
-
-	// With not a lot of parts on the boards, we can get away with using the precision trig functions, might have to change to LUT
-	// based later.
-	ttx = tx * cos(theta) - ty * sin(theta);
-	tty = tx * sin(theta) + ty * cos(theta);
-
-	return ImVec2(ttx + o.x, tty + o.y);
-}
-
-ImVec2 BoardView::RotateV(ImVec2 v, double theta) {
-	double nx, ny;
-
-	nx = v.x * cos(theta) - v.y * sin(theta);
-	ny = v.x * sin(theta) + v.y * cos(theta);
-
-	return ImVec2(nx, ny);
-}
-
-double BoardView::AngleToX(ImVec2 a, ImVec2 b) {
-	return atan2((b.y - a.y), (b.x - a.x));
-}
-
-void BoardView::MBBCalculate(ImVec2 box[], ImVec2 *hull, int n, double psz) {
-
-	double mbAngle = 0, cumulative_angle = 0;
-	double mbArea = DBL_MAX; // fake area to initialise
-	ImVec2 mbb, mba, origin; // Box bottom left, box top right
-	int i;
-	int lowest_i;
-	double lowest;
-
-	// Find the lowest hull point, if it's below the x-axis just bring it up to compensate
-	// NOTE: we're not modifying the actual hull point, just a copy
-	lowest   = DBL_MAX;
-	lowest_i = 0;
-	for (i = 0; i < n; i++) {
-		if (hull[i].y < lowest) {
-			lowest_i = i;
-			lowest   = hull[i].y;
-		}
-	}
-	origin = hull[lowest_i];
-	if (lowest < 0) {
-		origin.y -= lowest;
-	}
-
-	for (i = 0; i < n; i++) {
-		int ni = i + 1;
-		double area;
-
-		ImVec2 current = hull[i];
-		ImVec2 next    = hull[ni % n];
-
-		double angle = AngleToX(current, next); // angle formed between current and next hull points;
-		cumulative_angle += angle;
-
-		double top, bot, left, right; // bounding rect limits
-		top = right = DBL_MIN;
-		bot = left = DBL_MAX;
-
-		int x;
-		for (x = 0; x < n; x++) {
-			ImVec2 rp = RotateV(hull[x], origin, -angle);
-
-			hull[x] = rp;
-
-			if (rp.y > top) top     = rp.y;
-			if (rp.y < bot) bot     = rp.y;
-			if (rp.x > right) right = rp.x;
-			if (rp.x < left) left   = rp.x;
-		}
-		area = (right - left) * (top - bot);
-
-		if (area < mbArea) {
-			mbArea  = area;
-			mbAngle = cumulative_angle; // total angle we've had to rotate the board to get to this orientation;
-			mba     = ImVec2(left, bot);
-			mbb     = ImVec2(right, top);
-		}
-	} // for all points on hull
-
-	// expand by pin size
-	mba.x -= psz;
-	mba.y -= psz;
-	mbb.x += psz;
-	mbb.y += psz;
-
-	// Form our rectangle, has to be all 4 points as it's a polygon now that'll be rotated
-	box[0] = RotateV(mba, origin, +mbAngle);
-	box[1] = RotateV(ImVec2(mbb.x, mba.y), origin, +mbAngle);
-	box[2] = RotateV(mbb, origin, +mbAngle);
-	box[3] = RotateV(ImVec2(mba.x, mbb.y), origin, +mbAngle);
-}
-
-// To find orientation of ordered triplet (p, q, r).
-// The function returns following values
-// 0 --> p, q and r are colinear
-// 1 --> Clockwise
-// 2 --> Counterclockwise
-int BoardView::ConvexHullOrientation(ImVec2 p, ImVec2 q, ImVec2 r) {
-
-	int val = trunc(((q.y - p.y) * (r.x - q.x) - (q.x - p.x) * (r.y - q.y)));
-
-	if (val == 0) return 0;   // colinear
-	return (val > 0) ? 1 : 2; // clock or counterclock wise
-}
-
-int BoardView::ConvexHull(ImVec2 hull[], ImVec2 points[], int n) {
-
-	int hpc = 0;
-
-	// There must be at least 3 points
-	if (n < 3) return 0;
-
-	// Find the leftmost point
-	int l = 0;
-	for (int i = 1; i < n; i++) {
-		if (points[i].x < points[l].x) {
-			l = i;
-		}
-	}
-
-	// Start from leftmost point, keep moving counterclockwise
-	// until reach the start point again.  This loop runs O(h)
-	// times where h is number of points in result or output.
-	int p = l, q;
-	do {
-		// Add current point to result
-		hull[hpc] = CoordToScreen(points[p].x, points[p].y);
-		hpc++;
-
-		// Search for a point 'q' such that orientation(p, x,
-		// q) is counterclockwise for all points 'x'. The idea
-		// is to keep track of last visited most counterclock-
-		// wise point in q. If any point 'i' is more counterclock-
-		// wise than q, then update q.
-		q = (p + 1) % n;
-		for (int i = 0; i < n; i++) {
-			// If i is more counterclockwise than current q, then update q
-			if (ConvexHullOrientation(points[p], points[i], points[q]) == 2) {
-				q = i;
-			}
-		}
-
-		// Now q is the most counterclockwise with respect to p
-		// Set p as q for next iteration, so that q is added to
-		// result 'hull'
-		p = q;
-
-	} while ((p != l) && (hpc < n)); // While we don't come to first point
-
-	return hpc;
-}
-
-int BoardView::TightenHull(ImVec2 hull[], int n, double threshold) {
-	// theory: circle the hull, compare 3 points at a time, if the mid point is sub-angular then make it equal the first point and
-	// move to the 3rd.
-	int i, ni;
-	ImVec2 *a, *b, *c;
-	double a1, a2, ad;
-	// First cycle, we look for sub-threshold 2-segment runs
-	for (i = 0; i < n; i++) {
-		a = &(hull[i]);
-		b = &(hull[(i + 1) % n]);
-		c = &(hull[(i + 2) % n]);
-
-		a1 = AngleToX(*a, *b);
-		a2 = AngleToX(*b, *c);
-		if (a1 > a2)
-			ad = a1 - a2;
-		else
-			ad = a2 - a1;
-
-		if (ad < threshold) {
-			//			fprintf(stderr,"angle below threshold (%0.2f)\n", ad);
-			*b = *a;
-		}
-	} // end first cycle
-
-	// Second cycle, we compact the hull
-	int output_index = 0;
-	i                = 0;
-	while (i < n) {
-		ni = (i + 1) % n;
-		if ((hull[i].x == hull[ni].x) && (hull[i].y == hull[ni].y)) {
-			// match found, discard one
-			i++;
-			continue;
-		}
-
-		hull[output_index] = hull[i];
-		output_index++;
-		i++;
-	}
-
-	return output_index;
-}
-
 inline void BoardView::DrawParts(ImDrawList *draw) {
 	float psz = (float)m_pinDiameter * 0.5f * m_scale;
 	double angle;
@@ -1097,7 +880,7 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 
 				mpx = dx / 2 + part->pins[0]->position.x;
 				mpy = dy / 2 + part->pins[0]->position.y;
-				RotateV(&mpx, &mpy, dx / 2 + part->pins[0]->position.x, dy / 2 + part->pins[0]->position.y, angle);
+				VHRotateV(&mpx, &mpy, dx / 2 + part->pins[0]->position.x, dy / 2 + part->pins[0]->position.y, angle);
 				mp = CoordToScreen(mpx, mpy);
 				// for the round pin representations, choose how many circle segments need based on the pin size
 				segments                    = trunc(distance);
@@ -1112,22 +895,22 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 			// TODO: Compact this bit of code, maybe. It works at least.
 			tx = part->pins[0]->position.x - armx;
 			ty = part->pins[0]->position.y - army;
-			RotateV(&tx, &ty, part->pins[0]->position.x, part->pins[0]->position.y, angle);
+			VHRotateV(&tx, &ty, part->pins[0]->position.x, part->pins[0]->position.y, angle);
 			a = CoordToScreen(tx, ty);
 
 			tx = part->pins[0]->position.x - armx;
 			ty = part->pins[0]->position.y + army;
-			RotateV(&tx, &ty, part->pins[0]->position.x, part->pins[0]->position.y, angle);
+			VHRotateV(&tx, &ty, part->pins[0]->position.x, part->pins[0]->position.y, angle);
 			b = CoordToScreen(tx, ty);
 
 			tx = part->pins[1]->position.x + armx;
 			ty = part->pins[1]->position.y + army;
-			RotateV(&tx, &ty, part->pins[1]->position.x, part->pins[1]->position.y, angle);
+			VHRotateV(&tx, &ty, part->pins[1]->position.x, part->pins[1]->position.y, angle);
 			c = CoordToScreen(tx, ty);
 
 			tx = part->pins[1]->position.x + armx;
 			ty = part->pins[1]->position.y - army;
-			RotateV(&tx, &ty, part->pins[1]->position.x, part->pins[1]->position.y, angle);
+			VHRotateV(&tx, &ty, part->pins[1]->position.x, part->pins[1]->position.y, angle);
 			d = CoordToScreen(tx, ty);
 			draw->AddQuad(a, b, c, d, color);
 
@@ -1145,14 +928,23 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 				hull = (ImVec2 *)malloc(sizeof(ImVec2) *
 				                        pincount); // massive overkill since our hull will only require the perimeter points
 				if (hull) {
-					hpc = ConvexHull(hull, pva, pincount); // (hpc = hull pin count)
+					// Find our hull
+					hpc = VHConvexHull(hull, pva, pincount); // (hpc = hull pin count)
+
+					// If we had a valid hull, then find the MBB for it
 					if (hpc > 0) {
+						int i = hpc;
 						ImVec2 bbox[4];
+
+						// Convert to screen coordinates
+						while (i--) {
+							hull[i] = CoordToScreen(hull[i].x, hull[i].y);
+						}
 
 						// first, tighten the hull, removes any small angle segments, such as a sequence of pins in a line
 						// hpc = TightenHull(hull, hpc, 0.1f); // tighten the hull a bit more, this might be an overkill
 						draw->AddPolyline(hull, hpc, ImColor(128, 128, 128, 128), true, 1.0f, false);
-						MBBCalculate(bbox, hull, hpc, pin_radius * m_scale);
+						VHMBBCalculate(bbox, hull, hpc, pin_radius * m_scale);
 						draw->AddPolyline(bbox, 4, color, true, 1.0f, false);
 						rendered = 1;
 					} else {

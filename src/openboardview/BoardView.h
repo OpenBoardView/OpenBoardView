@@ -81,17 +81,10 @@ struct BoardView {
 
 	History history;
 	int history_file_has_changed = 0;
+
 	void CenterView(void);
-	void Zoom(float osd_x, float osd_y, float zoom);
-	void RotateV(double *px, double *py, double ox, double oy, double theta);
-	ImVec2 RotateV(ImVec2 v, double theta);
-	ImVec2 RotateV(ImVec2 v, ImVec2 o, double theta);
-	double AngleToX(ImVec2 a, ImVec2 b);
-	int ConvexHullOrientation(ImVec2 p, ImVec2 q, ImVec2 r);
-	int ConvexHull(ImVec2 hull[], ImVec2 points[], int n);
-	int TightenHull(ImVec2 hull[], int n, double threshold);
-	void MBBCalculate(ImVec2 box[], ImVec2 *hull, int n, double psz);
 	void Pan(int direction, int amount);
+	void Zoom(float osd_x, float osd_y, float zoom);
 
 	Pin *m_pinSelected = nullptr;
 	vector<Pin *> m_pinHighlighted;
