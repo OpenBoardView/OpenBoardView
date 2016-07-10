@@ -157,18 +157,21 @@
     <ClInclude Include="..\imgui\stb_rect_pack.h" />
     <ClInclude Include="..\imgui\stb_textedit.h" />
     <ClInclude Include="..\imgui\stb_truetype.h" />
+    <ClInclude Include="..\openboardview\annotations.h" />
     <ClInclude Include="..\openboardview\BDVFile.h" />
     <ClInclude Include="..\openboardview\Board.h" />
     <ClInclude Include="..\openboardview\BoardView.h" />
     <ClInclude Include="..\openboardview\BRDBoard.h" />
     <ClInclude Include="..\openboardview\BRDFile.h" />
     <ClInclude Include="..\openboardview\FZFile.h" />
+    <ClInclude Include="..\openboardview\history.h" />
     <ClInclude Include="..\openboardview\imgui_impl_dx9.h" />
     <ClInclude Include="..\openboardview\NetList.h" />
     <ClInclude Include="..\openboardview\PartList.h" />
     <ClInclude Include="..\openboardview\platform.h" />
     <ClInclude Include="..\openboardview\resource.h" />
     <ClInclude Include="..\openboardview\TextureDDS.h" />
+    <ClInclude Include="..\openboardview\vectorhulls.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\imgui\imgui.cpp" />
@@ -178,12 +181,15 @@
     <ClCompile Include="..\openboardview\BRDBoard.cpp" />
     <ClCompile Include="..\openboardview\BRDFile.cpp" />
     <ClCompile Include="..\openboardview\FZFile.cpp" />
+    <ClCompile Include="..\openboardview\history.cpp" />
     <ClCompile Include="..\openboardview\imgui_impl_dx9.cpp" />
     <ClCompile Include="..\openboardview\main_dx9.cpp" />
     <ClCompile Include="..\openboardview\NetList.cpp" />
     <ClCompile Include="..\openboardview\PartList.cpp" />
     <ClCompile Include="..\openboardview\TextureDDS.cpp" />
+    <ClCompile Include="..\openboardview\vectorhulls.cpp" />
     <ClCompile Include="..\openboardview\win32.cpp" />
+    <ClCompile Include="Source.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\..\asset\brd.ico" />

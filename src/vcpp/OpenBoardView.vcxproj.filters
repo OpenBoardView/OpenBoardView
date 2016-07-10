@@ -33,12 +33,12 @@
     <ClInclude Include="..\openboardview\TextureDDS.h" />
     <ClInclude Include="..\openboardview\BDVFile.h" />
     <ClInclude Include="..\openboardview\FZFile.h" />
+    <ClInclude Include="..\openboardview\vectorhulls.h" />
+    <ClInclude Include="..\openboardview\history.h" />
+    <ClInclude Include="..\openboardview\annotations.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\openboardview\imgui_impl_dx9.cpp">
-      <Filter>win32</Filter>
-    </ClCompile>
-    <ClCompile Include="..\openboardview\main_dx9.cpp">
       <Filter>win32</Filter>
     </ClCompile>
     <ClCompile Include="..\openboardview\win32.cpp">
@@ -58,6 +58,10 @@
     <ClCompile Include="..\openboardview\TextureDDS.cpp" />
     <ClCompile Include="..\openboardview\BDVFile.cpp" />
     <ClCompile Include="..\openboardview\FZFile.cpp" />
+    <ClCompile Include="Source.cpp" />
+    <ClCompile Include="..\openboardview\vectorhulls.cpp" />
+    <ClCompile Include="..\openboardview\history.cpp" />
+    <ClCompile Include="..\openboardview\main_dx9.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="imgui">
