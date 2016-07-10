@@ -5,23 +5,6 @@
 #include <stdint.h>
 #include <vector>
 
-#define ANNOTATION_NET_SIZE 256
-#define ANNOTATION_PART_SIZE 256
-#define ANNOTATION_FNAME_LEN_MAX 2048
-struct annotation {
-	char net[ANNOTATION_NET_SIZE];
-	char part[ANNOTATION_PART_SIZE];
-	double x;
-	double y;
-	int side;
-	char *comment;
-};
-
-struct annotations {
-	char fname[ANNOTATION_FNAME_LEN_MAX];
-	// vector of struct annotation
-};
-
 struct BRDPart;
 struct BRDFile;
 
@@ -79,7 +62,7 @@ struct BoardView {
 	BRDFile *m_file;
 	Board *m_board;
 
-	History history;
+	FHistory history;
 	int history_file_has_changed = 0;
 
 	void CenterView(void);

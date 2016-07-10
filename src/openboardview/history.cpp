@@ -9,11 +9,11 @@
 
 #include "history.h"
 
-History::~History() {
+FHistory::~FHistory() {
 	// Destructor
 }
 
-int History::Set_filename(const char *f) {
+int FHistory::Set_filename(const char *f) {
 #ifdef _WIN32
 	fname = _strdup(f);
 #else
@@ -22,7 +22,7 @@ int History::Set_filename(const char *f) {
 	return 0;
 }
 
-int History::Load(void) {
+int FHistory::Load(void) {
 	if (fname) {
 		FILE *f;
 #ifdef _WIN32
@@ -62,7 +62,7 @@ int History::Load(void) {
 	return count;
 }
 
-int History::Prepend_save(char *newfile) {
+int FHistory::Prepend_save(char *newfile) {
 	if (fname) {
 		FILE *f;
 #ifdef _WIN32
@@ -98,7 +98,7 @@ int History::Prepend_save(char *newfile) {
  *
  * PLD20160618-1729
  */
-char *History::Trim_filename(char *s, int stops) {
+char *FHistory::Trim_filename(char *s, int stops) {
 
 	int l   = strlen(s);
 	char *p = s + l - 1;
