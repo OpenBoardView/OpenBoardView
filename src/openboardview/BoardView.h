@@ -22,14 +22,6 @@ struct annotations {
 	// vector of struct annotation
 };
 
-#define HISTORY_COUNT_MAX 20
-#define HISTORY_FNAME_LEN_MAX 2048
-struct file_history {
-	int count;                                              // How many entries in the history array
-	char history[HISTORY_COUNT_MAX][HISTORY_FNAME_LEN_MAX]; // Array of files in the history
-	char *fname = NULL;
-};
-
 struct BRDPart;
 struct BRDFile;
 
@@ -87,13 +79,9 @@ struct BoardView {
 	BRDFile *m_file;
 	Board *m_board;
 
-	struct file_history history;
+	History history;
 	struct annotations annotations;
 	int history_file_has_changed = 0;
-	char *History_trim_filename(char *s, int stops);
-	int History_set_filename(const char *f);
-	int History_load(void);
-	int History_prepend_save(char *newfile);
 	void CenterView(void);
 	void Zoom(float osd_x, float osd_y, float zoom);
 	void RotateV(double *px, double *py, double ox, double oy, double theta);

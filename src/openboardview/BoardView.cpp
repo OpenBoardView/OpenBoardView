@@ -1,5 +1,6 @@
 #define _CRT_SECURE_NO_WARNINGS 1
 #include "BoardView.h"
+#include "history.h"
 
 #include <algorithm>
 #include <cmath>
@@ -64,90 +65,6 @@ int BoardView::Annotations_update(int index, char *annotation) {
 	return 0;
 }
 
-int BoardView::History_set_filename(const char *f) {
-	history.fname = strdup(f);
-	return 0;
-}
-
-int BoardView::History_load(void) {
-	if (history.fname) {
-		FILE *f;
-
-		f             = fopen(history.fname, "r");
-		history.count = 0;
-		if (!f) return 0;
-
-		while (history.count < HISTORY_COUNT_MAX) {
-			char *r;
-
-			r = fgets(history.history[history.count], HISTORY_FNAME_LEN_MAX, f);
-			if (r) {
-				history.count++;
-
-				/// strip off the trailing line break
-				while (*r) {
-					if ((*r == '\r') || (*r == '\n')) {
-						*r = '\0';
-						break;
-					}
-					r++;
-				}
-
-			} else {
-				break;
-			}
-		}
-		fclose(f);
-	} else {
-		return -1;
-	}
-
-	return history.count;
-}
-
-int BoardView::History_prepend_save(char *newfile) {
-	if (history.fname) {
-		FILE *f;
-		f = fopen(history.fname, "w");
-		if (f) {
-			int i;
-
-			fprintf(f, "%s\n", newfile);
-			for (i = 0; i < history.count; i++) {
-				// Don't create duplicate entries, so check each one against the newfile
-				if (strcmp(newfile, history.history[i])) {
-					fprintf(f, "%s\n", history.history[i]);
-				}
-			}
-			fclose(f);
-
-			History_load();
-		}
-	}
-
-	return 0;
-}
-
-/**
-  * Only displays the tail end of the filename path, where
-  * 'stops' indicates how many paths up to truncate at
-  *
-  * PLD20160618-1729
-  */
-char *BoardView::History_trim_filename(char *s, int stops) {
-
-	int l   = strlen(s);
-	char *p = s + l - 1;
-
-	while ((stops) && (p > s)) {
-		if ((*p == '/') || (*p == '\\')) stops--;
-		p--;
-	}
-	if (!stops) p += 2;
-
-	return p;
-}
-
 int BoardView::LoadFile(char *filename) {
 	if (filename) {
 		char *ext = strrchr(filename, '.');
@@ -166,7 +83,7 @@ int BoardView::LoadFile(char *filename) {
 
 			if (file && file->valid) {
 				SetFile(file);
-				History_prepend_save(filename);
+				history.Prepend_save(filename);
 				history_file_has_changed = 1; // used by main to know when to update the window title
 
 			} else {
@@ -217,7 +134,7 @@ void BoardView::Update() {
 			{
 				int i;
 				for (i = 0; i < history.count; i++) {
-					if (ImGui::MenuItem(History_trim_filename(history.history[i], 2))) {
+					if (ImGui::MenuItem(history.Trim_filename(history.history[i], 2))) {
 						open_file       = true;
 						preset_filename = history.history[i];
 					}

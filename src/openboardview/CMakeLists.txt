@@ -33,6 +33,7 @@ endif()
 
 
 set(SOURCES
+	history.cpp
 	BDVFile.cpp
 	BoardView.cpp
 	BRDBoard.cpp
