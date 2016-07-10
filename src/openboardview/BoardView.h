@@ -80,7 +80,6 @@ struct BoardView {
 	Board *m_board;
 
 	History history;
-	struct annotations annotations;
 	int history_file_has_changed = 0;
 	void CenterView(void);
 	void Zoom(float osd_x, float osd_y, float zoom);
@@ -93,13 +92,6 @@ struct BoardView {
 	int TightenHull(ImVec2 hull[], int n, double threshold);
 	void MBBCalculate(ImVec2 box[], ImVec2 *hull, int n, double psz);
 	void Pan(int direction, int amount);
-
-	int Annotations_set_filename(char *f);
-	int Annotations_load(void);
-	int Annotations_save(void);
-	int Annotations_add(char *net, char *part, double x, double y, char *annotation);
-	int Annotations_del(int index);
-	int Annotations_update(int index, char *annotation);
 
 	Pin *m_pinSelected = nullptr;
 	vector<Pin *> m_pinHighlighted;
