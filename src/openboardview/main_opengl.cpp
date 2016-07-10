@@ -56,8 +56,8 @@ int main(int argc, char **argv) {
 	//	io.Fonts->AddFontDefault();
 
 	BoardView app{};
-	app.history.Set_filename("openboardview.history");
-	app.history.Load();
+	app.fhistory.Set_filename("openboardview.history");
+	app.fhistory.Load();
 
 	ImVec4 clear_color = ImColor(20, 20, 30);
 
@@ -111,7 +111,7 @@ int main(int argc, char **argv) {
 		// Update the title of the SDL app if the board filename has changed. - PLD20160618
 		if (app.history_file_has_changed) {
 			char scratch[1024];
-			snprintf(scratch, sizeof(scratch), "OpenFlex Board Viewer - %s", app.history.history[0]);
+			snprintf(scratch, sizeof(scratch), "OpenFlex Board Viewer - %s", app.fhistory.history[0]);
 			SDL_SetWindowTitle(window, scratch);
 			app.history_file_has_changed = 0;
 		}
