@@ -60,7 +60,7 @@ int main(int argc, char **argv) {
 #endif
 	ImGuiIO &io          = ImGui::GetIO();
 	std::string fontpath = get_asset_path("DroidSans.ttf");
-	io.Fonts->AddFontFromFileTTF(fontpath.c_str(), 16.0f);
+	io.Fonts->AddFontFromFileTTF(fontpath.c_str(), obvconfig.ParseDouble("fontSize", 20.0f));
 	//	io.Fonts->AddFontDefault();
 
 	BoardView app{};
