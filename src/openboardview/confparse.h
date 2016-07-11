@@ -8,7 +8,7 @@ struct Confparse {
 
 	int Load(const char *utf8_filename);
 	char *Parse(const char *key);
-	char *Parse(const char *key, char *defaultv);
+	char *ParseStr(const char *key, char *defaultv);
 	double ParseDouble(const char *key, double defaultv);
 	int ParseInt(const char *key, int defaultv);
 };

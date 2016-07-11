@@ -59,7 +59,7 @@ int main(int argc, char **argv) {
 	io.Fonts->AddFontFromFileTTF(fontpath.c_str(), 20.0f);
 #endif
 	ImGuiIO &io          = ImGui::GetIO();
-	std::string fontpath = get_asset_path("DroidSans.ttf");
+	std::string fontpath = get_asset_path(obvconfig.ParseStr("fontPath", "DroidSans.ttf"));
 	io.Fonts->AddFontFromFileTTF(fontpath.c_str(), obvconfig.ParseDouble("fontSize", 20.0f));
 	//	io.Fonts->AddFontDefault();
 

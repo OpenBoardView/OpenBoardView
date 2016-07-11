@@ -52,7 +52,7 @@ char *Confparse::Parse(const char *key) {
 	while (p && p < llimit) {
 		if (*(p + keylen) == '=') {
 			if ((p < llimit) && (p >= conf)) {
-				if ((p == conf) || (*(p - 1) == '\r' || *(p - 1) == '\n')) {
+				if ((p == conf) || (*(p - 1) == '\r') || (*(p - 1) == '\n')) {
 					size_t i = 0;
 
 					p = p + keylen + 1;
@@ -68,12 +68,12 @@ char *Confparse::Parse(const char *key) {
 				}
 			}
 		}
-		p++;
+		p = strstr(p + 1, key);
 	}
 	return NULL;
 }
 
-char *Confparse::Parse(const char *key, char *defaultv) {
+char *Confparse::ParseStr(const char *key, char *defaultv) {
 	char *p = Parse(key);
 	if (p)
 		return p;
