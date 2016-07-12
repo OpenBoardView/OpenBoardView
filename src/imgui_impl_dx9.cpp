@@ -126,6 +126,7 @@ void ImGui_ImplDX9_RenderDrawLists(ImDrawData *draw_data) {
 	g_pd3dDevice->SetTextureStageState(0, D3DTSS_ALPHAARG2, D3DTA_DIFFUSE);
 	g_pd3dDevice->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
 	g_pd3dDevice->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
+	g_pd3dDevice->SetSamplerState(0, D3DSAMP_MIPFILTER, D3DTEXF_LINEAR);
 
 	// Setup orthographic projection matrix
 	// Being agnostic of whether <d3dx9.h> or <DirectXMath.h> can be used, we aren't relying on
