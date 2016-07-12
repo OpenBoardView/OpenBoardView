@@ -484,15 +484,17 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 			draw->ChannelsSetCurrent(kChannelImages);
 
 			segments = trunc(psz);
-			if (segments < 8) segments = 8;
-			if (segments > 32) segments = 32;
+			if (segments < 8)
+				segments = 8;
+			if (segments > 32)
+				segments = 32;
 
 			switch (pin->type) {
-				case Pin::kPinTypeTestPad:
-					draw->AddCircleFilled( ImVec2(pos.x, pos.y), psz, color, segments);
-					break;
-				default:
-					draw->AddCircle( ImVec2(pos.x, pos.y), psz, color, segments);
+			case Pin::kPinTypeTestPad:
+				draw->AddCircleFilled(ImVec2(pos.x, pos.y), psz, color, segments);
+				break;
+			default:
+				draw->AddCircle(ImVec2(pos.x, pos.y), psz, color, segments);
 			}
 
 			if (show_text) {
