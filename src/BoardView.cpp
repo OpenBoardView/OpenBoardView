@@ -411,9 +411,6 @@ inline void BoardView::DrawOutline(ImDrawList *draw) {
 }
 
 inline void BoardView::DrawPins(ImDrawList *draw) {
-	ImTextureID filled_circle_tex = TextureIDs[0];
-	ImTextureID empty_circle_tex = TextureIDs[1];
-
 	// TODO: use pin->diameter
 	float psz = (float)m_pinDiameter * 0.5f * m_scale;
 
@@ -433,7 +430,6 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 		}
 
 		// color & text depending on app state & pin type
-		auto pin_texture = empty_circle_tex;
 		uint32_t color = m_colors.pinDefault;
 		uint32_t text_color = color;
 		bool show_text = false;
@@ -461,7 +457,6 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 
 			if (pin->type == Pin::kPinTypeTestPad) {
 				color = m_colors.pinTestPad;
-				// pin_texture = filled_circle_tex; // TODO
 				show_text = false;
 			}
 

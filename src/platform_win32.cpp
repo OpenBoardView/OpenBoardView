@@ -88,6 +88,4 @@ unsigned char *LoadAsset(int *asset_size, int asset_id) {
 	return data;
 }
 
-ImTextureID TextureIDs[NUM_GLOBAL_TEXTURES];
-
 #endif // _WIN32
