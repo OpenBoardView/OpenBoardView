@@ -330,6 +330,8 @@ struct DDSHeader {
 bool ImGui_ImplDX9_CreateDeviceObjects() {
 	if (!g_pd3dDevice)
 		return false;
+	if (!ImGui_ImplDX9_CreateFontsTexture())
+		return false;
 	return true;
 }
 
