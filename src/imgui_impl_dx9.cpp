@@ -326,53 +326,9 @@ struct DDSHeader {
 	u32 reserved2;
 };
 
-static bool ImGui_ImplDX9_CreateAssetTexture(int global_id, int asset_id) {
-	int size;
-	unsigned char *data = LoadAsset(&size, asset_id);
-	DDSHeader *header = (DDSHeader *)data;
-
-	LPDIRECT3DTEXTURE9 tex = NULL;
-	assert(header->pf.fourCC == D3DFMT_DXT5);
-	u32 width = header->width;
-	u32 height = header->height;
-	if (g_pd3dDevice->CreateTexture(width, height, header->mipMapCount, D3DUSAGE_DYNAMIC, D3DFMT_DXT5, D3DPOOL_DEFAULT, &tex, NULL) < 0)
-		return false;
-
-	D3DLOCKED_RECT tex_locked_rect;
-	data = data + sizeof(DDSHeader);
-	for (u32 i = 0; i < header->mipMapCount; i++) {
-		const u32 bytes_per_block = 16;
-		if (tex->LockRect(i, &tex_locked_rect, NULL, 0) != D3D_OK)
-			return false;
-		u32 num_blocks = ((width + 3) >> 2) * ((height + 3) >> 2);
-		u32 num_bytes = num_blocks * bytes_per_block;
-		memcpy(tex_locked_rect.pBits,
-			data, num_bytes);
-		tex->UnlockRect(i);
-
-		data += num_bytes;
-		width >>= 1;
-		height >>= 1;
-		if (!width) width = 1;
-		if (!height) height = 1;
-	}
-	TextureIDs[global_id] = tex;
-	return true;
-}
-
-static bool ImGui_ImplDX9_CreateCircleTexture() {
-	bool result = true;
-	// result &= ImGui_ImplDX9_CreateAssetTexture(0, ASSET_FILLED_CIRCLE);
-	result &= ImGui_ImplDX9_CreateAssetTexture(1, ASSET_EMPTY_CIRCLE);
-	return result;
-}
 
 bool ImGui_ImplDX9_CreateDeviceObjects() {
 	if (!g_pd3dDevice)
-		return false;
-	if (!ImGui_ImplDX9_CreateFontsTexture())
-		return false;
-	if (!ImGui_ImplDX9_CreateCircleTexture())
 		return false;
 	return true;
 }
