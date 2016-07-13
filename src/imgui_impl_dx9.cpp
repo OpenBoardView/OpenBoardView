@@ -16,8 +16,6 @@
 #define DIRECTINPUT_VERSION 0x0800
 #include <dinput.h>
 
-#include "platform.h"
-
 // Data
 static HWND g_hWnd = 0;
 static INT64 g_Time = 0;
@@ -295,38 +293,6 @@ static bool ImGui_ImplDX9_CreateFontsTexture() {
 	return true;
 }
 
-typedef unsigned long u32;
-
-struct DDSPixelFormat {
-	u32 size;
-	u32 flags;
-	u32 fourCC;
-	u32 rgbBitCount;
-	u32 rBitMask;
-	u32 gBitMask;
-	u32 bBitMask;
-	u32 aBitMask;
-};
-
-struct DDSHeader {
-	u32 magic;
-	u32 size;
-	u32 flags;
-	u32 height;
-	u32 width;
-	u32 pitchOrLinearSize;
-	u32 depth;
-	u32 mipMapCount;
-	u32 reserved1[11];
-	DDSPixelFormat pf;
-	u32 caps;
-	u32 caps2;
-	u32 caps3;
-	u32 caps4;
-	u32 reserved2;
-};
-
-
 bool ImGui_ImplDX9_CreateDeviceObjects() {
 	if (!g_pd3dDevice)
 		return false;
@@ -349,13 +315,6 @@ void ImGui_ImplDX9_InvalidateDeviceObjects() {
 	if (LPDIRECT3DTEXTURE9 tex = (LPDIRECT3DTEXTURE9)ImGui::GetIO().Fonts->TexID) {
 		tex->Release();
 		ImGui::GetIO().Fonts->TexID = 0;
-	}
-	for (int i = 0; i < NUM_GLOBAL_TEXTURES; i++) {
-		LPDIRECT3DTEXTURE9 tex = (LPDIRECT3DTEXTURE9)TextureIDs[i];
-		if (tex) {
-			tex->Release();
-			TextureIDs[i] = 0;
-		}
 	}
 	g_FontTexture = NULL;
 }

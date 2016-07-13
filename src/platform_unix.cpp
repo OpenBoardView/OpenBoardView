@@ -79,6 +79,4 @@ char *show_file_picker() {
 
 #endif // ! __APPLE__
 
-ImTextureID TextureIDs[NUM_GLOBAL_TEXTURES];
-
 #endif // ! _WIN32
