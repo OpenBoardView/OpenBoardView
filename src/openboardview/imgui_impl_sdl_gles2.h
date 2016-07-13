@@ -8,7 +8,7 @@
 #ifndef IMGUI_IMPL_SDL_GL2
 #define IMGUI_IMPL_SDL_GL2
 
-#include "../../../../../../../imgui.h"
+#include "imgui/imgui.h"
 
 struct SDL_Window;
 typedef union SDL_Event SDL_Event;
