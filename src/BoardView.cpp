@@ -411,9 +411,6 @@ inline void BoardView::DrawOutline(ImDrawList *draw) {
 }
 
 inline void BoardView::DrawPins(ImDrawList *draw) {
-	ImTextureID filled_circle_tex = TextureIDs[0];
-	ImTextureID empty_circle_tex = TextureIDs[1];
-
 	// TODO: use pin->diameter
 	float psz = (float)m_pinDiameter * 0.5f * m_scale;
 
@@ -433,7 +430,6 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 		}
 
 		// color & text depending on app state & pin type
-		auto pin_texture = empty_circle_tex;
 		uint32_t color = m_colors.pinDefault;
 		uint32_t text_color = color;
 		bool show_text = false;
@@ -461,7 +457,6 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 
 			if (pin->type == Pin::kPinTypeTestPad) {
 				color = m_colors.pinTestPad;
-				// pin_texture = filled_circle_tex; // TODO
 				show_text = false;
 			}
 
@@ -484,10 +479,24 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 
 		// Drawing
 		{
+			int segments; // how fine to draw the circle for the pin
 			char pin_number[64];
 			draw->ChannelsSetCurrent(kChannelImages);
-			draw->AddImage(pin_texture, ImVec2(pos.x - psz, pos.y - psz),
-			               ImVec2(pos.x + psz, pos.y + psz), ImVec2(0, 0), ImVec2(1, 1), color);
+
+			segments = trunc(psz);
+			if (segments < 8)
+				segments = 8;
+			if (segments > 32)
+				segments = 32;
+
+			switch (pin->type) {
+			case Pin::kPinTypeTestPad:
+				draw->AddCircleFilled(ImVec2(pos.x, pos.y), psz, color, segments);
+				break;
+			default:
+				draw->AddCircle(ImVec2(pos.x, pos.y), psz, color, segments);
+			}
+
 			if (show_text) {
 				sprintf(pin_number, "%d", pin->number);
 

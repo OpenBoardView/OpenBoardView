@@ -14,6 +14,3 @@ char *file_as_buffer(size_t *buffer_size, const char *utf8_filename);
 char *show_file_picker();
 
 unsigned char *LoadAsset(int *asset_size, int asset_id);
-
-#define NUM_GLOBAL_TEXTURES 10
-extern ImTextureID TextureIDs[NUM_GLOBAL_TEXTURES];
