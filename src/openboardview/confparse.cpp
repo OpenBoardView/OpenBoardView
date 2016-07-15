@@ -105,3 +105,14 @@ double Confparse::ParseDouble(const char *key, double defaultv) {
 	} else
 		return defaultv;
 }
+
+bool Confparse::ParseBool(const char *key, bool defaultv) {
+	char *p = Parse(key);
+	if (p) {
+		if (strncmp(p, "true", sizeof("true")) == 0) {
+			return true;
+		} else
+			return false;
+	} else
+		return defaultv;
+}

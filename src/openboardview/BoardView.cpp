@@ -248,6 +248,7 @@ void BoardView::Update() {
 			ImGui::Text("https://github.com/inflex/OpenBoardView");
 			if (ImGui::Button("Close") || ImGui::IsKeyPressed(SDLK_ESCAPE)) {
 				ImGui::CloseCurrentPopup();
+				ImGui::SetKeyboardFocusHere(-1);
 			}
 			ImGui::Indent();
 			ImGui::Text("License info");
@@ -356,7 +357,12 @@ void BoardView::Update() {
 	} else {
 		ImVec2 spos = ImGui::GetMousePos();
 		ImVec2 pos  = ScreenToCoord(spos.x, spos.y);
-		ImGui::Text("Position: %0.3f\", %0.3f\" (%0.2f, %0.2fmm)", pos.x / 1000, pos.y / 1000, pos.x * 0.0254, pos.y * 0.0254);
+		ImGui::Text("FPS: %0.0f Position: %0.3f\", %0.3f\" (%0.2f, %0.2fmm)",
+		            ImGui::GetIO().Framerate,
+		            pos.x / 1000,
+		            pos.y / 1000,
+		            pos.x * 0.0254,
+		            pos.y * 0.0254);
 	}
 	ImGui::End();
 	ImGui::PopStyleVar();
@@ -444,7 +450,6 @@ void BoardView::HandleInput() {
 			// Conext menu
 			if (m_file && m_board && ImGui::IsMouseReleased(1) && !m_draggingLastFrame) {
 				// Build context menu here, for annotations and inspection
-				// fprintf(stderr,"Context menu select\n");
 				//
 				Rotate(1);
 
@@ -486,6 +491,10 @@ void BoardView::HandleInput() {
 			}
 			Zoom(io.MousePos.x, io.MousePos.y, mwheel);
 		}
+	} else {
+		//		ImGuiContext& g = *GImGui;
+		//    return g.FocusedWindow == g.CurrentWindow;
+		//		fprintf(stderr,"%s\n", g.CurrentWindow.name.c_str());
 	}
 
 	if (!io.WantCaptureKeyboard) {
@@ -687,7 +696,7 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 
 			// for the round pin representations, choose how many circle segments need based on the pin size
 			segments                    = trunc(psz);
-			if (segments < 8) segments  = 8;
+			if (segments < 10) segments = 10;
 			if (segments > 32) segments = 32;
 
 			switch (pin->type) {
