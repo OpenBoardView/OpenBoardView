@@ -22,6 +22,8 @@ uint32_t byte4swap(uint32_t x) {
 }
 
 int main(int argc, char **argv) {
+	char s[1025];
+	char *homepath;
 	Confparse obvconfig;
 	int sizex, sizey;
 
@@ -31,7 +33,27 @@ int main(int argc, char **argv) {
 		return -1;
 	}
 
-	obvconfig.Load("openboardview.conf");
+	homepath = getenv("HOME");
+	if (homepath) {
+		struct stat st;
+		int sr;
+		snprintf(s, sizeof(s), "%s/.obv", homepath);
+		sr = stat(s, &st);
+		if (sr == -1) {
+			mkdir(s, S_IRWXU);
+			sr = stat(s, &st);
+		}
+
+		if ((sr == 0) && (S_ISDIR(st.st_mode))) {
+			// path exists
+			//
+			snprintf(s, sizeof(s), "%s/.obv/obv.conf", homepath);
+			obvconfig.Load(s);
+
+			snprintf(s, sizeof(s), "%s/.obv/obv.history", homepath);
+		}
+	}
+
 	sizex = obvconfig.ParseInt("windowX", 1280);
 	sizey = obvconfig.ParseInt("windowY", 900);
 
@@ -70,8 +92,11 @@ int main(int argc, char **argv) {
 	//	io.Fonts->AddFontDefault();
 
 	BoardView app{};
-	app.fhistory.Set_filename("openboardview.history");
-	app.fhistory.Load();
+	if (homepath) {
+		app.fhistory.Set_filename(s);
+		;
+		app.fhistory.Load();
+	}
 
 	/*
 	 * Some machines (Atom etc) don't have enough CPU/GPU
@@ -94,18 +119,18 @@ int main(int argc, char **argv) {
 	 * we use the human-readable version but swap the ordering around when
 	 * it comes to assigning the actual colour to ImGui.
 	 */
-	app.m_colors.backgroundColor     = byte4swap(obvconfig.ParseHex("backgroundColor", 0xa0000000));
-	app.m_colors.partTextColor       = byte4swap(obvconfig.ParseHex("partTextColor", 0xff808000));
+	app.m_colors.backgroundColor     = byte4swap(obvconfig.ParseHex("backgroundColor", 0x000000a0));
+	app.m_colors.partTextColor       = byte4swap(obvconfig.ParseHex("partTextColor", 0x008080ff));
 	app.m_colors.boardOutline        = byte4swap(obvconfig.ParseHex("boardOutline", 0xffff00ff));
-	app.m_colors.boxColor            = byte4swap(obvconfig.ParseHex("boxColor", 0xffcccccc));
+	app.m_colors.boxColor            = byte4swap(obvconfig.ParseHex("boxColor", 0xccccccff));
 	app.m_colors.pinDefault          = byte4swap(obvconfig.ParseHex("pinDefault", 0xff0000ff));
-	app.m_colors.pinGround           = byte4swap(obvconfig.ParseHex("pinGround", 0xff0000bb));
-	app.m_colors.pinNotConnected     = byte4swap(obvconfig.ParseHex("pinNotConnected", 0xffff0000));
-	app.m_colors.pinTestPad          = byte4swap(obvconfig.ParseHex("pinTestPad", 0xff888888));
-	app.m_colors.pinSelected         = byte4swap(obvconfig.ParseHex("pinSelected", 0xffeeeeee));
+	app.m_colors.pinGround           = byte4swap(obvconfig.ParseHex("pinGround", 0xbb0000ff));
+	app.m_colors.pinNotConnected     = byte4swap(obvconfig.ParseHex("pinNotConnected", 0x0000ffff));
+	app.m_colors.pinTestPad          = byte4swap(obvconfig.ParseHex("pinTestPad", 0x888888ff));
+	app.m_colors.pinSelected         = byte4swap(obvconfig.ParseHex("pinSelected", 0xeeeeeeff));
 	app.m_colors.pinHighlighted      = byte4swap(obvconfig.ParseHex("pinHighlighted", 0xffffffff));
-	app.m_colors.pinHighlightSameNet = byte4swap(obvconfig.ParseHex("pinHighlightSameNet", 0xff88f8ff));
-	app.m_colors.annotationPartAlias = byte4swap(obvconfig.ParseHex("annotationPartAlias", 0xff00ffff));
+	app.m_colors.pinHighlightSameNet = byte4swap(obvconfig.ParseHex("pinHighlightSameNet", 0xfff888ff));
+	app.m_colors.annotationPartAlias = byte4swap(obvconfig.ParseHex("annotationPartAlias", 0xffff00ff));
 	app.m_colors.partHullColor       = byte4swap(obvconfig.ParseHex("partHullColor", 0x80808080));
 
 	ImVec4 clear_color = ImColor(20, 20, 30);
