@@ -12,4 +12,5 @@ struct Confparse {
 	double ParseDouble(const char *key, double defaultv);
 	int ParseInt(const char *key, int defaultv);
 	bool ParseBool(const char *key, bool defaultv);
+	unsigned long ParseHex(const char *key, unsigned long defaultv);
 };

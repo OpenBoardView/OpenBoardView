@@ -55,6 +55,8 @@ struct ColorScheme {
 	uint32_t pinHighlightSameNet = 0xff99f8ff;
 
 	uint32_t annotationPartAlias = 0xcc00ffff;
+
+	uint32_t partHullColor = 0x80808080;
 };
 
 enum DrawChannel { kChannelImages = 0, kChannelPolylines = 1, kChannelText = 2, kChannelAnnotations = 3, NUM_DRAW_CHANNELS = 4 };
@@ -65,10 +67,15 @@ struct BoardView {
 
 	FHistory fhistory;
 	int history_file_has_changed = 0;
+	bool slowCPU                 = false;
+	bool showFPS                 = false;
 
 	void CenterView(void);
 	void Pan(int direction, int amount);
 	void Zoom(float osd_x, float osd_y, float zoom);
+	void DrawDiamond(ImDrawList *draw, ImVec2 c, double r, uint32_t color);
+	void DrawHex(ImDrawList *draw, ImVec2 c, double r, uint32_t color);
+	void DrawBox(ImDrawList *draw, ImVec2 c, double r, uint32_t color);
 
 	Pin *m_pinSelected = nullptr;
 	vector<Pin *> m_pinHighlighted;

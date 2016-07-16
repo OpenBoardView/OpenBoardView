@@ -35,7 +35,7 @@ int Confparse::Load(const char *utf8_filename) {
 }
 
 char *Confparse::Parse(const char *key) {
-	char *p;
+	char *p, *op;
 	char *llimit;
 	int keylen;
 
@@ -45,30 +45,50 @@ char *Confparse::Parse(const char *key) {
 	if (!key) return NULL;
 
 	keylen = strlen(key);
-	p      = strstr(conf, key);
+	if (keylen == 0) return NULL;
+
+	op = p = strstr(conf, key);
+	if (p == NULL) return NULL;
 
 	llimit = limit - keylen - 2; // allows for up to 'key=x'
 
 	while (p && p < llimit) {
-		if (*(p + keylen) == '=') {
-			if ((p < llimit) && (p >= conf)) {
-				if ((p == conf) || (*(p - 1) == '\r') || (*(p - 1) == '\n')) {
-					size_t i = 0;
 
-					p = p + keylen + 1;
-					while ((p < limit) && ((*p != '\0') && (*p != '\n') && (*p != '\r'))) {
-						value[i] = *p;
-						p++;
-						i++;
-						if (i >= CONFPARSE_MAX_VALUE_SIZE) break;
-					}
-					value[i] = '\0';
+		/*
+		 * Consume the name<whitespace>=<whitespace> trash before we
+		 * get to the actual value.  While this does mean things are
+		 * slightly less strict in the configuration file text it can
+		 * assist in making it easier for people to read it.
+		 */
+		p = p + keylen;
+		while ((p < llimit) && (*p == '=') || (*p == ' ') || (*p == '\t')) p++; // get up to the start of the value;
 
-					return value;
+		if ((p < llimit) && (p >= conf)) {
+
+			/*
+			 * Check that the location of the strstr() return is
+			 * left aligned to the start of the line. This prevents
+			 * us picking up trash name=value pairs among the general
+			 * text within the file
+			 */
+			if ((op == conf) || (*(op - 1) == '\r') || (*(op - 1) == '\n')) {
+				size_t i = 0;
+
+				/*
+				 * Search for the end of the data by finding the end of the line
+				 */
+				while ((p < limit) && ((*p != '\0') && (*p != '\n') && (*p != '\r'))) {
+					value[i] = *p;
+					p++;
+					i++;
+					if (i >= CONFPARSE_MAX_VALUE_SIZE) break;
 				}
+				value[i] = '\0';
+				return value;
 			}
 		}
-		p = strstr(p + 1, key);
+		p  = strstr(op + 1, key);
+		op = p;
 	}
 	return NULL;
 }
@@ -85,6 +105,22 @@ int Confparse::ParseInt(const char *key, int defaultv) {
 	char *p = Parse(key);
 	if (p) {
 		int v = strtol((char *)Parse(key), NULL, 10);
+		if (errno == ERANGE)
+			return defaultv;
+		else
+			return v;
+	} else
+		return defaultv;
+}
+
+unsigned long Confparse::ParseHex(const char *key, unsigned long defaultv) {
+	char *p = Parse(key);
+	if (p) {
+		unsigned long v;
+		if ((*p == '0') && (*(p + 1) == 'x')) {
+			p += 2;
+		}
+		v = strtoul(p, NULL, 16);
 		if (errno == ERANGE)
 			return defaultv;
 		else

@@ -357,12 +357,15 @@ void BoardView::Update() {
 	} else {
 		ImVec2 spos = ImGui::GetMousePos();
 		ImVec2 pos  = ScreenToCoord(spos.x, spos.y);
-		ImGui::Text("FPS: %0.0f Position: %0.3f\", %0.3f\" (%0.2f, %0.2fmm)",
-		            ImGui::GetIO().Framerate,
-		            pos.x / 1000,
-		            pos.y / 1000,
-		            pos.x * 0.0254,
-		            pos.y * 0.0254);
+		if (showFPS == true)
+			ImGui::Text("FPS: %0.0f Position: %0.3f\", %0.3f\" (%0.2f, %0.2fmm)",
+			            ImGui::GetIO().Framerate,
+			            pos.x / 1000,
+			            pos.y / 1000,
+			            pos.x * 0.0254,
+			            pos.y * 0.0254);
+		else
+			ImGui::Text("Position: %0.3f\", %0.3f\" (%0.2f, %0.2fmm)", pos.x / 1000, pos.y / 1000, pos.x * 0.0254, pos.y * 0.0254);
 	}
 	ImGui::End();
 	ImGui::PopStyleVar();
@@ -594,6 +597,46 @@ void BoardView::RenderOverlay() {
  *
  *
  */
+
+void BoardView::DrawBox(ImDrawList *draw, ImVec2 c, double r, uint32_t color) {
+	ImVec2 dia[4];
+
+	dia[0] = ImVec2((int)c.x - r, (int)c.y - r);
+	dia[1] = ImVec2((int)c.x + r, (int)c.y - r);
+	dia[2] = ImVec2((int)c.x + r, (int)c.y + r);
+	dia[3] = ImVec2((int)c.x - r, (int)c.y + r);
+
+	draw->AddPolyline(dia, 4, color, true, 1.0f, true);
+}
+
+void BoardView::DrawDiamond(ImDrawList *draw, ImVec2 c, double r, uint32_t color) {
+	ImVec2 dia[4];
+
+	dia[0] = ImVec2(c.x, c.y - r);
+	dia[1] = ImVec2(c.x + r, c.y);
+	dia[2] = ImVec2(c.x, c.y + r);
+	dia[3] = ImVec2(c.x - r, c.y);
+
+	draw->AddPolyline(dia, 4, color, true, 1.0f, true);
+}
+
+void BoardView::DrawHex(ImDrawList *draw, ImVec2 c, double r, uint32_t color) {
+	double da, db;
+	ImVec2 hex[6];
+
+	da = r * 0.5;         // cos(60')
+	db = r * 0.866025404; // sin(60')
+
+	hex[0] = ImVec2(c.x - r, c.y);
+	hex[1] = ImVec2(c.x - da, c.y - db);
+	hex[2] = ImVec2(c.x + da, c.y - db);
+	hex[3] = ImVec2(c.x + r, c.y);
+	hex[4] = ImVec2(c.x + da, c.y + db);
+	hex[5] = ImVec2(c.x - da, c.y + db);
+
+	draw->AddPolyline(hex, 6, color, true, 1.0f, true);
+}
+
 inline void BoardView::DrawOutline(ImDrawList *draw) {
 	int jump = 1;
 	Point fp;
@@ -696,12 +739,22 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 
 			// for the round pin representations, choose how many circle segments need based on the pin size
 			segments                    = trunc(psz);
-			if (segments < 10) segments = 10;
 			if (segments > 32) segments = 32;
+			if (segments < 8) segments  = 8;
 
 			switch (pin->type) {
 				case Pin::kPinTypeTestPad: draw->AddCircleFilled(ImVec2(pos.x, pos.y), psz, color, segments); break;
-				default: draw->AddCircle(ImVec2(pos.x, pos.y), psz, color, segments);
+				default:
+					if (slowCPU == true) {
+						if (psz > 5)
+							draw->AddCircle(ImVec2(pos.x, pos.y), psz, color, segments);
+						else if (psz > 2)
+							DrawHex(draw, ImVec2(pos.x, pos.y), psz, color);
+						else
+							draw->AddRect(ImVec2(pos.x, pos.y), ImVec2(pos.x + 1, pos.y + 1), color, false, 0, 1.0f);
+					} else {
+						draw->AddCircle(ImVec2(pos.x, pos.y), psz, color, segments);
+					}
 			}
 
 			if (show_text) {
@@ -767,15 +820,22 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 				min_y = pin->position.y;
 		}
 
-		if (min_x < max_x)
-			distance = max_y - min_y;
-		else
-			distance = max_x - min_x;
+		//		if (min_x < max_x) distance = max_y -min_y;
+		//		else distance = max_x -min_x;
 
 		distance = sqrt((max_x - min_x) * (max_x - min_x) + (max_y - min_y) * (max_y - min_y));
 
 		float pin_radius = m_pinDiameter / 2.0f;
 
+		/*
+		 *
+		 * Determine the size of our part's pin radius based on the distance
+		 * between the extremes of the pin coordinates.
+		 *
+		 * All the figures below are determined empirically rather than any
+		 * specific formula.
+		 *
+		 */
 		if ((pincount < 4) && (part->name[0] != 'U') && (part->name[0] != 'Q')) {
 
 			if ((distance > 52) && (distance < 57)) {
@@ -952,7 +1012,7 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 
 						// first, tighten the hull, removes any small angle segments, such as a sequence of pins in a line
 						// hpc = TightenHull(hull, hpc, 0.1f); // tighten the hull a bit more, this might be an overkill
-						draw->AddPolyline(hull, hpc, ImColor(128, 128, 128, 128), true, 1.0f, false);
+						draw->AddPolyline(hull, hpc, m_colors.partHullColor, true, 1.0f, false);
 						VHMBBCalculate(bbox, hull, hpc, pin_radius * m_scale);
 						draw->AddPolyline(bbox, 4, color, true, 1.0f, false);
 						rendered = 1;

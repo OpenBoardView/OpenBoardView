@@ -14,6 +14,12 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+uint32_t byte4swap(uint32_t x) {
+	/*
+	 * used to convert RGBA -> ABGR etc
+	 */
+	return (((x & 0x000000ff) << 24) | ((x & 0x0000ff00) << 8) | ((x & 0x00ff0000) >> 8) | ((x & 0xff000000) >> 24));
+}
 
 int main(int argc, char **argv) {
 	Confparse obvconfig;
@@ -63,12 +69,44 @@ int main(int argc, char **argv) {
 	io.Fonts->AddFontFromFileTTF(fontpath.c_str(), obvconfig.ParseDouble("fontSize", 20.0f));
 	//	io.Fonts->AddFontDefault();
 
-	ImGuiStyle &style       = ImGui::GetStyle();
-	style.AntiAliasedShapes = obvconfig.ParseBool("enableAA", true);
-
 	BoardView app{};
 	app.fhistory.Set_filename("openboardview.history");
 	app.fhistory.Load();
+
+	/*
+	 * Some machines (Atom etc) don't have enough CPU/GPU
+	 * grunt to cope with the large number of AA'd circles
+	 * generated on a large dense board like a Macbook Pro
+	 * so we have the lowCPU option which will let people
+	 * trade good-looks for better FPS
+	 */
+	app.slowCPU = obvconfig.ParseBool("slowCPU", false);
+	if (app.slowCPU == true) {
+		ImGuiStyle &style       = ImGui::GetStyle();
+		style.AntiAliasedShapes = false;
+	}
+
+	app.showFPS = obvconfig.ParseBool("showFPS", false);
+
+	/*
+	 * Colours in ImGui can be represented as a 4-byte packed uint32_t as ABGR
+	 * but most humans are more accustomed to RBGA, so for the sake of readability
+	 * we use the human-readable version but swap the ordering around when
+	 * it comes to assigning the actual colour to ImGui.
+	 */
+	app.m_colors.backgroundColor     = byte4swap(obvconfig.ParseHex("backgroundColor", 0xa0000000));
+	app.m_colors.partTextColor       = byte4swap(obvconfig.ParseHex("partTextColor", 0xff808000));
+	app.m_colors.boardOutline        = byte4swap(obvconfig.ParseHex("boardOutline", 0xffff00ff));
+	app.m_colors.boxColor            = byte4swap(obvconfig.ParseHex("boxColor", 0xffcccccc));
+	app.m_colors.pinDefault          = byte4swap(obvconfig.ParseHex("pinDefault", 0xff0000ff));
+	app.m_colors.pinGround           = byte4swap(obvconfig.ParseHex("pinGround", 0xff0000bb));
+	app.m_colors.pinNotConnected     = byte4swap(obvconfig.ParseHex("pinNotConnected", 0xffff0000));
+	app.m_colors.pinTestPad          = byte4swap(obvconfig.ParseHex("pinTestPad", 0xff888888));
+	app.m_colors.pinSelected         = byte4swap(obvconfig.ParseHex("pinSelected", 0xffeeeeee));
+	app.m_colors.pinHighlighted      = byte4swap(obvconfig.ParseHex("pinHighlighted", 0xffffffff));
+	app.m_colors.pinHighlightSameNet = byte4swap(obvconfig.ParseHex("pinHighlightSameNet", 0xff88f8ff));
+	app.m_colors.annotationPartAlias = byte4swap(obvconfig.ParseHex("annotationPartAlias", 0xff00ffff));
+	app.m_colors.partHullColor       = byte4swap(obvconfig.ParseHex("partHullColor", 0x80808080));
 
 	ImVec4 clear_color = ImColor(20, 20, 30);
 
