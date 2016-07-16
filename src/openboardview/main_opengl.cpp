@@ -37,7 +37,7 @@ int main(int argc, char **argv) {
 	if (homepath) {
 		struct stat st;
 		int sr;
-		snprintf(s, sizeof(s), "%s/.obv", homepath);
+		snprintf(s, sizeof(s), "%s/.config/openboardview", homepath);
 		sr = stat(s, &st);
 		if (sr == -1) {
 			mkdir(s, S_IRWXU);
@@ -47,10 +47,10 @@ int main(int argc, char **argv) {
 		if ((sr == 0) && (S_ISDIR(st.st_mode))) {
 			// path exists
 			//
-			snprintf(s, sizeof(s), "%s/.obv/obv.conf", homepath);
+			snprintf(s, sizeof(s), "%s/.config/openboardview/obv.conf", homepath);
 			obvconfig.Load(s);
 
-			snprintf(s, sizeof(s), "%s/.obv/obv.history", homepath);
+			snprintf(s, sizeof(s), "%s/.config/openboardview/obv.history", homepath);
 		}
 	}
 
