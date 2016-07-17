@@ -84,6 +84,8 @@ struct BoardView {
 	ImVector<char> m_cachedDrawCommands;
 	SharedVector<Net> m_nets;
 	char m_search[128];
+	char m_search2[128];
+	char m_search3[128];
 	char m_netFilter[128];
 	char *m_lastFileOpenName;
 	float m_dx; // display top-right coordinate?
@@ -155,6 +157,7 @@ struct BoardView {
 	bool PartIsHighlighted(const Component &component);
 	void SetNetFilter(const char *net);
 	void FindComponent(const char *name);
+	void FindComponentNoClear(const char *name);
 	void SetLastFileOpenName(char *name);
 	void FlipBoard();
 };

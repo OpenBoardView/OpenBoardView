@@ -207,24 +207,41 @@ void BoardView::Update() {
 			}
 			ImGui::EndPopup();
 		}
-		if (ImGui::BeginPopupModal("Search for Component", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+
+		if (ImGui::BeginPopupModal("Search for Component",
+		                           nullptr,
+		                           ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoCollapse |
+		                               ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_ShowBorders)) {
+			ImGui::Columns(3);
+
 			if (m_showComponentSearch) {
 				m_showComponentSearch = false;
 			}
-			if (ImGui::InputText("##search", m_search, 128)) {
+			ImGui::Text("Component #1");
+
+			//			ImGui::Dummy(ImVec2(200,1));
+			if (ImGui::InputText("##search", m_search, 128, ImGuiInputTextFlags_CharsNoBlank)) {
 				FindComponent(m_search);
 			}
+			//			ImGui::SameLine();
+			//			if (ImGui::SmallButton("X")) {
+			//				m_search[0] = '\0';
+			//			};
 			const char *first_button = m_search;
-			if (ImGui::IsItemHovered() ||
-			    (ImGui::IsRootWindowOrAnyChildFocused() && !ImGui::IsAnyItemActive() && !ImGui::IsMouseClicked(0)))
+
+			// if (ImGui::IsItemHovered() || (ImGui::IsRootWindowOrAnyChildFocused() && !ImGui::IsAnyItemActive() &&
+			// !ImGui::IsMouseClicked(0))) {
+			if (ImGui::IsRootWindowOrAnyChildFocused() && !ImGui::IsAnyItemActive() && !ImGui::IsMouseClicked(0)) {
 				ImGui::SetKeyboardFocusHere(-1);
+			}
+
 			int buttons_left = 10;
 			for (int i = 0; buttons_left && i < m_file->num_parts; i++) {
 				const BRDPart &part = m_file->parts[i];
 				if (utf8casestr(part.name, m_search)) {
-					if (ImGui::Button(part.name)) {
+					if (ImGui::SmallButton(part.name)) {
 						FindComponent(part.name);
-						ImGui::CloseCurrentPopup();
+						//		ImGui::CloseCurrentPopup();
 					}
 					if (buttons_left == 10) {
 						first_button = part.name;
@@ -232,17 +249,100 @@ void BoardView::Update() {
 					buttons_left--;
 				}
 			}
+
+			ImGui::NextColumn();
+			ImGui::Text("Component #2");
+			// ImGui::Dummy(ImVec2(200,1));
+			if (ImGui::InputText("##search2", m_search2, 128)) {
+				FindComponent(m_search2);
+			}
+			//			ImGui::SameLine();
+			//			if (ImGui::SmallButton("X")) {
+			//				m_search2[0] = '\0';
+			//			};
+			const char *first_button2 = m_search2;
+
+			//	if (ImGui::IsMouseClicked(0)) {
+			//	  	ImGui::SetKeyboardFocusHere(-1);
+			//	}
+
+			int buttons_left2 = 10;
+			for (int i = 0; buttons_left2 && i < m_file->num_parts; i++) {
+				const BRDPart &part2 = m_file->parts[i];
+				if (utf8casestr(part2.name, m_search2)) {
+					if (ImGui::SmallButton(part2.name)) {
+						FindComponent(part2.name);
+						//		ImGui::CloseCurrentPopup();
+					}
+					if (buttons_left2 == 10) {
+						first_button2 = part2.name;
+					}
+					buttons_left2--;
+				}
+			}
+
+			ImGui::NextColumn();
+			ImGui::Text("Component #3");
+			// ImGui::Dummy(ImVec2(200,1));
+			if (ImGui::InputText("##search3", m_search3, 128)) {
+				FindComponent(m_search3);
+			}
+			//			ImGui::SameLine();
+			//			if (ImGui::SmallButton("X")) {
+			//				m_search3[0] = '\0';
+			//			};
+			const char *first_button3 = m_search3;
+
+			//	if (ImGui::IsMouseClicked(0)) {
+			//	  	ImGui::SetKeyboardFocusHere(-1);
+			//	}
+
+			int buttons_left3 = 10;
+			for (int i = 0; buttons_left3 && i < m_file->num_parts; i++) {
+				const BRDPart &part3 = m_file->parts[i];
+				if (utf8casestr(part3.name, m_search3)) {
+					if (ImGui::SmallButton(part3.name)) {
+						FindComponent(part3.name);
+						snprintf(m_search3, sizeof(m_search3), "%s", part3.name);
+						first_button3 = part3.name;
+						//		ImGui::CloseCurrentPopup();
+					}
+					if (buttons_left3 == 10) {
+						first_button3 = part3.name;
+					}
+					buttons_left3--;
+				}
+			}
+
 			// Enter and Esc close the search:
 			if (ImGui::IsKeyPressed(SDLK_RETURN)) {
 				FindComponent(first_button);
+				FindComponentNoClear(first_button2);
+				FindComponentNoClear(first_button3);
 				ImGui::CloseCurrentPopup();
 			}
-			if (ImGui::Button("Clear") || ImGui::IsKeyPressed(SDLK_ESCAPE)) {
+			ImGui::Columns(1);
+			ImGui::Separator();
+			if (ImGui::Button("Reset")) {
 				FindComponent("");
+				m_search[0]  = '\0';
+				m_search2[0] = '\0';
+				m_search3[0] = '\0';
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("Exit") || ImGui::IsKeyPressed(SDLK_ESCAPE)) {
+				FindComponent("");
+				m_search[0]  = '\0';
+				m_search2[0] = '\0';
+				m_search3[0] = '\0';
 				ImGui::CloseCurrentPopup();
 			}
+			ImGui::SameLine();
+			ImGui::Text("ENTER to search, ESC to EXIT, TAB to next field");
+
 			ImGui::EndPopup();
 		}
+
 		if (ImGui::BeginPopupModal("About", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
 			ImGui::Text("OpenFlex Board View");
 			ImGui::Text("https://github.com/inflex/OpenBoardView");
@@ -255,8 +355,8 @@ void BoardView::Update() {
 			ImGui::Unindent();
 			ImGui::Separator();
 			ImGui::Text("OpenBoardView is MIT Licensed");
-			ImGui::Text("Copyright (c) 2016 Chloridite and OpenBoardView contributors");
 			ImGui::Text("Copyright (c) 2016 Paul Daniels (Inflex Additions)");
+			ImGui::Text("Copyright (c) 2016 Chloridite and OpenBoardView contributors");
 			ImGui::Spacing();
 			ImGui::Text("ImGui is MIT Licensed");
 			ImGui::Text("Copyright (c) 2014-2015 Omar Cornut and ImGui contributors");
@@ -750,8 +850,6 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 							draw->AddCircle(ImVec2(pos.x, pos.y), psz, color, segments);
 						else if (psz > 2)
 							DrawHex(draw, ImVec2(pos.x, pos.y), psz, color);
-						else
-							draw->AddRect(ImVec2(pos.x, pos.y), ImVec2(pos.x + 1, pos.y + 1), color, false, 0, 1.0f);
 					} else {
 						draw->AddCircle(ImVec2(pos.x, pos.y), psz, color, segments);
 					}
@@ -1300,11 +1398,8 @@ void BoardView::SetNetFilter(const char *net) {
 	m_needsRedraw = true;
 }
 
-void BoardView::FindComponent(const char *name) {
+void BoardView::FindComponentNoClear(const char *name) {
 	if (!m_file || !m_board) return;
-
-	m_pinHighlighted.clear();
-	m_partHighlighted.clear();
 
 	string comp_name = string(name);
 
@@ -1331,6 +1426,15 @@ void BoardView::FindComponent(const char *name) {
 		}
 	}
 	m_needsRedraw = true;
+}
+
+void BoardView::FindComponent(const char *name) {
+	if (!m_file || !m_board) return;
+
+	m_pinHighlighted.clear();
+	m_partHighlighted.clear();
+
+	FindComponentNoClear(name);
 }
 
 void BoardView::SetLastFileOpenName(char *name) {
