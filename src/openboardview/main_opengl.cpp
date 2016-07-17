@@ -125,6 +125,7 @@ int parse_parameters(int argc, char **argv, struct globals *g) {
 }
 
 int main(int argc, char **argv) {
+	uint8_t sleepout;
 	char s[1025];
 	char *homepath;
 	globals g;
@@ -256,9 +257,25 @@ int main(int argc, char **argv) {
 		}
 	}
 
+	/*
+	 * The sleepout var keeps track of how many iterations of the main loop
+	 * are left, without an event having happened before OBV will start to sleep
+	 * and continue without redrawing the page.
+	 *
+	 * The reason we don't just sleep immediately after a non-event is because
+	 * sometimes there are internal things that still need to be done on the next
+	 * render (such as responding to a mouse click
+	 *
+	 * For now we've got this set to 3 frames which seems to work okay with OBV.
+	 * If you find some things aren't working properly without you having to move
+	 * the mouse or 'waking up' OBV then increase to 5 or more.
+	 */
+	sleepout = 3;
 	while (!done) {
+
 		SDL_Event event;
 		while (SDL_PollEvent(&event)) {
+			sleepout = 3;
 			ImGui_ImplSdlGL3_ProcessEvent(&event);
 
 			if (event.type == SDL_DROPFILE) {
@@ -272,10 +289,13 @@ int main(int argc, char **argv) {
 			if (event.type == SDL_QUIT) done = true;
 		}
 
-		if (SDL_GetWindowFlags(window) & (SDL_WINDOW_MINIMIZED | SDL_WINDOW_HIDDEN)) {
+		//		if (SDL_GetWindowFlags(window) & (SDL_WINDOW_MINIMIZED|SDL_WINDOW_HIDDEN)) { usleep(50000); continue; } // stops
+		// OVB/SDL consuming masses of CPU when it should be idling.
+		if (!(sleepout--)) {
 			usleep(50000);
+			sleepout = 0;
 			continue;
-		} // stops OVB/SDL consuming masses of CPU when it should be idling.
+		} // puts OBV to sleep if nothing is happening.
 
 		ImGui_ImplSdlGL3_NewFrame(window);
 
