@@ -4,7 +4,7 @@ Linux SDL/ImGui edition software for viewing .brd files, intended as a drop-in
 replacement for the "Test_Link" software.
 
 
-[![Demo Video](https://github.com/inflex/OpenBoardView/blob/inflex-ui-features/asset/screenshot.png)](https://youtu.be/hR-3xZU3xQE)
+[![Demo Video](https://github.com/inflex/OpenBoardView/blob/inflex-ui-features/asset/screenshot.png)](https://www.youtube.com/watch?v=rObeatsf660)
 
 
 ### Features
@@ -20,9 +20,7 @@ replacement for the "Test_Link" software.
 ### TODO
 
 - Decode more board formats
-- Adjustable colours
 - Compound project/file format
-- Configuration file
 
 
 ### Installation
@@ -31,26 +29,29 @@ replacement for the "Test_Link" software.
 
     $ git clone --recursive 'https://github.com/inflex/OpenBoardView'
 
-2. Build it!
+2. Build it
 
     $ ./build.sh
+
+3. Run it!
+
+	$ ./openboardview.sh
 
 
 ### Usage
 
-- Ctrl-O: Open a .brd file
 - N: Search by power net
 - C: Search by component name
 
 - w/a/s/d: pan viewport over board
-- Mouse scroll, -/=: Zoom out/in
 - x: Reset zoom and center
+- Mouse scroll, -/=: Zoom out/in
 - Mouse click-hold-drag, Numeric pad up/down/left/right: pan viewport over board
 - Numeric pad +/-: zoom board
 - Numeric pad 5: Reset zoom and center
 - Space, Middle mouse click: Flip board
-- R|.: Rotate clockwise
-- ,: Rotate counter-clockwise
+- R/./Numpad-Del: Rotate clockwise
+- ,/Numpad-Ins: Rotate counter-clockwise
 - L: Show net list
 - K: Show part list
 
