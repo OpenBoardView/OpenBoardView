@@ -14,6 +14,33 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+
+struct globals {
+	char *input_file;
+	char *config_file;
+	bool slowCPU;
+	int width;
+	int height;
+};
+
+char help[] =
+    " [-h] [-l] [-c <config file>] [-i <intput file>]\n\
+	-h : This help\n\
+	-l : slow CPU mode, disables AA and other items to try provide more FPS\n\
+	-c <config file> : alternative configuration file (default is ~/.config/openboardview)\n\
+	-i <input file> : board file to load\n\
+	-x <width> : Set window width\n\
+	-y <height> : Set window height\n\
+";
+
+void globals_init(globals *g) {
+	g->input_file  = NULL;
+	g->config_file = NULL;
+	g->slowCPU     = false;
+	g->width       = 0;
+	g->height      = 0;
+}
+
 uint32_t byte4swap(uint32_t x) {
 	/*
 	 * used to convert RGBA -> ABGR etc
@@ -21,11 +48,78 @@ uint32_t byte4swap(uint32_t x) {
 	return (((x & 0x000000ff) << 24) | ((x & 0x0000ff00) << 8) | ((x & 0x00ff0000) >> 8) | ((x & 0xff000000) >> 24));
 }
 
+int parse_parameters(int argc, char **argv, struct globals *g) {
+	int param;
+
+	/**
+	 * Decode the input parameters.
+	 * Yes, I know, I should do this using gnu params etc.
+	 */
+	for (param = 1; param < argc; param++) {
+		char *p = argv[param];
+
+		if (strcmp(p, "-h") == 0) {
+			fprintf(stdout, "%s %s", argv[0], help);
+			exit(0);
+		}
+
+		// Configuration file (alternative)
+		if (strcmp(p, "-c") == 0) {
+			param++;
+			if (param < argc) {
+				g->config_file = argv[param];
+			} else {
+				fprintf(stderr, "Not enough paramters\n");
+				exit(1);
+			}
+
+		} else if (strcmp(p, "-i") == 0) {
+			param++;
+			if (param < argc) {
+				g->input_file = argv[param];
+			} else {
+				fprintf(stderr, "Not enough parameters\n");
+			}
+
+		} else if (strcmp(p, "-x") == 0) {
+			param++;
+			if (param < argc) {
+				g->width = strtol(argv[param], NULL, 10);
+			} else {
+				fprintf(stderr, "Not enough parameters\n");
+			}
+
+		} else if (strcmp(p, "-y") == 0) {
+			param++;
+			if (param < argc) {
+				g->height = strtol(argv[param], NULL, 10);
+			} else {
+				fprintf(stderr, "Not enough parameters\n");
+			}
+
+		} else if (strcmp(p, "-l") == 0) {
+			g->slowCPU = true;
+
+			/*
+			 * for extended parameters, nothing yet required
+			 *
+			 *
+		} else if (strncmp(p,"--", 2) == 0) {
+
+			 */
+		}
+	}
+
+	return 0;
+}
+
 int main(int argc, char **argv) {
 	char s[1025];
 	char *homepath;
+	globals g;
 	Confparse obvconfig;
-	int sizex, sizey;
+
+	parse_parameters(argc, argv, &g);
 
 	// Setup SDL
 	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) != 0) {
@@ -54,8 +148,9 @@ int main(int argc, char **argv) {
 		}
 	}
 
-	sizex = obvconfig.ParseInt("windowX", 1280);
-	sizey = obvconfig.ParseInt("windowY", 900);
+	if (g.config_file) obvconfig.Load(g.config_file);
+	if (g.width == 0) g.width   = obvconfig.ParseInt("windowX", 1280);
+	if (g.height == 0) g.height = obvconfig.ParseInt("windowY", 900);
 
 	// Setup window
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG);
@@ -70,8 +165,8 @@ int main(int argc, char **argv) {
 	SDL_Window *window = SDL_CreateWindow("OpenFlex Board Viewer",
 	                                      SDL_WINDOWPOS_CENTERED,
 	                                      SDL_WINDOWPOS_CENTERED,
-	                                      sizex,
-	                                      sizey,
+	                                      g.width,
+	                                      g.height,
 	                                      SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
 	SDL_GLContext glcontext = SDL_GL_CreateContext(window);
 	SDL_EventState(SDL_DROPFILE, SDL_ENABLE);
@@ -105,7 +200,7 @@ int main(int argc, char **argv) {
 	 * so we have the lowCPU option which will let people
 	 * trade good-looks for better FPS
 	 */
-	app.slowCPU = obvconfig.ParseBool("slowCPU", false);
+	app.slowCPU = (obvconfig.ParseBool("slowCPU", false) | g.slowCPU);
 	if (app.slowCPU == true) {
 		ImGuiStyle &style       = ImGui::GetStyle();
 		style.AntiAliasedShapes = false;
@@ -139,9 +234,9 @@ int main(int argc, char **argv) {
 	bool done             = false;
 	bool preload_required = false;
 
-	if (argc == 2) {
+	if (g.input_file) {
 		struct stat buffer;
-		if ((stat(argv[1], &buffer) == 0)) {
+		if ((stat(g.input_file, &buffer) == 0)) {
 			preload_required = true;
 		}
 	}
@@ -171,7 +266,7 @@ int main(int argc, char **argv) {
 
 		// If we have a board to view being passed from command line, then "inject" it here.
 		if (preload_required) {
-			app.LoadFile(strdup(argv[1]));
+			app.LoadFile(strdup(g.input_file));
 			preload_required = false;
 		}
 
