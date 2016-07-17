@@ -212,6 +212,8 @@ void BoardView::Update() {
 		                           nullptr,
 		                           ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoCollapse |
 		                               ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_ShowBorders)) {
+			char cs[128];
+
 			ImGui::Columns(3);
 
 			if (m_showComponentSearch) {
@@ -242,6 +244,8 @@ void BoardView::Update() {
 					if (ImGui::SmallButton(part.name)) {
 						FindComponent(part.name);
 						//		ImGui::CloseCurrentPopup();
+						snprintf(m_search, sizeof(m_search), "%s", part.name);
+						first_button = part.name;
 					}
 					if (buttons_left == 10) {
 						first_button = part.name;
@@ -270,9 +274,12 @@ void BoardView::Update() {
 			for (int i = 0; buttons_left2 && i < m_file->num_parts; i++) {
 				const BRDPart &part2 = m_file->parts[i];
 				if (utf8casestr(part2.name, m_search2)) {
-					if (ImGui::SmallButton(part2.name)) {
+					snprintf(cs, sizeof(cs), "%s##2", part2.name);
+					if (ImGui::SmallButton(cs)) {
 						FindComponent(part2.name);
 						//		ImGui::CloseCurrentPopup();
+						snprintf(m_search2, sizeof(m_search2), "%s", part2.name);
+						first_button2 = part2.name;
 					}
 					if (buttons_left2 == 10) {
 						first_button2 = part2.name;
@@ -301,7 +308,8 @@ void BoardView::Update() {
 			for (int i = 0; buttons_left3 && i < m_file->num_parts; i++) {
 				const BRDPart &part3 = m_file->parts[i];
 				if (utf8casestr(part3.name, m_search3)) {
-					if (ImGui::SmallButton(part3.name)) {
+					snprintf(cs, sizeof(cs), "%s##3", part3.name);
+					if (ImGui::SmallButton(cs)) {
 						FindComponent(part3.name);
 						snprintf(m_search3, sizeof(m_search3), "%s", part3.name);
 						first_button3 = part3.name;
