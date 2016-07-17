@@ -57,6 +57,7 @@ struct ColorScheme {
 	uint32_t annotationPartAlias = 0xcc00ffff;
 
 	uint32_t partHullColor = 0x80808080;
+	uint32_t selectedMask  = 0x4FFFFFFF;
 };
 
 enum DrawChannel { kChannelImages = 0, kChannelPolylines = 1, kChannelText = 2, kChannelAnnotations = 3, NUM_DRAW_CHANNELS = 4 };

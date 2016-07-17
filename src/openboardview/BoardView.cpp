@@ -714,17 +714,6 @@ void BoardView::RenderOverlay() {
  *
  */
 
-void BoardView::DrawBox(ImDrawList *draw, ImVec2 c, double r, uint32_t color) {
-	ImVec2 dia[4];
-
-	dia[0] = ImVec2((int)c.x - r, (int)c.y - r);
-	dia[1] = ImVec2((int)c.x + r, (int)c.y - r);
-	dia[2] = ImVec2((int)c.x + r, (int)c.y + r);
-	dia[3] = ImVec2((int)c.x - r, (int)c.y + r);
-
-	draw->AddPolyline(dia, 4, color, true, 1.0f, true);
-}
-
 void BoardView::DrawDiamond(ImDrawList *draw, ImVec2 c, double r, uint32_t color) {
 	ImVec2 dia[4];
 
@@ -788,7 +777,18 @@ inline void BoardView::DrawOutline(ImDrawList *draw) {
 }
 
 inline void BoardView::DrawPins(ImDrawList *draw) {
-	auto io = ImGui::GetIO();
+
+	uint32_t cmask  = 0xFFFFFFFF;
+	float threshold = 0;
+	auto io         = ImGui::GetIO();
+
+	/*
+	 * If we have a pin selected, then it makes it
+	 * easier to see where the associated pins are
+	 * by masking out (alpha or channel) the other
+	 * pins so they're fainter.
+	 */
+	if (m_pinSelected) cmask = m_colors.selectedMask;
 
 	for (auto &pin : m_board->Pins()) {
 		auto p_pin = pin.get();
@@ -802,20 +802,24 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 			if (!IsVisibleScreen(pos.x, pos.y, psz, io)) continue;
 		}
 
+		if (slowCPU) threshold = 1.5;
+
 		// color & text depending on app state & pin type
-		uint32_t color      = m_colors.pinDefault;
+		uint32_t color      = m_colors.pinDefault & cmask;
 		uint32_t text_color = color;
 		bool show_text      = false;
+
 		{
 			if (contains(*pin, m_pinHighlighted)) {
 				text_color = color = m_colors.pinHighlighted;
 				show_text          = true;
+				threshold          = 0;
 			}
 
 			if (!pin->net || pin->type == Pin::kPinTypeNotConnected) {
-				color = m_colors.pinNotConnected;
+				color = m_colors.pinNotConnected & cmask;
 			} else {
-				if (pin->net->is_ground) color = m_colors.pinGround;
+				if (pin->net->is_ground) color = m_colors.pinGround & cmask;
 			}
 
 			if (PartIsHighlighted(*pin->component)) {
@@ -825,16 +829,18 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 					text_color = 0xff808000;
 				}
 				show_text = true;
+				threshold = 0;
 			}
 
 			if (pin->type == Pin::kPinTypeTestPad) {
-				color     = m_colors.pinTestPad;
+				color     = m_colors.pinTestPad & cmask;
 				show_text = false;
 			}
 
 			// pin is on the same net as selected pin: highlight > rest
 			if (!show_text && m_pinSelected && pin->net == m_pinSelected->net) {
-				color = m_colors.pinHighlightSameNet;
+				color     = m_colors.pinHighlightSameNet;
+				threshold = 0;
 			}
 
 			// pin selected overwrites everything
@@ -842,6 +848,7 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 				color      = m_colors.pinSelected;
 				text_color = m_colors.pinSelected;
 				show_text  = true;
+				threshold  = 0;
 			}
 
 			// don't show text if it doesn't make sense
@@ -859,16 +866,17 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 			if (segments < 8) segments  = 8;
 
 			switch (pin->type) {
-				case Pin::kPinTypeTestPad: draw->AddCircleFilled(ImVec2(pos.x, pos.y), psz, color, segments); break;
+				case Pin::kPinTypeTestPad:
+					if (psz > 3)
+						draw->AddCircleFilled(ImVec2(pos.x, pos.y), psz, color, segments);
+					else if (psz > threshold)
+						draw->AddRect(ImVec2(pos.x - 1, pos.y - 1), ImVec2(pos.x + 1, pos.y + 1), color);
+					break;
 				default:
-					if (slowCPU == true) {
-						if (psz > 5)
-							draw->AddCircle(ImVec2(pos.x, pos.y), psz, color, segments);
-						else if (psz > 2)
-							DrawHex(draw, ImVec2(pos.x, pos.y), psz, color);
-					} else {
+					if (psz > 3)
 						draw->AddCircle(ImVec2(pos.x, pos.y), psz, color, segments);
-					}
+					else if (psz > threshold)
+						draw->AddRect(ImVec2(pos.x - 1, pos.y - 1), ImVec2(pos.x + 1, pos.y + 1), color);
 			}
 
 			if (show_text) {
