@@ -239,7 +239,9 @@ int main(int argc, char **argv) {
 	app.m_colors.pinHighlightSameNet = byte4swap(obvconfig.ParseHex("pinHighlightSameNet", 0xfff888ff));
 	app.m_colors.annotationPartAlias = byte4swap(obvconfig.ParseHex("annotationPartAlias", 0xffff00ff));
 	app.m_colors.partHullColor       = byte4swap(obvconfig.ParseHex("partHullColor", 0x80808080));
-	app.m_colors.selectedMask        = byte4swap(obvconfig.ParseHex("selectedMask", 0xffffff4f));
+	app.m_colors.selectedMaskPins    = byte4swap(obvconfig.ParseHex("selectedMaskPins", 0xffffff4f));
+	app.m_colors.selectedMaskParts   = byte4swap(obvconfig.ParseHex("selectedMaskParts", 0xffffff8f));
+	app.m_colors.selectedMaskOutline = byte4swap(obvconfig.ParseHex("selectedMaskOutline", 0xffffff8f));
 
 	ImVec4 clear_color = ImColor(20, 20, 30);
 

@@ -772,7 +772,10 @@ inline void BoardView::DrawOutline(ImDrawList *draw) {
 
 		ImVec2 spa = CoordToScreen(pa.x, pa.y);
 		ImVec2 spb = CoordToScreen(pb.x, pb.y);
-		draw->AddLine(spa, spb, m_colors.boardOutline);
+		if (m_pinSelected)
+			draw->AddLine(spa, spb, m_colors.boardOutline & m_colors.selectedMaskOutline);
+		else
+			draw->AddLine(spa, spb, m_colors.boardOutline);
 	} // for
 }
 
@@ -788,7 +791,7 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 	 * by masking out (alpha or channel) the other
 	 * pins so they're fainter.
 	 */
-	if (m_pinSelected) cmask = m_colors.selectedMask;
+	if (m_pinSelected) cmask = m_colors.selectedMaskPins;
 
 	for (auto &pin : m_board->Pins()) {
 		auto p_pin = pin.get();
@@ -904,6 +907,8 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 	uint32_t color = m_colors.boxColor;
 	int rendered   = 0;
 	char p0, p1; // first two characters of the part name, code-writing convenience more than anything else
+
+	if (m_pinSelected) color &= m_colors.selectedMaskParts;
 
 	for (auto &part : m_board->Components()) {
 		int pincount = 0;
