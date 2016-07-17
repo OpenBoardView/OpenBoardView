@@ -21,16 +21,18 @@ struct globals {
 	bool slowCPU;
 	int width;
 	int height;
+	double font_size;
 };
 
 char help[] =
     " [-h] [-l] [-c <config file>] [-i <intput file>]\n\
 	-h : This help\n\
 	-l : slow CPU mode, disables AA and other items to try provide more FPS\n\
-	-c <config file> : alternative configuration file (default is ~/.config/openboardview)\n\
+	-c <config file> : alternative configuration file (default is ~/.config/openboardview/obv.conf)\n\
 	-i <input file> : board file to load\n\
 	-x <width> : Set window width\n\
 	-y <height> : Set window height\n\
+	-z <pixels> : Set font size\n\
 ";
 
 void globals_init(globals *g) {
@@ -39,6 +41,7 @@ void globals_init(globals *g) {
 	g->slowCPU     = false;
 	g->width       = 0;
 	g->height      = 0;
+	g->font_size   = 0.0f;
 }
 
 uint32_t byte4swap(uint32_t x) {
@@ -93,6 +96,14 @@ int parse_parameters(int argc, char **argv, struct globals *g) {
 			param++;
 			if (param < argc) {
 				g->height = strtol(argv[param], NULL, 10);
+			} else {
+				fprintf(stderr, "Not enough parameters\n");
+			}
+
+		} else if (strcmp(p, "-z") == 0) {
+			param++;
+			if (param < argc) {
+				g->font_size = strtof(argv[param], NULL);
 			} else {
 				fprintf(stderr, "Not enough parameters\n");
 			}
@@ -181,9 +192,10 @@ int main(int argc, char **argv) {
 	std::string fontpath = get_asset_path("FiraSans-Medium.ttf");
 	io.Fonts->AddFontFromFileTTF(fontpath.c_str(), 20.0f);
 #endif
-	ImGuiIO &io          = ImGui::GetIO();
-	std::string fontpath = get_asset_path(obvconfig.ParseStr("fontPath", "DroidSans.ttf"));
-	io.Fonts->AddFontFromFileTTF(fontpath.c_str(), obvconfig.ParseDouble("fontSize", 20.0f));
+	ImGuiIO &io                       = ImGui::GetIO();
+	std::string fontpath              = get_asset_path(obvconfig.ParseStr("fontPath", "DroidSans.ttf"));
+	if (g.font_size == 0) g.font_size = obvconfig.ParseDouble("fontSize", 20.0f);
+	io.Fonts->AddFontFromFileTTF(fontpath.c_str(), g.font_size);
 	//	io.Fonts->AddFontDefault();
 
 	BoardView app{};
