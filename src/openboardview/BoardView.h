@@ -50,7 +50,8 @@ struct ColorScheme {
 	uint32_t pinNotConnected = 0xffdd0000;
 	uint32_t pinTestPad      = 0xff888888;
 
-	uint32_t pinSelected         = 0xff00ff00;
+	uint32_t pinSelected         = 0xffeeeeee;
+	uint32_t pinHalo             = 0x8f00ff00;
 	uint32_t pinHighlighted      = 0xffffffff;
 	uint32_t pinHighlightSameNet = 0xff99f8ff;
 
