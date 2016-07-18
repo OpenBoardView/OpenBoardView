@@ -86,19 +86,23 @@ void BoardView::Update() {
 	// ImGuiIO &io = ImGui::GetIO();
 	char *preset_filename = NULL;
 	float menu_height     = 0;
+	ImGuiIO &io           = ImGui::GetIO();
 
 	/**
 	 * ** FIXME
 	 * This should be handled in the keyboard section, not here
-	 *
-	if ((ImGui::IsKeyDown(SDLK_RCTRL)||ImGui::IsKeyDown(SDLK_LCTRL)) && ImGui::IsKeyPressed('O', false)) {
-	    open_file = true;
-	    // the dialog will likely eat our WM_KEYUP message for CTRL and O:
-	    ImGuiIO &io = ImGui::GetIO();
-	    io.KeysDown[17] = false;
-	    io.KeysDown['O'] = false;
+	 */
+	if ((io.KeyCtrl) && ImGui::IsKeyPressed(SDLK_o)) {
+		open_file = true;
+		// the dialog will likely eat our WM_KEYUP message for CTRL and O:
+		io.KeysDown[SDL_SCANCODE_RCTRL] = false;
+		io.KeysDown[SDL_SCANCODE_LCTRL] = false;
+		io.KeysDown[SDLK_o]             = false;
 	}
-	**/
+
+	if ((io.KeyCtrl) && ImGui::IsKeyPressed(SDLK_q)) {
+		m_wantsQuit = true;
+	}
 
 	if (ImGui::BeginMainMenuBar()) {
 		menu_height = ImGui::GetWindowHeight();
@@ -418,7 +422,7 @@ void BoardView::Update() {
 	/*
 	 * Status footer
 	 */
-	const ImGuiIO &io   = ImGui::GetIO();
+	// const ImGuiIO &io = ImGui::GetIO();
 	float status_height = (10.0f + ImGui::GetFontSize());
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(4.0f, 3.0f));
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
