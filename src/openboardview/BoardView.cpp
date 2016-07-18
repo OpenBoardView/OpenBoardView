@@ -85,6 +85,7 @@ void BoardView::Update() {
 	bool open_file = false;
 	// ImGuiIO &io = ImGui::GetIO();
 	char *preset_filename = NULL;
+	float menu_height     = 0;
 
 	/**
 	 * ** FIXME
@@ -100,6 +101,7 @@ void BoardView::Update() {
 	**/
 
 	if (ImGui::BeginMainMenuBar()) {
+		menu_height = ImGui::GetWindowHeight();
 		if (ImGui::BeginMenu("File")) {
 			if (ImGui::MenuItem("Open", "Ctrl+O")) {
 				open_file = true;
@@ -343,8 +345,6 @@ void BoardView::Update() {
 			ImGui::Text("https://github.com/inflex/OpenBoardView");
 			if (ImGui::Button("Close") || ImGui::IsKeyPressed(SDLK_ESCAPE)) {
 				ImGui::CloseCurrentPopup();
-				//					ImGui::SetKeyboardFocusHere(-1);
-				//					ImGui::CaptureMouseFromApp(false);
 			}
 			ImGui::Indent();
 			ImGui::Text("License info");
@@ -412,37 +412,19 @@ void BoardView::Update() {
 
 	ImGuiWindowFlags flags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
 	                         ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings;
+
 	ImGuiWindowFlags draw_surface_flags = flags | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoBringToFrontOnFocus;
-	ImGui::SetNextWindowPos(ImVec2{0, 0});
-	const ImGuiIO &io = ImGui::GetIO();
-	if (io.DisplaySize.x != m_lastWidth || io.DisplaySize.y != m_lastHeight) {
-		m_lastWidth   = io.DisplaySize.x;
-		m_lastHeight  = io.DisplaySize.y;
-		m_needsRedraw = true;
-	}
-	ImGui::SetNextWindowSize(io.DisplaySize);
-	ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
-	ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
-	if (m_firstFrame) {
-		ImGui::SetNextWindowFocus();
-		m_firstFrame = false;
-	}
-	ImGui::Begin("surface", nullptr, draw_surface_flags);
-	HandleInput();
-	DrawBoard();
-	ImGui::End();
-	ImGui::PopStyleColor();
 
-	// Overlay
-	RenderOverlay();
-
-	// Status Footer
+	/*
+	 * Status footer
+	 */
+	const ImGuiIO &io   = ImGui::GetIO();
 	float status_height = (10.0f + ImGui::GetFontSize());
-
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(4.0f, 3.0f));
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
 	ImGui::SetNextWindowPos(ImVec2{0, io.DisplaySize.y - status_height});
 	ImGui::SetNextWindowSize(ImVec2(io.DisplaySize.x, status_height));
-	ImGui::Begin("status", nullptr, flags);
+	ImGui::Begin("status", nullptr, flags | ImGuiWindowFlags_NoFocusOnAppearing);
 	if (m_file && m_board && m_pinSelected) {
 		auto pin = m_pinSelected;
 		ImGui::Text("Part: %s   Pin: %s   Net: %s   Probe: %d   (%s.)",
@@ -466,6 +448,30 @@ void BoardView::Update() {
 	}
 	ImGui::End();
 	ImGui::PopStyleVar();
+	ImGui::PopStyleVar();
+
+	/*
+	 * Drawing surface, where the actual PCB/board is plotted out
+	 */
+	ImGui::SetNextWindowPos(ImVec2(0, menu_height));
+	if (io.DisplaySize.x != m_lastWidth || io.DisplaySize.y != m_lastHeight) {
+		m_lastWidth   = io.DisplaySize.x;
+		m_lastHeight  = io.DisplaySize.y;
+		m_needsRedraw = true;
+	}
+	ImGui::SetNextWindowSize(ImVec2(io.DisplaySize.x, io.DisplaySize.y - (status_height + menu_height)));
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+	ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
+
+	ImGui::Begin("surface", nullptr, draw_surface_flags);
+	HandleInput();
+	DrawBoard();
+	ImGui::End();
+	ImGui::PopStyleColor();
+
+	// Overlay
+	RenderOverlay();
+
 	ImGui::PopStyleVar();
 
 } // main menu bar
@@ -531,9 +537,18 @@ void BoardView::Pan(int direction, int amount) {
 	m_needsRedraw       = true;
 }
 
+/*
+ * This HandleInput() function isn't actually a generic input handler
+ * it's meant specifically for the board draw surface only.  The inputs
+ * for menus is handled within the menu generation itself.
+ */
 void BoardView::HandleInput() {
 	const ImGuiIO &io = ImGui::GetIO();
-	if (ImGui::IsWindowFocused()) {
+
+	// ImGuiContext& g = *GImGui;
+	//	fprintf(stderr,"%s =!? %s\n", g.CurrentWindow->Name, g.FocusedWindow->Name);
+
+	if (ImGui::IsWindowHovered()) {
 		if (ImGui::IsMouseDragging()) {
 			ImVec2 delta = ImGui::GetMouseDragDelta();
 			if ((abs(delta.x) > 500) || (abs(delta.y) > 500)) {
@@ -594,9 +609,6 @@ void BoardView::HandleInput() {
 			}
 			Zoom(io.MousePos.x, io.MousePos.y, mwheel);
 		}
-	} else {
-		// fprintf(stderr,"x");
-		// fprintf(stderr,"%s\n", io.CurrentWindow.name.c_str());
 	}
 
 	if (!io.WantCaptureKeyboard) {
