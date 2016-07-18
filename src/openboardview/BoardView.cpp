@@ -82,7 +82,8 @@ int BoardView::LoadFile(char *filename) {
  *
  */
 void BoardView::Update() {
-	bool open_file        = false;
+	bool open_file = false;
+	// ImGuiIO &io = ImGui::GetIO();
 	char *preset_filename = NULL;
 
 	/**
@@ -334,7 +335,8 @@ void BoardView::Update() {
 			ImGui::Text("https://github.com/inflex/OpenBoardView");
 			if (ImGui::Button("Close") || ImGui::IsKeyPressed(SDLK_ESCAPE)) {
 				ImGui::CloseCurrentPopup();
-				ImGui::SetKeyboardFocusHere(-1);
+				//					ImGui::SetKeyboardFocusHere(-1);
+				//					ImGui::CaptureMouseFromApp(false);
 			}
 			ImGui::Indent();
 			ImGui::Text("License info");
@@ -479,6 +481,7 @@ void BoardView::Zoom(float osd_x, float osd_y, float zoom) {
 }
 
 void BoardView::Pan(int direction, int amount) {
+	ImGuiIO &io = ImGui::GetIO();
 #define DIR_UP 1
 #define DIR_DOWN 2
 #define DIR_LEFT 3
@@ -491,7 +494,7 @@ void BoardView::Pan(int direction, int amount) {
 
 	amount = amount / m_scale;
 
-	if (ImGui::IsKeyDown(KM(SDL_SCANCODE_LCTRL)) || ImGui::IsKeyDown(KM(SDL_SCANCODE_RCTRL))) amount /= 10;
+	if (io.KeyCtrl) amount /= 10;
 
 	switch (direction) {
 		case DIR_UP: amount = -amount;
@@ -578,15 +581,14 @@ void BoardView::HandleInput() {
 			mwheel *= 0.5f;
 
 			// Ctrl slows down the zoom speed:
-			if (ImGui::IsKeyDown(KM(SDL_SCANCODE_LCTRL)) || ImGui::IsKeyDown(KM(SDL_SCANCODE_RCTRL))) {
+			if (io.KeyCtrl) {
 				mwheel *= 0.1f;
 			}
 			Zoom(io.MousePos.x, io.MousePos.y, mwheel);
 		}
 	} else {
-		//		ImGuiContext& g = *GImGui;
-		//    return g.FocusedWindow == g.CurrentWindow;
-		//		fprintf(stderr,"%s\n", g.CurrentWindow.name.c_str());
+		fprintf(stderr, "x");
+		// fprintf(stderr,"%s\n", io.CurrentWindow.name.c_str());
 	}
 
 	if (!io.WantCaptureKeyboard) {
@@ -621,13 +623,13 @@ void BoardView::HandleInput() {
 			Rotate(-1);
 
 		} else if (ImGui::IsKeyPressed(KM(SDL_SCANCODE_KP_PLUS)) || ImGui::IsKeyPressed(SDLK_EQUALS)) {
-			if (ImGui::IsKeyDown(KM(SDL_SCANCODE_LCTRL)) || ImGui::IsKeyDown(KM(SDL_SCANCODE_RCTRL))) {
+			if (io.KeyCtrl) {
 				Zoom(m_lastWidth / 2, m_lastHeight / 2, 0.01f);
 			} else {
 				Zoom(m_lastWidth / 2, m_lastHeight / 2, 0.1f);
 			}
 		} else if (ImGui::IsKeyPressed(KM(SDL_SCANCODE_KP_MINUS)) || ImGui::IsKeyPressed(SDLK_MINUS)) {
-			if (ImGui::IsKeyDown(KM(SDL_SCANCODE_LCTRL)) || ImGui::IsKeyDown(KM(SDL_SCANCODE_RCTRL))) {
+			if (io.KeyCtrl) {
 				Zoom(m_lastWidth / 2, m_lastHeight / 2, -0.01f);
 			} else {
 				Zoom(m_lastWidth / 2, m_lastHeight / 2, -0.1f);
