@@ -213,121 +213,129 @@ void BoardView::Update() {
 		                           ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoCollapse |
 		                               ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_ShowBorders)) {
 			char cs[128];
-
-			ImGui::Columns(3);
+			const char *first_button  = m_search;
+			const char *first_button2 = m_search2;
+			const char *first_button3 = m_search3;
 
 			if (m_showComponentSearch) {
 				m_showComponentSearch = false;
 			}
+
+			// Column 1, implied.
+			//
+			ImGui::Columns(3);
 			ImGui::Text("Component #1");
 
 			if (ImGui::InputText("##search", m_search, 128, ImGuiInputTextFlags_CharsNoBlank)) {
 				FindComponent(m_search);
-				const char *first_button = m_search;
-
-				if (ImGui::IsRootWindowOrAnyChildFocused() && !ImGui::IsAnyItemActive() && !ImGui::IsMouseClicked(0)) {
-					ImGui::SetKeyboardFocusHere(-1);
-				}
-
-				int buttons_left = 10;
-				for (int i = 0; buttons_left && i < m_file->num_parts; i++) {
-					const BRDPart &part = m_file->parts[i];
-					if (utf8casestr(part.name, m_search)) {
-						if (ImGui::SmallButton(part.name)) {
-							FindComponent(part.name);
-							snprintf(m_search, sizeof(m_search), "%s", part.name);
-							first_button = part.name;
-						}
-						if (buttons_left == 10) {
-							first_button = part.name;
-						}
-						buttons_left--;
-					}
-				}
-
-				ImGui::NextColumn();
-				ImGui::Text("Component #2");
-				if (ImGui::InputText("##search2", m_search2, 128)) {
-					FindComponent(m_search2);
-				}
-				const char *first_button2 = m_search2;
-				int buttons_left2         = 10;
-				for (int i = 0; buttons_left2 && i < m_file->num_parts; i++) {
-					const BRDPart &part2 = m_file->parts[i];
-					if (utf8casestr(part2.name, m_search2)) {
-						snprintf(cs, sizeof(cs), "%s##2", part2.name);
-						if (ImGui::SmallButton(cs)) {
-							FindComponent(part2.name);
-							//		ImGui::CloseCurrentPopup();
-							snprintf(m_search2, sizeof(m_search2), "%s", part2.name);
-							first_button2 = part2.name;
-						}
-						if (buttons_left2 == 10) {
-							first_button2 = part2.name;
-						}
-						buttons_left2--;
-					}
-				}
-
-				ImGui::NextColumn();
-				ImGui::Text("Component #3");
-				if (ImGui::InputText("##search3", m_search3, 128)) {
-					FindComponent(m_search3);
-				}
-				const char *first_button3 = m_search3;
-				int buttons_left3         = 10;
-				for (int i = 0; buttons_left3 && i < m_file->num_parts; i++) {
-					const BRDPart &part3 = m_file->parts[i];
-					if (utf8casestr(part3.name, m_search3)) {
-						snprintf(cs, sizeof(cs), "%s##3", part3.name);
-						if (ImGui::SmallButton(cs)) {
-							FindComponent(part3.name);
-							snprintf(m_search3, sizeof(m_search3), "%s", part3.name);
-							first_button3 = part3.name;
-						}
-						if (buttons_left3 == 10) {
-							first_button3 = part3.name;
-						}
-						buttons_left3--;
-					}
-				}
-
-				// Enter and Esc close the search:
-				if (ImGui::IsKeyPressed(SDLK_RETURN)) {
-					FindComponent(first_button);
-					FindComponentNoClear(first_button2);
-					FindComponentNoClear(first_button3);
-					ImGui::CloseCurrentPopup();
-				}
-				ImGui::Columns(1);
-				ImGui::Separator();
-
-				if (ImGui::Button("Search")) {
-					FindComponent(first_button);
-					FindComponentNoClear(first_button2);
-					FindComponentNoClear(first_button3);
-					ImGui::CloseCurrentPopup();
-				}
-				ImGui::SameLine();
-				if (ImGui::Button("Reset")) {
-					FindComponent("");
-					m_search[0]  = '\0';
-					m_search2[0] = '\0';
-					m_search3[0] = '\0';
-				}
-				ImGui::SameLine();
-				if (ImGui::Button("Exit") || ImGui::IsKeyPressed(SDLK_ESCAPE)) {
-					FindComponent("");
-					m_search[0]  = '\0';
-					m_search2[0] = '\0';
-					m_search3[0] = '\0';
-					ImGui::CloseCurrentPopup();
-				}
-				ImGui::SameLine();
-				ImGui::Text("ENTER: Search, ESC: Exit, TAB: next field");
-
-				ImGui::EndPopup();
 			}
+
+			if (ImGui::IsRootWindowOrAnyChildFocused() && !ImGui::IsAnyItemActive() && !ImGui::IsMouseClicked(0)) {
+				ImGui::SetKeyboardFocusHere(-1);
+			} // set keyboard focus
+
+			int buttons_left = 10;
+			for (int i = 0; buttons_left && i < m_file->num_parts; i++) {
+				const BRDPart &part = m_file->parts[i];
+				if (utf8casestr(part.name, m_search)) {
+					if (ImGui::SmallButton(part.name)) {
+						FindComponent(part.name);
+						snprintf(m_search, sizeof(m_search), "%s", part.name);
+						first_button = part.name;
+					} // button name generation
+					if (buttons_left == 10) {
+						first_button = part.name;
+					}
+					buttons_left--;
+				} // testing for match of our component partial to the part name
+			}     // for each part ( search column 1 )
+
+			ImGui::NextColumn();
+			ImGui::Text("Component #2");
+			if (ImGui::InputText("##search2", m_search2, 128, ImGuiInputTextFlags_CharsNoBlank)) {
+				FindComponent(m_search2);
+			}
+			//			const char *first_button2 = m_search2;
+			int buttons_left2 = 10;
+			for (int i = 0; buttons_left2 && i < m_file->num_parts; i++) {
+				const BRDPart &part2 = m_file->parts[i];
+				if (utf8casestr(part2.name, m_search2)) {
+					snprintf(cs, sizeof(cs), "%s##2", part2.name);
+					if (ImGui::SmallButton(cs)) {
+						FindComponent(part2.name);
+						//		ImGui::CloseCurrentPopup();
+						snprintf(m_search2, sizeof(m_search2), "%s", part2.name);
+						first_button2 = part2.name;
+					}
+					if (buttons_left2 == 10) {
+						first_button2 = part2.name;
+					}
+					buttons_left2--;
+				}
+			}
+
+			ImGui::NextColumn();
+			ImGui::Text("Component #3");
+			if (ImGui::InputText("##search3", m_search3, 128, ImGuiInputTextFlags_CharsNoBlank)) {
+				FindComponent(m_search3);
+			}
+			//			const char *first_button3 = m_search3;
+			int buttons_left3 = 10;
+			for (int i = 0; buttons_left3 && i < m_file->num_parts; i++) {
+				const BRDPart &part3 = m_file->parts[i];
+				if (utf8casestr(part3.name, m_search3)) {
+					snprintf(cs, sizeof(cs), "%s##3", part3.name);
+					if (ImGui::SmallButton(cs)) {
+						FindComponent(part3.name);
+						snprintf(m_search3, sizeof(m_search3), "%s", part3.name);
+						first_button3 = part3.name;
+					}
+					if (buttons_left3 == 10) {
+						first_button3 = part3.name;
+					}
+					buttons_left3--;
+				}
+			}
+
+			// Enter and Esc close the search:
+			if (ImGui::IsKeyPressed(SDLK_RETURN)) {
+				FindComponent(first_button);
+				FindComponentNoClear(first_button2);
+				FindComponentNoClear(first_button3);
+				ImGui::CloseCurrentPopup();
+			} // response to keyboard ENTER
+
+			ImGui::Columns(1); // reset back to single column mode
+			ImGui::Separator();
+
+			if (ImGui::Button("Search")) {
+				FindComponent(first_button);
+				FindComponentNoClear(first_button2);
+				FindComponentNoClear(first_button3);
+				ImGui::CloseCurrentPopup();
+			} // search button
+
+			ImGui::SameLine();
+			if (ImGui::Button("Reset")) {
+				FindComponent("");
+				m_search[0]  = '\0';
+				m_search2[0] = '\0';
+				m_search3[0] = '\0';
+			} // reset button
+
+			ImGui::SameLine();
+			if (ImGui::Button("Exit") || ImGui::IsKeyPressed(SDLK_ESCAPE)) {
+				FindComponent("");
+				m_search[0]  = '\0';
+				m_search2[0] = '\0';
+				m_search3[0] = '\0';
+				ImGui::CloseCurrentPopup();
+			} // exit button
+
+			ImGui::SameLine();
+			ImGui::Text("ENTER: Search, ESC: Exit, TAB: next field");
+
+			ImGui::EndPopup();
 		}
 
 		if (ImGui::BeginPopupModal("About", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
@@ -587,7 +595,7 @@ void BoardView::HandleInput() {
 			Zoom(io.MousePos.x, io.MousePos.y, mwheel);
 		}
 	} else {
-		fprintf(stderr, "x");
+		// fprintf(stderr,"x");
 		// fprintf(stderr,"%s\n", io.CurrentWindow.name.c_str());
 	}
 
