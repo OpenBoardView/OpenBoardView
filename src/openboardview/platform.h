@@ -28,8 +28,8 @@
 #define SDLK_c 0x43
 #define SDLK_n 0x4e
 
-#define SDLK_o 0x6F
-#define SDLK_q 0x71
+#define SDLK_o 0x4F
+#define SDLK_q 0x51
 #define SDLK_r 0x52
 
 #define SDLK_COMMA VK_OEM_COMMA
