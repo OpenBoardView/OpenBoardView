@@ -905,9 +905,8 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 						draw->AddRect(ImVec2(pos.x - 1, pos.y - 1), ImVec2(pos.x + 1, pos.y + 1), color);
 			}
 
-			if (color == m_colors.pinHighlightSameNet) {
+			if ((color == m_colors.pinHighlightSameNet) && (pinHalo == true)) {
 				draw->AddCircle(ImVec2(pos.x, pos.y), psz + 1.25, m_colors.pinHalo, segments);
-				// draw->AddCircle(ImVec2(pos.x, pos.y), psz +1.25, 0x8f00ff00, segments);
 			}
 
 			if (show_text) {

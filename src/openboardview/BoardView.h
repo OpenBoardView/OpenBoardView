@@ -73,6 +73,7 @@ struct BoardView {
 	int history_file_has_changed = 0;
 	bool slowCPU                 = false;
 	bool showFPS                 = false;
+	bool pinHalo                 = true;
 
 	void CenterView(void);
 	void Pan(int direction, int amount);

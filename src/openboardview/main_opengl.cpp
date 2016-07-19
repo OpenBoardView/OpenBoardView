@@ -220,6 +220,7 @@ int main(int argc, char **argv) {
 		style.AntiAliasedShapes = false;
 	}
 
+	app.pinHalo = obvconfig.ParseBool("pinHalo", true);
 	app.showFPS = obvconfig.ParseBool("showFPS", false);
 
 	/*
@@ -237,7 +238,7 @@ int main(int argc, char **argv) {
 	app.m_colors.pinNotConnected     = byte4swap(obvconfig.ParseHex("pinNotConnected", 0x0000ffff));
 	app.m_colors.pinTestPad          = byte4swap(obvconfig.ParseHex("pinTestPad", 0x888888ff));
 	app.m_colors.pinSelected         = byte4swap(obvconfig.ParseHex("pinSelected", 0xeeeeeeff));
-	app.m_colors.pinHalo             = byte4swap(obvconfig.ParseHex("pinHalo", 0x00ff006f));
+	app.m_colors.pinHalo             = byte4swap(obvconfig.ParseHex("pinHaloColor", 0x00ff006f));
 	app.m_colors.pinHighlighted      = byte4swap(obvconfig.ParseHex("pinHighlighted", 0xffffffff));
 	app.m_colors.pinHighlightSameNet = byte4swap(obvconfig.ParseHex("pinHighlightSameNet", 0xfff888ff));
 	app.m_colors.annotationPartAlias = byte4swap(obvconfig.ParseHex("annotationPartAlias", 0xffff00ff));
