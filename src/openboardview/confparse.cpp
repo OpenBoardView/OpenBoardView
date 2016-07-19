@@ -8,6 +8,59 @@
 
 #include "confparse.h"
 
+char default_conf[] =
+    "#\r\n\
+# OpenFlex Board View configuration file (inflex-ui)\r\n\
+#\r\n\
+windowX=1280\r\n\
+windowY=900\r\n\
+#fontPath=FiraSans-Medium.ttf\r\n\
+fontSize=20\r\n\
+slowCPU =       false\r\n\
+showFPS =       false\r\n\
+pinHalo =       true\r\n\
+\r\n\
+# Colors, format is 0xRRGGBBAA\r\n\
+backgroundColor		= 0x000000a0\r\n\
+partTextColor			= 0x008080ff\r\n\
+boardOutline			= 0xffff00ff\r\n\
+boxColor					= 0xccccccff\r\n\
+pinDefault				= 0xff0000ff\r\n\
+pinGround				= 0xbb0000ff\r\n\
+pinNotConnected		= 0x0000ffff\r\n\
+pinTestPad				= 0x888888ff\r\n\
+pinSelected				= 0xeeeeeeff\r\n\
+pinHighlighted			= 0xffffffff\r\n\
+pinHaloColor			= 0x00ff006f\r\n\
+pinHighlightSameNet	= 0xfff888ff\r\n\
+annotationPartAlias	= 0xffff00ff\r\n\
+partHullColor			= 0x80808080\r\n\
+selectedMaskPins		= 0xffffff4f\r\n\
+selectedMaskParts		= 0xffffff8f\r\n\
+selectedMaskOutline	= 0xffffff8f\r\n\
+# EndColors\r\n\
+\r\n\
+\r\n\
+# END\r\n\
+";
+
+int Confparse::SaveDefault(const char *utf8_filename) {
+	std::ofstream file;
+	file.open(utf8_filename, std::ios::out | std::ios::binary | std::ios::ate);
+
+	fprintf(stderr, "Writing the default config to %s\n", utf8_filename);
+	nested = true;
+	if (file.is_open()) {
+		file.write(default_conf, sizeof(default_conf));
+		file.close();
+		fprintf(stderr, "Closed new config, now try reading...\n");
+		Load(utf8_filename);
+
+		return 0;
+	} else
+		return 1;
+}
+
 int Confparse::Load(const char *utf8_filename) {
 	std::ifstream file;
 	file.open(utf8_filename, std::ios::in | std::ios::binary | std::ios::ate);
@@ -16,7 +69,8 @@ int Confparse::Load(const char *utf8_filename) {
 		// strerror(errno) << std::endl;
 		buffer_size = 0;
 		conf        = NULL;
-		return 1;
+		if (nested) return 1; // to prevent infinite recursion, we test the nested flag
+		return (SaveDefault(utf8_filename));
 	}
 
 	std::streampos sz = file.tellg();
@@ -32,6 +86,10 @@ int Confparse::Load(const char *utf8_filename) {
 		return 1;
 	}
 	//	assert(file.gcount() == sz);
+	//
+	//
+
+	nested = false;
 
 	return 0;
 }
