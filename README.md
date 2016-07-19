@@ -7,6 +7,9 @@ replacement for the "Test_Link" software.
 [![Demo Video](https://github.com/inflex/OpenBoardView/blob/inflex-ui-features/asset/screenshot.png)](https://www.youtube.com/watch?v=rObeatsf660)
 
 
+[![Demo Video](https://github.com/inflex/OpenBoardView/blob/inflex-ui-features/asset/screenshot-halo.png)](https://www.youtube.com/watch?v=rObeatsf660)
+
+
 ### Features
 
 - Part and pin sizes better represented
