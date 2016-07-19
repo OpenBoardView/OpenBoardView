@@ -788,10 +788,16 @@ inline void BoardView::DrawOutline(ImDrawList *draw) {
 
 		ImVec2 spa = CoordToScreen(pa.x, pa.y);
 		ImVec2 spb = CoordToScreen(pb.x, pb.y);
-		if (m_pinSelected)
+
+		/*
+		 * If we have a pin selected, we mask off the colour to shade out
+		 * things and make it easier to see associated pins/points
+		 */
+		if (m_pinSelected) {
 			draw->AddLine(spa, spb, m_colors.boardOutline & m_colors.selectedMaskOutline);
-		else
+		} else {
 			draw->AddLine(spa, spb, m_colors.boardOutline);
+		}
 	} // for
 }
 
@@ -931,6 +937,10 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 	char p0, p1; // first two characters of the part name, code-writing
 	             // convenience more than anything else
 
+	/*
+	 * If a pin has been selected, we mask out the colour to
+	 * enhance (relatively) the appearance of the pin(s)
+	 */
 	if (m_pinSelected) color &= m_colors.selectedMaskParts;
 
 	for (auto &part : m_board->Components()) {
@@ -970,9 +980,6 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 			else if (pin->position.y < min_y)
 				min_y = pin->position.y;
 		}
-
-		//		if (min_x < max_x) distance = max_y -min_y;
-		//		else distance = max_x -min_x;
 
 		distance = sqrt((max_x - min_x) * (max_x - min_x) + (max_y - min_y) * (max_y - min_y));
 
@@ -1066,7 +1073,8 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 		p0 = p_part->name[0];
 		p1 = p_part->name[1];
 
-		/** Draw all 2~3 pin devices as if they're not orthagonal.  It's a bit more
+		/*
+		 * Draw all 2~3 pin devices as if they're not orthagonal.  It's a bit more
 		 * CPU
 		 * overhead but it keeps the code simpler and saves us replicating things.
 		 */
@@ -1140,9 +1148,11 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 
 		} else {
 
-			// If we have (typically) a connector with a non uniform pin distribution
-			// then we can try use the minimal bounding box algorithm to give it a
-			// more sane outline
+			/*
+			 * If we have (typically) a connector with a non uniform pin distribution
+			 * then we can try use the minimal bounding box algorithm
+			 * to give it a more sane outline
+			 */
 			if ((pincount >= 4) && ((p0 == 'J') || (strncmp(part->name.c_str(), "CN", 2) == 0) || ((p0 == 'L') || (p1 == 'L')))) {
 				ImVec2 *hull;
 				int hpc;
@@ -1163,10 +1173,11 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 							hull[i] = CoordToScreen(hull[i].x, hull[i].y);
 						}
 
-						// first, tighten the hull, removes any small angle segments, such
-						// as a sequence of pins in a line
-						// hpc = TightenHull(hull, hpc, 0.1f); // tighten the hull a bit
-						// more, this might be an overkill
+						/*
+						 * Tighten the hull, removes any small angle segments
+						 * such as a sequence of pins in a line, might be an overkill
+						 */
+						// hpc = TightenHull(hull, hpc, 0.1f);
 						draw->AddPolyline(hull, hpc, m_colors.partHullColor, true, 1.0f, false);
 						VHMBBCalculate(bbox, hull, hpc, pin_radius * m_scale);
 						draw->AddPolyline(bbox, 4, color, true, 1.0f, false);
