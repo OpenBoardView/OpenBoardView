@@ -71,14 +71,29 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	size_t hpsz;
 	Confparse obvconfig;
 	int sizex, sizey;
+	bool use_exepath  = false;
+	bool use_homepath = true;
+	CHAR history_file[MAX_PATH];
+	CHAR conf_file[MAX_PATH];
 
 	static const wchar_t *class_name = L"Openflex Board View";
 
-	// Create application window
-	HINSTANCE instance = GetModuleHandle(NULL);
-	HICON icon         = LoadIcon(instance, MAKEINTRESOURCE(IDI_ICON1));
-	WNDCLASSEX wc      = {sizeof(WNDCLASSEX), CS_CLASSDC, WndProc, 0L, 0L, instance, icon, NULL, NULL, NULL, class_name, NULL};
-	RegisterClassEx(&wc);
+	HMODULE hModule = GetModuleHandleA(NULL);
+	CHAR exepath[MAX_PATH];
+	GetModuleFileNameA(hModule, exepath, MAX_PATH);
+
+	/*
+	 * Trim off the filename at the end of the path
+	*/
+	int l = strlen(exepath);
+	while (--l) {
+		if (exepath[l] == '\\') {
+			exepath[l] = '\0';
+			break;
+		}
+	}
+	snprintf(history_file, sizeof(history_file), "%s\\obv.history", exepath);
+	snprintf(conf_file, sizeof(conf_file), "%s\\obv.conf", exepath);
 
 	err = _dupenv_s(&homepath, &hpsz, "APPDATA");
 	if (homepath) {
@@ -87,20 +102,21 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 		snprintf(ss, sizeof(ss), "%s/openboardview", homepath);
 		sr = stat(ss, &st);
 		if (sr == -1) {
-			_mkdir(ss);
-			sr = stat(ss, &st);
-		}
-
-		if ((sr == 0) && (S_ISDIR(st.st_mode))) {
-			// path exists
-			//
-			snprintf(ss, sizeof(ss), "%s/openboardview/obv.conf", homepath);
-			obvconfig.Load(ss);
-
-			snprintf(ss, sizeof(ss), "%s/openboardview/obv.history", homepath);
+			//_mkdir(ss);
+			// sr = stat(ss, &st);
+		} else {
+			snprintf(history_file, sizeof(history_file), "%s\\obv.history", homepath);
+			snprintf(conf_file, sizeof(conf_file), "%s\\obv.conf", homepath);
 		}
 	}
 
+	// Create application window
+	HINSTANCE instance = GetModuleHandle(NULL);
+	HICON icon         = LoadIcon(instance, MAKEINTRESOURCE(IDI_ICON1));
+	WNDCLASSEX wc      = {sizeof(WNDCLASSEX), CS_CLASSDC, WndProc, 0L, 0L, instance, icon, NULL, NULL, NULL, class_name, NULL};
+	RegisterClassEx(&wc);
+
+	obvconfig.Load(conf_file);
 	sizex = obvconfig.ParseInt("windowX", 1280);
 	sizey = obvconfig.ParseInt("windowY", 900);
 
@@ -171,7 +187,7 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
 	BoardView app{};
 	if (homepath) {
-		app.fhistory.Set_filename(ss);
+		app.fhistory.Set_filename(history_file);
 		app.fhistory.Load();
 	}
 
