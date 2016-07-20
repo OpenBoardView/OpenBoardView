@@ -1,4 +1,5 @@
-
+#ifndef __CONFPARSE__
+#define __CONFPARSE__
 #define CONFPARSE_MAX_VALUE_SIZE 10240
 struct Confparse {
 
@@ -16,3 +17,5 @@ struct Confparse {
 	bool ParseBool(const char *key, bool defaultv);
 	unsigned long ParseHex(const char *key, unsigned long defaultv);
 };
+
+#endif

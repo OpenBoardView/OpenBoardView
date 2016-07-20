@@ -69,22 +69,29 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	char *homepath;
 	int err;
 	size_t hpsz;
-	Confparse obvconfig;
+	// Confparse obvconfig;
 	int sizex, sizey;
 	bool use_exepath  = false;
 	bool use_homepath = true;
+	BoardView app{};
 	CHAR history_file[MAX_PATH];
 	CHAR conf_file[MAX_PATH];
 
 	static const wchar_t *class_name = L"Openflex Board View";
 
+	/*
+	 * To make OBV very easy to use and transportable among windows
+	 * users, one method is to just make it do all its business in the
+	 * folder that the EXE is launched from.  It's not "proper" but
+	 * it is very simple and it works.
+	 */
 	HMODULE hModule = GetModuleHandleA(NULL);
 	CHAR exepath[MAX_PATH];
 	GetModuleFileNameA(hModule, exepath, MAX_PATH);
 
 	/*
 	 * Trim off the filename at the end of the path
-	*/
+	 */
 	int l = strlen(exepath);
 	while (--l) {
 		if (exepath[l] == '\\') {
@@ -95,6 +102,12 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	snprintf(history_file, sizeof(history_file), "%s\\obv.history", exepath);
 	snprintf(conf_file, sizeof(conf_file), "%s\\obv.conf", exepath);
 
+	/*
+	 * Next, we check to see if there's an APPDATA folder that's
+	 * already setup with our name on it.  This will be the case
+	 * if OBV has been 'installed', even via the simple install.bat
+	 * script.
+	 */
 	err = _dupenv_s(&homepath, &hpsz, "APPDATA");
 	if (homepath) {
 		struct stat st;
@@ -116,9 +129,9 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	WNDCLASSEX wc      = {sizeof(WNDCLASSEX), CS_CLASSDC, WndProc, 0L, 0L, instance, icon, NULL, NULL, NULL, class_name, NULL};
 	RegisterClassEx(&wc);
 
-	obvconfig.Load(conf_file);
-	sizex = obvconfig.ParseInt("windowX", 900);
-	sizey = obvconfig.ParseInt("windowY", 600);
+	app.obvconfig.Load(conf_file);
+	sizex = app.obvconfig.ParseInt("windowX", 900);
+	sizey = app.obvconfig.ParseInt("windowY", 600);
 
 	HWND hwnd = CreateWindow(class_name,
 	                         _T("Openflex Board Viewer"),
@@ -166,72 +179,25 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	unsigned char *ttf_data = LoadAsset(&ttf_size, ASSET_FIRA_SANS);
 	ImFontConfig font_cfg{};
 	font_cfg.FontDataOwnedByAtlas = false;
-	io.Fonts->AddFontFromMemoryTTF(ttf_data, ttf_size, obvconfig.ParseDouble("fontSize", 20.0f), &font_cfg);
-// io.Fonts->AddFontDefault();
-// io.Fonts->AddFontFromFileTTF("../../extra_fonts/Cousine-Regular.ttf", 15.0f);
-// io.Fonts->AddFontFromFileTTF("../../extra_fonts/DroidSans.ttf", 16.0f);
-// io.Fonts->AddFontFromFileTTF("../../extra_fonts/ProggyClean.ttf", 13.0f);
-// io.Fonts->AddFontFromFileTTF("../../extra_fonts/ProggyTiny.ttf", 10.0f);
-// io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\ArialUni.ttf", 18.0f, NULL,
-// io.Fonts->GetGlyphRangesJapanese());
-#if 0
-	// Get current flag
-	int tmpFlag = _CrtSetDbgFlag(_CRTDBG_REPORT_FLAG);
+	io.Fonts->AddFontFromMemoryTTF(ttf_data, ttf_size, app.obvconfig.ParseDouble("fontSize", 20.0f), &font_cfg);
 
-	// Turn on leak-checking bit.
-	tmpFlag |= _CRTDBG_CHECK_ALWAYS_DF;
-
-	// Set flag to the new value.
-	_CrtSetDbgFlag(tmpFlag);
-#endif
-
-	BoardView app{};
-	if (homepath) {
+	/*
+	 * Load the existing file loaded history
+	 */
+	if (history_file[0] != '\0') {
 		app.fhistory.Set_filename(history_file);
 		app.fhistory.Load();
 	}
 
 	/*
-	* Some machines (Atom etc) don't have enough CPU/GPU
-	* grunt to cope with the large number of AA'd circles
-	* generated on a large dense board like a Macbook Pro
-	* so we have the lowCPU option which will let people
-	* trade good-looks for better FPS
-	*/
-	app.slowCPU = obvconfig.ParseBool("slowCPU", false);
-	if (app.slowCPU == true) {
-		ImGuiStyle &style       = ImGui::GetStyle();
-		style.AntiAliasedShapes = false;
-	}
-
-	app.showFPS = obvconfig.ParseBool("showFPS", false);
-	app.showFPS = obvconfig.ParseBool("pinHalo", true);
-
-	/*
-	* Colours in ImGui can be represented as a 4-byte packed uint32_t as ABGR
-	* but most humans are more accustomed to RBGA, so for the sake of readability
-	* we use the human-readable version but swap the ordering around when
-	* it comes to assigning the actual colour to ImGui.
-	*/
-	app.m_colors.backgroundColor     = byte4swap(obvconfig.ParseHex("backgroundColor", 0x000000a0));
-	app.m_colors.partTextColor       = byte4swap(obvconfig.ParseHex("partTextColor", 0x008080ff));
-	app.m_colors.boardOutline        = byte4swap(obvconfig.ParseHex("boardOutline", 0xffff00ff));
-	app.m_colors.boxColor            = byte4swap(obvconfig.ParseHex("boxColor", 0xccccccff));
-	app.m_colors.pinDefault          = byte4swap(obvconfig.ParseHex("pinDefault", 0xff0000ff));
-	app.m_colors.pinGround           = byte4swap(obvconfig.ParseHex("pinGround", 0xbb0000ff));
-	app.m_colors.pinNotConnected     = byte4swap(obvconfig.ParseHex("pinNotConnected", 0x0000ffff));
-	app.m_colors.pinTestPad          = byte4swap(obvconfig.ParseHex("pinTestPad", 0x888888ff));
-	app.m_colors.pinSelected         = byte4swap(obvconfig.ParseHex("pinSelected", 0xeeeeeeff));
-	app.m_colors.pinHalo             = byte4swap(obvconfig.ParseHex("pinHaloColor", 0x00ff006f));
-	app.m_colors.pinHighlighted      = byte4swap(obvconfig.ParseHex("pinHighlighted", 0xffffffff));
-	app.m_colors.pinHighlightSameNet = byte4swap(obvconfig.ParseHex("pinHighlightSameNet", 0xfff888ff));
-	app.m_colors.annotationPartAlias = byte4swap(obvconfig.ParseHex("annotationPartAlias", 0xffff00ff));
-	app.m_colors.partHullColor       = byte4swap(obvconfig.ParseHex("partHullColor", 0x80808080));
-	app.m_colors.selectedMaskPins    = byte4swap(obvconfig.ParseHex("selectedMaskPins", 0xffffff4f));
-	app.m_colors.selectedMaskParts   = byte4swap(obvconfig.ParseHex("selectedMaskParts", 0xffffff8f));
-	app.m_colors.selectedMaskOutline = byte4swap(obvconfig.ParseHex("selectedMaskOutline", 0xffffff8f));
-
-	app.SetFZKey(obvconfig.ParseStr("FZKey", ""));
+	 * Parse the settings in the configuration file
+	 *
+	 * There are some settings which have been parsed
+	 * earlier but they apply to the startup of the
+	 * main, as opposed to OBV itself.  This call
+	 * parses all the things that'll influence OBV
+	 */
+	app.ConfigParse();
 
 	bool show_test_window    = true;
 	bool show_another_window = false;

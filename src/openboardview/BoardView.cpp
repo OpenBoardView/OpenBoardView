@@ -41,6 +41,71 @@ BoardView::~BoardView() {
 	free(m_lastFileOpenName);
 }
 
+uint32_t BoardView::byte4swap(uint32_t x) {
+	/*
+	 * used to convert RGBA -> ABGR etc
+	 */
+	return (((x & 0x000000ff) << 24) | ((x & 0x0000ff00) << 8) | ((x & 0x00ff0000) >> 8) | ((x & 0xff000000) >> 24));
+}
+
+int BoardView::ConfigParse(void) {
+	/*
+	 * Some machines (Atom etc) don't have enough CPU/GPU
+	 * grunt to cope with the large number of AA'd circles
+	 * generated on a large dense board like a Macbook Pro
+	 * so we have the lowCPU option which will let people
+	 * trade good-looks for better FPS
+	 *
+	 * If we want slowCPU to take impact from a command line
+	 * parameter, we need it to be set to false before we
+	 * call this.
+	 */
+	slowCPU |= obvconfig.ParseBool("slowCPU", false);
+	if (slowCPU == true) {
+		fprintf(stderr, "SlowCPU active\n");
+		ImGuiStyle &style       = ImGui::GetStyle();
+		style.AntiAliasedShapes = false;
+	}
+
+	pinHalo = obvconfig.ParseBool("pinHalo", true);
+	showFPS = obvconfig.ParseBool("showFPS", false);
+
+	/*
+	 * Colours in ImGui can be represented as a 4-byte packed uint32_t as ABGR
+	 * but most humans are more accustomed to RBGA, so for the sake of readability
+	 * we use the human-readable version but swap the ordering around when
+	 * it comes to assigning the actual colour to ImGui.
+	 */
+	m_colors.backgroundColor     = byte4swap(obvconfig.ParseHex("backgroundColor", 0x000000a0));
+	m_colors.partTextColor       = byte4swap(obvconfig.ParseHex("partTextColor", 0x008080ff));
+	m_colors.boardOutline        = byte4swap(obvconfig.ParseHex("boardOutline", 0xffff00ff));
+	m_colors.boxColor            = byte4swap(obvconfig.ParseHex("boxColor", 0xccccccff));
+	m_colors.pinDefault          = byte4swap(obvconfig.ParseHex("pinDefault", 0xff0000ff));
+	m_colors.pinGround           = byte4swap(obvconfig.ParseHex("pinGround", 0xbb0000ff));
+	m_colors.pinNotConnected     = byte4swap(obvconfig.ParseHex("pinNotConnected", 0x0000ffff));
+	m_colors.pinTestPad          = byte4swap(obvconfig.ParseHex("pinTestPad", 0x888888ff));
+	m_colors.pinSelected         = byte4swap(obvconfig.ParseHex("pinSelected", 0xeeeeeeff));
+	m_colors.pinHalo             = byte4swap(obvconfig.ParseHex("pinHaloColor", 0x00ff006f));
+	m_colors.pinHighlighted      = byte4swap(obvconfig.ParseHex("pinHighlighted", 0xffffffff));
+	m_colors.pinHighlightSameNet = byte4swap(obvconfig.ParseHex("pinHighlightSameNet", 0xfff888ff));
+	m_colors.annotationPartAlias = byte4swap(obvconfig.ParseHex("annotationPartAlias", 0xffff00ff));
+	m_colors.partHullColor       = byte4swap(obvconfig.ParseHex("partHullColor", 0x80808080));
+	m_colors.selectedMaskPins    = byte4swap(obvconfig.ParseHex("selectedMaskPins", 0xffffff4f));
+	m_colors.selectedMaskParts   = byte4swap(obvconfig.ParseHex("selectedMaskParts", 0xffffff8f));
+	m_colors.selectedMaskOutline = byte4swap(obvconfig.ParseHex("selectedMaskOutline", 0xffffff8f));
+
+	/*
+	 * The asus .fz file formats require a specific key to be decoded.
+	 *
+	 * This key is supplied in the obv.conf file as a long single line
+	 * of comma/space separated 32-bit hex values 0x1234abcd etc.
+	 *
+	 */
+	SetFZKey(obvconfig.ParseStr("FZKey", ""));
+
+	return 0;
+}
+
 int BoardView::LoadFile(char *filename) {
 	if (filename) {
 		char *ext = strrchr(filename, '.');
@@ -434,9 +499,9 @@ void BoardView::Update() {
 				ImGui::Separator();
 				ImGui::Text("FZKey:");
 				for (i = 0; i < 44; i++) {
-					char s[128];
-					snprintf(s, sizeof(s), "%08x %08x %08x %08x", FZKey[i], FZKey[i + 1], FZKey[i + 2], FZKey[i + 3]);
-					ImGui::Text(s);
+					// snprintf(s, sizeof(s), "%08x %08x %08x %08x", FZKey[i], FZKey[i + 1], FZKey[i + 2], FZKey[i + 3]);
+					ImGui::Text("%08x %08x %08x %08x", FZKey[i], FZKey[i + 1], FZKey[i + 2], FZKey[i + 3]);
+					//					ImGui::Text(s);
 					i += 3;
 				}
 			}

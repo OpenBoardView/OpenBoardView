@@ -46,13 +46,6 @@ void globals_init(globals *g) {
 	g->font_size   = 0.0f;
 }
 
-uint32_t byte4swap(uint32_t x) {
-	/*
-	 * used to convert RGBA -> ABGR etc
-	 */
-	return (((x & 0x000000ff) << 24) | ((x & 0x0000ff00) << 8) | ((x & 0x00ff0000) >> 8) | ((x & 0xff000000) >> 24));
-}
-
 int parse_parameters(int argc, char **argv, struct globals *g) {
 	int param;
 
@@ -111,6 +104,7 @@ int parse_parameters(int argc, char **argv, struct globals *g) {
 			}
 
 		} else if (strcmp(p, "-l") == 0) {
+
 			g->slowCPU = true;
 
 			/*
@@ -130,9 +124,16 @@ int main(int argc, char **argv) {
 	uint8_t sleepout;
 	char s[1025];
 	char *homepath;
-	globals g;
-	Confparse obvconfig;
+	globals g; // because some things we have to store *before* we load the config file in BoardView app.obvconf
+	BoardView app{};
 
+	/*
+	 * Parse the parameters first up, store the results in the global struct.
+	 *
+	 * This does mean a little more redundancy between the OS builds but not
+	 * as bad as it was before.
+	 *
+	 */
 	parse_parameters(argc, argv, &g);
 
 	// Setup SDL
@@ -141,6 +142,13 @@ int main(int argc, char **argv) {
 		return -1;
 	}
 
+	/*
+	 * *nix specific, usually we have a $HOME env var set and
+	 * from that we can see if we have a ~/.config in which we
+	 * can create our openboardview folder for storing what ever
+	 * stuff we need (currently file-history and configuration file)
+	 *
+	 */
 	homepath = getenv("HOME");
 	if (homepath) {
 		struct stat st;
@@ -152,20 +160,28 @@ int main(int argc, char **argv) {
 			sr = stat(s, &st);
 		}
 
+		/*
+		 * Check to see if the path exists, if it does, create the full
+		 * filenames and load up
+		 */
 		if ((sr == 0) && (S_ISDIR(st.st_mode))) {
-			// path exists
-			//
 			snprintf(s, sizeof(s), "%s/.config/openboardview/obv.conf", homepath);
-			obvconfig.Load(s);
+			app.obvconfig.Load(s);
 
 			snprintf(s, sizeof(s), "%s/.config/openboardview/obv.history", homepath);
+			app.fhistory.Set_filename(s);
+			app.fhistory.Load();
 		}
 	}
 
-	if (g.config_file) obvconfig.Load(g.config_file);
+	// If we've chosen to override the normally found config.
+	if (g.config_file) app.obvconfig.Load(g.config_file);
 
-	if (g.width == 0) g.width   = obvconfig.ParseInt("windowX", 800);
-	if (g.height == 0) g.height = obvconfig.ParseInt("windowY", 600);
+	// Apply the slowCPU flag if required.
+	app.slowCPU = g.slowCPU;
+
+	if (g.width == 0) g.width   = app.obvconfig.ParseInt("windowX", 800);
+	if (g.height == 0) g.height = app.obvconfig.ParseInt("windowY", 600);
 
 	// Setup window
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG);
@@ -190,66 +206,11 @@ int main(int argc, char **argv) {
 	// Setup ImGui binding
 	ImGui_ImplSdlGL3_Init(window);
 
-#ifdef CUSTOM_FONT
-	// Load Fonts
-	ImGuiIO &io          = ImGui::GetIO();
-	std::string fontpath = get_asset_path("FiraSans-Medium.ttf");
-	io.Fonts->AddFontFromFileTTF(fontpath.c_str(), 20.0f);
-#endif
 	ImGuiIO &io                       = ImGui::GetIO();
-	std::string fontpath              = get_asset_path(obvconfig.ParseStr("fontPath", "DroidSans.ttf"));
-	if (g.font_size == 0) g.font_size = obvconfig.ParseDouble("fontSize", 20.0f);
+	std::string fontpath              = get_asset_path(app.obvconfig.ParseStr("fontPath", "DroidSans.ttf"));
+	if (g.font_size == 0) g.font_size = app.obvconfig.ParseDouble("fontSize", 20.0f);
 	io.Fonts->AddFontFromFileTTF(fontpath.c_str(), g.font_size);
 	//	io.Fonts->AddFontDefault();
-
-	BoardView app{};
-	if (homepath) {
-		app.fhistory.Set_filename(s);
-		;
-		app.fhistory.Load();
-	}
-
-	/*
-	 * Some machines (Atom etc) don't have enough CPU/GPU
-	 * grunt to cope with the large number of AA'd circles
-	 * generated on a large dense board like a Macbook Pro
-	 * so we have the lowCPU option which will let people
-	 * trade good-looks for better FPS
-	 */
-	app.slowCPU = (obvconfig.ParseBool("slowCPU", false) | g.slowCPU);
-	if (app.slowCPU == true) {
-		ImGuiStyle &style       = ImGui::GetStyle();
-		style.AntiAliasedShapes = false;
-	}
-
-	app.pinHalo = obvconfig.ParseBool("pinHalo", true);
-	app.showFPS = obvconfig.ParseBool("showFPS", false);
-
-	/*
-	 * Colours in ImGui can be represented as a 4-byte packed uint32_t as ABGR
-	 * but most humans are more accustomed to RBGA, so for the sake of readability
-	 * we use the human-readable version but swap the ordering around when
-	 * it comes to assigning the actual colour to ImGui.
-	 */
-	app.m_colors.backgroundColor     = byte4swap(obvconfig.ParseHex("backgroundColor", 0x000000a0));
-	app.m_colors.partTextColor       = byte4swap(obvconfig.ParseHex("partTextColor", 0x008080ff));
-	app.m_colors.boardOutline        = byte4swap(obvconfig.ParseHex("boardOutline", 0xffff00ff));
-	app.m_colors.boxColor            = byte4swap(obvconfig.ParseHex("boxColor", 0xccccccff));
-	app.m_colors.pinDefault          = byte4swap(obvconfig.ParseHex("pinDefault", 0xff0000ff));
-	app.m_colors.pinGround           = byte4swap(obvconfig.ParseHex("pinGround", 0xbb0000ff));
-	app.m_colors.pinNotConnected     = byte4swap(obvconfig.ParseHex("pinNotConnected", 0x0000ffff));
-	app.m_colors.pinTestPad          = byte4swap(obvconfig.ParseHex("pinTestPad", 0x888888ff));
-	app.m_colors.pinSelected         = byte4swap(obvconfig.ParseHex("pinSelected", 0xeeeeeeff));
-	app.m_colors.pinHalo             = byte4swap(obvconfig.ParseHex("pinHaloColor", 0x00ff006f));
-	app.m_colors.pinHighlighted      = byte4swap(obvconfig.ParseHex("pinHighlighted", 0xffffffff));
-	app.m_colors.pinHighlightSameNet = byte4swap(obvconfig.ParseHex("pinHighlightSameNet", 0xfff888ff));
-	app.m_colors.annotationPartAlias = byte4swap(obvconfig.ParseHex("annotationPartAlias", 0xffff00ff));
-	app.m_colors.partHullColor       = byte4swap(obvconfig.ParseHex("partHullColor", 0x80808080));
-	app.m_colors.selectedMaskPins    = byte4swap(obvconfig.ParseHex("selectedMaskPins", 0xffffff4f));
-	app.m_colors.selectedMaskParts   = byte4swap(obvconfig.ParseHex("selectedMaskParts", 0xffffff8f));
-	app.m_colors.selectedMaskOutline = byte4swap(obvconfig.ParseHex("selectedMaskOutline", 0xffffff8f));
-
-	app.SetFZKey(obvconfig.ParseStr("FZKey", ""));
 
 	ImVec4 clear_color = ImColor(20, 20, 30);
 
@@ -257,6 +218,14 @@ int main(int argc, char **argv) {
 	bool done             = false;
 	bool preload_required = false;
 
+	// Now that the configuration file is loaded in to BoardView, parse its settings.
+	app.ConfigParse();
+
+	/*
+	 * If we've asked to load a file from the command line
+	 * then this is where we stage it to be loaded directly
+	 * in to OBV
+	 */
 	if (g.input_file) {
 		struct stat buffer;
 		if ((stat(g.input_file, &buffer) == 0)) {
@@ -297,9 +266,6 @@ int main(int argc, char **argv) {
 			if (event.type == SDL_QUIT) done = true;
 		}
 
-		//		if (SDL_GetWindowFlags(window) &
-		//(SDL_WINDOW_MINIMIZED|SDL_WINDOW_HIDDEN)) { usleep(50000); continue; } //
-		// stops OVB/SDL consuming masses of CPU when it should be idling.
 		if (!(sleepout--)) {
 			usleep(50000);
 			sleepout = 0;

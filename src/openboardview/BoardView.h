@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Board.h"
+#include "confparse.h"
 #include "history.h"
 #include "imgui/imgui.h"
 #include <stdint.h>
@@ -69,6 +70,7 @@ struct BoardView {
 	BRDFile *m_file;
 	Board *m_board;
 
+	Confparse obvconfig;
 	FHistory fhistory;
 	int history_file_has_changed = 0;
 	bool slowCPU                 = false;
@@ -76,6 +78,8 @@ struct BoardView {
 	bool pinHalo                 = true;
 	uint32_t FZKey[44]           = {0};
 
+	int ConfigParse(void);
+	uint32_t byte4swap(uint32_t x);
 	void CenterView(void);
 	void Pan(int direction, int amount);
 	void Zoom(float osd_x, float osd_y, float zoom);
