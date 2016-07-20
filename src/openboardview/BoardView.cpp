@@ -98,7 +98,7 @@ void BoardView::SetFZKey(char *keytext) {
 				while ((p < limit) && (*p != '0')) p++;
 
 				// decode the next number, ep will be set to the end of the converted string
-				FZKey[ki] = strtol(p, &ep, 16);
+				FZKey[ki] = strtoll(p, &ep, 16);
 
 				ki++;
 				p = ep;
@@ -429,6 +429,17 @@ void BoardView::Update() {
 
 		if (ImGui::BeginPopupModal("Error opening file")) {
 			ImGui::Text("There was an error opening the file: %s", m_lastFileOpenName);
+			if (strstr(m_lastFileOpenName, ".fz")) {
+				int i;
+				ImGui::Separator();
+				ImGui::Text("FZKey:");
+				for (i = 0; i < 44; i++) {
+					char s[128];
+					snprintf(s, sizeof(s), "%08x %08x %08x %08x", FZKey[i], FZKey[i + 1], FZKey[i + 2], FZKey[i + 3]);
+					ImGui::Text(s);
+					i += 3;
+				}
+			}
 			// TODO: error details? -- would need the loader to say what's wrong.
 			if (ImGui::Button("OK")) {
 				ImGui::CloseCurrentPopup();

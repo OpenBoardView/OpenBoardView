@@ -201,13 +201,20 @@ FZFile::FZFile(const char *buf, size_t buffer_size, uint32_t *fzkey) {
 	FZFile::decode(file_buf, buffer_size); // first decrypt buffer
 	size_t content_size = 0;
 	char *content       = FZFile::split(file_buf, buffer_size, content_size); // then split it, discarding descr part
-	ENSURE(content != nullptr);
-	ENSURE(content_size > 0);
+
+	if (content == nullptr) return;
+	if (content_size < 1) return;
+
+	//	ENSURE(content != nullptr);
+	//	ENSURE(content_size > 0);
 	content = FZFile::decompress(file_buf + 4,
 	                             content_size,
 	                             content_size); // and decompress zlib content data, discard first 4 bytes
-	ENSURE(content != nullptr);
-	ENSURE(content_size > 0);
+
+	if (content == nullptr) return;
+	if (content_size < 1) return;
+	//	ENSURE(content != nullptr);
+	//	ENSURE(content_size > 0);
 
 	int current_block = 0;
 	std::unordered_map<std::string, int> parts_id; // map between part name and part number
