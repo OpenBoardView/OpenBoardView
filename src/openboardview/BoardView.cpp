@@ -76,24 +76,31 @@ int BoardView::LoadFile(char *filename) {
 }
 
 void BoardView::SetFZKey(char *keytext) {
-	int ki;
-	char *p, *ep, *limit;
-
-	ki    = 0;
-	p     = keytext;
-	limit = keytext + strlen(keytext);
 
 	if (keytext) {
-		while (p < limit) {
+		int ki;
+		char *p, *ep, *limit;
+		ki    = 0;
+		p     = keytext;
+		limit = keytext + strlen(keytext);
+
+		/*
+		 * we *assume* that the key is correctly formatted in the configuration file
+		 * as such it should be like FZKey = 0x12345678, 0xabcd1234, ...
+		 *
+		 * If your key is incorrectly formatted, or incorrect, it'll cause OBV to
+		 * likely crash / segfault (for now).
+		 */
+		while (p && (p < limit)) {
+
 			// locate the start of the u32 hex value
 			while ((p < limit) && (*p != '0')) p++;
-			ep = p + 1;
-			while ((ep < limit) && (isxdigit(*ep))) ep++;
-			if ((p < limit) && (ep < limit)) {
-				FZKey[ki] = strtol(p, &ep, 16);
-				ki++;
-				p = ep + 1;
-			}
+
+			// decode the next number, ep will be set to the end of the converted string
+			FZKey[ki] = strtol(p, &ep, 16);
+
+			ki++;
+			p = ep;
 		}
 	}
 }
