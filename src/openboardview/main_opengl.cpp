@@ -6,6 +6,7 @@
 #include "history.h"
 
 #include "platform.h"
+#include "FZFile.h"
 #include "confparse.h"
 #include "imgui_impl_sdl_gl3.h"
 #include "resource.h"
@@ -162,8 +163,9 @@ int main(int argc, char **argv) {
 	}
 
 	if (g.config_file) obvconfig.Load(g.config_file);
-	if (g.width == 0) g.width   = obvconfig.ParseInt("windowX", 1280);
-	if (g.height == 0) g.height = obvconfig.ParseInt("windowY", 900);
+
+	if (g.width == 0) g.width   = obvconfig.ParseInt("windowX", 800);
+	if (g.height == 0) g.height = obvconfig.ParseInt("windowY", 600);
 
 	// Setup window
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG);
@@ -246,6 +248,8 @@ int main(int argc, char **argv) {
 	app.m_colors.selectedMaskPins    = byte4swap(obvconfig.ParseHex("selectedMaskPins", 0xffffff4f));
 	app.m_colors.selectedMaskParts   = byte4swap(obvconfig.ParseHex("selectedMaskParts", 0xffffff8f));
 	app.m_colors.selectedMaskOutline = byte4swap(obvconfig.ParseHex("selectedMaskOutline", 0xffffff8f));
+
+	app.SetFZKey(obvconfig.ParseStr("FZKey", ""));
 
 	ImVec4 clear_color = ImColor(20, 20, 30);
 

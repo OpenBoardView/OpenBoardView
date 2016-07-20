@@ -74,6 +74,7 @@ struct BoardView {
 	bool slowCPU                 = false;
 	bool showFPS                 = false;
 	bool pinHalo                 = true;
+	uint32_t FZKey[44]           = {0};
 
 	void CenterView(void);
 	void Pan(int direction, int amount);
@@ -81,6 +82,7 @@ struct BoardView {
 	void DrawDiamond(ImDrawList *draw, ImVec2 c, double r, uint32_t color);
 	void DrawHex(ImDrawList *draw, ImVec2 c, double r, uint32_t color);
 	void DrawBox(ImDrawList *draw, ImVec2 c, double r, uint32_t color);
+	void SetFZKey(char *keytext);
 
 	Pin *m_pinSelected = nullptr;
 	vector<Pin *> m_pinHighlighted;

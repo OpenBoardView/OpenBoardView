@@ -55,7 +55,7 @@ int BoardView::LoadFile(char *filename) {
 			else if (!strcmp(ext, ".bdv"))
 				file = new BDVFile(buffer, buffer_size);
 			else if (!strcmp(ext, ".fz"))
-				file = new FZFile(buffer, buffer_size);
+				file = new FZFile(buffer, buffer_size, FZKey);
 
 			if (file && file->valid) {
 				SetFile(file);
@@ -73,6 +73,29 @@ int BoardView::LoadFile(char *filename) {
 	}
 
 	return 0;
+}
+
+void BoardView::SetFZKey(char *keytext) {
+	int ki;
+	char *p, *ep, *limit;
+
+	ki    = 0;
+	p     = keytext;
+	limit = keytext + strlen(keytext);
+
+	if (keytext) {
+		while (p < limit) {
+			// locate the start of the u32 hex value
+			while ((p < limit) && (*p != '0')) p++;
+			ep = p + 1;
+			while ((ep < limit) && (isxdigit(*ep))) ep++;
+			if ((p < limit) && (ep < limit)) {
+				FZKey[ki] = strtol(p, &ep, 16);
+				ki++;
+				p = ep + 1;
+			}
+		}
+	}
 }
 
 /** UPDATE Logic region

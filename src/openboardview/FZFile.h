@@ -21,10 +21,12 @@
 
 class FZFile : public BRDFile {
   public:
-	FZFile(const char *buf, size_t buffer_size);
+	FZFile(const char *buf, size_t buffer_size, uint32_t *fzkey);
 	~FZFile() {
 		free(file_buf);
 	}
+
+	void SetKey(char *keytext);
 
   private:
 	static void decode(char *source, size_t size);
@@ -35,5 +37,7 @@ class FZFile : public BRDFile {
 
 	// Put your key here.
 	// uint32_t keylength = 2*r + 4; // i.e. buf[0..2r+3]
-	static constexpr uint32_t key[44] = {0};
+	// static constexpr uint32_t key[44] = {0};
+	// static uint32_t key[44] = {0};
+	static uint32_t key[44];
 };
