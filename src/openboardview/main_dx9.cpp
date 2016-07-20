@@ -117,16 +117,16 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	RegisterClassEx(&wc);
 
 	obvconfig.Load(conf_file);
-	sizex = obvconfig.ParseInt("windowX", 1280);
-	sizey = obvconfig.ParseInt("windowY", 900);
+	sizex = obvconfig.ParseInt("windowX", 900);
+	sizey = obvconfig.ParseInt("windowY", 600);
 
 	HWND hwnd = CreateWindow(class_name,
 	                         _T("Openflex Board Viewer"),
 	                         WS_OVERLAPPEDWINDOW,
 	                         CW_USEDEFAULT,
 	                         CW_USEDEFAULT,
-	                         1280,
-	                         800,
+	                         sizex,
+	                         sizey,
 	                         NULL,
 	                         NULL,
 	                         wc.hInstance,
@@ -166,7 +166,7 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	unsigned char *ttf_data = LoadAsset(&ttf_size, ASSET_FIRA_SANS);
 	ImFontConfig font_cfg{};
 	font_cfg.FontDataOwnedByAtlas = false;
-	io.Fonts->AddFontFromMemoryTTF(ttf_data, ttf_size, 20.0f, &font_cfg);
+	io.Fonts->AddFontFromMemoryTTF(ttf_data, ttf_size, obvconfig.ParseDouble("fontSize", 20.0f), &font_cfg);
 // io.Fonts->AddFontDefault();
 // io.Fonts->AddFontFromFileTTF("../../extra_fonts/Cousine-Regular.ttf", 15.0f);
 // io.Fonts->AddFontFromFileTTF("../../extra_fonts/DroidSans.ttf", 16.0f);
@@ -230,6 +230,8 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	app.m_colors.selectedMaskPins    = byte4swap(obvconfig.ParseHex("selectedMaskPins", 0xffffff4f));
 	app.m_colors.selectedMaskParts   = byte4swap(obvconfig.ParseHex("selectedMaskParts", 0xffffff8f));
 	app.m_colors.selectedMaskOutline = byte4swap(obvconfig.ParseHex("selectedMaskOutline", 0xffffff8f));
+
+	app.SetFZKey(obvconfig.ParseStr("FZKey", ""));
 
 	bool show_test_window    = true;
 	bool show_another_window = false;
