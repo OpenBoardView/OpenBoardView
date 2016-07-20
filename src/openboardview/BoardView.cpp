@@ -62,7 +62,6 @@ int BoardView::ConfigParse(void) {
 	 */
 	slowCPU |= obvconfig.ParseBool("slowCPU", false);
 	if (slowCPU == true) {
-		fprintf(stderr, "SlowCPU active\n");
 		ImGuiStyle &style       = ImGui::GetStyle();
 		style.AntiAliasedShapes = false;
 	}
