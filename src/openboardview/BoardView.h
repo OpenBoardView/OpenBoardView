@@ -134,6 +134,8 @@ struct BoardView {
 	bool m_showComponentSearch;
 	bool m_showNetList;
 	bool m_showPartList;
+	bool m_showHelpAbout;
+	bool m_showHelpControls;
 	bool m_firstFrame = true;
 	bool m_lastFileOpenWasInvalid;
 	bool m_wantsQuit;

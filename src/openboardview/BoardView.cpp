@@ -243,6 +243,7 @@ void BoardView::Update() {
 			}
 			ImGui::EndMenu();
 		}
+
 		if (ImGui::BeginMenu("Windows")) {
 			if (ImGui::MenuItem("Net List", "l")) {
 				m_showNetList = m_showNetList ? false : true;
@@ -252,6 +253,169 @@ void BoardView::Update() {
 			}
 			ImGui::EndMenu();
 		}
+
+		if (ImGui::BeginMenu("Help##1")) {
+			if (ImGui::MenuItem("Controls")) {
+				m_showHelpControls = true;
+			}
+			if (ImGui::MenuItem("About")) {
+				m_showHelpAbout = true;
+			}
+			ImGui::EndMenu();
+		}
+
+		if (ImGui::BeginPopupModal("Controls", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+			if (m_showHelpControls) m_showHelpControls = false;
+			ImGui::Text("KEYBOARD CONTROLS");
+			ImGui::SameLine();
+
+			if (ImGui::Button("Close") || ImGui::IsKeyPressed(SDLK_ESCAPE)) {
+				ImGui::CloseCurrentPopup();
+			}
+			ImGui::Separator();
+
+			ImGui::Columns(2);
+			ImGui::PushItemWidth(-1);
+			ImGui::Text("Load file");
+			ImGui::Text("Quit");
+			ImGui::Spacing();
+			ImGui::Spacing();
+
+			ImGui::Text("Pan up");
+			ImGui::Text("Pan down");
+			ImGui::Text("Pan left");
+			ImGui::Text("Pan right");
+			ImGui::Spacing();
+			ImGui::Spacing();
+
+			ImGui::Text("Search for compnent");
+			ImGui::Text("Search for net");
+			ImGui::Text("Display component list");
+			ImGui::Text("Display net list");
+			ImGui::Spacing();
+			ImGui::Spacing();
+
+			ImGui::Text("Flip board");
+			ImGui::Spacing();
+			ImGui::Spacing();
+
+			ImGui::Text("Zoom in");
+			ImGui::Text("Zoom out");
+			ImGui::Spacing();
+			ImGui::Spacing();
+
+			ImGui::Text("Reset zoom and center");
+			ImGui::Text("Rotate clockwise");
+			ImGui::Text("Rotate anticlockwise");
+
+			ImGui::NextColumn();
+			ImGui::Text("CTRL-o");
+			ImGui::Text("Ctrl-q");
+			ImGui::Spacing();
+			ImGui::Spacing();
+
+			ImGui::Text("w, numpad-up, arrow-up");
+			ImGui::Text("s, numpad-down, arrow-down");
+			ImGui::Text("a, numpad-left, arrow-left");
+			ImGui::Text("d, numpad-right, arrow-right");
+			ImGui::Spacing();
+			ImGui::Spacing();
+
+			ImGui::Text("c");
+			ImGui::Text("n");
+			ImGui::Text("k");
+			ImGui::Text("l");
+			ImGui::Spacing();
+			ImGui::Spacing();
+
+			ImGui::Text("Space bar");
+			ImGui::Spacing();
+			ImGui::Spacing();
+
+			ImGui::Text("+, numpad+");
+			ImGui::Text("-, numpad-");
+			ImGui::Spacing();
+			ImGui::Spacing();
+
+			ImGui::Text("x, numpad-5");
+			ImGui::Text("'.' numpad '.'");
+			ImGui::Text("',' numpad-0");
+			ImGui::Columns(1);
+			ImGui::Separator();
+
+			ImGui::Text("MOUSE CONTROLS");
+			ImGui::Separator();
+			ImGui::Columns(2);
+			ImGui::Text("Highlight pins on network");
+			ImGui::Text("Move board");
+			ImGui::Text("Zoom (CTRL for finer steps)");
+			ImGui::Text("Flip board");
+			ImGui::Text("Rotate board");
+
+			ImGui::NextColumn();
+			ImGui::Text("Click (on pin)");
+			ImGui::Text("Click and drag");
+			ImGui::Text("Scroll");
+			ImGui::Text("Middle click");
+			ImGui::Text("Right click");
+			ImGui::Columns(1);
+
+			ImGui::EndPopup();
+		}
+
+		if (ImGui::BeginPopupModal("About", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+			if (m_showHelpAbout) m_showHelpAbout = false;
+			ImGui::Text("OpenFlex Board View");
+			ImGui::Text("https://github.com/inflex/OpenBoardView");
+			if (ImGui::Button("Close") || ImGui::IsKeyPressed(SDLK_ESCAPE)) {
+				ImGui::CloseCurrentPopup();
+			}
+			ImGui::Indent();
+			ImGui::Text("License info");
+			ImGui::Unindent();
+			ImGui::Separator();
+			ImGui::Text("OpenBoardView is MIT Licensed");
+			ImGui::Text("Copyright (c) 2016 Paul Daniels (Inflex Additions)");
+			ImGui::Text("Copyright (c) 2016 Chloridite");
+			ImGui::Spacing();
+			ImGui::Text("ImGui is MIT Licensed");
+			ImGui::Text("Copyright (c) 2014-2015 Omar Cornut and ImGui contributors");
+			ImGui::Separator();
+			ImGui::Text("The MIT License");
+			ImGui::TextWrapped(
+			    "Permission is hereby granted, free of charge, to any person "
+			    "obtaining a copy "
+			    "of this software and associated documentation files (the "
+			    "\"Software\"), to deal "
+			    "in the Software without restriction, including without limitation "
+			    "the rights "
+			    "to use, copy, modify, merge, publish, distribute, sublicense, "
+			    "and/or sell "
+			    "copies of the Software, and to permit persons to whom the Software "
+			    "is "
+			    "furnished to do so, subject to the following conditions: ");
+			ImGui::TextWrapped(
+			    "The above copyright notice and this permission "
+			    "notice shall be included in all "
+			    "copies or substantial portions of the Software.");
+			ImGui::TextWrapped(
+			    "THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY "
+			    "OF ANY KIND, EXPRESS OR "
+			    "IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES "
+			    "OF MERCHANTABILITY, "
+			    "FITNESS FOR A PARTICULAR PURPOSE AND "
+			    "NONINFRINGEMENT. IN NO EVENT SHALL THE "
+			    "AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY "
+			    "CLAIM, DAMAGES OR OTHER "
+			    "LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR "
+			    "OTHERWISE, ARISING FROM, "
+			    "OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE "
+			    "OR OTHER DEALINGS IN THE "
+			    "SOFTWARE.");
+			ImGui::EndPopup();
+		}
+
+		ImGui::SameLine();
 		if (ImGui::Button("Net")) {
 			m_showNetfilterSearch = true;
 		}
@@ -259,9 +423,12 @@ void BoardView::Update() {
 		if (ImGui::Button("Component")) {
 			m_showComponentSearch = true;
 		}
-		ImGui::SameLine();
-		if (ImGui::Button("About")) {
+
+		if (m_showHelpAbout) {
 			ImGui::OpenPopup("About");
+		}
+		if (m_showHelpControls) {
+			ImGui::OpenPopup("Controls");
 		}
 		if (m_showNetfilterSearch) {
 			ImGui::OpenPopup("Search for Net");
@@ -443,57 +610,6 @@ void BoardView::Update() {
 			ImGui::EndPopup();
 		}
 
-		if (ImGui::BeginPopupModal("About", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
-			ImGui::Text("OpenFlex Board View");
-			ImGui::Text("https://github.com/inflex/OpenBoardView");
-			if (ImGui::Button("Close") || ImGui::IsKeyPressed(SDLK_ESCAPE)) {
-				ImGui::CloseCurrentPopup();
-			}
-			ImGui::Indent();
-			ImGui::Text("License info");
-			ImGui::Unindent();
-			ImGui::Separator();
-			ImGui::Text("OpenBoardView is MIT Licensed");
-			ImGui::Text("Copyright (c) 2016 Paul Daniels (Inflex Additions)");
-			ImGui::Text("Copyright (c) 2016 Chloridite and OpenBoardView contributors");
-			ImGui::Spacing();
-			ImGui::Text("ImGui is MIT Licensed");
-			ImGui::Text("Copyright (c) 2014-2015 Omar Cornut and ImGui contributors");
-			ImGui::Separator();
-			ImGui::Text("The MIT License");
-			ImGui::TextWrapped(
-			    "Permission is hereby granted, free of charge, to any person "
-			    "obtaining a copy "
-			    "of this software and associated documentation files (the "
-			    "\"Software\"), to deal "
-			    "in the Software without restriction, including without limitation "
-			    "the rights "
-			    "to use, copy, modify, merge, publish, distribute, sublicense, "
-			    "and/or sell "
-			    "copies of the Software, and to permit persons to whom the Software "
-			    "is "
-			    "furnished to do so, subject to the following conditions: ");
-			ImGui::TextWrapped(
-			    "The above copyright notice and this permission "
-			    "notice shall be included in all "
-			    "copies or substantial portions of the Software.");
-			ImGui::TextWrapped(
-			    "THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY "
-			    "OF ANY KIND, EXPRESS OR "
-			    "IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES "
-			    "OF MERCHANTABILITY, "
-			    "FITNESS FOR A PARTICULAR PURPOSE AND "
-			    "NONINFRINGEMENT. IN NO EVENT SHALL THE "
-			    "AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY "
-			    "CLAIM, DAMAGES OR OTHER "
-			    "LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR "
-			    "OTHERWISE, ARISING FROM, "
-			    "OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE "
-			    "OR OTHER DEALINGS IN THE "
-			    "SOFTWARE.");
-			ImGui::EndPopup();
-		}
-
 		if (ImGui::BeginPopupModal("Error opening file")) {
 			ImGui::Text("There was an error opening the file: %s", m_lastFileOpenName);
 			if (strstr(m_lastFileOpenName, ".fz")) {
@@ -562,15 +678,16 @@ void BoardView::Update() {
 	} else {
 		ImVec2 spos = ImGui::GetMousePos();
 		ImVec2 pos  = ScreenToCoord(spos.x, spos.y);
-		if (showFPS == true)
+		if (showFPS == true) {
 			ImGui::Text("FPS: %0.0f Position: %0.3f\", %0.3f\" (%0.2f, %0.2fmm)",
 			            ImGui::GetIO().Framerate,
 			            pos.x / 1000,
 			            pos.y / 1000,
 			            pos.x * 0.0254,
 			            pos.y * 0.0254);
-		else
+		} else {
 			ImGui::Text("Position: %0.3f\", %0.3f\" (%0.2f, %0.2fmm)", pos.x / 1000, pos.y / 1000, pos.x * 0.0254, pos.y * 0.0254);
+		}
 	}
 	ImGui::End();
 	ImGui::PopStyleVar();
