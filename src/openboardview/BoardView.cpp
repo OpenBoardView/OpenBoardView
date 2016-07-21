@@ -465,6 +465,11 @@ void BoardView::Update() {
 			Rotate(1);
 		}
 
+		ImGui::SameLine();
+		if (ImGui::Button(" X ")) {
+			CenterView();
+		}
+
 		if (m_showHelpAbout) {
 			ImGui::OpenPopup("About");
 		}
