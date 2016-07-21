@@ -23,6 +23,9 @@ pinHalo =       true\r\n\
 zoomFactor = 5\r\n\
 zoomModifier = 5\r\n\
 \r\n\
+panFactor = 30\r\n\
+panModifier = 5\r\n\
+\r\n\
 # Colors, format is 0xRRGGBBAA\r\n\
 backgroundColor		= 0x000000a0\r\n\
 partTextColor			= 0x008080ff\r\n\

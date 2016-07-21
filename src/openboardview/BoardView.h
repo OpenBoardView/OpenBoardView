@@ -75,6 +75,8 @@ struct BoardView {
 	int history_file_has_changed = 0;
 	float zoomFactor             = 0.5f;
 	int zoomModifier             = 5;
+	int panFactor                = 30;
+	int panModifier              = 5;
 	bool slowCPU                 = false;
 	bool showFPS                 = false;
 	bool pinHalo                 = true;

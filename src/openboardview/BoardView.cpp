@@ -72,6 +72,9 @@ int BoardView::ConfigParse(void) {
 	zoomFactor   = obvconfig.ParseInt("zoomFactor", 10) / 10.0f;
 	zoomModifier = obvconfig.ParseInt("zoomModifier", 5);
 
+	panFactor   = obvconfig.ParseInt("panFactor", 30);
+	panModifier = obvconfig.ParseInt("panModifier", 5);
+
 	/*
 	 * Colours in ImGui can be represented as a 4-byte packed uint32_t as ABGR
 	 * but most humans are more accustomed to RBGA, so for the sake of readability
@@ -722,6 +725,9 @@ void BoardView::Update() {
 void BoardView::Zoom(float osd_x, float osd_y, float zoom) {
 	ImVec2 target;
 	ImVec2 coord;
+	ImGuiIO &io = ImGui::GetIO();
+
+	if (io.KeyCtrl) zoom /= zoomModifier;
 
 	target.x = osd_x;
 	target.y = osd_y;
@@ -752,7 +758,7 @@ void BoardView::Pan(int direction, int amount) {
 
 	amount = amount / m_scale;
 
-	if (io.KeyCtrl) amount /= 10;
+	if (io.KeyCtrl) amount /= panModifier;
 
 	switch (direction) {
 		case DIR_UP: amount = -amount;
@@ -849,16 +855,11 @@ void BoardView::HandleInput() {
 		if (mwheel != 0.0f) {
 			mwheel *= zoomFactor;
 
-			// Ctrl slows down the zoom speed:
-			if (io.KeyCtrl) {
-				mwheel *= zoomFactor / zoomModifier;
-			}
 			Zoom(io.MousePos.x, io.MousePos.y, mwheel);
 		}
 	}
 
 	if (!io.WantCaptureKeyboard) {
-#define PAN_AMOUNT 30
 		//		fprintf(stderr,"DEL/. = %d,  c = %d\n", SDL_SCANCODE_KP_PERIOD,
 		// SDLK_c);
 		if (ImGui::IsKeyPressed(SDLK_n)) {
@@ -890,29 +891,22 @@ void BoardView::HandleInput() {
 			Rotate(-1);
 
 		} else if (ImGui::IsKeyPressed(KM(SDL_SCANCODE_KP_PLUS)) || ImGui::IsKeyPressed(SDLK_EQUALS)) {
-			if (io.KeyCtrl) {
-				Zoom(m_lastWidth / 2, m_lastHeight / 2, zoomFactor / zoomModifier);
-			} else {
-				Zoom(m_lastWidth / 2, m_lastHeight / 2, zoomFactor);
-			}
+			Zoom(m_lastWidth / 2, m_lastHeight / 2, zoomFactor);
+
 		} else if (ImGui::IsKeyPressed(KM(SDL_SCANCODE_KP_MINUS)) || ImGui::IsKeyPressed(SDLK_MINUS)) {
-			if (io.KeyCtrl) {
-				Zoom(m_lastWidth / 2, m_lastHeight / 2, -zoomFactor / zoomModifier);
-			} else {
-				Zoom(m_lastWidth / 2, m_lastHeight / 2, -zoomFactor);
-			}
+			Zoom(m_lastWidth / 2, m_lastHeight / 2, -zoomFactor);
 
 		} else if (ImGui::IsKeyPressed(KM(SDL_SCANCODE_KP_2)) || ImGui::IsKeyPressed(SDLK_s)) {
-			Pan(DIR_DOWN, PAN_AMOUNT);
+			Pan(DIR_DOWN, panFactor);
 
 		} else if (ImGui::IsKeyPressed(KM(SDL_SCANCODE_KP_8)) || ImGui::IsKeyPressed(SDLK_w)) {
-			Pan(DIR_UP, PAN_AMOUNT);
+			Pan(DIR_UP, panFactor);
 
 		} else if (ImGui::IsKeyPressed(KM(SDL_SCANCODE_KP_4)) || ImGui::IsKeyPressed(SDLK_a)) {
-			Pan(DIR_LEFT, PAN_AMOUNT);
+			Pan(DIR_LEFT, panFactor);
 
 		} else if (ImGui::IsKeyPressed(KM(SDL_SCANCODE_KP_6)) || ImGui::IsKeyPressed(SDLK_d)) {
-			Pan(DIR_RIGHT, PAN_AMOUNT);
+			Pan(DIR_RIGHT, panFactor);
 
 		} else if (ImGui::IsKeyPressed(KM(SDL_SCANCODE_KP_5)) || ImGui::IsKeyPressed(SDLK_x)) {
 			// Center and reset zoom
