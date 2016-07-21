@@ -426,6 +426,44 @@ void BoardView::Update() {
 		if (ImGui::Button("Component")) {
 			m_showComponentSearch = true;
 		}
+		ImGui::SameLine();
+		ImGui::Dummy(ImVec2(60, 1));
+
+		ImGui::SameLine();
+		if (ImGui::Button(" + ")) {
+			Zoom(m_lastWidth / 2, m_lastHeight / 2, +zoomFactor);
+		}
+		ImGui::SameLine();
+		if (ImGui::Button(" - ")) {
+			Zoom(m_lastWidth / 2, m_lastHeight / 2, -zoomFactor);
+		}
+		ImGui::SameLine();
+		ImGui::Dummy(ImVec2(20, 1));
+		ImGui::SameLine();
+		if (ImGui::Button("+")) {
+			Zoom(m_lastWidth / 2, m_lastHeight / 2, +zoomFactor / zoomModifier);
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("-")) {
+			Zoom(m_lastWidth / 2, m_lastHeight / 2, -zoomFactor / zoomModifier);
+		}
+
+		ImGui::SameLine();
+		ImGui::Dummy(ImVec2(20, 1));
+		ImGui::SameLine();
+		if (ImGui::Button(" < ")) {
+			Rotate(-1);
+		}
+
+		ImGui::SameLine();
+		if (ImGui::Button(" ^ ")) {
+			FlipBoard();
+		}
+
+		ImGui::SameLine();
+		if (ImGui::Button(" > ")) {
+			Rotate(1);
+		}
 
 		if (m_showHelpAbout) {
 			ImGui::OpenPopup("About");
