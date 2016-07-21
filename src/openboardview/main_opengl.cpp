@@ -207,6 +207,7 @@ int main(int argc, char **argv) {
 	ImGui_ImplSdlGL3_Init(window);
 
 	ImGuiIO &io                       = ImGui::GetIO();
+	io.IniFilename                    = NULL;
 	std::string fontpath              = get_asset_path(app.obvconfig.ParseStr("fontPath", "DroidSans.ttf"));
 	if (g.font_size == 0) g.font_size = app.obvconfig.ParseDouble("fontSize", 20.0f);
 	io.Fonts->AddFontFromFileTTF(fontpath.c_str(), g.font_size);
