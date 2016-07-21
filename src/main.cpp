@@ -98,10 +98,12 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	// Setup ImGui binding
 	ImGui_ImplDX9_Init(hwnd, g_pd3dDevice);
 
+	ImGuiIO &io = ImGui::GetIO();
+	io.IniFilename = NULL; // Disable imgui.ini
+
 	// Load Fonts
 	// (there is a default font, this is only if you want to change it. see extra_fonts/README.txt
 	// for more details)
-	ImGuiIO &io = ImGui::GetIO();
 	int ttf_size;
 	unsigned char *ttf_data = LoadAsset(&ttf_size, ASSET_FIRA_SANS);
 	ImFontConfig font_cfg{};
