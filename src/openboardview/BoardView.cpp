@@ -69,6 +69,9 @@ int BoardView::ConfigParse(void) {
 	pinHalo = obvconfig.ParseBool("pinHalo", true);
 	showFPS = obvconfig.ParseBool("showFPS", false);
 
+	zoomFactor   = obvconfig.ParseInt("zoomFactor", 10) / 10.0f;
+	zoomModifier = obvconfig.ParseInt("zoomModifier", 5);
+
 	/*
 	 * Colours in ImGui can be represented as a 4-byte packed uint32_t as ABGR
 	 * but most humans are more accustomed to RBGA, so for the sake of readability
@@ -727,11 +730,11 @@ void BoardView::HandleInput() {
 		// Zoom:
 		float mwheel = io.MouseWheel;
 		if (mwheel != 0.0f) {
-			mwheel *= 0.5f;
+			mwheel *= zoomFactor;
 
 			// Ctrl slows down the zoom speed:
 			if (io.KeyCtrl) {
-				mwheel *= 0.1f;
+				mwheel *= zoomFactor / zoomModifier;
 			}
 			Zoom(io.MousePos.x, io.MousePos.y, mwheel);
 		}
@@ -771,15 +774,15 @@ void BoardView::HandleInput() {
 
 		} else if (ImGui::IsKeyPressed(KM(SDL_SCANCODE_KP_PLUS)) || ImGui::IsKeyPressed(SDLK_EQUALS)) {
 			if (io.KeyCtrl) {
-				Zoom(m_lastWidth / 2, m_lastHeight / 2, 0.01f);
+				Zoom(m_lastWidth / 2, m_lastHeight / 2, zoomFactor / zoomModifier);
 			} else {
-				Zoom(m_lastWidth / 2, m_lastHeight / 2, 0.1f);
+				Zoom(m_lastWidth / 2, m_lastHeight / 2, zoomFactor);
 			}
 		} else if (ImGui::IsKeyPressed(KM(SDL_SCANCODE_KP_MINUS)) || ImGui::IsKeyPressed(SDLK_MINUS)) {
 			if (io.KeyCtrl) {
-				Zoom(m_lastWidth / 2, m_lastHeight / 2, -0.01f);
+				Zoom(m_lastWidth / 2, m_lastHeight / 2, -zoomFactor / zoomModifier);
 			} else {
-				Zoom(m_lastWidth / 2, m_lastHeight / 2, -0.1f);
+				Zoom(m_lastWidth / 2, m_lastHeight / 2, -zoomFactor);
 			}
 
 		} else if (ImGui::IsKeyPressed(KM(SDL_SCANCODE_KP_2)) || ImGui::IsKeyPressed(SDLK_s)) {

@@ -20,6 +20,9 @@ slowCPU =       false\r\n\
 showFPS =       false\r\n\
 pinHalo =       true\r\n\
 \r\n\
+zoomFactor = 5\r\n\
+zoomModifier = 5\r\n\
+\r\n\
 # Colors, format is 0xRRGGBBAA\r\n\
 backgroundColor		= 0x000000a0\r\n\
 partTextColor			= 0x008080ff\r\n\
@@ -40,6 +43,7 @@ selectedMaskParts		= 0xffffff8f\r\n\
 selectedMaskOutline	= 0xffffff8f\r\n\
 # EndColors\r\n\
 \r\n\
+#FZKey = 0x12345678, 0x12345678, 0x12345678, 0x12345678, 0x12345678, 0x12345678, 0x12345678, 0x12345678, 0x12345678, 0x12345678, 0x12345678, 0x12345678, 0x12345678, 0x12345678, 0x12345678, 0x12345678, 0x12345678, 0x12345678, 0x12345678, 0x12345678, 0x12345678\r\n\
 \r\n\
 # END\r\n\
 ";
