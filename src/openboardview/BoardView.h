@@ -77,9 +77,14 @@ struct BoardView {
 	int zoomModifier             = 5;
 	int panFactor                = 30;
 	int panModifier              = 5;
+	float pinSizeThresholdLow    = 0.0f;
+	bool pinShapeSquare          = false;
+	bool pinShapeCircle          = true;
 	bool slowCPU                 = false;
 	bool showFPS                 = false;
 	bool pinHalo                 = true;
+	bool showPosition            = true;
+	int pinBlank                 = 0;
 	uint32_t FZKey[44]           = {0};
 
 	int ConfigParse(void);

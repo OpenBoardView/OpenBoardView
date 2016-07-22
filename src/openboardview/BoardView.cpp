@@ -66,6 +66,14 @@ int BoardView::ConfigParse(void) {
 		style.AntiAliasedShapes = false;
 	}
 
+	pinSizeThresholdLow = obvconfig.ParseDouble("pinSizeThresholdLow", 0);
+	pinShapeSquare      = obvconfig.ParseBool("pinShapeSquare", false);
+	pinShapeCircle      = obvconfig.ParseBool("pinShapeCircle", true);
+
+	if ((!pinShapeCircle) && (!pinShapeSquare)) {
+		pinShapeSquare = true;
+	}
+
 	pinHalo = obvconfig.ParseBool("pinHalo", true);
 	showFPS = obvconfig.ParseBool("showFPS", false);
 
@@ -585,6 +593,20 @@ void BoardView::Update() {
 			if (ImGui::MenuItem("Reset View", "5")) { // actually want this to be numpad 5
 				CenterView();
 			}
+			ImGui::Separator();
+			if (ImGui::MenuItem("Toggle FPS", "f")) {
+				showFPS ^= 1;
+				m_needsRedraw = true;
+			}
+			if (ImGui::MenuItem("Toggle Position", "p")) {
+				showPosition ^= 1;
+				m_needsRedraw = true;
+			}
+			if (ImGui::MenuItem("Toggle Pin blank", "b")) {
+				pinBlank ^= 1;
+				m_needsRedraw = true;
+			}
+
 			ImGui::EndMenu();
 		}
 
@@ -746,16 +768,20 @@ void BoardView::Update() {
 	} else {
 		ImVec2 spos = ImGui::GetMousePos();
 		ImVec2 pos  = ScreenToCoord(spos.x, spos.y);
-		if (showFPS == true) {
-			ImGui::Text("FPS: %0.0f Position: %0.3f\", %0.3f\" (%0.2f, %0.2fmm)",
-			            ImGui::GetIO().Framerate,
-			            pos.x / 1000,
-			            pos.y / 1000,
-			            pos.x * 0.0254,
-			            pos.y * 0.0254);
-		} else {
-			ImGui::Text("Position: %0.3f\", %0.3f\" (%0.2f, %0.2fmm)", pos.x / 1000, pos.y / 1000, pos.x * 0.0254, pos.y * 0.0254);
+		if (pinBlank) {
+			ImGui::Text("PIN BLANK ON: Press 'b' to turn off. ");
+			ImGui::SameLine();
 		}
+		if (showFPS == true) {
+			ImGui::Text("FPS: %0.0f ", ImGui::GetIO().Framerate);
+			ImGui::SameLine();
+		}
+
+		if (showPosition == true) {
+			ImGui::Text("Position: %0.3f\", %0.3f\" (%0.2f, %0.2fmm)", pos.x / 1000, pos.y / 1000, pos.x * 0.0254, pos.y * 0.0254);
+			ImGui::SameLine();
+		}
+		ImGui::Text(" ");
 	}
 	ImGui::End();
 	ImGui::PopStyleVar();
@@ -947,6 +973,18 @@ void BoardView::HandleInput() {
 			// Flip board:
 			FlipBoard();
 
+		} else if (ImGui::IsKeyPressed(SDLK_b)) {
+			pinBlank ^= 1;
+			m_needsRedraw = true;
+
+		} else if (ImGui::IsKeyPressed(SDLK_f)) {
+			showFPS ^= 1;
+			m_needsRedraw = true;
+
+		} else if (ImGui::IsKeyPressed(SDLK_p)) {
+			showPosition ^= 1;
+			m_needsRedraw = true;
+
 		} else if (ImGui::IsKeyPressed(KM(SDLK_KP_PERIOD)) || ImGui::IsKeyPressed(SDLK_r) || ImGui::IsKeyPressed(SDLK_PERIOD)) {
 			// Rotate board: R and period rotate clockwise; comma rotates
 			// counter-clockwise
@@ -1093,13 +1131,24 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 	float threshold = 0;
 	auto io         = ImGui::GetIO();
 
+	if (pinBlank) return;
+
 	/*
 	 * If we have a pin selected, then it makes it
 	 * easier to see where the associated pins are
 	 * by masking out (alpha or channel) the other
 	 * pins so they're fainter.
 	 */
-	if (m_pinSelected) cmask = m_colors.selectedMaskPins;
+	if (m_pinSelected) {
+		cmask = m_colors.selectedMaskPins;
+	}
+
+	if (slowCPU) {
+		threshold      = 2.0f;
+		pinShapeSquare = true;
+		pinShapeCircle = false;
+	}
+	if (pinSizeThresholdLow > threshold) threshold = pinSizeThresholdLow;
 
 	for (auto &pin : m_board->Pins()) {
 		auto p_pin = pin.get();
@@ -1113,7 +1162,7 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 			if (!IsVisibleScreen(pos.x, pos.y, psz, io)) continue;
 		}
 
-		if (slowCPU) threshold = 1.5;
+		if ((!m_pinSelected) && (psz < threshold)) continue;
 
 		// color & text depending on app state & pin type
 		uint32_t color      = m_colors.pinDefault & cmask;
@@ -1173,22 +1222,29 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 
 			// for the round pin representations, choose how many circle segments need
 			// based on the pin size
-			segments                    = trunc(psz);
+			segments                    = round(psz);
 			if (segments > 32) segments = 32;
 			if (segments < 8) segments  = 8;
+			float h                     = psz / 2 + 0.5f;
 
 			switch (pin->type) {
 				case Pin::kPinTypeTestPad:
-					if (psz > 3)
+					if (psz > 3) {
 						draw->AddCircleFilled(ImVec2(pos.x, pos.y), psz, color, segments);
-					else if (psz > threshold)
-						draw->AddRect(ImVec2(pos.x - 1, pos.y - 1), ImVec2(pos.x + 1, pos.y + 1), color);
+					} else if (psz > threshold) {
+						draw->AddRectFilled(ImVec2(pos.x - h, pos.y - h), ImVec2(pos.x + h, pos.y + h), color);
+					}
 					break;
 				default:
-					if (psz > 3)
-						draw->AddCircle(ImVec2(pos.x, pos.y), psz, color, segments);
-					else if (psz > threshold)
-						draw->AddRect(ImVec2(pos.x - 1, pos.y - 1), ImVec2(pos.x + 1, pos.y + 1), color);
+					if ((psz > 3) && (psz > threshold)) {
+						if (pinShapeSquare) {
+							draw->AddRect(ImVec2(pos.x - h, pos.y - h), ImVec2(pos.x + h, pos.y + h), color);
+						} else {
+							draw->AddCircle(ImVec2(pos.x, pos.y), psz, color, segments);
+						}
+					} else if (psz > threshold) {
+						draw->AddRect(ImVec2(pos.x - h, pos.y - h), ImVec2(pos.x + h, pos.y + h), color);
+					}
 			}
 
 			if ((color == m_colors.pinHighlightSameNet) && (pinHalo == true)) {
