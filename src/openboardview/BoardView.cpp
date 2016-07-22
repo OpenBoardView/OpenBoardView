@@ -177,6 +177,341 @@ void BoardView::SetFZKey(char *keytext) {
 	}
 }
 
+void BoardView::HelpAbout(void) {
+	if (ImGui::BeginPopupModal("About", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+		if (m_showHelpAbout) m_showHelpAbout = false;
+		ImGui::Text("OpenFlex Board View");
+		ImGui::Text("https://github.com/inflex/OpenBoardView");
+		if (ImGui::Button("Close") || ImGui::IsKeyPressed(SDLK_ESCAPE)) {
+			ImGui::CloseCurrentPopup();
+		}
+		ImGui::Indent();
+		ImGui::Text("License info");
+		ImGui::Unindent();
+		ImGui::Separator();
+		ImGui::Text("OpenBoardView is MIT Licensed");
+		ImGui::Text("Copyright (c) 2016 Paul Daniels (Inflex Additions)");
+		ImGui::Text("Copyright (c) 2016 Chloridite");
+		ImGui::Spacing();
+		ImGui::Text("ImGui is MIT Licensed");
+		ImGui::Text("Copyright (c) 2014-2015 Omar Cornut and ImGui contributors");
+		ImGui::Separator();
+		ImGui::Text("The MIT License");
+		ImGui::TextWrapped(
+		    "Permission is hereby granted, free of charge, to any person "
+		    "obtaining a copy "
+		    "of this software and associated documentation files (the "
+		    "\"Software\"), to deal "
+		    "in the Software without restriction, including without limitation "
+		    "the rights "
+		    "to use, copy, modify, merge, publish, distribute, sublicense, "
+		    "and/or sell "
+		    "copies of the Software, and to permit persons to whom the Software "
+		    "is "
+		    "furnished to do so, subject to the following conditions: ");
+		ImGui::TextWrapped(
+		    "The above copyright notice and this permission "
+		    "notice shall be included in all "
+		    "copies or substantial portions of the Software.");
+		ImGui::TextWrapped(
+		    "THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY "
+		    "OF ANY KIND, EXPRESS OR "
+		    "IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES "
+		    "OF MERCHANTABILITY, "
+		    "FITNESS FOR A PARTICULAR PURPOSE AND "
+		    "NONINFRINGEMENT. IN NO EVENT SHALL THE "
+		    "AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY "
+		    "CLAIM, DAMAGES OR OTHER "
+		    "LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR "
+		    "OTHERWISE, ARISING FROM, "
+		    "OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE "
+		    "OR OTHER DEALINGS IN THE "
+		    "SOFTWARE.");
+		ImGui::EndPopup();
+	}
+}
+
+void BoardView::HelpControls(void) {
+	if (ImGui::BeginPopupModal("Controls", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+		if (m_showHelpControls) m_showHelpControls = false;
+		ImGui::Text("KEYBOARD CONTROLS");
+		ImGui::SameLine();
+
+		if (ImGui::Button("Close") || ImGui::IsKeyPressed(SDLK_ESCAPE)) {
+			ImGui::CloseCurrentPopup();
+		}
+		ImGui::Separator();
+
+		ImGui::Columns(2);
+		ImGui::PushItemWidth(-1);
+		ImGui::Text("Load file");
+		ImGui::Text("Quit");
+		ImGui::Spacing();
+		ImGui::Spacing();
+
+		ImGui::Text("Pan up");
+		ImGui::Text("Pan down");
+		ImGui::Text("Pan left");
+		ImGui::Text("Pan right");
+		ImGui::Spacing();
+		ImGui::Spacing();
+
+		ImGui::Text("Search for compnent");
+		ImGui::Text("Search for net");
+		ImGui::Text("Display component list");
+		ImGui::Text("Display net list");
+		ImGui::Spacing();
+		ImGui::Spacing();
+
+		ImGui::Text("Flip board");
+		ImGui::Spacing();
+		ImGui::Spacing();
+
+		ImGui::Text("Zoom in");
+		ImGui::Text("Zoom out");
+		ImGui::Spacing();
+		ImGui::Spacing();
+
+		ImGui::Text("Reset zoom and center");
+		ImGui::Text("Rotate clockwise");
+		ImGui::Text("Rotate anticlockwise");
+
+		ImGui::NextColumn();
+		ImGui::Text("CTRL-o");
+		ImGui::Text("Ctrl-q");
+		ImGui::Spacing();
+		ImGui::Spacing();
+
+		ImGui::Text("w, numpad-up, arrow-up");
+		ImGui::Text("s, numpad-down, arrow-down");
+		ImGui::Text("a, numpad-left, arrow-left");
+		ImGui::Text("d, numpad-right, arrow-right");
+		ImGui::Spacing();
+		ImGui::Spacing();
+
+		ImGui::Text("c");
+		ImGui::Text("n");
+		ImGui::Text("k");
+		ImGui::Text("l");
+		ImGui::Spacing();
+		ImGui::Spacing();
+
+		ImGui::Text("Space bar");
+		ImGui::Spacing();
+		ImGui::Spacing();
+
+		ImGui::Text("+, numpad+");
+		ImGui::Text("-, numpad-");
+		ImGui::Spacing();
+		ImGui::Spacing();
+
+		ImGui::Text("x, numpad-5");
+		ImGui::Text("'.' numpad '.'");
+		ImGui::Text("',' numpad-0");
+		ImGui::Columns(1);
+		ImGui::Separator();
+
+		ImGui::Text("MOUSE CONTROLS");
+		ImGui::Separator();
+		ImGui::Columns(2);
+		ImGui::Text("Highlight pins on network");
+		ImGui::Text("Move board");
+		ImGui::Text("Zoom (CTRL for finer steps)");
+		ImGui::Text("Flip board");
+		ImGui::Text("Rotate board");
+
+		ImGui::NextColumn();
+		ImGui::Text("Click (on pin)");
+		ImGui::Text("Click and drag");
+		ImGui::Text("Scroll");
+		ImGui::Text("Middle click");
+		ImGui::Text("Right click");
+		ImGui::Columns(1);
+
+		ImGui::EndPopup();
+	}
+}
+
+void BoardView::SearchComponent(void) {
+	if (ImGui::BeginPopupModal("Search for Component",
+	                           nullptr,
+	                           ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings |
+	                               ImGuiWindowFlags_ShowBorders)) {
+		char cs[128];
+		const char *first_button  = m_search;
+		const char *first_button2 = m_search2;
+		const char *first_button3 = m_search3;
+
+		if (m_showComponentSearch) {
+			m_showComponentSearch = false;
+		}
+
+		// Column 1, implied.
+		//
+		ImGui::Columns(3);
+		ImGui::Text("Component #1");
+
+		if (ImGui::InputText("##search", m_search, 128, ImGuiInputTextFlags_CharsNoBlank)) {
+			FindComponent(m_search);
+		}
+
+		if (ImGui::IsRootWindowOrAnyChildFocused() && !ImGui::IsAnyItemActive() && !ImGui::IsMouseClicked(0)) {
+			ImGui::SetKeyboardFocusHere(-1);
+		} // set keyboard focus
+
+		int buttons_left = 10;
+		for (int i = 0; buttons_left && i < m_file->num_parts; i++) {
+			const BRDPart &part = m_file->parts[i];
+			if (utf8casestr(part.name, m_search)) {
+				if (ImGui::SmallButton(part.name)) {
+					FindComponent(part.name);
+					snprintf(m_search, sizeof(m_search), "%s", part.name);
+					first_button = part.name;
+				} // button name generation
+				if (buttons_left == 10) {
+					first_button = part.name;
+				}
+				buttons_left--;
+			} // testing for match of our component partial to the part name
+		}     // for each part ( search column 1 )
+
+		ImGui::NextColumn();
+		ImGui::Text("Component #2");
+		if (ImGui::InputText("##search2", m_search2, 128, ImGuiInputTextFlags_CharsNoBlank)) {
+			FindComponent(m_search2);
+		}
+		//			const char *first_button2 = m_search2;
+		int buttons_left2 = 10;
+		for (int i = 0; buttons_left2 && i < m_file->num_parts; i++) {
+			const BRDPart &part2 = m_file->parts[i];
+			if (utf8casestr(part2.name, m_search2)) {
+				snprintf(cs, sizeof(cs), "%s##2", part2.name);
+				if (ImGui::SmallButton(cs)) {
+					FindComponent(part2.name);
+					//		ImGui::CloseCurrentPopup();
+					snprintf(m_search2, sizeof(m_search2), "%s", part2.name);
+					first_button2 = part2.name;
+				}
+				if (buttons_left2 == 10) {
+					first_button2 = part2.name;
+				}
+				buttons_left2--;
+			}
+		}
+
+		ImGui::NextColumn();
+		ImGui::Text("Component #3");
+		if (ImGui::InputText("##search3", m_search3, 128, ImGuiInputTextFlags_CharsNoBlank)) {
+			FindComponent(m_search3);
+		}
+		//			const char *first_button3 = m_search3;
+		int buttons_left3 = 10;
+		for (int i = 0; buttons_left3 && i < m_file->num_parts; i++) {
+			const BRDPart &part3 = m_file->parts[i];
+			if (utf8casestr(part3.name, m_search3)) {
+				snprintf(cs, sizeof(cs), "%s##3", part3.name);
+				if (ImGui::SmallButton(cs)) {
+					FindComponent(part3.name);
+					snprintf(m_search3, sizeof(m_search3), "%s", part3.name);
+					first_button3 = part3.name;
+				}
+				if (buttons_left3 == 10) {
+					first_button3 = part3.name;
+				}
+				buttons_left3--;
+			}
+		}
+
+		// Enter and Esc close the search:
+		if (ImGui::IsKeyPressed(SDLK_RETURN)) {
+			FindComponent(first_button);
+			FindComponentNoClear(first_button2);
+			FindComponentNoClear(first_button3);
+			ImGui::CloseCurrentPopup();
+		} // response to keyboard ENTER
+
+		ImGui::Columns(1); // reset back to single column mode
+		ImGui::Separator();
+
+		if (ImGui::Button("Search")) {
+			FindComponent(first_button);
+			FindComponentNoClear(first_button2);
+			FindComponentNoClear(first_button3);
+			ImGui::CloseCurrentPopup();
+		} // search button
+
+		ImGui::SameLine();
+		if (ImGui::Button("Reset")) {
+			FindComponent("");
+			m_search[0]  = '\0';
+			m_search2[0] = '\0';
+			m_search3[0] = '\0';
+		} // reset button
+
+		ImGui::SameLine();
+		if (ImGui::Button("Exit") || ImGui::IsKeyPressed(SDLK_ESCAPE)) {
+			FindComponent("");
+			m_search[0]  = '\0';
+			m_search2[0] = '\0';
+			m_search3[0] = '\0';
+			ImGui::CloseCurrentPopup();
+		} // exit button
+
+		ImGui::SameLine();
+		ImGui::Text("ENTER: Search, ESC: Exit, TAB: next field");
+
+		ImGui::EndPopup();
+	}
+}
+
+void BoardView::SearchNet(void) {
+	/*
+ * Network popup window (search)
+ */
+	if (ImGui::BeginPopupModal("Search for Net", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_ShowBorders)) {
+		if (m_showNetfilterSearch) {
+			m_showNetfilterSearch = false;
+		}
+		if (ImGui::InputText("##search", m_search, 128)) {
+			SetNetFilter(m_search);
+		}
+		const char *first_button = m_search;
+		if (ImGui::IsItemHovered() ||
+		    (ImGui::IsRootWindowOrAnyChildFocused() && !ImGui::IsAnyItemActive() && !ImGui::IsMouseClicked(0)))
+			ImGui::SetKeyboardFocusHere(-1);
+
+		int buttons_left = 10;
+		for (auto &net : m_nets) {
+			if (buttons_left > 0) {
+				if (utf8casestr(net->name.c_str(), m_search)) {
+					if (ImGui::Button(net->name.c_str())) {
+						SetNetFilter(net->name.c_str());
+						ImGui::CloseCurrentPopup();
+					}
+					if (buttons_left == 10) {
+						first_button = net->name.c_str();
+					}
+					buttons_left--;
+				}
+			}
+		}
+
+		// Enter and Esc close the search:
+		if (ImGui::IsKeyPressed(SDLK_RETURN)) {
+			SetNetFilter(first_button);
+			ImGui::CloseCurrentPopup();
+		}
+		ImGui::Separator();
+		if (ImGui::Button("Clear") || ImGui::IsKeyPressed(SDLK_ESCAPE)) {
+			SetNetFilter("");
+			ImGui::CloseCurrentPopup();
+		}
+		ImGui::SameLine();
+		ImGui::Text("ENTER to submit, ESC to close");
+		ImGui::EndPopup();
+	}
+}
+
 /** UPDATE Logic region
  *
  *
@@ -208,6 +543,12 @@ void BoardView::Update() {
 
 	if (ImGui::BeginMainMenuBar()) {
 		menu_height = ImGui::GetWindowHeight();
+
+		SearchNet();
+		SearchComponent();
+		HelpControls();
+		HelpAbout();
+
 		if (ImGui::BeginMenu("File")) {
 			if (ImGui::MenuItem("Open", "Ctrl+O")) {
 				open_file = true;
@@ -247,6 +588,16 @@ void BoardView::Update() {
 			ImGui::EndMenu();
 		}
 
+		if (ImGui::BeginMenu("Search")) {
+			if (ImGui::MenuItem("Components", "c")) {
+				m_showComponentSearch = true;
+			}
+			if (ImGui::MenuItem("Nets", "n")) {
+				m_showNetfilterSearch = true;
+			}
+			ImGui::EndMenu();
+		}
+
 		if (ImGui::BeginMenu("Windows")) {
 			if (ImGui::MenuItem("Net List", "l")) {
 				m_showNetList = m_showNetList ? false : true;
@@ -267,185 +618,26 @@ void BoardView::Update() {
 			ImGui::EndMenu();
 		}
 
-		if (ImGui::BeginPopupModal("Controls", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
-			if (m_showHelpControls) m_showHelpControls = false;
-			ImGui::Text("KEYBOARD CONTROLS");
-			ImGui::SameLine();
-
-			if (ImGui::Button("Close") || ImGui::IsKeyPressed(SDLK_ESCAPE)) {
-				ImGui::CloseCurrentPopup();
-			}
-			ImGui::Separator();
-
-			ImGui::Columns(2);
-			ImGui::PushItemWidth(-1);
-			ImGui::Text("Load file");
-			ImGui::Text("Quit");
-			ImGui::Spacing();
-			ImGui::Spacing();
-
-			ImGui::Text("Pan up");
-			ImGui::Text("Pan down");
-			ImGui::Text("Pan left");
-			ImGui::Text("Pan right");
-			ImGui::Spacing();
-			ImGui::Spacing();
-
-			ImGui::Text("Search for compnent");
-			ImGui::Text("Search for net");
-			ImGui::Text("Display component list");
-			ImGui::Text("Display net list");
-			ImGui::Spacing();
-			ImGui::Spacing();
-
-			ImGui::Text("Flip board");
-			ImGui::Spacing();
-			ImGui::Spacing();
-
-			ImGui::Text("Zoom in");
-			ImGui::Text("Zoom out");
-			ImGui::Spacing();
-			ImGui::Spacing();
-
-			ImGui::Text("Reset zoom and center");
-			ImGui::Text("Rotate clockwise");
-			ImGui::Text("Rotate anticlockwise");
-
-			ImGui::NextColumn();
-			ImGui::Text("CTRL-o");
-			ImGui::Text("Ctrl-q");
-			ImGui::Spacing();
-			ImGui::Spacing();
-
-			ImGui::Text("w, numpad-up, arrow-up");
-			ImGui::Text("s, numpad-down, arrow-down");
-			ImGui::Text("a, numpad-left, arrow-left");
-			ImGui::Text("d, numpad-right, arrow-right");
-			ImGui::Spacing();
-			ImGui::Spacing();
-
-			ImGui::Text("c");
-			ImGui::Text("n");
-			ImGui::Text("k");
-			ImGui::Text("l");
-			ImGui::Spacing();
-			ImGui::Spacing();
-
-			ImGui::Text("Space bar");
-			ImGui::Spacing();
-			ImGui::Spacing();
-
-			ImGui::Text("+, numpad+");
-			ImGui::Text("-, numpad-");
-			ImGui::Spacing();
-			ImGui::Spacing();
-
-			ImGui::Text("x, numpad-5");
-			ImGui::Text("'.' numpad '.'");
-			ImGui::Text("',' numpad-0");
-			ImGui::Columns(1);
-			ImGui::Separator();
-
-			ImGui::Text("MOUSE CONTROLS");
-			ImGui::Separator();
-			ImGui::Columns(2);
-			ImGui::Text("Highlight pins on network");
-			ImGui::Text("Move board");
-			ImGui::Text("Zoom (CTRL for finer steps)");
-			ImGui::Text("Flip board");
-			ImGui::Text("Rotate board");
-
-			ImGui::NextColumn();
-			ImGui::Text("Click (on pin)");
-			ImGui::Text("Click and drag");
-			ImGui::Text("Scroll");
-			ImGui::Text("Middle click");
-			ImGui::Text("Right click");
-			ImGui::Columns(1);
-
-			ImGui::EndPopup();
-		}
-
-		if (ImGui::BeginPopupModal("About", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
-			if (m_showHelpAbout) m_showHelpAbout = false;
-			ImGui::Text("OpenFlex Board View");
-			ImGui::Text("https://github.com/inflex/OpenBoardView");
-			if (ImGui::Button("Close") || ImGui::IsKeyPressed(SDLK_ESCAPE)) {
-				ImGui::CloseCurrentPopup();
-			}
-			ImGui::Indent();
-			ImGui::Text("License info");
-			ImGui::Unindent();
-			ImGui::Separator();
-			ImGui::Text("OpenBoardView is MIT Licensed");
-			ImGui::Text("Copyright (c) 2016 Paul Daniels (Inflex Additions)");
-			ImGui::Text("Copyright (c) 2016 Chloridite");
-			ImGui::Spacing();
-			ImGui::Text("ImGui is MIT Licensed");
-			ImGui::Text("Copyright (c) 2014-2015 Omar Cornut and ImGui contributors");
-			ImGui::Separator();
-			ImGui::Text("The MIT License");
-			ImGui::TextWrapped(
-			    "Permission is hereby granted, free of charge, to any person "
-			    "obtaining a copy "
-			    "of this software and associated documentation files (the "
-			    "\"Software\"), to deal "
-			    "in the Software without restriction, including without limitation "
-			    "the rights "
-			    "to use, copy, modify, merge, publish, distribute, sublicense, "
-			    "and/or sell "
-			    "copies of the Software, and to permit persons to whom the Software "
-			    "is "
-			    "furnished to do so, subject to the following conditions: ");
-			ImGui::TextWrapped(
-			    "The above copyright notice and this permission "
-			    "notice shall be included in all "
-			    "copies or substantial portions of the Software.");
-			ImGui::TextWrapped(
-			    "THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY "
-			    "OF ANY KIND, EXPRESS OR "
-			    "IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES "
-			    "OF MERCHANTABILITY, "
-			    "FITNESS FOR A PARTICULAR PURPOSE AND "
-			    "NONINFRINGEMENT. IN NO EVENT SHALL THE "
-			    "AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY "
-			    "CLAIM, DAMAGES OR OTHER "
-			    "LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR "
-			    "OTHERWISE, ARISING FROM, "
-			    "OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE "
-			    "OR OTHER DEALINGS IN THE "
-			    "SOFTWARE.");
-			ImGui::EndPopup();
-		}
-
-		ImGui::SameLine();
-		if (ImGui::Button("Net")) {
-			m_showNetfilterSearch = true;
-		}
-		ImGui::SameLine();
-		if (ImGui::Button("Component")) {
-			m_showComponentSearch = true;
-		}
 		ImGui::SameLine();
 		ImGui::Dummy(ImVec2(60, 1));
 
-		ImGui::SameLine();
-		if (ImGui::Button(" + ")) {
-			Zoom(m_lastWidth / 2, m_lastHeight / 2, +zoomFactor);
-		}
 		ImGui::SameLine();
 		if (ImGui::Button(" - ")) {
 			Zoom(m_lastWidth / 2, m_lastHeight / 2, -zoomFactor);
 		}
 		ImGui::SameLine();
-		ImGui::Dummy(ImVec2(20, 1));
-		ImGui::SameLine();
-		if (ImGui::Button("+")) {
-			Zoom(m_lastWidth / 2, m_lastHeight / 2, +zoomFactor / zoomModifier);
+		if (ImGui::Button(" + ")) {
+			Zoom(m_lastWidth / 2, m_lastHeight / 2, +zoomFactor);
 		}
+		ImGui::SameLine();
+		ImGui::Dummy(ImVec2(20, 1));
 		ImGui::SameLine();
 		if (ImGui::Button("-")) {
 			Zoom(m_lastWidth / 2, m_lastHeight / 2, -zoomFactor / zoomModifier);
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("+")) {
+			Zoom(m_lastWidth / 2, m_lastHeight / 2, +zoomFactor / zoomModifier);
 		}
 
 		ImGui::SameLine();
@@ -466,7 +658,7 @@ void BoardView::Update() {
 		}
 
 		ImGui::SameLine();
-		if (ImGui::Button(" X ")) {
+		if (ImGui::Button("X")) {
 			CenterView();
 		}
 
@@ -485,175 +677,6 @@ void BoardView::Update() {
 		if (m_lastFileOpenWasInvalid) {
 			ImGui::OpenPopup("Error opening file");
 			m_lastFileOpenWasInvalid = false;
-		}
-		if (ImGui::BeginPopupModal("Search for Net", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
-			if (m_showNetfilterSearch) {
-				m_showNetfilterSearch = false;
-			}
-			if (ImGui::InputText("##search", m_search, 128)) {
-				SetNetFilter(m_search);
-			}
-			const char *first_button = m_search;
-			if (ImGui::IsItemHovered() ||
-			    (ImGui::IsRootWindowOrAnyChildFocused() && !ImGui::IsAnyItemActive() && !ImGui::IsMouseClicked(0)))
-				ImGui::SetKeyboardFocusHere(-1);
-
-			int buttons_left = 10;
-			for (auto &net : m_nets) {
-				if (buttons_left > 0) {
-					if (utf8casestr(net->name.c_str(), m_search)) {
-						if (ImGui::Button(net->name.c_str())) {
-							SetNetFilter(net->name.c_str());
-							ImGui::CloseCurrentPopup();
-						}
-						if (buttons_left == 10) {
-							first_button = net->name.c_str();
-						}
-						buttons_left--;
-					}
-				}
-			}
-
-			// Enter and Esc close the search:
-			if (ImGui::IsKeyPressed(SDLK_RETURN)) {
-				SetNetFilter(first_button);
-				ImGui::CloseCurrentPopup();
-			}
-			if (ImGui::Button("Clear") || ImGui::IsKeyPressed(SDLK_ESCAPE)) {
-				SetNetFilter("");
-				ImGui::CloseCurrentPopup();
-			}
-			ImGui::EndPopup();
-		}
-
-		if (ImGui::BeginPopupModal("Search for Component",
-		                           nullptr,
-		                           ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoCollapse |
-		                               ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_ShowBorders)) {
-			char cs[128];
-			const char *first_button  = m_search;
-			const char *first_button2 = m_search2;
-			const char *first_button3 = m_search3;
-
-			if (m_showComponentSearch) {
-				m_showComponentSearch = false;
-			}
-
-			// Column 1, implied.
-			//
-			ImGui::Columns(3);
-			ImGui::Text("Component #1");
-
-			if (ImGui::InputText("##search", m_search, 128, ImGuiInputTextFlags_CharsNoBlank)) {
-				FindComponent(m_search);
-			}
-
-			if (ImGui::IsRootWindowOrAnyChildFocused() && !ImGui::IsAnyItemActive() && !ImGui::IsMouseClicked(0)) {
-				ImGui::SetKeyboardFocusHere(-1);
-			} // set keyboard focus
-
-			int buttons_left = 10;
-			for (int i = 0; buttons_left && i < m_file->num_parts; i++) {
-				const BRDPart &part = m_file->parts[i];
-				if (utf8casestr(part.name, m_search)) {
-					if (ImGui::SmallButton(part.name)) {
-						FindComponent(part.name);
-						snprintf(m_search, sizeof(m_search), "%s", part.name);
-						first_button = part.name;
-					} // button name generation
-					if (buttons_left == 10) {
-						first_button = part.name;
-					}
-					buttons_left--;
-				} // testing for match of our component partial to the part name
-			}     // for each part ( search column 1 )
-
-			ImGui::NextColumn();
-			ImGui::Text("Component #2");
-			if (ImGui::InputText("##search2", m_search2, 128, ImGuiInputTextFlags_CharsNoBlank)) {
-				FindComponent(m_search2);
-			}
-			//			const char *first_button2 = m_search2;
-			int buttons_left2 = 10;
-			for (int i = 0; buttons_left2 && i < m_file->num_parts; i++) {
-				const BRDPart &part2 = m_file->parts[i];
-				if (utf8casestr(part2.name, m_search2)) {
-					snprintf(cs, sizeof(cs), "%s##2", part2.name);
-					if (ImGui::SmallButton(cs)) {
-						FindComponent(part2.name);
-						//		ImGui::CloseCurrentPopup();
-						snprintf(m_search2, sizeof(m_search2), "%s", part2.name);
-						first_button2 = part2.name;
-					}
-					if (buttons_left2 == 10) {
-						first_button2 = part2.name;
-					}
-					buttons_left2--;
-				}
-			}
-
-			ImGui::NextColumn();
-			ImGui::Text("Component #3");
-			if (ImGui::InputText("##search3", m_search3, 128, ImGuiInputTextFlags_CharsNoBlank)) {
-				FindComponent(m_search3);
-			}
-			//			const char *first_button3 = m_search3;
-			int buttons_left3 = 10;
-			for (int i = 0; buttons_left3 && i < m_file->num_parts; i++) {
-				const BRDPart &part3 = m_file->parts[i];
-				if (utf8casestr(part3.name, m_search3)) {
-					snprintf(cs, sizeof(cs), "%s##3", part3.name);
-					if (ImGui::SmallButton(cs)) {
-						FindComponent(part3.name);
-						snprintf(m_search3, sizeof(m_search3), "%s", part3.name);
-						first_button3 = part3.name;
-					}
-					if (buttons_left3 == 10) {
-						first_button3 = part3.name;
-					}
-					buttons_left3--;
-				}
-			}
-
-			// Enter and Esc close the search:
-			if (ImGui::IsKeyPressed(SDLK_RETURN)) {
-				FindComponent(first_button);
-				FindComponentNoClear(first_button2);
-				FindComponentNoClear(first_button3);
-				ImGui::CloseCurrentPopup();
-			} // response to keyboard ENTER
-
-			ImGui::Columns(1); // reset back to single column mode
-			ImGui::Separator();
-
-			if (ImGui::Button("Search")) {
-				FindComponent(first_button);
-				FindComponentNoClear(first_button2);
-				FindComponentNoClear(first_button3);
-				ImGui::CloseCurrentPopup();
-			} // search button
-
-			ImGui::SameLine();
-			if (ImGui::Button("Reset")) {
-				FindComponent("");
-				m_search[0]  = '\0';
-				m_search2[0] = '\0';
-				m_search3[0] = '\0';
-			} // reset button
-
-			ImGui::SameLine();
-			if (ImGui::Button("Exit") || ImGui::IsKeyPressed(SDLK_ESCAPE)) {
-				FindComponent("");
-				m_search[0]  = '\0';
-				m_search2[0] = '\0';
-				m_search3[0] = '\0';
-				ImGui::CloseCurrentPopup();
-			} // exit button
-
-			ImGui::SameLine();
-			ImGui::Text("ENTER: Search, ESC: Exit, TAB: next field");
-
-			ImGui::EndPopup();
 		}
 
 		if (ImGui::BeginPopupModal("Error opening file")) {
@@ -706,7 +729,6 @@ void BoardView::Update() {
 	/*
 	 * Status footer
 	 */
-	// const ImGuiIO &io = ImGui::GetIO();
 	float status_height = (10.0f + ImGui::GetFontSize());
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(4.0f, 3.0f));
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);

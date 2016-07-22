@@ -91,6 +91,10 @@ struct BoardView {
 	void DrawHex(ImDrawList *draw, ImVec2 c, double r, uint32_t color);
 	void DrawBox(ImDrawList *draw, ImVec2 c, double r, uint32_t color);
 	void SetFZKey(char *keytext);
+	void HelpAbout(void);
+	void HelpControls(void);
+	void SearchNet(void);
+	void SearchComponent(void);
 
 	Pin *m_pinSelected = nullptr;
 	vector<Pin *> m_pinHighlighted;
