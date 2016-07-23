@@ -27,6 +27,8 @@
 #define SDLK_d 0x44
 #define SDLK_w 0x57
 #define SDLK_x 0x58
+#define SDLK_y 0x59
+#define SDLK_z 0x5A
 
 #define SDLK_l 0x4c
 #define SDLK_k 0x4b
