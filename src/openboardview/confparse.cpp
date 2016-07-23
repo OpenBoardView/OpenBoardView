@@ -17,8 +17,8 @@ windowY=900\r\n\
 #fontPath=FiraSans-Medium.ttf\r\n\
 fontSize=20\r\n\
 pinSizeThresholdLow = 0\r\n\
-pinShapeCircle = false\r\n\
-pinShapeSquare = true\r\n\
+pinShapeCircle = true\r\n\
+pinShapeSquare = false\r\n\
 \r\n\
 slowCPU =       false\r\n\
 showFPS =       false\r\n\
