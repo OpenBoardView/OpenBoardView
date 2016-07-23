@@ -26,6 +26,12 @@ replacement for the "Test_Link" software.
 - Compound project/file format
 
 
+### Prerequisites
+
+For Ubuntu developers, you'll need the following packages at a minium;
+
+	$ apt-get install build-essential cmake libsdl2-dev libgtk-3-dev
+
 ### Installation
 
 1. Clone the project
