@@ -202,7 +202,7 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
 	bool show_test_window    = true;
 	bool show_another_window = false;
-	ImVec4 clear_col         = ImColor(20, 20, 30);
+	ImVec4 clear_color       = ImColor(app.m_colors.backgroundColor);
 
 	// Main loop
 	MSG msg;
