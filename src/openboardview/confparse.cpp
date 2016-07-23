@@ -48,6 +48,15 @@ partHullColor			= 0x80808080\r\n\
 selectedMaskPins		= 0xffffff4f\r\n\
 selectedMaskParts		= 0xffffff8f\r\n\
 selectedMaskOutline	= 0xffffff8f\r\n\
+\r\n\
+# OR mask pins are applied after the above selectedMask, in the \r\n\
+# form of color = original & selectedMask | orMask\r\n\
+#\r\n\
+# This is useful if you want to *lighten* a colour when 'masked'\r\n\
+#\r\n\
+orMaskPins		= 0x00000000\r\n\
+orMaskParts		= 0x00000000\r\n\
+orMaskOutline	= 0x00000000\r\n\
 # EndColors\r\n\
 \r\n\
 #FZKey = 0x12345678, 0x12345678, 0x12345678, 0x12345678, 0x12345678, 0x12345678, 0x12345678, 0x12345678, 0x12345678, 0x12345678, 0x12345678, 0x12345678, 0x12345678, 0x12345678, 0x12345678, 0x12345678, 0x12345678, 0x12345678, 0x12345678, 0x12345678, 0x12345678\r\n\
@@ -130,30 +139,34 @@ char *Confparse::Parse(const char *key) {
 		 * assist in making it easier for people to read it.
 		 */
 		p = p + keylen;
-		while ((p < llimit) && ((*p == '=') || (*p == ' ') || (*p == '\t'))) p++; // get up to the start of the value;
 
-		if ((p < llimit) && (p >= conf)) {
+		if ((p < llimit) && (!isalnum(*p))) {
 
-			/*
-			 * Check that the location of the strstr() return is
-			 * left aligned to the start of the line. This prevents
-			 * us picking up trash name=value pairs among the general
-			 * text within the file
-			 */
-			if ((op == conf) || (*(op - 1) == '\r') || (*(op - 1) == '\n')) {
-				size_t i = 0;
+			while ((p < llimit) && ((*p == '=') || (*p == ' ') || (*p == '\t'))) p++; // get up to the start of the value;
+
+			if ((p < llimit) && (p >= conf)) {
 
 				/*
-				 * Search for the end of the data by finding the end of the line
+				 * Check that the location of the strstr() return is
+				 * left aligned to the start of the line. This prevents
+				 * us picking up trash name=value pairs among the general
+				 * text within the file
 				 */
-				while ((p < limit) && ((*p != '\0') && (*p != '\n') && (*p != '\r'))) {
-					value[i] = *p;
-					p++;
-					i++;
-					if (i >= CONFPARSE_MAX_VALUE_SIZE) break;
+				if ((op == conf) || (*(op - 1) == '\r') || (*(op - 1) == '\n')) {
+					size_t i = 0;
+
+					/*
+					 * Search for the end of the data by finding the end of the line
+					 */
+					while ((p < limit) && ((*p != '\0') && (*p != '\n') && (*p != '\r'))) {
+						value[i] = *p;
+						p++;
+						i++;
+						if (i >= CONFPARSE_MAX_VALUE_SIZE) break;
+					}
+					value[i] = '\0';
+					return value;
 				}
-				value[i] = '\0';
-				return value;
 			}
 		}
 		p  = strstr(op + 1, key);

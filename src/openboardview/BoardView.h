@@ -40,6 +40,10 @@ struct BitVec {
 };
 
 struct ColorScheme {
+	/*
+	 * Take note, because these are directly set
+	 * the packing format is ABGR,  not RGBA
+	 */
 	uint32_t backgroundColor = 0xa0000000;
 	uint32_t partTextColor   = 0xff808000;
 	uint32_t boardOutline    = 0xff0000ff;
@@ -51,7 +55,8 @@ struct ColorScheme {
 	uint32_t pinNotConnected = 0xffdd0000;
 	uint32_t pinTestPad      = 0xff888888;
 
-	uint32_t pinSelected         = 0xffeeeeee;
+	uint32_t pinSelected         = 0xff00eeee;
+	uint32_t pinSelectedText     = 0xff00eeee;
 	uint32_t pinHalo             = 0x8f00ff00;
 	uint32_t pinHighlighted      = 0xffffffff;
 	uint32_t pinHighlightSameNet = 0xff99f8ff;
@@ -62,6 +67,10 @@ struct ColorScheme {
 	uint32_t selectedMaskPins    = 0x4FFFFFFF;
 	uint32_t selectedMaskParts   = 0x8FFFFFFF;
 	uint32_t selectedMaskOutline = 0x8FFFFFFF;
+
+	uint32_t orMaskPins    = 0x00000000;
+	uint32_t orMaskParts   = 0x00000000;
+	uint32_t orMaskOutline = 0x00000000;
 };
 
 enum DrawChannel { kChannelImages = 0, kChannelPolylines = 1, kChannelText = 2, kChannelAnnotations = 3, NUM_DRAW_CHANNELS = 4 };
@@ -84,6 +93,7 @@ struct BoardView {
 	bool showFPS                 = false;
 	bool pinHalo                 = true;
 	bool showPosition            = true;
+	bool reloadConfig            = false;
 	int pinBlank                 = 0;
 	uint32_t FZKey[44]           = {0};
 

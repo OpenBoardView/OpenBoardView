@@ -97,15 +97,21 @@ int BoardView::ConfigParse(void) {
 	m_colors.pinGround           = byte4swap(obvconfig.ParseHex("pinGround", 0xbb0000ff));
 	m_colors.pinNotConnected     = byte4swap(obvconfig.ParseHex("pinNotConnected", 0x0000ffff));
 	m_colors.pinTestPad          = byte4swap(obvconfig.ParseHex("pinTestPad", 0x888888ff));
+	m_colors.pinSelectedText     = byte4swap(obvconfig.ParseHex("pinSelectedText", 0xeeeeeeff));
 	m_colors.pinSelected         = byte4swap(obvconfig.ParseHex("pinSelected", 0xeeeeeeff));
 	m_colors.pinHalo             = byte4swap(obvconfig.ParseHex("pinHaloColor", 0x00ff006f));
 	m_colors.pinHighlighted      = byte4swap(obvconfig.ParseHex("pinHighlighted", 0xffffffff));
 	m_colors.pinHighlightSameNet = byte4swap(obvconfig.ParseHex("pinHighlightSameNet", 0xfff888ff));
 	m_colors.annotationPartAlias = byte4swap(obvconfig.ParseHex("annotationPartAlias", 0xffff00ff));
 	m_colors.partHullColor       = byte4swap(obvconfig.ParseHex("partHullColor", 0x80808080));
+
 	m_colors.selectedMaskPins    = byte4swap(obvconfig.ParseHex("selectedMaskPins", 0xffffff4f));
 	m_colors.selectedMaskParts   = byte4swap(obvconfig.ParseHex("selectedMaskParts", 0xffffff8f));
 	m_colors.selectedMaskOutline = byte4swap(obvconfig.ParseHex("selectedMaskOutline", 0xffffff8f));
+
+	m_colors.orMaskPins    = byte4swap(obvconfig.ParseHex("orMaskPins", 0x00000000));
+	m_colors.orMaskParts   = byte4swap(obvconfig.ParseHex("orMaskParts", 0x00000000));
+	m_colors.orMaskOutline = byte4swap(obvconfig.ParseHex("orMaskOutline", 0x00000000));
 
 	/*
 	 * The asus .fz file formats require a specific key to be decoded.
@@ -1001,6 +1007,10 @@ void BoardView::HandleInput() {
 			showPosition ^= 1;
 			m_needsRedraw = true;
 
+		} else if (ImGui::IsKeyPressed(SDLK_z)) {
+			reloadConfig  = true;
+			m_needsRedraw = true;
+
 		} else if (ImGui::IsKeyPressed(KM(SDLK_KP_PERIOD)) || ImGui::IsKeyPressed(SDLK_r) || ImGui::IsKeyPressed(SDLK_PERIOD)) {
 			// Rotate board: R and period rotate clockwise; comma rotates
 			// counter-clockwise
@@ -1134,7 +1144,7 @@ inline void BoardView::DrawOutline(ImDrawList *draw) {
 		 * things and make it easier to see associated pins/points
 		 */
 		if (m_pinSelected) {
-			draw->AddLine(spa, spb, m_colors.boardOutline & m_colors.selectedMaskOutline);
+			draw->AddLine(spa, spb, (m_colors.boardOutline & m_colors.selectedMaskOutline) | m_colors.orMaskOutline);
 		} else {
 			draw->AddLine(spa, spb, m_colors.boardOutline);
 		}
@@ -1144,6 +1154,7 @@ inline void BoardView::DrawOutline(ImDrawList *draw) {
 inline void BoardView::DrawPins(ImDrawList *draw) {
 
 	uint32_t cmask  = 0xFFFFFFFF;
+	uint32_t omask  = 0x00000000;
 	float threshold = 0;
 	auto io         = ImGui::GetIO();
 
@@ -1157,6 +1168,7 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 	 */
 	if (m_pinSelected) {
 		cmask = m_colors.selectedMaskPins;
+		omask = m_colors.orMaskPins;
 	}
 
 	if (slowCPU) {
@@ -1181,7 +1193,7 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 		if ((!m_pinSelected) && (psz < threshold)) continue;
 
 		// color & text depending on app state & pin type
-		uint32_t color      = m_colors.pinDefault & cmask;
+		uint32_t color      = (m_colors.pinDefault & cmask) | omask;
 		uint32_t text_color = color;
 		bool show_text      = false;
 
@@ -1193,23 +1205,22 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 			}
 
 			if (!pin->net || pin->type == Pin::kPinTypeNotConnected) {
-				color = m_colors.pinNotConnected & cmask;
+				color = (m_colors.pinNotConnected & cmask) | omask;
 			} else {
-				if (pin->net->is_ground) color = m_colors.pinGround & cmask;
+				if (pin->net->is_ground) color = (m_colors.pinGround & cmask) | omask;
 			}
 
 			if (PartIsHighlighted(*pin->component)) {
 				if (!show_text) {
-					// TODO: not sure how to name this
-					color      = 0xffff8000;
-					text_color = 0xff808000;
+					color      = m_colors.pinHighlightSameNet;
+					text_color = m_colors.partTextColor;
 				}
 				show_text = true;
 				threshold = 0;
 			}
 
 			if (pin->type == Pin::kPinTypeTestPad) {
-				color     = m_colors.pinTestPad & cmask;
+				color     = (m_colors.pinTestPad & cmask) | omask;
 				show_text = false;
 			}
 
@@ -1222,7 +1233,7 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 			// pin selected overwrites everything
 			if (p_pin == m_pinSelected) {
 				color      = m_colors.pinSelected;
-				text_color = m_colors.pinSelected;
+				text_color = m_colors.pinSelectedText;
 				show_text  = true;
 				threshold  = 0;
 			}
@@ -1263,6 +1274,10 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 					}
 			}
 
+			if (p_pin == m_pinSelected) {
+				draw->AddCircle(ImVec2(pos.x, pos.y), psz + 1.25, m_colors.pinSelectedText, segments);
+			}
+
 			if ((color == m_colors.pinHighlightSameNet) && (pinHalo == true)) {
 				draw->AddCircle(ImVec2(pos.x, pos.y), psz + 1.25, m_colors.pinHalo, segments);
 			}
@@ -1298,7 +1313,7 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 	 * If a pin has been selected, we mask out the colour to
 	 * enhance (relatively) the appearance of the pin(s)
 	 */
-	if (m_pinSelected) color &= m_colors.selectedMaskParts;
+	if (m_pinSelected) color = (m_colors.boxColor & m_colors.selectedMaskParts) | m_colors.orMaskParts;
 
 	for (auto &part : m_board->Components()) {
 		int pincount = 0;

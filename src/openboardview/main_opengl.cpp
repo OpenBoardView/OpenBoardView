@@ -268,6 +268,14 @@ int main(int argc, char **argv) {
 			if (event.type == SDL_QUIT) done = true;
 		}
 
+		if (app.reloadConfig) {
+			app.reloadConfig = false;
+			snprintf(s, sizeof(s), "%s/.config/openboardview/obv.conf", homepath);
+			app.obvconfig.Load(s);
+			app.ConfigParse();
+			clear_color = ImColor(app.m_colors.backgroundColor);
+		}
+
 		if (!(sleepout--)) {
 			usleep(50000);
 			sleepout = 0;
