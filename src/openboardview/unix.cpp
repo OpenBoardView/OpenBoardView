@@ -41,6 +41,7 @@ char *show_file_picker() {
 	gtk_file_filter_set_name(filter, "Boards");
 	gtk_file_filter_add_pattern(filter, "*.brd");
 	gtk_file_filter_add_pattern(filter, "*.bdv");
+	gtk_file_filter_add_pattern(filter, "*.bvr");
 	gtk_file_filter_add_pattern(filter, "*.fz");
 
 	gtk_file_filter_set_name(filter_everything, "All");

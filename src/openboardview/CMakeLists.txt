@@ -36,6 +36,7 @@ set(SOURCES
 	confparse.cpp
 	vectorhulls.cpp
 	history.cpp
+	BVRFile.cpp
 	BDVFile.cpp
 	BoardView.cpp
 	BRDBoard.cpp
