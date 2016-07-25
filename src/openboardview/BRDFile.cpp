@@ -15,20 +15,32 @@ char **stringfile(char *buffer) {
 	for (i = 0; i < 2; ++i) {
 		s                   = buffer;
 		if (i == 1) list[0] = s;
-		count               = 1;
+		count               = 1; // was '1',  but C arrays are 0-indexed
 		while (*s) {
 			if (*s == '\n' || *s == '\r') {
-				// detect if both cr & lf are together
-				int crlf       = (s[0] + s[1]) == ('\n' + '\r');
+
+				// If this is the 2nd pass, then terminate the line at the first line break char
 				if (i == 1) *s = 0;
-				if (crlf) ++s;
-				if (s[1]) { // it's not over yet
-					if (i == 1) list[count] = s + 1;
+
+				s++; // next char
+
+				// if the termination is a CRLF combo, then jump to the next char
+				if ((*s == '\r') || (*s == '\n')) s++;
+
+				// if the char is valid (first after line break), set up the next item in the line array
+				if (*s) { // it's not over yet
+					if (i == 1) {
+						list[count] = s;
+						//					  list[count+1] = NULL;
+						// fprintf(stdout,"%s\n",list[count]);
+					}
 					++count;
 				}
 			}
-			++s;
-		}
+			s++;
+		} // while s
+
+		// Generate the required array to hold all the line starting points
 		if (i == 0) {
 			list = (char **)malloc(sizeof(*list) * (count + 2));
 			if (!list) return NULL;
@@ -146,13 +158,12 @@ BRDFile::BRDFile(const char *buf, size_t buffer_size) {
 		char *p = line;
 		char *s;
 #define LOAD_INT(var) var = strtol(p, &p, 10)
-#define LOAD_STR(var)                  \
-	while (isspace((uint8_t)*p)) ++p;  \
-	s = p;                             \
-	while (!isspace((uint8_t)*p)) ++p; \
-	*p++ = 0;                          \
+#define LOAD_STR(var)                            \
+	while ((*p) && (isspace((uint8_t)*p))) ++p;  \
+	s = p;                                       \
+	while ((*p) && (!isspace((uint8_t)*p))) ++p; \
+	*p++ = 0;                                    \
 	var  = fix_to_utf8(s, &arena, arena_end);
-
 		switch (current_block) {
 			case 2: { // var_data
 				LOAD_INT(num_format);

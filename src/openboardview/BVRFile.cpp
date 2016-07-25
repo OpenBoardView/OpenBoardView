@@ -52,20 +52,21 @@ BVRFile::BVRFile(const char *buf, size_t buffer_size) {
 
 		while (isspace((uint8_t)*line)) line++;
 		if (!line[0]) continue;
+
 		if (!strcmp(line, "<<Layout>>")) {
-			fprintf(stderr, "HIT LAYOUT\n");
+			//			fprintf(stderr,"HIT LAYOUT\n");
 			current_block = 1;
 			lines += 1; // Skip 1 unused lines before 1st layout
 			continue;
 		}
 		if (!strcmp(line, "<<Pin>>")) {
 			current_block = 2;
-			fprintf(stderr, "HIT PIN, block = %d\n", current_block);
+			//			fprintf(stderr,"HIT PIN, block = %d\n", current_block);
 			lines += 1; // Skip 1 unused lines before 1st pin
 			continue;
 		}
 		if (!strcmp(line, "<<Nail>>")) {
-			fprintf(stderr, "HIT NAIL\n");
+			//			fprintf(stderr,"HIT NAIL\n");
 			current_block = 3;
 			lines += 1; // Skip 1 unused lines before 1st nail
 			continue;
@@ -78,14 +79,13 @@ BVRFile::BVRFile(const char *buf, size_t buffer_size) {
 			case 1: { // Format
 				BRDPoint point;
 				double x;
-				fprintf(stderr, "Decoding format ");
+				//				fprintf(stderr,"Decoding format ");
 				LOAD_DOUBLE(x);
-				point.x = x * 1000; // OBV uses integers
+				point.x = trunc(x * 1000); // OBV uses integers
 				if (*p == ',') p++;
 				double y;
 				LOAD_DOUBLE(y);
-				point.y = y * 1000;
-				printf("%d, %d\n", point.x, point.y);
+				point.y = trunc(y * 1000);
 				format.push_back(point);
 			} break;
 
@@ -145,20 +145,20 @@ BVRFile::BVRFile(const char *buf, size_t buffer_size) {
 				double posx;
 				LOAD_DOUBLE(posx);
 				nail.pos.x = trunc(posx * 1000);
-				fprintf(stderr, "%d ", nail.pos.x);
+				//				fprintf(stderr,"%d ",nail.pos.x);
 
 				double posy;
 				LOAD_DOUBLE(posy);
 				nail.pos.y = trunc(posy * 1000);
-				fprintf(stderr, "%d ", nail.pos.y);
+				//				fprintf(stderr,"%d ",nail.pos.y);
 
 				int type;
 				LOAD_INT(type);
-				fprintf(stderr, "Type:%d ", type);
+				//				fprintf(stderr,"Type:%d ",type);
 
 				char *grid;
 				LOAD_STR(grid);
-				fprintf(stderr, "Grid:%s ", grid);
+				//				fprintf(stderr,"Grid:%s ", grid);
 
 				char *loc;
 				LOAD_STR(loc);
@@ -166,14 +166,14 @@ BVRFile::BVRFile(const char *buf, size_t buffer_size) {
 					nail.side = 1;
 				else
 					nail.side = 2;
-				fprintf(stderr, "Side:%d ", nail.side);
+				//				fprintf(stderr,"Side:%d ",nail.side);
 
 				char *netid;
 				LOAD_STR(netid);
-				fprintf(stderr, "ID:%s ", netid);
+				//				fprintf(stderr,"ID:%s ", netid);
 
 				LOAD_STR(nail.net);
-				fprintf(stderr, "Net:%s\n", nail.net);
+				//				fprintf(stderr,"Net:%s\n", nail.net);
 
 				nail.pos.x = posx * 1000;
 				nail.pos.y = posy * 1000;
@@ -200,5 +200,4 @@ fail_lines:
 fail:;
 #undef FAIL_LABEL
 #undef ENSURE
-	fprintf(stderr, "All DONE\n");
 }
