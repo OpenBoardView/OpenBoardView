@@ -26,16 +26,12 @@ BDVFile::BDVFile(const char *buf, size_t buffer_size) {
 	saved_locale = setlocale(LC_NUMERIC, "C"); // Use '.' as delimiter for strtod
 
 	memset(this, 0, sizeof(*this));
-//#define ENSURE(X)                                                                                  \
-//	assert(X);                                                                                     \
-//	if (!(X))                                                                                      \
-//		goto FAIL_LABEL;
-#define ENSURE(X)                                                                                  \
-	assert(X);                                                                                     \
-	if (!(X))                                                                                      \
-		return;
 
-#define FAIL_LABEL fail
+	#define ENSURE(X)  \
+	  assert(X);       \
+	  if (!(X))        \
+	    return;
+
 	ENSURE(buffer_size > 4);
 	size_t file_buf_size = 3 * (1 + buffer_size);
 	file_buf = (char *)malloc(file_buf_size);
@@ -53,10 +49,17 @@ BDVFile::BDVFile(const char *buf, size_t buffer_size) {
 	char **lines = stringfile(file_buf);
 	if (!lines)
 		return;
-	//		goto fail;
+
 	char **lines_begin = lines;
-#undef FAIL_LABEL
-#define FAIL_LABEL fail_lines
+
+	#undef ENSURE
+	#define ENSURE(X)      \
+	  assert(X);           \
+	  if (!(X)) {          \
+	    free(lines_begin); \
+	    return;            \
+	  }
+
 	while (*lines) {
 		char *line = *lines;
 		++lines;
@@ -166,9 +169,6 @@ BDVFile::BDVFile(const char *buf, size_t buffer_size) {
 	setlocale(LC_NUMERIC, saved_locale); // Restore locale
 
 	valid = current_block != 0;
-fail_lines:
-	free(lines_begin);
-fail:;
-#undef FAIL_LABEL
+
 #undef ENSURE
 }
