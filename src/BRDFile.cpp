@@ -162,16 +162,6 @@ BRDFile::BRDFile(const char *buf, size_t buffer_size) {
 		char *p = line;
 		char *s;
 
-		#define LOAD_INT(var) var = strtol(p, &p, 10)
-		#define LOAD_STR(var)                        \
-		  while ((*p) && (isspace((uint8_t)*p)))     \
-		    ++p;                                     \
-		  s = p;                                     \
-		  while ((*p) && (!isspace((uint8_t)*p)))    \
-		    ++p;                                     \
-		  *p++ = 0;                                  \
-		  var = fix_to_utf8(s, &arena, arena_end);
-
 		switch (current_block) {
 		case 2: { // var_data
 			LOAD_INT(num_format);
@@ -182,49 +172,46 @@ BRDFile::BRDFile(const char *buf, size_t buffer_size) {
 			ENSURE(num_parts >= 0);
 			ENSURE(num_pins >= 0);
 			ENSURE(num_nails >= 0);
-			// NOTE: can allocate together because everything aligns fine
-			// in 32- and 64-bit.
-			size_t buf_size = sizeof(BRDPoint) * num_format;
-			buf_size += sizeof(BRDPart) * num_parts;
-			buf_size += sizeof(BRDPin) * num_pins;
-			buf_size += sizeof(BRDNail) * num_nails;
-			format = (BRDPoint *)malloc(buf_size);
-			parts = (BRDPart *)(format + num_format);
-			pins = (BRDPin *)(parts + num_parts);
-			nails = (BRDNail *)(pins + num_pins);
 		} break;
 		case 3: { // Format
 			ENSURE(format_idx < num_format);
-			BRDPoint *fmt = &format[format_idx++];
-			fmt->x = strtol(p, &p, 10);
-			fmt->y = strtol(p, &p, 10);
+			BRDPoint fmt;
+			fmt.x = strtol(p, &p, 10);
+			fmt.y = strtol(p, &p, 10);
+			format.push_back(fmt);
 		} break;
 		case 4: { // Parts
 			ENSURE(parts_idx < num_parts);
-			BRDPart *part = &parts[parts_idx++];
-			LOAD_STR(part->name);
-			LOAD_INT(part->type);
-			LOAD_INT(part->end_of_pins);
-			ENSURE(part->end_of_pins <= num_pins);
+			BRDPart part;
+			LOAD_STR(part.name);
+			LOAD_INT(part.type);
+			LOAD_INT(part.end_of_pins);
+			ENSURE(part.end_of_pins <= num_pins);
+			parts.push_back(part);
+			parts_idx++;
 		} break;
 		case 5: { // Pins
 			ENSURE(pins_idx < num_pins);
-			BRDPin *pin = &pins[pins_idx++];
-			LOAD_INT(pin->pos.x);
-			LOAD_INT(pin->pos.y);
-			LOAD_INT(pin->probe);
-			LOAD_INT(pin->part);
-			LOAD_STR(pin->net);
-			ENSURE(pin->part <= num_parts);
+			BRDPin pin;
+			LOAD_INT(pin.pos.x);
+			LOAD_INT(pin.pos.y);
+			LOAD_INT(pin.probe);
+			LOAD_INT(pin.part);
+			LOAD_STR(pin.net);
+			ENSURE(pin.part <= num_parts);
+			pins.push_back(pin);
+			pins_idx++;
 		} break;
 		case 6: { // Nails
 			ENSURE(nails_idx < num_nails);
-			BRDNail *nail = &nails[nails_idx++];
-			LOAD_INT(nail->probe);
-			LOAD_INT(nail->pos.x);
-			LOAD_INT(nail->pos.y);
-			LOAD_INT(nail->side);
-			LOAD_STR(nail->net);
+			BRDNail nail;
+			LOAD_INT(nail.probe);
+			LOAD_INT(nail.pos.x);
+			LOAD_INT(nail.pos.y);
+			LOAD_INT(nail.side);
+			LOAD_STR(nail.net);
+			nails.push_back(nail);
+			nails_idx++;
 		} break;
 		}
 	}
@@ -232,6 +219,4 @@ BRDFile::BRDFile(const char *buf, size_t buffer_size) {
 }
 
 // Ensure this files #defines dont bleed out
-#undef LOAD_STR
-#undef LOAD_INT
 #undef ENSURE
