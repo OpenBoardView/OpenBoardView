@@ -21,7 +21,7 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{7470E8BE-B362-438C-A297-10C2C8E99B01}</ProjectGuid>
     <RootNamespace>OpenBoardView</RootNamespace>
-    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.10240.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -163,6 +163,8 @@
     <ClInclude Include="..\openboardview\BoardView.h" />
     <ClInclude Include="..\openboardview\BRDBoard.h" />
     <ClInclude Include="..\openboardview\BRDFile.h" />
+    <ClInclude Include="..\openboardview\BVRFile.h" />
+    <ClInclude Include="..\openboardview\confparse.h" />
     <ClInclude Include="..\openboardview\FZFile.h" />
     <ClInclude Include="..\openboardview\history.h" />
     <ClInclude Include="..\openboardview\imgui_impl_dx9.h" />
@@ -180,6 +182,8 @@
     <ClCompile Include="..\openboardview\BoardView.cpp" />
     <ClCompile Include="..\openboardview\BRDBoard.cpp" />
     <ClCompile Include="..\openboardview\BRDFile.cpp" />
+    <ClCompile Include="..\openboardview\BVRFile.cpp" />
+    <ClCompile Include="..\openboardview\confparse.cpp" />
     <ClCompile Include="..\openboardview\FZFile.cpp" />
     <ClCompile Include="..\openboardview\history.cpp" />
     <ClCompile Include="..\openboardview\imgui_impl_dx9.cpp" />
@@ -189,7 +193,6 @@
     <ClCompile Include="..\openboardview\TextureDDS.cpp" />
     <ClCompile Include="..\openboardview\vectorhulls.cpp" />
     <ClCompile Include="..\openboardview\win32.cpp" />
-    <ClCompile Include="Source.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\..\asset\brd.ico" />
