@@ -31,6 +31,7 @@ panFactor = 30\r\n\
 panModifier = 5\r\n\
 \r\n\
 # Colors, format is 0xRRGGBBAA\r\n\
+lightTheme	= false\r\n\
 backgroundColor		= 0x000000a0\r\n\
 partTextColor			= 0x008080ff\r\n\
 boardOutline			= 0xffff00ff\r\n\
