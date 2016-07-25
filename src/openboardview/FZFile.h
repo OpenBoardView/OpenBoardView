@@ -11,12 +11,12 @@
 #define LOAD_DOUBLE(var) \
 	var = strtod(p, &p); \
 	if (*p == '!') p++;
-#define LOAD_STR(var)                            \
-	while (isspace((uint8_t)*p)) ++p;            \
-	s = p;                                       \
-	while (*p != '!') /* '!' is our delimiter */ \
-		++p;                                     \
-	*p++ = 0;                                    \
+#define LOAD_STR(var)                                      \
+	while ((*p) && (isspace((uint8_t)*p))) ++p;            \
+	s = p;                                                 \
+	while ((*p) && (*p != '!')) /* '!' is our delimiter */ \
+		++p;                                               \
+	*p++ = 0;                                              \
 	var  = fix_to_utf8(s, &arena, arena_end);
 
 class FZFile : public BRDFile {
