@@ -60,3 +60,6 @@ struct BRDFile {
 		free(file_buf);
 	}
 };
+
+char **stringfile(char *buffer);
+char *fix_to_utf8(char *s, char **arena, char *arena_end);

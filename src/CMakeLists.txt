@@ -9,6 +9,7 @@ set(SOURCES
 	BoardView.cpp
 	BRDBoard.cpp
 	BRDFile.cpp
+	BDVFile.cpp
 	NetList.cpp
 	PartList.cpp
 

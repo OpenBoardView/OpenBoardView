@@ -6,6 +6,7 @@
 #include <memory>
 #include <stdio.h>
 
+#include "BDVFile.h"
 #include "BRDBoard.h"
 #include "BRDFile.h"
 #include "imgui.h"
@@ -965,8 +966,20 @@ void BoardView::OpenFile(char *filename) {
 	size_t buffer_size;
 	char *buffer = file_as_buffer(&buffer_size, filename);
 	if (buffer) {
-		BRDFile *file = new BRDFile(buffer, buffer_size);
-		if (file->valid) {
+		BRDFile *file;
+
+		// Extract lowercase file extension
+		char *ext = strrchr(filename, '.');
+		for (int i = 0; ext[i]; i++)
+			ext[i] = tolower(ext[i]);
+
+		// Check file format using filename extension
+		if (!strcmp(ext, ".brd"))
+			file = new BRDFile(buffer, buffer_size);
+		else if (!strcmp(ext, ".bdv"))
+			file = new BDVFile(buffer, buffer_size);
+
+		if (file && file->valid) {
 			SetFile(file);
 			m_wantsTitleChange = true;
 		} else {
