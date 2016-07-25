@@ -70,7 +70,7 @@ char *show_file_picker() {
 	memset(&ofn, 0, sizeof(ofn));
 	ofn.lStructSize = sizeof(ofn);
 	ofn.hwndOwner = (HWND)ImGui::GetIO().ImeWindowHandle;
-	ofn.lpstrFilter = L"BRD Files\0*.brd\0All Files\0*.*\0\0";
+	ofn.lpstrFilter = L"All Supported Files\0*.brd;*.bdv\0BRD Files\0*.brd\0BDV Files\0*.bdv\0All Files\0*.*\0\0";
 	ofn.lpstrFile = filename;
 	ofn.nMaxFile = 1024;
 	if (GetOpenFileName(&ofn)) {

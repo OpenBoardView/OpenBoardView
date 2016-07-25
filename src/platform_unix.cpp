@@ -52,16 +52,28 @@ char *show_file_picker() {
 					NULL );
 
 	/* Filter file types */
+	// TODO: use a static/const array of filters
 	GtkFileFilter *filter1 = gtk_file_filter_new();
-	gtk_file_filter_set_name(filter1, "All Files");
-	gtk_file_filter_add_pattern(filter1, "*");
+	gtk_file_filter_set_name(filter1, "All Supported Files");
+	gtk_file_filter_add_pattern(filter1, "*.brd");
+	gtk_file_filter_add_pattern(filter1, "*.bdv");
 
 	GtkFileFilter *filter2 = gtk_file_filter_new();
 	gtk_file_filter_set_name(filter2, "BRD Files");
 	gtk_file_filter_add_pattern(filter2, "*.brd");
 
+	GtkFileFilter *filter3 = gtk_file_filter_new();
+	gtk_file_filter_set_name(filter3, "BDV Files");
+	gtk_file_filter_add_pattern(filter3, "*.bdv");
+
+	GtkFileFilter *filter4 = gtk_file_filter_new();
+	gtk_file_filter_set_name(filter4, "All Files");
+	gtk_file_filter_add_pattern(filter4, "*");
+
 	gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(dialog), filter1);
 	gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(dialog), filter2);
+	gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(dialog), filter3);
+	gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(dialog), filter4);
 
 	if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_ACCEPT) {
 		char *filename = nullptr;

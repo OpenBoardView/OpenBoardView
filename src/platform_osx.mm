@@ -9,7 +9,7 @@ char *show_file_picker() {
 
 	// Filter file types
 	[op setCanChooseFiles:YES];
-	[op setAllowedFileTypes:@[ @"brd" ]];
+	[op setAllowedFileTypes:@[ @"brd", @"bdv" ]];
 
 	if ([op runModal] == NSModalResponseOK) {
 		NSURL *nsurl = [[op URLs] objectAtIndex:0];
