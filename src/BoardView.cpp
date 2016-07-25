@@ -966,7 +966,7 @@ void BoardView::OpenFile(char *filename) {
 	size_t buffer_size;
 	char *buffer = file_as_buffer(&buffer_size, filename);
 	if (buffer) {
-		BRDFile *file;
+		BRDFile *file = nullptr;
 
 		// Extract lowercase file extension
 		char *ext = strrchr(filename, '.');
