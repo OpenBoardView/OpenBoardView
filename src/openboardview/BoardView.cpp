@@ -66,7 +66,7 @@ int BoardView::ConfigParse(void) {
 		style.Colors[ImGuiCol_TitleBg]              = ImVec4(0.96f, 0.96f, 0.96f, 1.00f);
 		style.Colors[ImGuiCol_TitleBgCollapsed]     = ImVec4(1.00f, 1.00f, 1.00f, 0.51f);
 		style.Colors[ImGuiCol_TitleBgActive]        = ImVec4(0.82f, 0.82f, 0.82f, 1.00f);
-		style.Colors[ImGuiCol_MenuBarBg]            = ImVec4(0.86f, 0.86f, 0.86f, 1.00f);
+		style.Colors[ImGuiCol_MenuBarBg]            = ImVec4(0.82f, 0.82f, 0.82f, 1.00f);
 		style.Colors[ImGuiCol_ScrollbarBg]          = ImVec4(0.98f, 0.98f, 0.98f, 0.53f);
 		style.Colors[ImGuiCol_ScrollbarGrab]        = ImVec4(0.69f, 0.69f, 0.69f, 0.80f);
 		style.Colors[ImGuiCol_ScrollbarGrabHovered] = ImVec4(0.49f, 0.49f, 0.49f, 0.80f);
@@ -1097,6 +1097,15 @@ void BoardView::HandleInput() {
 		} else if (ImGui::IsKeyPressed(KM(SDL_SCANCODE_KP_5)) || ImGui::IsKeyPressed(SDLK_x)) {
 			// Center and reset zoom
 			CenterView();
+
+		} else if (ImGui::IsKeyPressed(SDLK_ESCAPE)) {
+			m_pinSelected = nullptr;
+			SetNetFilter("");
+			FindComponent("");
+			m_search[0]   = '\0';
+			m_search2[0]  = '\0';
+			m_search3[0]  = '\0';
+			m_needsRedraw = true;
 		}
 	}
 }
