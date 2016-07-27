@@ -122,8 +122,9 @@ int BoardView::ConfigParse(void) {
 		pinShapeSquare = true;
 	}
 
-	pinHalo = obvconfig.ParseBool("pinHalo", true);
-	showFPS = obvconfig.ParseBool("showFPS", false);
+	pinHalo   = obvconfig.ParseBool("pinHalo", true);
+	showFPS   = obvconfig.ParseBool("showFPS", false);
+	fillParts = obvconfig.ParseBool("fillParts", true);
 
 	zoomFactor   = obvconfig.ParseInt("zoomFactor", 10) / 10.0f;
 	zoomModifier = obvconfig.ParseInt("zoomModifier", 5);
@@ -137,8 +138,42 @@ int BoardView::ConfigParse(void) {
 	 * we use the human-readable version but swap the ordering around when
 	 * it comes to assigning the actual colour to ImGui.
 	 */
+
+	/*
+	 * XRayBlue theme
+	 */
+	m_colors.backgroundColor         = byte4swap(obvconfig.ParseHex("backgroundColor", 0xeeeeeeff));
+	m_colors.partTextColor           = byte4swap(obvconfig.ParseHex("partTextColor", 0xff3030ff));
+	m_colors.partTextBackgroundColor = byte4swap(obvconfig.ParseHex("partTextBackgroundColor", 0xffff00ff));
+	m_colors.boardOutline            = byte4swap(obvconfig.ParseHex("boardOutline", 0x444444ff));
+	m_colors.boxColor                = byte4swap(obvconfig.ParseHex("boxColor", 0x444444ff));
+	m_colors.pinDefault              = byte4swap(obvconfig.ParseHex("pinDefault", 0x8888ffff));
+	m_colors.pinGround               = byte4swap(obvconfig.ParseHex("pinGround", 0x2222aaff));
+	m_colors.pinNotConnected         = byte4swap(obvconfig.ParseHex("pinNotConnected", 0xaaaaaaff));
+	m_colors.pinTestPad              = byte4swap(obvconfig.ParseHex("pinTestPad", 0x888888ff));
+	m_colors.pinSelectedText         = byte4swap(obvconfig.ParseHex("pinSelectedText", 0xff0000ff));
+	m_colors.pinSelected             = byte4swap(obvconfig.ParseHex("pinSelected", 0x0000ffff));
+	m_colors.pinHalo                 = byte4swap(obvconfig.ParseHex("pinHaloColor", 0x00aa00ff));
+	m_colors.pinHighlighted          = byte4swap(obvconfig.ParseHex("pinHighlighted", 0x0000ffff));
+	m_colors.pinHighlightSameNet     = byte4swap(obvconfig.ParseHex("pinHighlightSameNet", 0x000000ff));
+	m_colors.annotationPartAlias     = byte4swap(obvconfig.ParseHex("annotationPartAlias", 0xffff00ff));
+	m_colors.partHullColor           = byte4swap(obvconfig.ParseHex("partHullColor", 0x80808080));
+
+	m_colors.selectedMaskPins    = byte4swap(obvconfig.ParseHex("selectedMaskPins", 0xffffffff));
+	m_colors.selectedMaskParts   = byte4swap(obvconfig.ParseHex("selectedMaskParts", 0xffffffff));
+	m_colors.selectedMaskOutline = byte4swap(obvconfig.ParseHex("selectedMaskOutline", 0xffffffff));
+
+	m_colors.orMaskPins    = byte4swap(obvconfig.ParseHex("orMaskPins", 0xccccccff));
+	m_colors.orMaskParts   = byte4swap(obvconfig.ParseHex("orMaskParts", 0x787878ff));
+	m_colors.orMaskOutline = byte4swap(obvconfig.ParseHex("orMaskOutline", 0x888888ff));
+
+	/*
+	 * Original dark theme
+	 */
+	/*
 	m_colors.backgroundColor     = byte4swap(obvconfig.ParseHex("backgroundColor", 0x000000a0));
 	m_colors.partTextColor       = byte4swap(obvconfig.ParseHex("partTextColor", 0x008080ff));
+	m_colors.partTextBackgroundColor = byte4swap(obvconfig.ParseHex("partTextBackgroundColor", 0xeeee00ff));
 	m_colors.boardOutline        = byte4swap(obvconfig.ParseHex("boardOutline", 0xffff00ff));
 	m_colors.boxColor            = byte4swap(obvconfig.ParseHex("boxColor", 0xccccccff));
 	m_colors.pinDefault          = byte4swap(obvconfig.ParseHex("pinDefault", 0xff0000ff));
@@ -160,6 +195,7 @@ int BoardView::ConfigParse(void) {
 	m_colors.orMaskPins    = byte4swap(obvconfig.ParseHex("orMaskPins", 0x00000000));
 	m_colors.orMaskParts   = byte4swap(obvconfig.ParseHex("orMaskParts", 0x00000000));
 	m_colors.orMaskOutline = byte4swap(obvconfig.ParseHex("orMaskOutline", 0x00000000));
+	*/
 
 	/*
 	 * The asus .fz file formats require a specific key to be decoded.
@@ -999,6 +1035,7 @@ void BoardView::HandleInput() {
 			} else if (m_file && m_board && ImGui::IsMouseReleased(0) && !m_draggingLastFrame) {
 				ImVec2 spos = ImGui::GetMousePos();
 				ImVec2 pos  = ScreenToCoord(spos.x, spos.y);
+
 				// threshold to within a pin's diameter of the pin center
 				float min_dist = m_pinDiameter * 1.0f;
 				min_dist *= min_dist; // all distance squared
@@ -1015,7 +1052,38 @@ void BoardView::HandleInput() {
 					}
 				}
 				m_pinSelected = selection;
+
+				// check also for a part hit.
 				m_needsRedraw = true;
+
+				m_partHighlighted.clear();
+				for (auto &part : m_board->Components()) {
+					int hit     = 0;
+					auto p_part = part.get();
+
+					if (!ComponentIsVisible(p_part)) continue;
+
+					// https://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
+					// {
+					{
+						int i, j, n;
+						outline_pt *poly;
+
+						n    = 4;
+						poly = p_part->outline;
+
+						for (i = 0, j = n - 1; i < n; j = i++) {
+							if (((poly[i].y > pos.y) != (poly[j].y > pos.y)) &&
+							    (pos.x < (poly[j].x - poly[i].x) * (pos.y - poly[i].y) / (poly[j].y - poly[i].y) + poly[i].x))
+								hit = !hit;
+						}
+					}
+					if (hit) {
+						//						fprintf(stderr,"hit on %s\n", p_part->name.c_str());
+						m_partHighlighted.push_back(p_part);
+						//						break;
+					}
+				}
 			}
 			m_draggingLastFrame = false;
 		}
@@ -1366,12 +1434,12 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 }
 
 inline void BoardView::DrawParts(ImDrawList *draw) {
-	float psz = (float)m_pinDiameter * 0.5f * m_scale;
+	// float psz = (float)m_pinDiameter * 0.5f * m_scale;
 	double angle;
 	double distance = 0;
 	struct ImVec2 pva[1000], *ppp;
 	uint32_t color = m_colors.boxColor;
-	int rendered   = 0;
+	//	int rendered   = 0;
 	char p0, p1; // first two characters of the part name, code-writing
 	             // convenience more than anything else
 
@@ -1384,287 +1452,381 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 	for (auto &part : m_board->Components()) {
 		int pincount = 0;
 		double min_x, min_y, max_x, max_y;
+		outline_pt dbox[4]; // default box, if there's nothing else claiming to render the part different.
 		auto p_part = part.get();
 
 		if (!ComponentIsVisible(p_part)) continue;
 
 		if (part->is_dummy()) continue;
 
-		ppp = &pva[0];
-		for (auto pin : part->pins) {
-			pincount++;
-
-			// scale box around pins as a fallback, else either use polygon or convex
-			// hull for better shape fidelity
-			if (pincount == 1) {
-				min_x = pin->position.x;
-				min_y = pin->position.y;
-				max_x = min_x;
-				max_y = min_y;
-			}
-
-			if (pincount < 1000) {
-				ppp->x = pin->position.x;
-				ppp->y = pin->position.y;
-				ppp++;
-			}
-
-			if (pin->position.x > max_x)
-				max_x = pin->position.x;
-			else if (pin->position.x < min_x)
-				min_x = pin->position.x;
-			if (pin->position.y > max_y)
-				max_y = pin->position.y;
-			else if (pin->position.y < min_y)
-				min_y = pin->position.y;
-		}
-
-		distance = sqrt((max_x - min_x) * (max_x - min_x) + (max_y - min_y) * (max_y - min_y));
-
-		float pin_radius = m_pinDiameter / 2.0f;
-
 		/*
 		 *
-		 * Determine the size of our part's pin radius based on the distance
-		 * between the extremes of the pin coordinates.
+		 * When we first load the board, the outline of each part isn't (yet) rendered
+		 * or determined/calculated.  So, the first time we display the board we
+		 * compute the outline and store it for later.
 		 *
-		 * All the figures below are determined empirically rather than any
-		 * specific formula.
+		 * This also sets the pin diameters too.
 		 *
 		 */
-		if ((pincount < 4) && (part->name[0] != 'U') && (part->name[0] != 'Q')) {
+		if (!part->outline_done) { // should only need to do this once for most parts
 
-			if ((distance > 52) && (distance < 57)) {
-				// 0603
-				pin_radius = 15;
-				for (auto pin : part->pins) {
-					pin->diameter = pin_radius * 0.05;
+			ppp = &pva[0];
+			for (auto pin : part->pins) {
+				pincount++;
+
+				// scale box around pins as a fallback, else either use polygon or convex
+				// hull for better shape fidelity
+				if (pincount == 1) {
+					min_x = pin->position.x;
+					min_y = pin->position.y;
+					max_x = min_x;
+					max_y = min_y;
 				}
 
-			} else if ((distance > 247) && (distance < 253)) {
-				// SMC diode?
-				pin_radius = 50;
-				for (auto pin : part->pins) {
-					pin->diameter = pin_radius * 0.05;
+				if (pincount < 1000) {
+					ppp->x = pin->position.x;
+					ppp->y = pin->position.y;
+					ppp++;
 				}
 
-			} else if ((distance > 195) && (distance < 199)) {
-				// Inductor?
-				pin_radius = 50;
-				for (auto pin : part->pins) {
-					pin->diameter = pin_radius * 0.05;
-				}
+				if (pin->position.x > max_x) {
+					max_x = pin->position.x;
 
-			} else if ((distance > 165) && (distance < 169)) {
-				// SMB diode?
-				pin_radius = 35;
-				for (auto pin : part->pins) {
-					pin->diameter = pin_radius * 0.05;
+				} else if (pin->position.x < min_x) {
+					min_x = pin->position.x;
 				}
+				if (pin->position.y > max_y) {
+					max_y = pin->position.y;
 
-			} else if ((distance > 101) && (distance < 109)) {
-				// SMA diode / tant cap
-				pin_radius = 30;
-				for (auto pin : part->pins) {
-					pin->diameter = pin_radius * 0.05;
-				}
-
-			} else if ((distance > 108) && (distance < 112)) {
-				// 1206
-				pin_radius = 30;
-				for (auto pin : part->pins) {
-					pin->diameter = pin_radius * 0.05;
-				}
-
-			} else if ((distance > 64) && (distance < 68)) {
-				// 0805
-				pin_radius = 25;
-				for (auto pin : part->pins) {
-					pin->diameter = pin_radius * 0.05;
-				}
-
-			} else if ((distance > 18) && (distance < 22)) {
-				// 0201 cap/resistor?
-				pin_radius = 5;
-				for (auto pin : part->pins) {
-					pin->diameter = pin_radius * 0.05;
-				}
-			} else if ((distance > 28) && (distance < 32)) {
-				// 0402 cap/resistor
-				pin_radius = 10;
-				for (auto pin : part->pins) {
-					pin->diameter = pin_radius * 0.05;
+				} else if (pin->position.y < min_y) {
+					min_y = pin->position.y;
 				}
 			}
-		}
 
-		// TODO: pin radius is stored in Pin object
-		min_x -= pin_radius;
-		max_x += pin_radius;
-		min_y -= pin_radius;
-		max_y += pin_radius;
-		bool bb_y_resized = false;
+			distance = sqrt((max_x - min_x) * (max_x - min_x) + (max_y - min_y) * (max_y - min_y));
 
-		ImVec2 min = CoordToScreen(min_x, min_y);
-		ImVec2 max = CoordToScreen(max_x, max_y);
-
-		p0 = p_part->name[0];
-		p1 = p_part->name[1];
-
-		/*
-		 * Draw all 2~3 pin devices as if they're not orthagonal.  It's a bit more
-		 * CPU
-		 * overhead but it keeps the code simpler and saves us replicating things.
-		 */
-		if ((pincount < 4) && ((strchr("CRLD", p0) || (strchr("CRLD", p1))))) {
-			ImVec2 a, b, c, d;
-			double dx, dy;
-			double tx, ty;
-			double armx, army;
-
-			dx    = part->pins[1]->position.x - part->pins[0]->position.x;
-			dy    = part->pins[1]->position.y - part->pins[0]->position.y;
-			angle = atan2(dy, dx);
-
-			if (((p0 == 'L') || (p1 == 'L')) && (distance > 50)) {
-				pin_radius = 15;
-				for (auto pin : part->pins) {
-					pin->diameter = pin_radius * 0.05;
-				}
-				army = distance / 2;
-				armx = pin_radius;
-			} else if (((p0 == 'C') || (p1 == 'C')) && (distance > 90)) {
-				double mpx, mpy;
-				int segments;
-				ImVec2 mp;
-
-				pin_radius = 15;
-				for (auto pin : part->pins) {
-					pin->diameter = pin_radius * 0.05;
-				}
-				army = distance / 2 - distance / 4;
-				armx = pin_radius;
-
-				mpx = dx / 2 + part->pins[0]->position.x;
-				mpy = dy / 2 + part->pins[0]->position.y;
-				VHRotateV(&mpx, &mpy, dx / 2 + part->pins[0]->position.x, dy / 2 + part->pins[0]->position.y, angle);
-				mp = CoordToScreen(mpx, mpy);
-				// for the round pin representations, choose how many circle segments
-				// need based on the pin size
-				segments                    = trunc(distance);
-				if (segments < 8) segments  = 8;
-				if (segments > 36) segments = 36;
-				draw->AddCircle(mp, (distance / 3) * m_scale, ImColor(210, 210, 210, 128), segments);
-
-			} else {
-				armx = army = pin_radius;
-			}
-
-			// TODO: Compact this bit of code, maybe. It works at least.
-			tx = part->pins[0]->position.x - armx;
-			ty = part->pins[0]->position.y - army;
-			VHRotateV(&tx, &ty, part->pins[0]->position.x, part->pins[0]->position.y, angle);
-			a = CoordToScreen(tx, ty);
-
-			tx = part->pins[0]->position.x - armx;
-			ty = part->pins[0]->position.y + army;
-			VHRotateV(&tx, &ty, part->pins[0]->position.x, part->pins[0]->position.y, angle);
-			b = CoordToScreen(tx, ty);
-
-			tx = part->pins[1]->position.x + armx;
-			ty = part->pins[1]->position.y + army;
-			VHRotateV(&tx, &ty, part->pins[1]->position.x, part->pins[1]->position.y, angle);
-			c = CoordToScreen(tx, ty);
-
-			tx = part->pins[1]->position.x + armx;
-			ty = part->pins[1]->position.y - army;
-			VHRotateV(&tx, &ty, part->pins[1]->position.x, part->pins[1]->position.y, angle);
-			d = CoordToScreen(tx, ty);
-			draw->AddQuad(a, b, c, d, color);
-
-			rendered = 1;
-
-		} else {
+			float pin_radius = m_pinDiameter / 2.0f;
 
 			/*
-			 * If we have (typically) a connector with a non uniform pin distribution
-			 * then we can try use the minimal bounding box algorithm
-			 * to give it a more sane outline
+			 *
+			 * Determine the size of our part's pin radius based on the distance
+			 * between the extremes of the pin coordinates.
+			 *
+			 * All the figures below are determined empirically rather than any
+			 * specific formula.
+			 *
 			 */
-			if ((pincount >= 4) && ((p0 == 'J') || (strncmp(part->name.c_str(), "CN", 2) == 0) || ((p0 == 'L') || (p1 == 'L')))) {
-				ImVec2 *hull;
-				int hpc;
+			if ((pincount < 4) && (part->name[0] != 'U') && (part->name[0] != 'Q')) {
 
-				hull = (ImVec2 *)malloc(sizeof(ImVec2) * pincount); // massive overkill since our hull will
-				                                                    // only require the perimeter points
-				if (hull) {
-					// Find our hull
-					hpc = VHConvexHull(hull, pva, pincount); // (hpc = hull pin count)
-
-					// If we had a valid hull, then find the MBB for it
-					if (hpc > 0) {
-						int i = hpc;
-						ImVec2 bbox[4];
-
-						// Convert to screen coordinates
-						while (i--) {
-							hull[i] = CoordToScreen(hull[i].x, hull[i].y);
-						}
-
-						/*
-						 * Tighten the hull, removes any small angle segments
-						 * such as a sequence of pins in a line, might be an overkill
-						 */
-						// hpc = TightenHull(hull, hpc, 0.1f);
-						draw->AddPolyline(hull, hpc, m_colors.partHullColor, true, 1.0f, false);
-						VHMBBCalculate(bbox, hull, hpc, pin_radius * m_scale);
-						draw->AddPolyline(bbox, 4, color, true, 1.0f, false);
-						rendered = 1;
-					} else {
-						draw->AddRect(min, max, color);
-						rendered = 1;
+				if ((distance > 52) && (distance < 57)) {
+					// 0603
+					pin_radius = 15;
+					for (auto pin : part->pins) {
+						pin->diameter = pin_radius * 0.05;
 					}
 
-					free(hull);
+				} else if ((distance > 247) && (distance < 253)) {
+					// SMC diode?
+					pin_radius = 50;
+					for (auto pin : part->pins) {
+						pin->diameter = pin_radius * 0.05;
+					}
+
+				} else if ((distance > 195) && (distance < 199)) {
+					// Inductor?
+					pin_radius = 50;
+					for (auto pin : part->pins) {
+						pin->diameter = pin_radius * 0.05;
+					}
+
+				} else if ((distance > 165) && (distance < 169)) {
+					// SMB diode?
+					pin_radius = 35;
+					for (auto pin : part->pins) {
+						pin->diameter = pin_radius * 0.05;
+					}
+
+				} else if ((distance > 101) && (distance < 109)) {
+					// SMA diode / tant cap
+					pin_radius = 30;
+					for (auto pin : part->pins) {
+						pin->diameter = pin_radius * 0.05;
+					}
+
+				} else if ((distance > 108) && (distance < 112)) {
+					// 1206
+					pin_radius = 30;
+					for (auto pin : part->pins) {
+						pin->diameter = pin_radius * 0.05;
+					}
+
+				} else if ((distance > 64) && (distance < 68)) {
+					// 0805
+					pin_radius = 25;
+					for (auto pin : part->pins) {
+						pin->diameter = pin_radius * 0.05;
+					}
+
+				} else if ((distance > 18) && (distance < 22)) {
+					// 0201 cap/resistor?
+					pin_radius = 5;
+					for (auto pin : part->pins) {
+						pin->diameter = pin_radius * 0.05;
+					}
+				} else if ((distance > 28) && (distance < 32)) {
+					// 0402 cap/resistor
+					pin_radius = 10;
+					for (auto pin : part->pins) {
+						pin->diameter = pin_radius * 0.05;
+					}
+				}
+			}
+
+			// TODO: pin radius is stored in Pin object
+			//
+			//
+			//
+			min_x -= pin_radius;
+			max_x += pin_radius;
+			min_y -= pin_radius;
+			max_y += pin_radius;
+
+			dbox[0].x = dbox[3].x = min_x;
+			dbox[1].x = dbox[2].x = max_x;
+			dbox[0].y = dbox[1].y = min_y;
+			dbox[3].y = dbox[2].y = max_y;
+			//		bool bb_y_resized = false; // not sure why this is here PLD20160727
+
+			//			ImVec2 min = CoordToScreen(min_x, min_y);
+			//			ImVec2 max = CoordToScreen(max_x, max_y);
+
+			p0 = p_part->name[0];
+			p1 = p_part->name[1];
+
+			/*
+			 * Draw all 2~3 pin devices as if they're not orthagonal.  It's a bit more
+			 * CPU
+			 * overhead but it keeps the code simpler and saves us replicating things.
+			 */
+			if ((pincount < 4) && ((strchr("CRLD", p0) || (strchr("CRLD", p1))))) {
+				//				ImVec2 a, b, c, d;
+				double dx, dy;
+				double tx, ty;
+				double armx, army;
+
+				dx    = part->pins[1]->position.x - part->pins[0]->position.x;
+				dy    = part->pins[1]->position.y - part->pins[0]->position.y;
+				angle = atan2(dy, dx);
+
+				if (((p0 == 'L') || (p1 == 'L')) && (distance > 50)) {
+					pin_radius = 15;
+					for (auto pin : part->pins) {
+						pin->diameter = pin_radius * 0.05;
+					}
+					army = distance / 2;
+					armx = pin_radius;
+				} else if (((p0 == 'C') || (p1 == 'C')) && (distance > 90)) {
+					double mpx, mpy;
+					int segments;
+					ImVec2 mp;
+
+					pin_radius = 15;
+					for (auto pin : part->pins) {
+						pin->diameter = pin_radius * 0.05;
+					}
+					army = distance / 2 - distance / 4;
+					armx = pin_radius;
+
+					mpx = dx / 2 + part->pins[0]->position.x;
+					mpy = dy / 2 + part->pins[0]->position.y;
+					VHRotateV(&mpx, &mpy, dx / 2 + part->pins[0]->position.x, dy / 2 + part->pins[0]->position.y, angle);
+					mp = CoordToScreen(mpx, mpy);
+					// for the round pin representations, choose how many circle segments
+					// need based on the pin size
+					segments                    = trunc(distance);
+					if (segments < 8) segments  = 8;
+					if (segments > 36) segments = 36;
+					draw->AddCircle(mp, (distance / 3) * m_scale, m_colors.boxColor & 0x8fffffff, segments);
+
 				} else {
-					fprintf(stderr, "ERROR: Cannot allocate memory for convex hull generation (%s)", strerror(errno));
-					draw->AddRect(min, max, color);
-					rendered = 1;
+					armx = army = pin_radius;
 				}
 
+				// TODO: Compact this bit of code, maybe. It works at least.
+				tx = part->pins[0]->position.x - armx;
+				ty = part->pins[0]->position.y - army;
+				VHRotateV(&tx, &ty, part->pins[0]->position.x, part->pins[0]->position.y, angle);
+				// a = CoordToScreen(tx, ty);
+				part->outline[0].x = tx;
+				part->outline[0].y = ty;
+
+				tx = part->pins[0]->position.x - armx;
+				ty = part->pins[0]->position.y + army;
+				VHRotateV(&tx, &ty, part->pins[0]->position.x, part->pins[0]->position.y, angle);
+				// b = CoordToScreen(tx, ty);
+				part->outline[1].x = tx;
+				part->outline[1].y = ty;
+
+				tx = part->pins[1]->position.x + armx;
+				ty = part->pins[1]->position.y + army;
+				VHRotateV(&tx, &ty, part->pins[1]->position.x, part->pins[1]->position.y, angle);
+				// c = CoordToScreen(tx, ty);
+				part->outline[2].x = tx;
+				part->outline[2].y = ty;
+
+				tx = part->pins[1]->position.x + armx;
+				ty = part->pins[1]->position.y - army;
+				VHRotateV(&tx, &ty, part->pins[1]->position.x, part->pins[1]->position.y, angle);
+				// d = CoordToScreen(tx, ty);
+				part->outline[3].x = tx;
+				part->outline[3].y = ty;
+
+				part->outline_done = true;
+
+				// rendered = 1;
+
 			} else {
-				// if it wasn't at an odd angle, or wasn't large, or wasn't a connector,
-				// just an ordinary
-				// type part, then this is where we'll likely end up
-				draw->AddRect(min, max, color);
-				rendered = 1;
+
+				/*
+				 * If we have (typically) a connector with a non uniform pin distribution
+				 * then we can try use the minimal bounding box algorithm
+				 * to give it a more sane outline
+				 */
+				if ((pincount >= 4) &&
+				    ((p0 == 'J') || (strncmp(part->name.c_str(), "CN", 2) == 0) || ((p0 == 'L') || (p1 == 'L')))) {
+					ImVec2 *hull;
+					int hpc;
+
+					hull = (ImVec2 *)malloc(sizeof(ImVec2) * pincount); // massive overkill since our hull will
+					                                                    // only require the perimeter points
+					if (hull) {
+						// Find our hull
+						hpc = VHConvexHull(hull, pva, pincount); // (hpc = hull pin count)
+
+						// If we had a valid hull, then find the MBB for it
+						if (hpc > 0) {
+							int i;
+							ImVec2 bbox[4];
+							outline_pt *hpt;
+							part->hull_count = hpc;
+
+							hpt = part->hull = (outline_pt *)malloc(sizeof(outline_pt) * hpc);
+							for (i = 0; i < hpc; i++) {
+								hpt->x = hull[i].x;
+								hpt->y = hull[i].y;
+								hpt++;
+							}
+
+							VHMBBCalculate(bbox, hull, hpc, pin_radius);
+							for (i = 0; i < 4; i++) {
+								part->outline[i].x = bbox[i].x;
+								part->outline[i].y = bbox[i].y;
+							}
+
+							part->outline_done = true;
+
+							/*
+							 * Tighten the hull, removes any small angle segments
+							 * such as a sequence of pins in a line, might be an overkill
+							 */
+							// hpc = TightenHull(hull, hpc, 0.1f);
+							//							rendered = 1;
+						}
+						// 	else {
+						//	draw->AddRect(min, max, 0xff0000ff);
+						//	rendered = 1;
+						//						}
+
+						free(hull);
+					} else {
+						fprintf(stderr, "ERROR: Cannot allocate memory for convex hull generation (%s)", strerror(errno));
+						memcpy(part->outline, dbox, sizeof(dbox));
+						part->outline_done = true;
+						//						draw->AddRect(min, max, color);
+						//						rendered = 1;
+					}
+
+				} else {
+					// if it wasn't at an odd angle, or wasn't large, or wasn't a connector,
+					// just an ordinary
+					// type part, then this is where we'll likely end up
+					memcpy(part->outline, dbox, sizeof(dbox));
+					part->outline_done = true;
+					//					draw->AddRect(min, max, color);
+					//					if (fillParts) draw->AddRectFilled(min, max, color & 0x0fffffff);
+					//					rendered = 1;
+				}
+			}
+
+			//			if (rendered == 0) {
+			//				fprintf(stderr, "Part wasn't rendered (%s)\n", part->name.c_str());
+			//			}
+
+			// if (m_annotationsVisible && part->annotation) {
+			//    char *annotation = component.annotation;
+			//    ImVec2 text_size = ImGui::CalcTextSize(annotation);
+
+			//    float mid_y = (min.y + max.y) * 0.5f - text_size.y * 0.5f;
+			//    ImVec2 pos = ImVec2((min.x + max.x) * 0.5f, mid_y);
+			//    pos.x -= text_size.x * 0.5f;
+
+			//    draw->ChannelsSetCurrent(kChannelAnnotations);
+			//    draw->AddText(pos, m_colors.annotationPartAlias, annotation);
+			//}
+		} // if outline_done
+
+		if (part->outline_done) {
+			ImVec2 a, b, c, d;
+
+			a = ImVec2(CoordToScreen(part->outline[0].x, part->outline[0].y));
+			b = ImVec2(CoordToScreen(part->outline[1].x, part->outline[1].y));
+			c = ImVec2(CoordToScreen(part->outline[2].x, part->outline[2].y));
+			d = ImVec2(CoordToScreen(part->outline[3].x, part->outline[3].y));
+
+			if (fillParts) draw->AddQuadFilled(a, b, c, d, color & 0x0fFFFFFF);
+			draw->AddQuad(a, b, c, d, color);
+
+			if (part->hull) {
+				int i;
+				draw->PathClear();
+				for (i = 0; i < part->hull_count; i++) {
+					ImVec2 p = CoordToScreen(part->hull[i].x, part->hull[i].y);
+					draw->PathLineTo(p);
+				}
+				draw->PathStroke(m_colors.partHullColor, true, 1.0f);
+			}
+
+			if (PartIsHighlighted(*part) && !part->is_dummy() && !part->name.empty()) {
+				ImVec2 text_size = ImGui::CalcTextSize(part->name.c_str());
+				float top_y      = a.y;
+
+				if (c.y < top_y) top_y = c.y;
+				ImVec2 pos             = ImVec2((a.x + c.x) * 0.5f, top_y);
+
+				// I'm really not sure why this bb_y_resize code is here, I'm sure it had
+				// a purpose I'm just not sure what :(
+				//
+				//			if (bb_y_resized) {
+				//				pos.y -= text_size.y + 2.0f * psz;
+				//			} else {
+				//				pos.y -= text_size.y *2;
+				//			}
+				//
+				pos.y -= text_size.y * 2;
+				pos.x -= text_size.x * 0.5f;
+				draw->ChannelsSetCurrent(kChannelPolylines);
+				// draw->AddRectFilled(ImVec2(pos.x - 2.0f, pos.y - 1.0f), ImVec2(pos.x + text_size.x + 2.0f, pos.y + text_size.y +
+				// 1.0f), m_colors.backgroundColor, 3.0f);
+				// This is the background of the part text.
+				draw->AddRectFilled(ImVec2(pos.x - 2.0f, pos.y - 2.0f),
+				                    ImVec2(pos.x + text_size.x + 2.0f, pos.y + text_size.y + 2.0f),
+				                    m_colors.partTextBackgroundColor,
+				                    0.0f);
+				draw->ChannelsSetCurrent(kChannelText);
+				draw->AddText(pos, m_colors.partTextColor, part->name.c_str());
 			}
 		}
-
-		if (rendered == 0) {
-			fprintf(stderr, "Part wasn't rendered (%s)\n", part->name.c_str());
-		}
-
-		if (PartIsHighlighted(*part) && !part->is_dummy() && !part->name.empty()) {
-			ImVec2 text_size         = ImGui::CalcTextSize(part->name.c_str());
-			float top_y              = min.y;
-			if (max.y < top_y) top_y = max.y;
-			ImVec2 pos               = ImVec2((min.x + max.x) * 0.5f, top_y);
-			if (bb_y_resized) {
-				pos.y -= text_size.y + 2.0f * psz;
-			} else {
-				pos.y -= text_size.y;
-			}
-			pos.x -= text_size.x * 0.5f;
-			draw->ChannelsSetCurrent(kChannelPolylines);
-			draw->AddRectFilled(ImVec2(pos.x - 2.0f, pos.y - 1.0f),
-			                    ImVec2(pos.x + text_size.x + 2.0f, pos.y + text_size.y + 1.0f),
-			                    m_colors.backgroundColor,
-			                    3.0f);
-			draw->ChannelsSetCurrent(kChannelText);
-			draw->AddText(pos, m_colors.partTextColor, part->name.c_str());
-		}
-	}
+	} // for each part
 }
 
 void BoardView::DrawBoard() {

@@ -44,9 +44,10 @@ struct ColorScheme {
 	 * Take note, because these are directly set
 	 * the packing format is ABGR,  not RGBA
 	 */
-	uint32_t backgroundColor = 0xa0000000;
-	uint32_t partTextColor   = 0xff808000;
-	uint32_t boardOutline    = 0xff0000ff;
+	uint32_t backgroundColor         = 0xa0000000;
+	uint32_t partTextColor           = 0xff808000;
+	uint32_t partTextBackgroundColor = 0xff00eeee;
+	uint32_t boardOutline            = 0xff00ffff;
 
 	uint32_t boxColor = 0xffcccccc;
 
@@ -92,6 +93,7 @@ struct BoardView {
 	bool slowCPU                 = false;
 	bool showFPS                 = false;
 	bool pinHalo                 = true;
+	bool fillParts               = true;
 	bool showPosition            = true;
 	bool reloadConfig            = false;
 	int pinBlank                 = 0;

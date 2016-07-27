@@ -96,6 +96,10 @@ struct Net : BoardElement {
 	}
 };
 
+struct outline_pt {
+	double x, y;
+};
+
 // Any observeable contact (nails, component pins).
 // Convieniently/Confusingly named Pin not Contact here.
 struct Pin : BoardElement {
@@ -153,6 +157,12 @@ struct Component : BoardElement {
 
 	// Pins belonging to this component.
 	vector<Pin *> pins;
+
+	// Post calculated outlines
+	outline_pt outline[4];
+	bool outline_done = false;
+	outline_pt *hull  = NULL;
+	int hull_count    = 0;
 
 	// Mount type as readable string.
 	string mount_type_str() {

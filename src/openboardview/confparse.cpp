@@ -8,6 +8,71 @@
 
 #include "confparse.h"
 
+/*
+ * XRayBlue theme - by Inflex
+ */
+char default_conf[] =
+    "#\r\n\
+# OpenFlex Board View configuration file (inflex-ui)\r\n\
+#\r\n\
+windowX=900\r\n\
+windowY=600\r\n\
+#fontPath=FiraSans-Medium.ttf\r\n\
+fontSize=20\r\n\
+pinSizeThresholdLow = 0\r\n\
+pinShapeCircle = true\r\n\
+pinShapeSquare = false\r\n\
+\r\n\
+slowCPU =       false\r\n\
+showFPS =       false\r\n\
+pinHalo =       true\r\n\
+fillParts =		true\r\n\
+\r\n\
+zoomFactor = 5\r\n\
+zoomModifier = 5\r\n\
+\r\n\
+panFactor = 30\r\n\
+panModifier = 5\r\n\
+\r\n\
+#\r\n\
+# \"XRayBlue\" Theme by Inflex (20160724)\r\n\
+# Colors, format is 0xRRGGBBAA\r\n\
+#\r\n\
+lightTheme = true\r\n\
+backgroundColor		= 0xeeeeeeff\r\n\
+partTextColor			= 0xff3030ff\r\n\
+partTextBackgroundColor			= 0xffff00ff\r\n\
+boardOutline			= 0x444444ff\r\n\
+boxColor					= 0x444444ff\r\n\
+pinDefault				= 0x8888ffff\r\n\
+pinGround				= 0x2222aaff\r\n\
+pinNotConnected		= 0xaaaaaaff\r\n\
+pinTestPad				= 0x888888ff\r\n\
+pinSelected				= 0x0000ffff\r\n\
+pinSelectedText			= 0xff0000ff\r\n\
+pinHighlighted			= 0x0000ffff\r\n\
+pinHaloColor			= 0x00aa00ff\r\n\
+pinHighlightSameNet	= 0x000000ff\r\n\
+annotationPartAlias	= 0xffff00ff\r\n\
+partHullColor			= 0x80808080\r\n\
+\r\n\
+selectedMaskPins		= 0xffffffff\r\n\
+selectedMaskParts		= 0xffffffff\r\n\
+selectedMaskOutline	= 0xffffffff\r\n\
+\r\n\
+orMaskPins		= 0xccccccff\r\n\
+orMaskParts		= 0x787878ff\r\n\
+orMaskOutline	= 0x888888ff\r\n\
+# EndColors\r\n\
+\r\n\
+FZKey = 0x12345678, 0x12345678\r\n\
+";
+
+/*
+ * Original dark theme
+ *
+ */
+/*
 char default_conf[] =
     "#\r\n\
 # OpenFlex Board View configuration file (inflex-ui)\r\n\
@@ -23,6 +88,7 @@ pinShapeSquare = false\r\n\
 slowCPU =       false\r\n\
 showFPS =       false\r\n\
 pinHalo =       true\r\n\
+fillParts =		true\r\n\
 \r\n\
 zoomFactor = 5\r\n\
 zoomModifier = 5\r\n\
@@ -34,6 +100,7 @@ panModifier = 5\r\n\
 lightTheme	= false\r\n\
 backgroundColor		= 0x000000a0\r\n\
 partTextColor			= 0x008080ff\r\n\
+partTextBackgroundColor	= 0xeeee00ff\r\n\
 boardOutline			= 0xffff00ff\r\n\
 boxColor					= 0xccccccff\r\n\
 pinDefault				= 0xff0000ff\r\n\
@@ -60,10 +127,13 @@ orMaskParts		= 0x00000000\r\n\
 orMaskOutline	= 0x00000000\r\n\
 # EndColors\r\n\
 \r\n\
-#FZKey = 0x12345678, 0x12345678, 0x12345678, 0x12345678, 0x12345678, 0x12345678, 0x12345678, 0x12345678, 0x12345678, 0x12345678, 0x12345678, 0x12345678, 0x12345678, 0x12345678, 0x12345678, 0x12345678, 0x12345678, 0x12345678, 0x12345678, 0x12345678, 0x12345678\r\n\
+#FZKey = 0x12345678, 0x12345678, 0x12345678, 0x12345678, 0x12345678, 0x12345678, 0x12345678, 0x12345678, 0x12345678, 0x12345678,
+0x12345678, 0x12345678, 0x12345678, 0x12345678, 0x12345678, 0x12345678, 0x12345678, 0x12345678, 0x12345678, 0x12345678,
+0x12345678\r\n\
 \r\n\
 # END\r\n\
 ";
+*/
 
 int Confparse::SaveDefault(const char *utf8_filename) {
 	std::ofstream file;
