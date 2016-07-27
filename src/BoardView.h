@@ -77,7 +77,7 @@ struct BoardView {
 	char m_search[128];
 	char m_netFilter[128];
 	char *m_lastFileOpenName;
-	char *m_lastErrorMsg;
+	const char *m_lastErrorMsg;
 	float m_dx;
 	float m_dy;
 	float m_mx;
@@ -117,7 +117,7 @@ struct BoardView {
 
 	~BoardView();
 
-	void ShowError(char *msg);
+	void ShowError(const char *msg);
 
 	void ShowNetList(bool *p_open);
 	void ShowPartList(bool *p_open);
@@ -156,3 +156,6 @@ struct BoardView {
 
 	void OpenFile(char *filename);
 };
+
+// global BoardView object, initialized in BoardView.cpp
+extern BoardView app;

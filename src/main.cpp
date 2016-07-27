@@ -126,7 +126,6 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	// Set flag to the new value.
 	_CrtSetDbgFlag(tmpFlag);
 #endif
-	BoardView app{};
 
 	bool show_test_window = true;
 	bool show_another_window = false;

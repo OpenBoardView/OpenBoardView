@@ -1,18 +1,6 @@
-#ifdef _WIN32
-
 #include "platform.h"
-#include "imgui.h"
 #include <stdint.h>
 #include <Windows.h>
-#include <assert.h>
-
-wchar_t *utf8_to_wide(const char *s) {
-	size_t len = utf8len(s);
-	wchar_t *buf = (wchar_t *)malloc(sizeof(wchar_t) * (1 + len));
-	mbstowcs(buf, s, len);
-	buf[len] = 0;
-	return buf;
-}
 
 char *wide_to_utf8(const wchar_t *s) {
 	size_t len = 0;
@@ -36,30 +24,6 @@ char *wide_to_utf8(const wchar_t *s) {
 	char *buf = (char *)malloc(1 + len);
 	wcstombs(buf, s, len);
 	buf[len] = 0;
-	return buf;
-}
-
-char *file_as_buffer(size_t *buffer_size, const char *utf8_filename) {
-	wchar_t *wide_filename = utf8_to_wide(utf8_filename);
-	HANDLE file = CreateFile(wide_filename, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL,
-	                         OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-	free(wide_filename);
-	if (file == INVALID_HANDLE_VALUE) {
-		*buffer_size = 0;
-		return nullptr;
-	}
-
-	LARGE_INTEGER filesize;
-	GetFileSizeEx(file, &filesize);
-	uint32_t sz = (uint32_t)filesize.QuadPart;
-	assert(filesize.QuadPart == sz);
-	*buffer_size = sz;
-
-	char *buf = (char *)malloc(sz);
-	uint32_t numRead = 0;
-	ReadFile(file, buf, sz, (LPDWORD)&numRead, NULL);
-	assert(numRead == sz);
-
 	return buf;
 }
 
@@ -87,5 +51,3 @@ unsigned char *LoadAsset(int *asset_size, int asset_id) {
 	UnlockResource(res);
 	return data;
 }
-
-#endif // _WIN32

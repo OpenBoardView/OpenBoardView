@@ -13,6 +13,7 @@ set(SOURCES
 	PartList.cpp
 
 	imgui_impl_dx9.cpp
+	platform.cpp
 	platform_win32.cpp)
 
 ## Add main target

@@ -1,5 +1,4 @@
-#ifdef __APPLE__
-
+#include "platform.h"
 #include <string>
 #import <Cocoa/Cocoa.h>
 
@@ -22,5 +21,3 @@ char *show_file_picker() {
 
 	return path;
 }
-
-#endif // __APPLE__

@@ -1,39 +1,5 @@
-#ifndef _WIN32
-
-#define _CRT_SECURE_NO_WARNINGS 1
 #include "platform.h"
-#include "imgui.h"
-#include <iostream>
-#include <fstream>
-#include <stdint.h>
-#include <assert.h>
-
-#ifndef __APPLE__
 #include <gtk/gtk.h>
-#endif  // ! __APPLE__
-
-char *file_as_buffer(size_t *buffer_size, const char *utf8_filename) {
-	std::ifstream file;
-	file.open(utf8_filename,  std::ios::in | std::ios::binary | std::ios::ate);
-	if (!file.is_open()) {
-		std::cerr << "Error opening " << utf8_filename << ": " << strerror(errno) << std::endl;
-		*buffer_size = 0;
-		return nullptr;
-	}
-
-	std::streampos sz = file.tellg();
-	*buffer_size = sz;
-	char *buf = (char *)malloc(sz);
-	file.seekg(0, std::ios::beg);
-	file.read(buf, sz);
-	assert(file.gcount() == sz);
-	file.close();
-
-	return buf;
-}
-
-#ifndef __APPLE__
-/* These are defined in platform_osx.mm */
 
 char *show_file_picker() {
 	char *path = nullptr;
@@ -88,7 +54,3 @@ char *show_file_picker() {
 
 	return path;
 }
-
-#endif // ! __APPLE__
-
-#endif // ! _WIN32

@@ -22,13 +22,16 @@ using namespace std::placeholders;
 #define stricmp _stricmp
 #endif
 
+// Initialize BoardView object globally
+BoardView app{};
+
 BoardView::~BoardView() {
 	delete m_file;
 	delete m_board;
 	free(m_lastFileOpenName);
 }
 
-void BoardView::ShowError(char *msg) {
+void BoardView::ShowError(const char *msg) {
 	m_lastErrorMsg = msg;
 	m_showError = true;
 }
