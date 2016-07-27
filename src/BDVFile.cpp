@@ -142,7 +142,7 @@ BDVFile::BDVFile(const char *buf, size_t buffer_size) {
 			nail.pos.x = posx * 1000;
 			double posy;
 			LOAD_DOUBLE(posy);
-			nail.pos.y = posy;
+			nail.pos.y = posy * 1000;
 			int type;
 			LOAD_INT(type);
 			char *grid;
