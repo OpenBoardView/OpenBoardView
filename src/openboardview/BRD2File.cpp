@@ -3,19 +3,11 @@
 #include "utf8/utf8.h"
 #include <assert.h>
 #include <ctype.h>
-#include <locale.h>
 #include <stdint.h>
 #include <string.h>
+#include <unordered_map>
 
-#define LOAD_INT(var) var    = strtol(p, &p, 10)
-#define LOAD_DOUBLE(var) var = strtod(p, &p);
-#define LOAD_STR(var)                            \
-	while ((*p) && (isspace((uint8_t)*p))) ++p;  \
-	s = p;                                       \
-	while ((*p) && (!isspace((uint8_t)*p))) ++p; \
-	*p = 0;                                      \
-	p++;                                         \
-	var = fix_to_utf8(s, &arena, arena_end);
+#include <iostream>
 
 bool BRD2File::verifyFormat(const char *buf, size_t buffer_size) {
 	std::string sbuf(buf, buffer_size);
@@ -24,16 +16,20 @@ bool BRD2File::verifyFormat(const char *buf, size_t buffer_size) {
 }
 
 BRD2File::BRD2File(const char *buf, size_t buffer_size) {
-	char *saved_locale;
-	char ppn[100] = {0};                        // previous part name
-	saved_locale  = setlocale(LC_NUMERIC, "C"); // Use '.' as delimiter for strtod
-
 	memset(this, 0, sizeof(*this));
-#define ENSURE(X) \
-	assert(X);    \
-	if (!(X)) return;
+	std::unordered_map<int, char *> nets;
+	char **lines_begin = nullptr;
+	int pins_idx       = 0;
+	int num_nets       = 0;
 
-#define FAIL_LABEL fail
+#define ENSURE(X)                               \
+	assert(X);                                  \
+	/*	if (!(X)) {                              \
+	        if (lines_begin) free(lines_begin); \
+	        assert(X);                          \
+	        return;                             \
+	    }*/
+
 	ENSURE(buffer_size > 4);
 	size_t file_buf_size = 3 * (1 + buffer_size);
 	file_buf             = (char *)malloc(file_buf_size);
@@ -47,11 +43,9 @@ BRD2File::BRD2File(const char *buf, size_t buffer_size) {
 	int current_block = 0;
 
 	char **lines = stringfile(file_buf);
-	if (!lines) return;
-	//		goto fail;
-	char **lines_begin = lines;
-#undef FAIL_LABEL
-#define FAIL_LABEL fail_lines
+	ENSURE(lines)
+	lines_begin = lines;
+
 	while (*lines) {
 		char *line = *lines;
 		++lines;
@@ -61,85 +55,124 @@ BRD2File::BRD2File(const char *buf, size_t buffer_size) {
 		while (isspace((uint8_t)*line)) line++;
 		if (!line[0]) continue;
 
+		char *p = line;
+		char *s;
+
 		if (strstr(line, "BRDOUT:") == line) {
 			current_block = 1;
+			p += 7; // Skip "BRDOUT:"
+			LOAD_INT(num_format);
+			ENSURE(num_format >= 0);
 			continue;
 		}
 		if (strstr(line, "NETS:") == line) {
 			current_block = 2;
+			p += 5; // Skip "NETS:"
+			LOAD_INT(num_nets);
+			ENSURE(num_nets >= 0);
 			continue;
 		}
 		if (strstr(line, "PARTS:") == line) {
 			current_block = 3;
+			p += 6; // Skip "PARTS:"
+			LOAD_INT(num_parts);
+			ENSURE(num_parts >= 0);
 			continue;
 		}
 		if (strstr(line, "PINS:") == line) {
 			current_block = 4;
+			p += 5; // Skip "PINS:"
+			LOAD_INT(num_pins);
+			ENSURE(num_pins >= 0);
 			continue;
 		}
 		if (strstr(line, "NAILS:") == line) {
 			current_block = 5;
+			p += 6; // Skip "NAILS:"
+			LOAD_INT(num_nails);
+			ENSURE(num_nails >= 0);
 			continue;
 		}
 
-		char *p = line;
-		char *s;
-
 		switch (current_block) {
 			case 1: { // Format
+				ENSURE(format.size() < num_format);
 				BRDPoint point;
-
 				LOAD_INT(point.x);
 				LOAD_INT(point.y);
 				format.push_back(point);
 			} break;
 
 			case 2: { // Nets
-				      /*
-			  BRDNet net;
-			  LOAD_INT(net.number);
-			  LOAD_STR(net.name);
-			  if (strcmp(net.name, "GND") == 0)
-				  net.is_ground = true;
-			  else
-				  net.is_ground = false;
-			  Nets.push_back(net);
-			  */
+				ENSURE(nets.size() < num_nets);
+				int id;
+				LOAD_INT(id);
+				LOAD_STR(nets[id]);
 			} break;
 
 			case 3: { // PARTS
+				ENSURE(parts.size() < num_parts);
 				BRDPart part;
-				int dud, side;
+				int side;
 
 				LOAD_STR(part.name);
-				LOAD_INT(dud);
-				LOAD_INT(dud);
-				LOAD_INT(dud);
-				LOAD_INT(dud);
-				LOAD_INT(dud);
+				LOAD_INT(part.x);
+				LOAD_INT(part.y);
+				LOAD_INT(part.z);
+				LOAD_INT(part.t);
 				LOAD_INT(part.end_of_pins);
 				LOAD_INT(side);
+				if (side == 1)
+					part.type = 10; // SMD part on top
+				else if (side == 2)
+					part.type = 5; // SMD part on bottom
+
 				parts.push_back(part);
 			} break;
 
 			case 4: { // PINS
+				pins_idx++;
+				ENSURE(pins.size() < num_pins);
 				BRDPin pin;
-				int pindex, side;
+				int netid, side;
 
 				LOAD_INT(pin.pos.x);
 				LOAD_INT(pin.pos.y);
-				LOAD_INT(pindex);
+				LOAD_INT(netid);
+				try {
+					pin.net = nets.at(netid);
+				} catch (const std::out_of_range &e) {
+					pin.net = "";
+				}
 				LOAD_INT(side);
+				pin.probe = 1;
+				pin.part  = 0;
+				for (decltype(parts)::size_type i = 0; i < parts.size(); i++) { // Yep, inefficient but I've got no better idea
+					if (pin.pos.x >= parts[i].x && pin.pos.x <= parts[i].z && pin.pos.y >= parts[i].y &&
+					    pin.pos.y <= parts[i].t /*&& parts[i].end_of_pins >= pins_idx*/) {
+						if ((side == 1 && parts[i].type == 10) || (side == 2 && parts[i].type == 5)) {
+							pin.part = i + 1;
+							break;
+						}
+					}
+				}
+				//				ENSURE(pin.part > 0);
+				if (pin.part <= 0) {
+					std::cout << "No part for pin. Net: " << pin.net << " x: " << pin.pos.x << " y: " << pin.pos.y << std::endl;
+					break;
+				}
 				pins.push_back(pin);
 			} break;
 
 			case 5: { // NAILS
+				ENSURE(nails.size() < num_nails);
 				BRDNail nail;
-				int nindex;
+				int netid;
 				LOAD_INT(nail.probe);
 				LOAD_INT(nail.pos.x);
 				LOAD_INT(nail.pos.y);
-				LOAD_INT(nindex);
+				LOAD_INT(netid);
+				nail.net = nets.at(netid);
 				LOAD_INT(nail.side);
 				nails.push_back(nail);
 
@@ -148,17 +181,17 @@ BRD2File::BRD2File(const char *buf, size_t buffer_size) {
 		}
 	}
 
+	ENSURE(num_format == format.size());
+	//	ENSURE(num_nets == nets.size());
+	ENSURE(num_parts == parts.size());
+	//	ENSURE(num_pins == pins.size());
+	ENSURE(num_nails == nails.size());
+
 	num_parts  = parts.size();
 	num_pins   = pins.size();
 	num_format = format.size();
 	num_nails  = nails.size();
 
-	setlocale(LC_NUMERIC, saved_locale); // Restore locale
-
 	valid = current_block != 0;
-fail_lines:
-	free(lines_begin);
-fail:;
-#undef FAIL_LABEL
 #undef ENSURE
 }

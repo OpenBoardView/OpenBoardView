@@ -24,6 +24,7 @@ struct BRDPart {
 	char *name;
 	int type;
 	int end_of_pins;
+	int x, y, z, t;
 };
 
 struct BRDPin {
