@@ -14,6 +14,7 @@
 #endif
 
 #include "BDVFile.h"
+#include "BRD2File.h"
 #include "BRDBoard.h"
 #include "BRDFile.h"
 #include "BVRFile.h"
@@ -223,7 +224,10 @@ int BoardView::detectFiletype(char *buf) {
 	if (strstr(buf, "dd:1.") == buf) return filetypeBDV;
 	if (strstr(buf, "<<format.asc>>") && strstr(buf, "<<pins.asc>>")) return filetypeBDV;
 
-	if (strstr(buf, "BRDOUT:") && strstr(buf, "NETS:")) return filetypeBRD2;
+	if (strstr(buf, "BRDOUT:") && strstr(buf, "NETS:")) {
+		fprintf(stderr, "BRD2format found\n");
+		return filetypeBRD2;
+	}
 
 	if (strstr(buf, "BVRAW_FORMAT_1")) return filetypeBVRAW;
 
@@ -249,10 +253,7 @@ int BoardView::LoadFile(char *filename) {
 
 					case filetypeBRD1: file = new BRDFile(buffer, buffer_size); break;
 
-					case filetypeBRD2:
-						// NOT YET SUPPORTED
-						//						file = new BRD2File(buffer, buffer_size);
-						break;
+					case filetypeBRD2: file = new BRD2File(buffer, buffer_size); break;
 
 					case filetypeBDV: file = new BDVFile(buffer, buffer_size); break;
 
