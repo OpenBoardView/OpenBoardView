@@ -1448,7 +1448,7 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 
 	for (auto &part : m_board->Components()) {
 		int pincount = 0;
-		double min_x, min_y, max_x, max_y;
+		double min_x, min_y, max_x, max_y, aspect;
 		outline_pt dbox[4]; // default box, if there's nothing else claiming to render the part different.
 		auto p_part = part.get();
 
@@ -1588,6 +1588,11 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 			min_y -= pin_radius;
 			max_y += pin_radius;
 
+			if ((max_y - min_y) < 0.01)
+				aspect = 0;
+			else
+				aspect = (max_x - min_x) / (max_y - min_y);
+
 			dbox[0].x = dbox[3].x = min_x;
 			dbox[1].x = dbox[2].x = max_x;
 			dbox[0].y = dbox[1].y = min_y;
@@ -1605,7 +1610,25 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 			 * CPU
 			 * overhead but it keeps the code simpler and saves us replicating things.
 			 */
-			if ((pincount < 4) && ((strchr("CRLD", p0) || (strchr("CRLD", p1))))) {
+
+			if ((pincount == 3) && (abs(aspect > 0.5)) && ((strchr("DQZ", p0) || (strchr("DQZ", p1))))) {
+				outline_pt *hpt;
+
+				memcpy(part->outline, dbox, sizeof(dbox));
+				part->outline_done = true;
+
+				hpt = part->hull = (outline_pt *)malloc(sizeof(outline_pt) * 3);
+				for (auto pin : part->pins) {
+					hpt->x = pin->position.x;
+					hpt->y = pin->position.y;
+					hpt++;
+				}
+				part->hull_count = 3;
+
+				/*
+				 * handle all other devices not specifically handled above
+				 */
+			} else if ((pincount < 4) && ((strchr("CRLD", p0) || (strchr("CRLD", p1))))) {
 				//				ImVec2 a, b, c, d;
 				double dx, dy;
 				double tx, ty;
@@ -1638,12 +1661,19 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 					mpy = dy / 2 + part->pins[0]->position.y;
 					VHRotateV(&mpx, &mpy, dx / 2 + part->pins[0]->position.x, dy / 2 + part->pins[0]->position.y, angle);
 					mp = CoordToScreen(mpx, mpy);
-					// for the round pin representations, choose how many circle segments
-					// need based on the pin size
-					segments                    = trunc(distance);
-					if (segments < 8) segments  = 8;
-					if (segments > 36) segments = 36;
+
+					/*
+					 * Need to work out how to icon/mark the parts in the Component
+					 * class so we don't have to recompute this each time.
+					 */
+					/*
+				// for the round pin representations, choose how many circle segments
+				// need based on the pin size
+				segments = trunc(distance);
+				if (segments < 8) segments = 8;
+				if (segments > 36) segments = 36;
 					draw->AddCircle(mp, (distance / 3) * m_scale, m_colors.boxColor & 0x8fffffff, segments);
+					*/
 
 				} else {
 					armx = army = pin_radius;
