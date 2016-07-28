@@ -72,7 +72,7 @@ BRD2File::BRD2File(const char *buf, size_t buffer_size) {
 			continue;
 		}
 		if (strstr(line, "NAILS:") == line) {
-			current_block = 4;
+			current_block = 5;
 			continue;
 		}
 
