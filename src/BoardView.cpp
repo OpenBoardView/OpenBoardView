@@ -968,10 +968,16 @@ void BoardView::OpenFile(char *filename) {
 	if (buffer) {
 		BRDFile *file = nullptr;
 
-		// Extract lowercase file extension
+		// Extract file extension
 		char *ext = strrchr(filename, '.');
-		for (int i = 0; ext[i]; i++)
-			ext[i] = tolower(ext[i]);
+		if (ext) {
+			// Convert extension to lowercase
+			for (int i = 0; ext[i]; i++)
+				ext[i] = tolower(ext[i]);
+		} else {
+			// No extension, point to end of filename
+			ext = strrchr(filename, '\0');
+		}
 
 		// Check file format using filename extension
 		if (!strcmp(ext, ".brd"))
