@@ -485,9 +485,9 @@ void BoardView::SearchComponent(void) {
 					snprintf(m_search, sizeof(m_search), "%s", part.name);
 					first_button = part.name;
 				} // button name generation
-				if (buttons_left == 10) {
-					first_button = part.name;
-				}
+				  //				if (buttons_left == 10) {
+				  //					first_button = part.name;
+				  //				}
 				buttons_left--;
 			} // testing for match of our component partial to the part name
 		}     // for each part ( search column 1 )
@@ -509,9 +509,9 @@ void BoardView::SearchComponent(void) {
 					snprintf(m_search2, sizeof(m_search2), "%s", part2.name);
 					first_button2 = part2.name;
 				}
-				if (buttons_left2 == 10) {
-					first_button2 = part2.name;
-				}
+				//				if (buttons_left2 == 10) {
+				//					first_button2 = part2.name;
+				//				}
 				buttons_left2--;
 			}
 		}
@@ -532,9 +532,9 @@ void BoardView::SearchComponent(void) {
 					snprintf(m_search3, sizeof(m_search3), "%s", part3.name);
 					first_button3 = part3.name;
 				}
-				if (buttons_left3 == 10) {
-					first_button3 = part3.name;
-				}
+				//				if (buttons_left3 == 10) {
+				//					first_button3 = part3.name;
+				//				}
 				buttons_left3--;
 			}
 		}
@@ -1248,6 +1248,7 @@ inline void BoardView::DrawOutline(ImDrawList *draw) {
 	// set our initial draw point, so we can detect when we encounter it again
 	fp = *outline[0];
 
+	draw->PathClear();
 	for (size_t i = 0; i < outline.size() - 1; i++) {
 		Point &pa = *outline[i];
 		Point &pb = *outline[i + 1];
