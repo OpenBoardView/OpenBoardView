@@ -58,25 +58,26 @@ void VHMBBCalculate(ImVec2 box[], ImVec2 *hull, int n, double psz) {
 	double mbArea = DBL_MAX; // fake area to initialise
 	ImVec2 mbb, mba, origin; // Box bottom left, box top right
 	int i;
-	int lowest_i;
-	double lowest;
 
 	// Find the lowest hull point, if it's below the x-axis just bring it up to
 	// compensate
 	// NOTE: we're not modifying the actual hull point, just a copy
-	lowest   = DBL_MAX;
-	lowest_i = 0;
+	origin.x = DBL_MAX;
+	origin.y = DBL_MAX;
+
+	// find bottom corner
 	for (i = 0; i < n; i++) {
-		if (hull[i].y < lowest) {
-			lowest_i = i;
-			lowest   = hull[i].y;
-		}
-	}
-	origin = hull[lowest_i];
-	if (lowest < 0) {
-		origin.y -= lowest;
+		if (hull[i].y < origin.y) origin.y = hull[i].y;
+		if (hull[i].x < origin.x) origin.x = hull[i].x;
 	}
 
+	// transpose
+	for (i = 0; i < n; i++) {
+		hull[i].x -= origin.x;
+		hull[i].y -= origin.y;
+	}
+
+	// rotate hull on each side and work out the smallest area
 	for (i = 0; i < n; i++) {
 		int ni = i + 1;
 		double area;
@@ -93,7 +94,7 @@ void VHMBBCalculate(ImVec2 box[], ImVec2 *hull, int n, double psz) {
 
 		int x;
 		for (x = 0; x < n; x++) {
-			ImVec2 rp = VHRotateV(hull[x], origin, -angle);
+			ImVec2 rp = VHRotateV(hull[x], -angle);
 
 			hull[x] = rp;
 
@@ -121,10 +122,16 @@ void VHMBBCalculate(ImVec2 box[], ImVec2 *hull, int n, double psz) {
 
 	// Form our rectangle, has to be all 4 points as it's a polygon now that'll be
 	// rotated
-	box[0] = VHRotateV(mba, origin, +mbAngle);
-	box[1] = VHRotateV(ImVec2(mbb.x, mba.y), origin, +mbAngle);
-	box[2] = VHRotateV(mbb, origin, +mbAngle);
-	box[3] = VHRotateV(ImVec2(mba.x, mbb.y), origin, +mbAngle);
+	box[0] = VHRotateV(mba, +mbAngle);
+	box[1] = VHRotateV(ImVec2(mbb.x, mba.y), +mbAngle);
+	box[2] = VHRotateV(mbb, +mbAngle);
+	box[3] = VHRotateV(ImVec2(mba.x, mbb.y), +mbAngle);
+
+	// Transpose MBB back
+	for (i = 0; i < 4; i++) {
+		box[i].x += origin.x;
+		box[i].y += origin.y;
+	}
 }
 
 // To find orientation of ordered triplet (p, q, r).

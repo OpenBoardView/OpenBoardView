@@ -83,10 +83,10 @@ BDVFile::BDVFile(const char *buf, size_t buffer_size) {
 				BRDPoint point;
 				double x;
 				LOAD_DOUBLE(x);
-				point.x = x * 1000; // OBV uses integers
+				point.x = x * 1000.0f; // OBV uses integers
 				double y;
 				LOAD_DOUBLE(y);
-				point.y = y * 1000;
+				point.y = y * 1000.0f;
 				format.push_back(point);
 			} break;
 			case 2: { // Parts & Pins
@@ -111,10 +111,12 @@ BDVFile::BDVFile(const char *buf, size_t buffer_size) {
 					LOAD_STR(name);
 					double posx;
 					LOAD_DOUBLE(posx);
-					pin.pos.x = posx * 1000;
+					pin.pos.x = posx * 1000.0f;
+					//		pin.pos.x = posx;
 					double posy;
 					LOAD_DOUBLE(posy);
-					pin.pos.y = posy * 1000;
+					pin.pos.y = posy * 1000.0f;
+					//		pin.pos.y = posy;
 					int layer;
 					LOAD_INT(layer);
 					LOAD_STR(pin.net);
@@ -129,10 +131,10 @@ BDVFile::BDVFile(const char *buf, size_t buffer_size) {
 				LOAD_INT(nail.probe);
 				double posx;
 				LOAD_DOUBLE(posx);
-				nail.pos.x = posx * 1000;
+				nail.pos.x = posx * 1000.0f;
 				double posy;
 				LOAD_DOUBLE(posy);
-				nail.pos.y = posy;
+				nail.pos.y = posy * 1000.0f;
 				int type;
 				LOAD_INT(type);
 				char *grid;
