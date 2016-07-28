@@ -75,6 +75,7 @@ struct ColorScheme {
 };
 
 enum DrawChannel { kChannelImages = 0, kChannelPolylines = 1, kChannelText = 2, kChannelAnnotations = 3, NUM_DRAW_CHANNELS = 4 };
+enum fileTypes { filetypeUnknown, filetypeBRD1, filetypeBRD2, filetypeBDV, filetypeBVRAW, NUM_FILETYPES };
 
 struct BoardView {
 	BRDFile *m_file;
@@ -112,6 +113,7 @@ struct BoardView {
 	void HelpControls(void);
 	void SearchNet(void);
 	void SearchComponent(void);
+	int detectFiletype(char *filename);
 
 	Pin *m_pinSelected = nullptr;
 	vector<Pin *> m_pinHighlighted;
