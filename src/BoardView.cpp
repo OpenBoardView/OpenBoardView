@@ -28,12 +28,15 @@ BoardView app{};
 BoardView::~BoardView() {
 	delete m_file;
 	delete m_board;
-	free(m_lastFileOpenName);
 }
 
 void BoardView::ShowError(const char *msg) {
-	m_lastErrorMsg = msg;
+	ShowError(std::string(msg));
+}
+void BoardView::ShowError(std::string &msg) {
+	m_lastErrorMsg = "There was an error: " + msg;
 	m_showError = true;
+	nowide::cerr << msg << std::endl;
 }
 
 #pragma region Update Logic
@@ -208,7 +211,7 @@ void BoardView::Update() {
 			ImGui::EndPopup();
 		}
 		if (ImGui::BeginPopupModal("Error")) {
-			ImGui::Text("There was an error: %s", m_lastErrorMsg);
+			ImGui::Text(m_lastErrorMsg.c_str());
 			if (ImGui::Button("OK")) {
 				ImGui::CloseCurrentPopup();
 			}
@@ -219,10 +222,7 @@ void BoardView::Update() {
 
 	if (m_open_file) {
 		m_open_file = false;
-		char *filename = show_file_picker();
-		if (filename) {
-			OpenFile(filename);
-		}
+		OpenFile(show_file_picker());
 	}
 
 	ImGuiWindowFlags flags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
@@ -949,8 +949,7 @@ void BoardView::FindComponent(const char *name) {
 	m_needsRedraw = true;
 }
 
-void BoardView::SetLastFileOpenName(char *name) {
-	free(m_lastFileOpenName);
+void BoardView::SetLastFileOpenName(std::string &name) {
 	m_lastFileOpenName = name;
 }
 
@@ -963,7 +962,11 @@ void BoardView::FlipBoard() {
 	m_needsRedraw = true;
 }
 
-void BoardView::OpenFile(char *filename) {
+void BoardView::OpenFile(std::string &filename) {
+	if (filename.length() < 1) {
+		//ShowError("Empty filename");
+		return;
+	}
 	SetLastFileOpenName(filename);
 	size_t buffer_size;
 	char *buffer = file_as_buffer(&buffer_size, filename);

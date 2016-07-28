@@ -76,8 +76,8 @@ struct BoardView {
 	SharedVector<Net> m_nets;
 	char m_search[128];
 	char m_netFilter[128];
-	char *m_lastFileOpenName;
-	const char *m_lastErrorMsg;
+	std::string m_lastFileOpenName;
+	std::string m_lastErrorMsg;
 	float m_dx;
 	float m_dy;
 	float m_mx;
@@ -118,6 +118,7 @@ struct BoardView {
 	~BoardView();
 
 	void ShowError(const char *msg);
+	void ShowError(std::string &msg);
 
 	void ShowNetList(bool *p_open);
 	void ShowPartList(bool *p_open);
@@ -151,10 +152,10 @@ struct BoardView {
 	bool PartIsHighlighted(const Component &component);
 	void SetNetFilter(const char *net);
 	void FindComponent(const char *name);
-	void SetLastFileOpenName(char *name);
+	void SetLastFileOpenName(std::string &name);
 	void FlipBoard();
 
-	void OpenFile(char *filename);
+	void OpenFile(std::string &filename);
 };
 
 // global BoardView object, initialized in BoardView.cpp

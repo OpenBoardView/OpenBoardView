@@ -6,10 +6,11 @@
 #include "imgui_impl_dx9.h"
 #include <d3d9.h>
 #define DIRECTINPUT_VERSION 0x0800
-#include <dinput.h>
-#include <tchar.h>
 #include "crtdbg.h"
 #include "platform.h"
+#include <dinput.h>
+#include <nowide/convert.hpp>
+#include <tchar.h>
 
 // Data
 static LPDIRECT3DDEVICE9 g_pd3dDevice = NULL;
@@ -157,9 +158,7 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 			} else {
 				lpszFile[0] = '\0';
 				if (DragQueryFile(hDrop, 0, lpszFile, MAX_PATH)) {
-					char *fileAsChar = new char[MAX_PATH];
-					wcstombs_s(NULL, fileAsChar, MAX_PATH, lpszFile, wcslen(lpszFile) + 1);
-					app.OpenFile(fileAsChar);
+					app.OpenFile(nowide::narrow(lpszFile));
 				}
 			}
 
@@ -211,8 +210,8 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 			TCHAR filename[MAX_PATH + 10];
 
 			// Convert character encoding if required, and format the window title
-			mbstowcs_s(NULL, filename, _countof(filename), app.m_lastFileOpenName,
-			           strlen(app.m_lastFileOpenName));
+			mbstowcs_s(NULL, filename, _countof(filename), app.m_lastFileOpenName.c_str(),
+			           app.m_lastFileOpenName.length());
 			_stprintf_s(title, _countof(title), L"%s - Open Board Viewer", filename);
 
 			SetWindowText(hwnd, title);

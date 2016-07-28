@@ -4,3 +4,6 @@
 [submodule "imgui"]
 	path = lib/imgui
 	url = https://github.com/ocornut/imgui.git
+[submodule "lib/nowide"]
+	path = lib/nowide
+	url = https://github.com/OpenBoardView/nowide.git

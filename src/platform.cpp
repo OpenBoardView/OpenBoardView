@@ -2,18 +2,18 @@
 #include "BoardView.h"
 
 #include <assert.h>
-#include <fstream>
-#include <sstream>
+#include <nowide/fstream.hpp>
 #include <string>
 
 char *file_as_buffer(size_t *buffer_size, const char *utf8_filename) {
-	std::ifstream file;
+	return file_as_buffer(buffer_size, std::string(utf8_filename));
+}
+char *file_as_buffer(size_t *buffer_size, std::string &utf8_filename) {
+	nowide::ifstream file;
 	file.open(utf8_filename, std::ios::in | std::ios::binary | std::ios::ate);
 	if (!file.is_open()) {
-		std::stringstream error;
-		error << "Error opening " << utf8_filename << ": " << strerror(errno);
-		std::string error_str = error.str();
-		app.ShowError(error_str.c_str());
+		std::string error = "Error opening \"" + utf8_filename + "\": " + strerror(errno);
+		app.ShowError(error);
 		*buffer_size = 0;
 		return nullptr;
 	}

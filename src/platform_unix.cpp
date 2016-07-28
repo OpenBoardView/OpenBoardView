@@ -1,12 +1,13 @@
 #include "platform.h"
 #include <gtk/gtk.h>
+#include <string>
 
-char *show_file_picker() {
-	char *path = nullptr;
+std::string show_file_picker() {
+	std::string filename("");
 	GtkWidget *parent, *dialog;
 
 	if (!gtk_init_check(NULL, NULL))
-		return nullptr;
+		return filename;
 
 	parent = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 
@@ -29,20 +30,8 @@ char *show_file_picker() {
 	gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(dialog), filter1);
 	gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(dialog), filter2);
 
-	if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_ACCEPT) {
-		char *filename = nullptr;
-
+	if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_ACCEPT)
  		filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
-		size_t len = strlen(filename);
-		path = (char *)malloc(len+1);
-		memcpy(path, filename, len+1);
-		if (!path ) {
-			g_free(filename);
-			gtk_widget_destroy(dialog);
-			return nullptr;
-		}
-		g_free(filename);
-	}
 
 	while (gtk_events_pending())
 		gtk_main_iteration();
@@ -52,5 +41,5 @@ char *show_file_picker() {
  	while (gtk_events_pending())
  		gtk_main_iteration();
 
-	return path;
+	return filename;
 }
