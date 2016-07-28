@@ -17,6 +17,12 @@
 	p++;                                         \
 	var = fix_to_utf8(s, &arena, arena_end);
 
+bool BRD2File::verifyFormat(const char *buf, size_t buffer_size) {
+	std::string sbuf(buf, buffer_size);
+	if ((sbuf.find("BRDOUT:") != std::string::npos) && (sbuf.find("NETS:") != std::string::npos)) return true;
+	return false;
+}
+
 BRD2File::BRD2File(const char *buf, size_t buffer_size) {
 	char *saved_locale;
 	char ppn[100] = {0};                        // previous part name

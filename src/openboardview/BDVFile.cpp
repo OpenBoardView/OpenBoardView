@@ -18,6 +18,13 @@ void decode_bdv(char *buf, size_t buffer_size) {
 	}
 }
 
+bool BDVFile::verifyFormat(const char *buf, size_t buffer_size) {
+	std::string sbuf(buf, buffer_size);
+	if (sbuf.find("dd:1.3?,r?-=bb") != std::string::npos) return true; // encoded "<<format.asc>>"
+	if ((sbuf.find("<<format.asc>>") != std::string::npos) && (sbuf.find("<<pins.asc>>") != std::string::npos)) return true;
+	return false;
+}
+
 BDVFile::BDVFile(const char *buf, size_t buffer_size) {
 	char *saved_locale;
 	saved_locale = setlocale(LC_NUMERIC, "C"); // Use '.' as delimiter for strtod

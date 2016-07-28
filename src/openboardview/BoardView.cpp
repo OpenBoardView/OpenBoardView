@@ -4,7 +4,6 @@
 
 #include <algorithm>
 #include <cmath>
-#include <fstream>
 #include <iostream>
 #include <limits.h>
 #include <memory>
@@ -212,28 +211,6 @@ int BoardView::ConfigParse(void) {
 	return 0;
 }
 
-int BoardView::detectFiletype(char *buf) {
-	/*
-	 * Now let's try determine the file type
-	 */
-	static const uint8_t signatureBRD1[] = {0x23, 0xe2, 0x63, 0x28};
-
-	if (memcmp(buf, signatureBRD1, sizeof(signatureBRD1)) == 0) return filetypeBRD1;
-	if (strstr(buf, "str_length:") && strstr(buf, "var_data:")) return filetypeBRD1;
-
-	if (strstr(buf, "dd:1.") == buf) return filetypeBDV;
-	if (strstr(buf, "<<format.asc>>") && strstr(buf, "<<pins.asc>>")) return filetypeBDV;
-
-	if (strstr(buf, "BRDOUT:") && strstr(buf, "NETS:")) {
-		fprintf(stderr, "BRD2format found\n");
-		return filetypeBRD2;
-	}
-
-	if (strstr(buf, "BVRAW_FORMAT_1")) return filetypeBVRAW;
-
-	return filetypeUnknown;
-}
-
 int BoardView::LoadFile(char *filename) {
 	if (filename) {
 		char *ext = strrchr(filename, '.');
@@ -249,25 +226,17 @@ int BoardView::LoadFile(char *filename) {
 		if (buffer) {
 			BRDFile *file = nullptr;
 
-			if (strcmp(ext, ".fz") == 0) {
+			if (strcmp(ext, ".fz") == 0) { // Since it is encrypted we cannot use the below logic. Trust the ext.
 				file = new FZFile(buffer, buffer_size, FZKey);
-			} else {
-				int ft = detectFiletype(buffer);
+			} else if (BRDFile::verifyFormat(buffer, buffer_size))
+				file = new BRDFile(buffer, buffer_size);
+			else if (BRD2File::verifyFormat(buffer, buffer_size))
+				file = new BRD2File(buffer, buffer_size);
+			else if (BDVFile::verifyFormat(buffer, buffer_size))
+				file = new BDVFile(buffer, buffer_size);
+			else if (BVRFile::verifyFormat(buffer, buffer_size))
+				file = new BVRFile(buffer, buffer_size);
 
-				switch (ft) {
-
-					case filetypeBRD1: file = new BRDFile(buffer, buffer_size); break;
-
-					case filetypeBRD2: file = new BRD2File(buffer, buffer_size); break;
-
-					case filetypeBDV: file = new BDVFile(buffer, buffer_size); break;
-
-					case filetypeBVRAW: file = new BVRFile(buffer, buffer_size); break;
-
-					case filetypeUnknown:
-					default: break;
-				} // switch
-			}
 			/*
 		if (!strcmp(ext, ".brd")) // Recognize file format using filename extension
 		  file = new BRDFile(buffer, buffer_size);

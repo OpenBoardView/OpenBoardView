@@ -6,6 +6,9 @@
 #include <stdint.h>
 #include <string.h>
 
+// Header for recognizing a BRD file
+decltype(BRDFile::signature) constexpr BRDFile::signature;
+
 // from stb.h -- return value must be freed
 char **stringfile(char *buffer) {
 	char **list = nullptr, *s;
@@ -73,6 +76,18 @@ char *fix_to_utf8(char *s, char **arena, char *arena_end) {
 done:
 	*arena = p;
 	return begin;
+}
+
+/*
+ * Returns true if the file format seems to be BRD.
+ * Uses std::string::find() on a std::string rather than strstr() on the buffer because the latter expects a null-terminated string.
+ */
+bool BRDFile::verifyFormat(const char *buf, size_t buffer_size) {
+	if (buffer_size < signature.size()) return false;
+	if (std::equal(signature.begin(), signature.end(), buf)) return true;
+	std::string sbuf(buf, buffer_size); // prevents us from reading beyond the buffer size
+	if ((sbuf.find("str_length:") != std::string::npos) && (sbuf.find("var_data:") != std::string::npos)) return true;
+	return false;
 }
 
 BRDFile::BRDFile(const char *buf, size_t buffer_size) {

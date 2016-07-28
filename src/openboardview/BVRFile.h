@@ -7,4 +7,6 @@ struct BVRFile : public BRDFile {
 	~BVRFile() {
 		free(file_buf);
 	}
+
+	static bool verifyFormat(const char *buf, size_t buffer_size);
 };

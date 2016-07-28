@@ -7,4 +7,6 @@ struct BRD2File : public BRDFile {
 	~BRD2File() {
 		free(file_buf);
 	}
+
+	static bool verifyFormat(const char *buf, size_t buffer_size);
 };

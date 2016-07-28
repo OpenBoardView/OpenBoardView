@@ -18,6 +18,12 @@ char *nextfield(char *p) {
 	return p;
 }
 
+bool BVRFile::verifyFormat(const char *buf, size_t buffer_size) {
+	std::string sbuf(buf, buffer_size);
+	if (sbuf.find("BVRAW_FORMAT_1") != std::string::npos) return true;
+	return false;
+}
+
 BVRFile::BVRFile(const char *buf, size_t buffer_size) {
 	char *saved_locale;
 	char ppn[100] = {0};                        // previous part name
