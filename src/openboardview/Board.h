@@ -168,6 +168,8 @@ struct Component : BoardElement {
 	bool outline_done = false;
 	outline_pt *hull  = NULL;
 	int hull_count    = 0;
+	outline_pt centerpoint;
+	double expanse = 0.0f;
 
 	// Mount type as readable string.
 	string mount_type_str() {
