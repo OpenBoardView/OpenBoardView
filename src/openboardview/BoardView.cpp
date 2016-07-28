@@ -237,7 +237,12 @@ int BoardView::detectFiletype(char *buf) {
 int BoardView::LoadFile(char *filename) {
 	if (filename) {
 		char *ext = strrchr(filename, '.');
-		for (int i = 0; ext[i]; i++) ext[i] = tolower(ext[i]); // Convert extension to lowercase
+		if (ext) {
+			for (int i = 0; ext[i]; i++) ext[i] = tolower(ext[i]); // Convert extension to lowercase
+		} else {
+			ext = strrchr(filename, '\0'); // No extension, point to end of filename
+		}
+
 		SetLastFileOpenName(filename);
 		size_t buffer_size;
 		char *buffer = file_as_buffer(&buffer_size, filename);
