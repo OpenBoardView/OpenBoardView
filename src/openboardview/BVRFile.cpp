@@ -2,6 +2,7 @@
 
 #include "utf8/utf8.h"
 #include <assert.h>
+#include <cmath>
 #include <ctype.h>
 #include <locale.h>
 #include <stdint.h>
