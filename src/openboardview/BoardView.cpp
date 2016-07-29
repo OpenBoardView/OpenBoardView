@@ -1492,6 +1492,12 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 		if (!part->outline_done) { // should only need to do this once for most parts
 
 			ppp = &pva[0];
+			if (part->pins.size() == 0) {
+				part->component_type = part->kComponentTypeDummy;
+				part->outline_done   = true;
+				continue;
+			}
+
 			for (auto pin : part->pins) {
 				pincount++;
 
