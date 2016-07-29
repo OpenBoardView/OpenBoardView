@@ -143,10 +143,13 @@ BRD2File::BRD2File(const char *buf, size_t buffer_size) {
 					pin.net = nets.at(netid);
 				} catch (const std::out_of_range &e) {
 					pin.net = "";
+					// pin.net = nullptr;
+					//	"...";
 				}
 				LOAD_INT(side);
 				pin.probe = 1;
 				pin.part  = 0;
+#ifdef PIERNOV
 				for (decltype(parts)::size_type i = 0; i < parts.size(); i++) { // Yep, inefficient but I've got no better idea
 					if (pin.pos.x >= parts[i].x && pin.pos.x <= parts[i].z && pin.pos.y >= parts[i].y &&
 					    pin.pos.y <= parts[i].t /*&& parts[i].end_of_pins >= pins_idx*/) {
@@ -158,9 +161,11 @@ BRD2File::BRD2File(const char *buf, size_t buffer_size) {
 				}
 				//				ENSURE(pin.part > 0);
 				if (pin.part <= 0) {
-					std::cout << "No part for pin. Net: " << pin.net << " x: " << pin.pos.x << " y: " << pin.pos.y << std::endl;
+					std::cout << "No part for pin. Net: " << (pin.net ? pin.net : "...") << " x: " << pin.pos.x
+					          << " y: " << pin.pos.y << std::endl;
 					break;
 				}
+#endif
 				pins.push_back(pin);
 			} break;
 
@@ -186,6 +191,29 @@ BRD2File::BRD2File(const char *buf, size_t buffer_size) {
 	ENSURE(num_parts == parts.size());
 	//	ENSURE(num_pins == pins.size());
 	ENSURE(num_nails == nails.size());
+
+	/*
+	 * Postprocess the data.  Specifically we need to allocate
+	 * pins to parts.  So with this it's easiest to just iterate
+	 * through the parts and pick up the pins required
+	 */
+	{
+		int pei;                                                        // pin end index (part[i+1].pin# -1
+		int cpi = 0;                                                    // current pin index
+		for (decltype(parts)::size_type i = 0; i < parts.size(); i++) { // Yep, inefficient but I've got no better idea
+			if (i == parts.size() - 1) {
+				pei = pins.size() - 1;
+			} else {
+				pei = parts[i + 1].end_of_pins;
+			}
+			fprintf(stdout, "%s: %d pins\n", parts[i].name, pei - cpi);
+
+			while (cpi < pei) {
+				pins[cpi].part = i;
+				cpi++;
+			}
+		}
+	}
 
 	num_parts  = parts.size();
 	num_pins   = pins.size();
