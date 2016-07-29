@@ -33,6 +33,7 @@ struct BRDPin {
 	BRDPoint pos;
 	int probe;
 	int part;
+	int side;
 	char *net;
 	double radius = 0.5f;
 	char *snum    = nullptr;

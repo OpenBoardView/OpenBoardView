@@ -21,6 +21,8 @@ BRD2File::BRD2File(const char *buf, size_t buffer_size) {
 	char **lines_begin = nullptr;
 	int pins_idx       = 0;
 	int num_nets       = 0;
+	int max_y          = 0;
+	int max_x          = 0;
 
 #define ENSURE(X)                               \
 	assert(X);                                  \
@@ -101,6 +103,10 @@ BRD2File::BRD2File(const char *buf, size_t buffer_size) {
 				LOAD_INT(point.x);
 				LOAD_INT(point.y);
 				format.push_back(point);
+
+				if (point.x > max_x) max_x = point.x;
+				if (point.y > max_y) max_y = point.y;
+
 			} break;
 
 			case 2: { // Nets
@@ -139,7 +145,7 @@ BRD2File::BRD2File(const char *buf, size_t buffer_size) {
 				LOAD_INT(pin.pos.x);
 				LOAD_INT(pin.pos.y);
 				LOAD_INT(netid);
-				LOAD_INT(side);
+				LOAD_INT(pin.side);
 
 				try {
 					pin.net = nets.at(netid);
@@ -210,7 +216,13 @@ BRD2File::BRD2File(const char *buf, size_t buffer_size) {
 			}
 
 			while (cpi < pei) {
-				if (strlen(pins[cpi].net)) pins[cpi].part = i + 1;
+				// if (strlen(pins[cpi].net)) pins[cpi].part = i + 1;
+				pins[cpi].part = i + 1;
+				if ((parts[i].type == 10) && (pins[cpi].side == 0)) {
+					//&&(strlen(pins[cpi].net) ==0)) {
+					pins[cpi].pos.y = max_y - pins[cpi].pos.y;
+					//				   	pins[cpi].pos.x = max_x -pins[cpi].pos.x;
+				}
 				cpi++;
 			}
 		}
