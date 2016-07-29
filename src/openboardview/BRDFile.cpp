@@ -83,9 +83,8 @@ done:
  * Uses std::string::find() on a std::string rather than strstr() on the buffer because the latter expects a null-terminated string.
  */
 bool BRDFile::verifyFormat(const char *buf, size_t buffer_size) {
-	uint8_t sig[4] = {0x23, 0xe2, 0x63, 0x28};
-	if (buffer_size < sizeof(sig)) return false;
-	if (memcmp(buf, sig, sizeof(sig)) == 0) return true;
+	if (buffer_size < signature.size()) return false;
+	if (std::equal(signature.begin(), signature.end(), (uint8_t *)buf)) return true;
 	std::string sbuf(buf, buffer_size); // prevents us from reading beyond the buffer size
 	if ((sbuf.find("str_length:") != std::string::npos) && (sbuf.find("var_data:") != std::string::npos)) return true;
 	return false;
