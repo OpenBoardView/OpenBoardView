@@ -216,13 +216,8 @@ BRD2File::BRD2File(const char *buf, size_t buffer_size) {
 			}
 
 			while (cpi < pei) {
-				// if (strlen(pins[cpi].net)) pins[cpi].part = i + 1;
-				pins[cpi].part = i + 1;
-				if ((parts[i].type == 10) && (pins[cpi].side == 0)) {
-					//&&(strlen(pins[cpi].net) ==0)) {
-					pins[cpi].pos.y = max_y - pins[cpi].pos.y;
-					//				   	pins[cpi].pos.x = max_x -pins[cpi].pos.x;
-				}
+				pins[cpi].part                           = i + 1;
+				if (pins[cpi].side != 1) pins[cpi].pos.y = max_y - pins[cpi].pos.y;
 				cpi++;
 			}
 		}
