@@ -2,6 +2,7 @@
 
 #include "BRDFile.h"
 
+#include "imgui/imgui.h"
 #include <algorithm>
 #include <functional>
 #include <map>
@@ -164,7 +165,10 @@ struct Component : BoardElement {
 	vector<Pin *> pins;
 
 	// Post calculated outlines
+	//
 	outline_pt outline[4];
+	int x1, y1, x2, y2; // for debugging
+
 	bool outline_done = false;
 	outline_pt *hull  = NULL;
 	int hull_count    = 0;

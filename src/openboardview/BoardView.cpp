@@ -1493,8 +1493,11 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 
 			ppp = &pva[0];
 			if (part->pins.size() == 0) {
-				part->component_type = part->kComponentTypeDummy;
-				part->outline_done   = true;
+				if (debug) fprintf(stderr, "WARNING: Drawing empty part %s\n", part->name.c_str());
+				draw->AddRect(CoordToScreen(part->x1 + 10, part->y1 + 10), CoordToScreen(part->x2 - 10, part->y2 - 10), 0xff0000ff);
+				draw->AddText(CoordToScreen(part->x1 + 10, part->y1 - 50), m_colors.partTextColor, part->name.c_str());
+				//				part->component_type = part->kComponentTypeDummy;
+				//				part->outline_done = true;
 				continue;
 			}
 

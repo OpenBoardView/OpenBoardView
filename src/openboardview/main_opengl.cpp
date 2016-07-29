@@ -24,6 +24,7 @@ struct globals {
 	int width;
 	int height;
 	double font_size;
+	bool debug;
 
 	globals() {
 		this->input_file  = NULL;
@@ -32,6 +33,7 @@ struct globals {
 		this->width       = 0;
 		this->height      = 0;
 		this->font_size   = 0.0f;
+		this->debug       = false;
 	}
 };
 
@@ -44,6 +46,7 @@ char help[] =
 	-x <width> : Set window width\n\
 	-y <height> : Set window height\n\
 	-z <pixels> : Set font size\n\
+	-d : Debug mode\n\
 ";
 
 int parse_parameters(int argc, char **argv, struct globals *g) {
@@ -104,8 +107,10 @@ int parse_parameters(int argc, char **argv, struct globals *g) {
 			}
 
 		} else if (strcmp(p, "-l") == 0) {
-
 			g->slowCPU = true;
+
+		} else if (strcmp(p, "-d") == 0) {
+			g->debug = true;
 
 			/*
 			 * for extended parameters, nothing yet required
@@ -135,6 +140,8 @@ int main(int argc, char **argv) {
 	 *
 	 */
 	parse_parameters(argc, argv, &g);
+
+	app.debug = g.debug;
 
 	// Setup SDL
 	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) != 0) {

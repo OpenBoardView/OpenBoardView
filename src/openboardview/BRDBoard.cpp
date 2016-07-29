@@ -80,6 +80,11 @@ BRDBoard::BRDBoard(const BRDFile *const boardFile)
 
 			comp->name = string(brd_part.name);
 
+			comp->x1 = brd_part.x;
+			comp->y1 = brd_part.y;
+			comp->x2 = brd_part.z;
+			comp->y2 = brd_part.t;
+
 			// is it some dummy component to indicate test pads?
 			if (is_prefix(kComponentDummyName, comp->name)) comp->component_type = Component::kComponentTypeDummy;
 
