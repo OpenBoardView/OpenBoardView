@@ -26,14 +26,15 @@ struct BRDPart {
 	char *name;
 	int type;
 	int end_of_pins;
-	int x, y, z, t;
+	BRDPoint p1{0, 0};
+	BRDPoint p2{0, 0};
 };
 
 struct BRDPin {
 	BRDPoint pos;
 	int probe;
 	int part;
-	int side;
+	int side = 0;
 	char *net;
 	double radius = 0.5f;
 	char *snum    = nullptr;

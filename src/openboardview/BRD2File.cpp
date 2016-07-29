@@ -3,11 +3,10 @@
 #include "utf8/utf8.h"
 #include <assert.h>
 #include <ctype.h>
+#include <iostream>
 #include <stdint.h>
 #include <string.h>
 #include <unordered_map>
-
-#include <iostream>
 
 bool BRD2File::verifyFormat(const char *buf, size_t buffer_size) {
 	std::string sbuf(buf, buffer_size);
@@ -17,12 +16,10 @@ bool BRD2File::verifyFormat(const char *buf, size_t buffer_size) {
 
 BRD2File::BRD2File(const char *buf, size_t buffer_size) {
 	memset(this, 0, sizeof(*this));
-	std::unordered_map<int, char *> nets;
+	std::unordered_map<int, char *> nets; // Map between net id and net name
 	char **lines_begin = nullptr;
-	int pins_idx       = 0;
 	int num_nets       = 0;
-	int max_y          = 0;
-	int max_x          = 0;
+	BRDPoint max{0, 0}; // Top-right board boundary
 
 #define ENSURE(X)                               \
 	assert(X);                                  \
@@ -52,8 +49,6 @@ BRD2File::BRD2File(const char *buf, size_t buffer_size) {
 		char *line = *lines;
 		++lines;
 
-		//		fprintf(stderr,"Parsing:%s\n",line);
-
 		while (isspace((uint8_t)*line)) line++;
 		if (!line[0]) continue;
 
@@ -64,7 +59,11 @@ BRD2File::BRD2File(const char *buf, size_t buffer_size) {
 			current_block = 1;
 			p += 7; // Skip "BRDOUT:"
 			LOAD_INT(num_format);
+			LOAD_INT(max.x);
+			LOAD_INT(max.y);
 			ENSURE(num_format >= 0);
+			ENSURE(max.x > 0);
+			ENSURE(max.y > 0);
 			continue;
 		}
 		if (strstr(line, "NETS:") == line) {
@@ -102,11 +101,9 @@ BRD2File::BRD2File(const char *buf, size_t buffer_size) {
 				BRDPoint point;
 				LOAD_INT(point.x);
 				LOAD_INT(point.y);
+				ENSURE(point.x <= max.x);
+				ENSURE(point.y <= max.y);
 				format.push_back(point);
-
-				if (point.x > max_x) max_x = point.x;
-				if (point.y > max_y) max_y = point.y;
-
 			} break;
 
 			case 2: { // Nets
@@ -122,11 +119,11 @@ BRD2File::BRD2File(const char *buf, size_t buffer_size) {
 				int side;
 
 				LOAD_STR(part.name);
-				LOAD_INT(part.x);
-				LOAD_INT(part.y);
-				LOAD_INT(part.z);
-				LOAD_INT(part.t);
-				LOAD_INT(part.end_of_pins);
+				LOAD_INT(part.p1.x);
+				LOAD_INT(part.p1.y);
+				LOAD_INT(part.p2.x);
+				LOAD_INT(part.p2.y);
+				LOAD_INT(part.end_of_pins); // Warning: not end but beginning in this format
 				LOAD_INT(side);
 				if (side == 1)
 					part.type = 10; // SMD part on top
@@ -137,7 +134,6 @@ BRD2File::BRD2File(const char *buf, size_t buffer_size) {
 			} break;
 
 			case 4: { // PINS
-				pins_idx++;
 				ENSURE(pins.size() < num_pins);
 				BRDPin pin;
 				int netid, side;
@@ -151,28 +147,10 @@ BRD2File::BRD2File(const char *buf, size_t buffer_size) {
 					pin.net = nets.at(netid);
 				} catch (const std::out_of_range &e) {
 					pin.net = "";
-					// pin.net = nullptr;
-					//	"...";
 				}
+
 				pin.probe = 1;
 				pin.part  = 0;
-#ifdef PIERNOV
-				for (decltype(parts)::size_type i = 0; i < parts.size(); i++) { // Yep, inefficient but I've got no better idea
-					if (pin.pos.x >= parts[i].x && pin.pos.x <= parts[i].z && pin.pos.y >= parts[i].y &&
-					    pin.pos.y <= parts[i].t /*&& parts[i].end_of_pins >= pins_idx*/) {
-						if ((side == 1 && parts[i].type == 10) || (side == 2 && parts[i].type == 5)) {
-							pin.part = i + 1;
-							break;
-						}
-					}
-				}
-				//				ENSURE(pin.part > 0);
-				if (pin.part <= 0) {
-					std::cout << "No part for pin. Net: " << (pin.net ? pin.net : "...") << " x: " << pin.pos.x
-					          << " y: " << pin.pos.y << std::endl;
-					break;
-				}
-#endif
 				pins.push_back(pin);
 			} break;
 
@@ -194,9 +172,9 @@ BRD2File::BRD2File(const char *buf, size_t buffer_size) {
 	}
 
 	ENSURE(num_format == format.size());
-	//	ENSURE(num_nets == nets.size());
+	ENSURE(num_nets == nets.size());
 	ENSURE(num_parts == parts.size());
-	//	ENSURE(num_pins == pins.size());
+	ENSURE(num_pins == pins.size());
 	ENSURE(num_nails == nails.size());
 
 	/*
@@ -205,28 +183,57 @@ BRD2File::BRD2File(const char *buf, size_t buffer_size) {
 	 * through the parts and pick up the pins required
 	 */
 	{
-		int pei;                                                        // pin end index (part[i+1].pin# -1
-		int cpi = 0;                                                    // current pin index
-		for (decltype(parts)::size_type i = 0; i < parts.size(); i++) { // Yep, inefficient but I've got no better idea
+		int pei;     // pin end index (part[i+1].pin# -1
+		int cpi = 0; // current pin index
+		for (decltype(parts)::size_type i = 0; i < parts.size(); i++) {
+			bool isDIP = true;
+
+			if (parts[i].type == 5) { // Part on bottom
+				parts[i].p1.y = max.y - parts[i].p1.y;
+				parts[i].p2.y = max.y - parts[i].p2.y;
+			}
 
 			if (i == parts.size() - 1) {
 				pei = pins.size();
 			} else {
-				pei = parts[i + 1].end_of_pins;
+				pei = parts[i + 1].end_of_pins; // Again, not end of pins but beginning
 			}
 
 			while (cpi < pei) {
 				pins[cpi].part                           = i + 1;
-				if (pins[cpi].side != 1) pins[cpi].pos.y = max_y - pins[cpi].pos.y;
+				if (pins[cpi].side != 1) pins[cpi].pos.y = max.y - pins[cpi].pos.y;
+				if ((pins[cpi].side == 1 && parts[i].type == 10) ||
+				    (pins[cpi].side == 2 && parts[i].type == 5)) // Pins on the same side as the part
+					isDIP = false;
 				cpi++;
 			}
+
+			if (isDIP) parts[i].type /= 5; // All pins are through hole so part is DIP
 		}
 	}
 
-	num_parts  = parts.size();
-	num_pins   = pins.size();
-	num_format = format.size();
-	num_nails  = nails.size();
+	for (auto i = 1; i <= 2; i++) { // Add dummy parts for probe points on both sides
+		BRDPart part;
+		part.name        = "...";
+		part.type        = 5 * i; // First part is bottom, last is top.
+		part.end_of_pins = 0;     // Unused
+		parts.push_back(part);
+	}
+
+	for (auto &nail : nails) {
+		BRDPin pin;
+		pin.pos = nail.pos;
+		if (nail.side == 1) {
+			pin.part = parts.size();
+		} else {
+			pin.pos.y = max.y - pin.pos.y;
+			pin.part  = parts.size() - 1;
+		}
+		pin.probe = nail.probe;
+		pin.side  = nail.side;
+		pin.net   = nail.net;
+		pins.push_back(pin);
+	}
 
 	valid = current_block != 0;
 #undef ENSURE
