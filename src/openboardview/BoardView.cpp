@@ -1652,7 +1652,7 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 				/*
 				 * handle all other devices not specifically handled above
 				 */
-			} else if ((pincount < 4) && ((strchr("CRLD", p0) || (strchr("CRLD", p1))))) {
+			} else if ((pincount > 1) && (pincount < 4) && ((strchr("CRLD", p0) || (strchr("CRLD", p1))))) {
 				//				ImVec2 a, b, c, d;
 				double dx, dy;
 				double tx, ty;
