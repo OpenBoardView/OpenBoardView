@@ -7,9 +7,9 @@ replacement for the "Test_Link" software.
 [![Demo Video](https://github.com/inflex/OpenBoardView/blob/inflex-ui-features/asset/screenshot.png)](https://www.youtube.com/watch?v=rObeatsf660)
 
 
-[![Demo Video](https://github.com/inflex/OpenBoardView/blob/inflex-ui-features/asset/screenshot-halo.png)](https://www.youtube.com/watch?v=rObeatsf660)
+![Common net pin halo](https://github.com/inflex/OpenBoardView/blob/inflex-ui-features/asset/screenshot-halo.png)
 
-[https://github.com/inflex/OpenBoardView/blob/inflex-ui-features/asset/screenshot-partsearch.png]
+![Part searching](https://github.com/inflex/OpenBoardView/blob/inflex-ui-features/asset/screenshot-partsearch.png)
 
 
 ### Features
