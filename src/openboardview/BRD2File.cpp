@@ -139,6 +139,8 @@ BRD2File::BRD2File(const char *buf, size_t buffer_size) {
 				LOAD_INT(pin.pos.x);
 				LOAD_INT(pin.pos.y);
 				LOAD_INT(netid);
+				LOAD_INT(side);
+
 				try {
 					pin.net = nets.at(netid);
 				} catch (const std::out_of_range &e) {
@@ -146,7 +148,6 @@ BRD2File::BRD2File(const char *buf, size_t buffer_size) {
 					// pin.net = nullptr;
 					//	"...";
 				}
-				LOAD_INT(side);
 				pin.probe = 1;
 				pin.part  = 0;
 #ifdef PIERNOV
@@ -201,15 +202,15 @@ BRD2File::BRD2File(const char *buf, size_t buffer_size) {
 		int pei;                                                        // pin end index (part[i+1].pin# -1
 		int cpi = 0;                                                    // current pin index
 		for (decltype(parts)::size_type i = 0; i < parts.size(); i++) { // Yep, inefficient but I've got no better idea
+
 			if (i == parts.size() - 1) {
-				pei = pins.size() - 1;
+				pei = pins.size();
 			} else {
 				pei = parts[i + 1].end_of_pins;
 			}
-			fprintf(stdout, "%s: %d pins\n", parts[i].name, pei - cpi);
 
 			while (cpi < pei) {
-				pins[cpi].part = i;
+				if (strlen(pins[cpi].net)) pins[cpi].part = i + 1;
 				cpi++;
 			}
 		}
