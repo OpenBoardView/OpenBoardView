@@ -40,6 +40,8 @@
 #define SDLK_q 0x51
 #define SDLK_r 0x52
 
+#define SDLK_SLASH '/'
+
 #define SDLK_COMMA VK_OEM_COMMA
 #define SDLK_KP_0 VK_INSERT
 #define SDLK_KP_PERIOD VK_DELETE

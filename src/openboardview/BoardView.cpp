@@ -1145,8 +1145,15 @@ void BoardView::HandleInput() {
 			m_needsRedraw = true;
 
 		} else if (ImGui::IsKeyPressed(SDLK_f)) {
-			showFPS ^= 1;
+			if (io.KeyCtrl)
+				m_showComponentSearch = true;
+			else
+				showFPS ^= 1;
 			m_needsRedraw = true;
+
+		} else if (ImGui::IsKeyPressed(SDLK_SLASH)) {
+			m_showComponentSearch = true;
+			m_needsRedraw         = true;
 
 		} else if (ImGui::IsKeyPressed(SDLK_p)) {
 			showPosition ^= 1;
