@@ -46,6 +46,45 @@ BoardView::~BoardView() {
 	free(m_lastFileOpenName);
 }
 
+static int sqlCallback(void *NotUsed, int argc, char **argv, char **azColName) {
+	int i;
+	for (i = 0; i < argc; i++) {
+		printf("%s = %s\n", azColName[i], argv[i] ? argv[i] : "NULL");
+	}
+	printf("\n");
+	return 0;
+}
+
+int BoardView::sqlInit(void) {
+
+	char *zErrMsg = 0;
+	int rc;
+	char sql_table_test[] = "SELECT name FROM sqlite_master WHERE type='table' AND name='annotations'";
+	char sql_table_create[] =
+	    "CREATE TABLE annotations("
+	    "ID INTEGER PRIMARY KEY AUTOINCREMENT,"
+	    "PIN TEXT,"
+	    "PART TEXT,"
+	    "NET TEXT,"
+	    "POSX INTEGER,"
+	    "POSY INTEGER,"
+	    "SIDE INTEGER,"
+	    "NOTE TEXT );";
+
+	if (!m_sql) return 1;
+
+	/* Execute SQL statement */
+	rc = sqlite3_exec(m_sql, sql_table_create, sqlCallback, 0, &zErrMsg);
+	if (rc != SQLITE_OK) {
+		fprintf(stderr, "SQL error: %s\n", zErrMsg);
+		sqlite3_free(zErrMsg);
+	} else {
+		fprintf(stdout, "Table created successfully\n");
+	}
+
+	return 0;
+}
+
 uint32_t BoardView::byte4swap(uint32_t x) {
 	/*
 	 * used to convert RGBA -> ABGR etc
@@ -261,6 +300,7 @@ int BoardView::LoadFile(char *filename) {
 						fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(m_sql));
 					} else {
 						if (debug) fprintf(stderr, "Opened database successfully\n");
+						sqlInit();
 					}
 				}
 
@@ -481,15 +521,51 @@ void BoardView::HelpControls(void) {
 		ImGui::EndPopup();
 	}
 }
+
+void BoardView::AnnotationAdd(int side, double x, double y, char *net, char *part, char *pin, char *note) {
+	char sql[10240];
+	char *zErrMsg = 0;
+	int r;
+
+	sqlite3_snprintf(sizeof(sql),
+	                 sql,
+	                 "INSERT into annotations ( side, posx, posy, net, part, pin, note ) \
+			values ( %d, %0.0f, %0.0f, '%s', '%s', '%s', '%q' );",
+	                 side,
+	                 x,
+	                 y,
+	                 net,
+	                 part,
+	                 pin,
+	                 note);
+
+	r = sqlite3_exec(m_sql, sql, NULL, 0, &zErrMsg);
+	if (r != SQLITE_OK) {
+		if (debug) fprintf(stderr, "SQL error: %s\n", zErrMsg);
+		sqlite3_free(zErrMsg);
+	} else {
+		if (debug) fprintf(stdout, "Records created successfully\n");
+	}
+}
+
 void BoardView::ContextMenu(void) {
+	static char buf[10240] = "";
+	char *pin, *partn, *net;
+	char empty[] = "";
+
+	double tx, ty;
+	ImGuiIO &io = ImGui::GetIO();
 
 	ImVec2 pos = ScreenToCoord(m_showContextMenuPos.x, m_showContextMenuPos.y);
+	tx         = trunc(pos.x / 10) * 10;
+	ty         = trunc(pos.y / 10) * 10;
 
 	ImGui::SetNextWindowPos(m_showContextMenuPos);
 
 	if (ImGui::BeginPopupModal("ContextOptions", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_ShowBorders)) {
 
 		if (m_showContextMenu) {
+			buf[0]            = 0;
 			m_showContextMenu = false;
 		}
 
@@ -497,9 +573,8 @@ void BoardView::ContextMenu(void) {
 			ImGui::SetKeyboardFocusHere(-1);
 		} // set keyboard focus
 
-		ImGui::Text("Context menu");
-		ImGui::Separator();
-
+		ImGui::Text("POS:%0.0f,%0.0f (%c) ", tx, ty, m_current_side == 0 ? 'T' : 'B');
+		ImGui::SameLine();
 		{
 			/*
 			 * we're going to go through all the possible items we can annotate at this position and offer them
@@ -530,15 +605,6 @@ void BoardView::ContextMenu(void) {
 			    pin->component->mount_type_str().c_str());
 			    */
 
-			if (selection != nullptr) {
-				char s[20];
-				snprintf(s, sizeof(s), "Pin %s[%s]", selection->component->name.c_str(), selection->number.c_str());
-				ImGui::Button(s);
-
-				snprintf(s, sizeof(s), "Net:%s", selection->net->name.c_str());
-				ImGui::Button(s);
-			}
-
 			m_partHighlighted.clear();
 			for (auto &part : m_board->Components()) {
 				int hit     = 0;
@@ -561,20 +627,52 @@ void BoardView::ContextMenu(void) {
 					}
 				} // hull test
 				if (hit) {
-					char s[200];
-					snprintf(s, sizeof(s), "Part:%s", p_part->name.c_str());
-					ImGui::Button(s);
+					ImGui::Text("Part: %s", p_part->name.c_str());
+					partn = strdup(p_part->name.c_str());
+
+					ImGui::SameLine();
 				}
 
 			} // for each part
 
+			if (selection != nullptr) {
+				// snprintf(s, sizeof(s),"Pin %s[%s]", selection->component->name.c_str(), selection->number.c_str());
+				ImGui::Text("Pin: %s[%s], Net: %s",
+				            selection->component->name.c_str(),
+				            selection->number.c_str(),
+				            selection->net->name.c_str());
+			}
+			{
+
+				ImGui::Spacing();
+				ImGui::InputTextMultiline("##annotation", buf, sizeof(buf), ImVec2(600, ImGui::GetTextLineHeight() * 16));
+
+				if (ImGui::Button("Apply") || (ImGui::IsKeyPressed(SDLK_RETURN) && io.KeyShift)) {
+					if (debug) fprintf(stderr, "DATA:'%s'\n\n", buf);
+					if (selection != nullptr) {
+						pin   = strdup(selection->number.c_str());
+						partn = strdup(selection->component->name.c_str());
+						net   = strdup(selection->net->name.c_str());
+					} else {
+						pin = empty;
+						net = empty;
+					}
+
+					AnnotationAdd(m_current_side, tx, ty, net, partn, pin, buf);
+
+					if (selection != nullptr) {
+						free(pin);
+						free(partn);
+						free(net);
+					}
+					ImGui::CloseCurrentPopup();
+				}
+			}
+
 			// the position.
-			char s[20];
-			snprintf(s, sizeof(s), "POS:%d:%0.0fx%0.0fy", m_current_side, pos.x, pos.y);
-			ImGui::Button(s);
 		}
 
-		ImGui::Separator();
+		ImGui::SameLine();
 		if (ImGui::Button("Exit") || ImGui::IsKeyPressed(SDLK_ESCAPE)) {
 			ImGui::CloseCurrentPopup();
 		}
@@ -1164,7 +1262,6 @@ void BoardView::HandleInput() {
 				m_showContextMenu    = true;
 				m_showContextMenuPos = spos;
 				if (debug) fprintf(stderr, "context click request at (%f %f)\n", spos.x, spos.y);
-				//				m_needsRedraw = true;
 
 				// Flip the board with the middle click
 			} else if (m_file && m_board && ImGui::IsMouseReleased(2)) {
@@ -2045,6 +2142,10 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 	} // for each part
 }
 
+inline void BoardView::DrawAnnotations(ImDrawList *draw) {
+	draw->ChannelsSetCurrent(kChannelAnnotations);
+}
+
 void BoardView::DrawBoard() {
 	if (!m_file || !m_board) return;
 
@@ -2064,6 +2165,7 @@ void BoardView::DrawBoard() {
 	DrawOutline(draw);
 	DrawParts(draw);
 	DrawPins(draw);
+	DrawAnnotations(draw);
 
 	draw->ChannelsMerge();
 

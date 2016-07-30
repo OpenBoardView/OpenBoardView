@@ -114,7 +114,12 @@ struct BoardView {
 	void HelpControls(void);
 	void SearchNet(void);
 	void SearchComponent(void);
+
+	/* Context menu, sql stuff */
 	void ContextMenu(void);
+	int sqlInit(void);
+	void AnnotationAdd(int side, double x, double y, char *net, char *part, char *pin, char *note);
+
 	ImVec2 m_showContextMenuPos;
 
 	Pin *m_pinSelected = nullptr;
@@ -176,6 +181,7 @@ struct BoardView {
 	void Update();
 	void HandleInput();
 	void RenderOverlay();
+	void DrawAnnotations(ImDrawList *draw);
 	void DrawOutline(ImDrawList *draw);
 	void DrawPins(ImDrawList *draw);
 	void DrawParts(ImDrawList *draw);
