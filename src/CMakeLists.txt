@@ -46,6 +46,10 @@ if(NOT SQLITE3_FOUND)
 endif()
 
 ## glad ##
+execute_process(
+	COMMAND git submodule update --init src/glad
+	WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+)
 set(GLAD_PROFILE "core" CACHE STRING "GL Profile" FORCE) # Using OpenGL Core profile
 set(GLAD_API "gl=3.2,gles2=2.0" CACHE STRING "GL versions" FORCE) # Build for OpenGL 3.2 and OpenGLES 2
 set(GLAD_EXTENSIONS "GL_EXT_texture_compression_s3tc,GL_OES_element_index_uint" CACHE STRING "Gl exts" FORCE) # S3TC used to load texture for pins — delete when removing support. The other is used by GLES2.
