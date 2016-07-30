@@ -79,6 +79,7 @@ enum DrawChannel { kChannelImages = 0, kChannelPolylines = 1, kChannelText = 2, 
 struct BoardView {
 	BRDFile *m_file;
 	Board *m_board;
+	sqlite3 *m_sql;
 
 	Confparse obvconfig;
 	FHistory fhistory;

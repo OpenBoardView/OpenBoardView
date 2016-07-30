@@ -74,6 +74,7 @@ add_executable(openboardview
 )
 
 target_link_libraries(openboardview
+		sqlite3
 	dl
 	imgui
 	gl3w

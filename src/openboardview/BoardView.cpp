@@ -7,6 +7,7 @@
 #include <iostream>
 #include <limits.h>
 #include <memory>
+#include <sqlite3.h>
 #include <stdio.h>
 #ifndef _WIN32 // SDL not used on Windows
 #include <SDL2/SDL.h>
@@ -41,6 +42,7 @@ using namespace std::placeholders;
 BoardView::~BoardView() {
 	delete m_file;
 	delete m_board;
+	sqlite3_close(m_sql);
 	free(m_lastFileOpenName);
 }
 
@@ -237,21 +239,30 @@ int BoardView::LoadFile(char *filename) {
 			else if (BVRFile::verifyFormat(buffer, buffer_size))
 				file = new BVRFile(buffer, buffer_size);
 
-			/*
-		if (!strcmp(ext, ".brd")) // Recognize file format using filename extension
-		  file = new BRDFile(buffer, buffer_size);
-		else if (!strcmp(ext, ".bdv"))
-		  file = new BDVFile(buffer, buffer_size);
-			else if (!strcmp(ext, ".bvr"))
-			    file = new BVRFile(buffer, buffer_size);
-		else if (!strcmp(ext, ".fz"))
-			    file = new FZFile(buffer, buffer_size, FZKey);
-			*/
-
 			if (file && file->valid) {
 				SetFile(file);
 				fhistory.Prepend_save(filename);
 				history_file_has_changed = 1; // used by main to know when to update the window title
+
+				/*
+				 * Now try load the DB associated with this file
+				 */
+				{
+					int r;
+					char sqlfn[1024];
+
+					if (*ext) *ext = '_';
+					snprintf(sqlfn, 1024, "%s.sqlite3", filename);
+					if (*ext) *ext = '.';
+					m_sql          = nullptr;
+
+					r = sqlite3_open(sqlfn, &m_sql);
+					if (r) {
+						fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(m_sql));
+					} else {
+						if (debug) fprintf(stderr, "Opened database successfully\n");
+					}
+				}
 
 			} else {
 				m_lastFileOpenWasInvalid = true;
@@ -472,7 +483,10 @@ void BoardView::HelpControls(void) {
 }
 void BoardView::ContextMenu(void) {
 
-	ImGui::SetNextWindowPos(CoordToScreen(m_showContextMenuPos.x, m_showContextMenuPos.y));
+	ImVec2 pos = ScreenToCoord(m_showContextMenuPos.x, m_showContextMenuPos.y);
+
+	ImGui::SetNextWindowPos(m_showContextMenuPos);
+
 	if (ImGui::BeginPopupModal("ContextOptions", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_ShowBorders)) {
 
 		if (m_showContextMenu) {
@@ -485,12 +499,81 @@ void BoardView::ContextMenu(void) {
 
 		ImGui::Text("Context menu");
 		ImGui::Separator();
-		if (ImGui::Button("Position")) {
+
+		{
+			/*
+			 * we're going to go through all the possible items we can annotate at this position and offer them
+			 */
+
+			// threshold to within a pin's diameter of the pin center
+			float min_dist = m_pinDiameter * 1.0f;
+
+			min_dist *= min_dist; // all distance squared
+			Pin *selection = nullptr;
+			for (auto &pin : m_board->Pins()) {
+				if (ComponentIsVisible(pin->component)) {
+					float dx   = pin->position.x - pos.x;
+					float dy   = pin->position.y - pos.y;
+					float dist = dx * dx + dy * dy;
+					if (dist < min_dist) {
+						selection = pin.get();
+						min_dist  = dist;
+					}
+				}
+			}
+
+			/*
+			    pin->component->name.c_str(),
+			    pin->number.c_str(),
+			    pin->net->name.c_str(),
+			    pin->net->number,
+			    pin->component->mount_type_str().c_str());
+			    */
+
+			if (selection != nullptr) {
+				char s[20];
+				snprintf(s, sizeof(s), "Pin %s[%s]", selection->component->name.c_str(), selection->number.c_str());
+				ImGui::Button(s);
+
+				snprintf(s, sizeof(s), "Net:%s", selection->net->name.c_str());
+				ImGui::Button(s);
+			}
+
+			m_partHighlighted.clear();
+			for (auto &part : m_board->Components()) {
+				int hit     = 0;
+				auto p_part = part.get();
+
+				if (!ComponentIsVisible(p_part)) continue;
+
+				// Work out if the point is inside the hull
+				{
+					int i, j, n;
+					outline_pt *poly;
+
+					n    = 4;
+					poly = p_part->outline;
+
+					for (i = 0, j = n - 1; i < n; j = i++) {
+						if (((poly[i].y > pos.y) != (poly[j].y > pos.y)) &&
+						    (pos.x < (poly[j].x - poly[i].x) * (pos.y - poly[i].y) / (poly[j].y - poly[i].y) + poly[i].x))
+							hit = !hit;
+					}
+				} // hull test
+				if (hit) {
+					char s[200];
+					snprintf(s, sizeof(s), "Part:%s", p_part->name.c_str());
+					ImGui::Button(s);
+				}
+
+			} // for each part
+
+			// the position.
+			char s[20];
+			snprintf(s, sizeof(s), "POS:%d:%0.0fx%0.0fy", m_current_side, pos.x, pos.y);
+			ImGui::Button(s);
 		}
-		if (ImGui::Button("Pin")) {
-		}
-		if (ImGui::Button("Part")) {
-		}
+
 		ImGui::Separator();
 		if (ImGui::Button("Exit") || ImGui::IsKeyPressed(SDLK_ESCAPE)) {
 			ImGui::CloseCurrentPopup();
@@ -1079,7 +1162,7 @@ void BoardView::HandleInput() {
 				//
 				ImVec2 spos          = ImGui::GetMousePos();
 				m_showContextMenu    = true;
-				m_showContextMenuPos = ScreenToCoord(spos.x, spos.y);
+				m_showContextMenuPos = spos;
 				if (debug) fprintf(stderr, "context click request at (%f %f)\n", spos.x, spos.y);
 				//				m_needsRedraw = true;
 
