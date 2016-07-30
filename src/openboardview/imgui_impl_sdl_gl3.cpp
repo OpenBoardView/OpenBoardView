@@ -14,15 +14,10 @@
 #include "imgui.h"
 #include "imgui_impl_sdl_gl3.h"
 
-// SDL,GL3W
-#include <GL/gl3w.h>
+// SDL, glad
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_syswm.h>
-#ifdef __APPLE__
-#include <OpenGL/gl3ext.h>
-#else
-#include <GL/glext.h>
-#endif
+#include <glad/glad.h>
 
 #include "platform.h"
 #include "TextureDDS.h"

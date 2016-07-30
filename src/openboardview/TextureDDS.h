@@ -2,12 +2,7 @@
 #include <d3d9.h>
 typedef unsigned long u32;
 #else
-#include <GL/gl3w.h>
-#ifdef __APPLE__
-#include <OpenGL/gl3ext.h>
-#else
-#include <GL/glext.h>
-#endif
+#include <glad/glad.h>
 typedef unsigned int u32;
 #endif
 

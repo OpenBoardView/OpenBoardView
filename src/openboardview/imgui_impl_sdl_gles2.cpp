@@ -5,14 +5,12 @@
 // See main.cpp for an example of using this.
 // https://github.com/ocornut/imgui
 
+#include "imgui/imgui.h"
 #include "imgui_impl_sdl_gles2.h"
 
-// SDL
-#include <SDL.h>
-
-/* Android OpenGL ES 2 headers */
-#include <GLES2/gl2.h>
-#include <GLES2/gl2ext.h>
+// SDL, glad
+#include <SDL2/SDL.h>
+#include <glad/glad.h>
 
 // Data
 static SDL_Window *g_Window   = NULL;
@@ -253,7 +251,7 @@ bool ImGui_ImplSdlGLES2_CreateDeviceObjects() {
 
 	GLint logLength;
 	glGetShaderiv(g_VertHandle, GL_INFO_LOG_LENGTH, &logLength);
-	if (logLength > 0) {
+	if (logLength > 1) {
 		GLchar *log = (GLchar *)malloc(logLength);
 		glGetShaderInfoLog(g_VertHandle, logLength, &logLength, log);
 		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "VERTEX Shader compile log:\n%s", log);
@@ -263,7 +261,7 @@ bool ImGui_ImplSdlGLES2_CreateDeviceObjects() {
 	glCompileShader(g_FragHandle);
 
 	glGetShaderiv(g_FragHandle, GL_INFO_LOG_LENGTH, &logLength);
-	if (logLength > 0) {
+	if (logLength > 1) {
 		GLchar *log = (GLchar *)malloc(logLength);
 		glGetShaderInfoLog(g_FragHandle, logLength, &logLength, log);
 		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "FRAGMENT Shader compile log:\n%s", log);
