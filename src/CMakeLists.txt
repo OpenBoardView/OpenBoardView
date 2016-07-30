@@ -12,18 +12,6 @@ else()
           See:  ${CMAKE_CURRENT_LIST_FILE}")
 endif()
 
-## gl3w ##
-execute_process(
-	COMMAND git submodule update --init src/gl3w
-	WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-)
-# Download include/GL/glcorearb.h & generate src/gl3w.c and include/GL/gl3w.h
-execute_process(
-	COMMAND ./gl3w_gen.py
-	WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/src/gl3w
-)
-add_subdirectory(gl3w)
-
 ## imgui ##
 execute_process(
 	COMMAND git submodule update --init src/imgui
@@ -56,5 +44,12 @@ find_package(SQLite3)
 if(NOT SQLITE3_FOUND)
 	add_subdirectory(sqlite3)
 endif()
+
+## glad ##
+set(GLAD_PROFILE "core" CACHE STRING "GL Profile" FORCE) # Using OpenGL Core profile
+set(GLAD_API "gl=3.2,gles2=2.0" CACHE STRING "GL versions" FORCE) # Build for OpenGL 3.2 and OpenGLES 2
+set(GLAD_EXTENSIONS "GL_EXT_texture_compression_s3tc" CACHE STRING "Gl exts" FORCE) # S3TC used to load texture for pins — delete when removing support.
+set(GLAD_NO_LOADER ON CACHE BOOL "Disable loader" FORCE) # We're using SDL2 loader
+add_subdirectory(glad)
 
 add_subdirectory(openboardview)

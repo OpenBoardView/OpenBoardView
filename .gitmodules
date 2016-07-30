@@ -1,9 +1,6 @@
 [submodule "src/imgui"]
 	path = src/imgui
 	url = https://github.com/ocornut/imgui.git
-[submodule "src/gl3w"]
-	path = src/gl3w
-	url = https://github.com/skaslev/gl3w.git
 [submodule "src/zlib"]
 	path = src/zlib
 	url = https://github.com/madler/zlib.git
@@ -11,3 +8,6 @@
 	path = src/utf8
 	url = https://github.com/sheredom/utf8.h.git
 	branch = master
+[submodule "src/glad"]
+	path = src/glad
+	url = https://github.com/Dav1dde/glad.git
