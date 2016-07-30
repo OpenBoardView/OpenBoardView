@@ -22,6 +22,7 @@ static int g_ShaderHandle = 0, g_VertHandle = 0, g_FragHandle = 0;
 static int g_AttribLocationTex = 0, g_AttribLocationProjMtx = 0;
 static int g_AttribLocationPosition = 0, g_AttribLocationUV = 0, g_AttribLocationColor = 0;
 static unsigned int g_VboHandle = 0, g_ElementsHandle = 0;
+static bool g_DrawElemWorkaround = false;
 
 // This is the main rendering function that you have to implement and provide to ImGui (via setting up 'RenderDrawListsFn' in the
 // ImGuiIO structure)
@@ -80,18 +81,30 @@ void ImGui_ImplSdlGLES2_RenderDrawLists(ImDrawData *draw_data) {
 	for (int n = 0; n < draw_data->CmdListsCount; n++) {
 		const ImDrawList *cmd_list         = draw_data->CmdLists[n];
 		const ImDrawIdx *idx_buffer_offset = 0;
+		GLint vtx_buffer_offset            = 0;
 
 		glBindBuffer(GL_ARRAY_BUFFER, g_VboHandle);
-		glBufferData(GL_ARRAY_BUFFER,
-		             (GLsizeiptr)cmd_list->VtxBuffer.size() * sizeof(ImDrawVert),
-		             (GLvoid *)&cmd_list->VtxBuffer.front(),
-		             GL_STREAM_DRAW);
 
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, g_ElementsHandle);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-		             (GLsizeiptr)cmd_list->IdxBuffer.size() * sizeof(ImDrawIdx),
-		             (GLvoid *)&cmd_list->IdxBuffer.front(),
-		             GL_STREAM_DRAW);
+		if (g_DrawElemWorkaround) {
+			ImVector<ImDrawVert> vertices;
+			vertices.reserve(cmd_list->IdxBuffer.size());
+
+			for (auto &id : cmd_list->IdxBuffer) vertices.push_back(cmd_list->VtxBuffer[id]);
+
+			glBufferData(
+			    GL_ARRAY_BUFFER, (GLsizeiptr)vertices.size() * sizeof(ImDrawVert), (GLvoid *)&vertices.front(), GL_STREAM_DRAW);
+		} else {
+			glBufferData(GL_ARRAY_BUFFER,
+			             (GLsizeiptr)cmd_list->VtxBuffer.size() * sizeof(ImDrawVert),
+			             (GLvoid *)&cmd_list->VtxBuffer.front(),
+			             GL_STREAM_DRAW);
+
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, g_ElementsHandle);
+			glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+			             (GLsizeiptr)cmd_list->IdxBuffer.size() * sizeof(ImDrawIdx),
+			             (GLvoid *)&cmd_list->IdxBuffer.front(),
+			             GL_STREAM_DRAW);
+		}
 
 		for (const ImDrawCmd *pcmd = cmd_list->CmdBuffer.begin(); pcmd != cmd_list->CmdBuffer.end(); pcmd++) {
 			if (pcmd->UserCallback) {
@@ -102,12 +115,21 @@ void ImGui_ImplSdlGLES2_RenderDrawLists(ImDrawData *draw_data) {
 				          (int)(fb_height - pcmd->ClipRect.w),
 				          (int)(pcmd->ClipRect.z - pcmd->ClipRect.x),
 				          (int)(pcmd->ClipRect.w - pcmd->ClipRect.y));
-				glDrawElements(GL_TRIANGLES,
-				               (GLsizei)pcmd->ElemCount,
-				               sizeof(ImDrawIdx) == 2 ? GL_UNSIGNED_SHORT : GL_UNSIGNED_INT,
-				               idx_buffer_offset);
+				if (g_DrawElemWorkaround)
+					glDrawArrays(
+					    GL_TRIANGLES,
+					    vtx_buffer_offset,
+					    (GLsizei)pcmd->ElemCount); // WARNING: inefficient workaround for devices not supporting GL_UNSIGNED_INT
+				else
+					glDrawElements(GL_TRIANGLES,
+					               (GLsizei)pcmd->ElemCount,
+					               sizeof(ImDrawIdx) == 2 ? GL_UNSIGNED_SHORT : GL_UNSIGNED_INT,
+					               idx_buffer_offset);
 			}
-			idx_buffer_offset += pcmd->ElemCount;
+			if (g_DrawElemWorkaround)
+				vtx_buffer_offset += pcmd->ElemCount;
+			else
+				idx_buffer_offset += pcmd->ElemCount;
 		}
 	}
 
@@ -212,6 +234,11 @@ void ImGui_ImplSdlGLES2_CreateFontsTexture() {
 }
 
 bool ImGui_ImplSdlGLES2_CreateDeviceObjects() {
+	g_DrawElemWorkaround =
+	    (SDL_GL_ExtensionSupported("GL_OES_element_index_uint") != SDL_TRUE) && (sizeof(ImDrawIdx) > sizeof(GLushort));
+	if (g_DrawElemWorkaround)
+		SDL_Log("[ImGui] Warning: GL_OES_element_index_uint not supported. Using glDrawArrays(). This will be slower.");
+
 	// Backup GL state
 	GLint last_texture, last_array_buffer;
 	glGetIntegerv(GL_TEXTURE_BINDING_2D, &last_texture);
