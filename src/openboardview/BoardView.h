@@ -113,6 +113,8 @@ struct BoardView {
 	void HelpControls(void);
 	void SearchNet(void);
 	void SearchComponent(void);
+	void ContextMenu(void);
+	ImVec2 m_showContextMenuPos;
 
 	Pin *m_pinSelected = nullptr;
 	vector<Pin *> m_pinHighlighted;
@@ -154,6 +156,7 @@ struct BoardView {
 	// The app will crash or break if this flag is not set when it should be.
 	bool m_needsRedraw = true;
 	bool m_draggingLastFrame;
+	bool m_showContextMenu;
 	bool m_showNetfilterSearch;
 	bool m_showComponentSearch;
 	bool m_showNetList;

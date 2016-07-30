@@ -470,6 +470,34 @@ void BoardView::HelpControls(void) {
 		ImGui::EndPopup();
 	}
 }
+void BoardView::ContextMenu(void) {
+
+	ImGui::SetNextWindowPos(CoordToScreen(m_showContextMenuPos.x, m_showContextMenuPos.y));
+	if (ImGui::BeginPopupModal("ContextOptions", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_ShowBorders)) {
+
+		if (m_showContextMenu) {
+			m_showContextMenu = false;
+		}
+
+		if (ImGui::IsRootWindowOrAnyChildFocused() && !ImGui::IsAnyItemActive() && !ImGui::IsMouseClicked(0)) {
+			ImGui::SetKeyboardFocusHere(-1);
+		} // set keyboard focus
+
+		ImGui::Text("Context menu");
+		ImGui::Separator();
+		if (ImGui::Button("Position")) {
+		}
+		if (ImGui::Button("Pin")) {
+		}
+		if (ImGui::Button("Part")) {
+		}
+		ImGui::Separator();
+		if (ImGui::Button("Exit") || ImGui::IsKeyPressed(SDLK_ESCAPE)) {
+			ImGui::CloseCurrentPopup();
+		}
+		ImGui::EndPopup();
+	}
+}
 
 void BoardView::SearchComponent(void) {
 	if (ImGui::BeginPopupModal("Search for Component",
@@ -691,6 +719,7 @@ void BoardView::Update() {
 		SearchNet();
 		SearchComponent();
 		HelpControls();
+		ContextMenu();
 		HelpAbout();
 
 		// ImGui::PushStyleColor(0xeeeeeeee);
@@ -820,6 +849,10 @@ void BoardView::Update() {
 		ImGui::SameLine();
 		if (ImGui::Button("X")) {
 			CenterView();
+		}
+
+		if (m_showContextMenu && m_file) {
+			ImGui::OpenPopup("ContextOptions");
 		}
 
 		if (m_showHelpAbout) {
@@ -1024,10 +1057,6 @@ void BoardView::Pan(int direction, int amount) {
 void BoardView::HandleInput() {
 	const ImGuiIO &io = ImGui::GetIO();
 
-	// ImGuiContext& g = *GImGui;
-	//	fprintf(stderr,"%s =!? %s\n", g.CurrentWindow->Name,
-	// g.FocusedWindow->Name);
-
 	if (ImGui::IsWindowHovered()) {
 		if (ImGui::IsMouseDragging()) {
 			ImVec2 delta = ImGui::GetMouseDragDelta();
@@ -1045,10 +1074,14 @@ void BoardView::HandleInput() {
 		} else {
 
 			// Conext menu
-			if (m_file && m_board && ImGui::IsMouseReleased(1) && !m_draggingLastFrame) {
+			if (m_file && m_board && ImGui::IsMouseClicked(1)) {
 				// Build context menu here, for annotations and inspection
 				//
-				Rotate(1);
+				ImVec2 spos          = ImGui::GetMousePos();
+				m_showContextMenu    = true;
+				m_showContextMenuPos = ScreenToCoord(spos.x, spos.y);
+				if (debug) fprintf(stderr, "context click request at (%f %f)\n", spos.x, spos.y);
+				//				m_needsRedraw = true;
 
 				// Flip the board with the middle click
 			} else if (m_file && m_board && ImGui::IsMouseReleased(2)) {
@@ -1914,7 +1947,8 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 				pos.y -= text_size.y * 2;
 				pos.x -= text_size.x * 0.5f;
 				draw->ChannelsSetCurrent(kChannelPolylines);
-				// draw->AddRectFilled(ImVec2(pos.x - 2.0f, pos.y - 1.0f), ImVec2(pos.x + text_size.x + 2.0f, pos.y + text_size.y +
+				// draw->AddRectFilled(ImVec2(pos.x - 2.0f, pos.y - 1.0f), ImVec2(pos.x + text_size.x + 2.0f, pos.y +
+				// text_size.y +
 				// 1.0f), m_colors.backgroundColor, 3.0f);
 				// This is the background of the part text.
 				draw->AddRectFilled(ImVec2(pos.x - 2.0f, pos.y - 2.0f),
