@@ -66,6 +66,16 @@ else
   [[ "$?" != "0" ]] && echo "$(tput bold ; tput setaf 1)MAKE INSTALL/STRIP FAILED$(tput sgr0)" && exit 1
 fi
 
-# Give right execution permissions to executables
-cd ../bin
-for i in openboardview; do chmod +x $i; done
+case "$(uname -s)" in
+  *Darwin*)
+    # Generate DMG
+    make package
+    [[ "$?" != "0" ]] && echo "$(tput bold ; tput setaf 1)MAKE PACKAGE FAILED$(tput sgr0)" && exit 1
+    ;;
+  *)
+    # Give right execution permissions to executables
+    cd ../bin
+    for i in openboardview; do chmod +x $i; done
+
+    ;;
+esac

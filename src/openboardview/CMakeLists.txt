@@ -80,13 +80,16 @@ elseif (MINGW) # Should this just be WIN32?
 	)
 endif()
 
-
+# Must be defined in the same directory as the add_executable including the file
+set_source_files_properties(${ASSETS} PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
 
 add_executable(openboardview
-#	MACOSX_BUNDLE
+	MACOSX_BUNDLE
 	${SOURCES}
 	${ASSETS}
 )
+
+set_target_properties(openboardview PROPERTIES MACOSX_BUNDLE_ICON_FILE "brd")
 
 target_link_libraries(openboardview
 	dl

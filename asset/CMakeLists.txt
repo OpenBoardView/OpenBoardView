@@ -1,0 +1,13 @@
+set(ASSETS
+	${CMAKE_CURRENT_SOURCE_DIR}/FiraSans-Medium.ttf
+	${CMAKE_CURRENT_SOURCE_DIR}/DroidSans.ttf
+	${CMAKE_CURRENT_SOURCE_DIR}/empty_circle.dds
+)
+
+if(APPLE)
+	SET(ASSETS ${ASSETS}
+		${CMAKE_CURRENT_SOURCE_DIR}/brd.icns
+	)
+endif()
+
+SET(ASSETS ${ASSETS} PARENT_SCOPE)
