@@ -828,7 +828,7 @@ void BoardView::ContextMenu(void) {
 					ImGui::Separator();
 				}
 
-				if (ImGui::Button("Remove")) {
+				if ((m_annotation_clicked_id >= 0) && (ImGui::Button("Remove"))) {
 					AnnotationRemove(m_annotations[m_annotation_clicked_id].id);
 					AnnotationGenerateList();
 					m_needsRedraw = true;
