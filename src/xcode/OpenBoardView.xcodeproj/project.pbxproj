@@ -7,6 +7,12 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1F03F87C1D4E35CF00477A74 /* BRD2File.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F03F8721D4E35CF00477A74 /* BRD2File.cpp */; };
+		1F03F87D1D4E35CF00477A74 /* BVRFile.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F03F8741D4E35CF00477A74 /* BVRFile.cpp */; };
+		1F03F87E1D4E35CF00477A74 /* confparse.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F03F8761D4E35CF00477A74 /* confparse.cpp */; };
+		1F03F87F1D4E35CF00477A74 /* history.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F03F8781D4E35CF00477A74 /* history.cpp */; };
+		1F03F8801D4E35CF00477A74 /* vectorhulls.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F03F87A1D4E35CF00477A74 /* vectorhulls.cpp */; };
+		1F03F8821D4E367200477A74 /* DroidSans.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 1F03F8811D4E367200477A74 /* DroidSans.ttf */; };
 		1F9260A31D2AFCBD003EA5EA /* FZFile.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F9260A11D2AFCBD003EA5EA /* FZFile.cpp */; };
 		1F9260A51D2AFDB7003EA5EA /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F9260A41D2AFDB7003EA5EA /* libz.tbd */; };
 		1FD7C7DD1D09D2B800B7D3D6 /* SDL2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FD7C7DC1D09D2B800B7D3D6 /* SDL2.framework */; };
@@ -33,6 +39,17 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		1F03F8721D4E35CF00477A74 /* BRD2File.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = BRD2File.cpp; path = ../../openboardview/BRD2File.cpp; sourceTree = "<group>"; };
+		1F03F8731D4E35CF00477A74 /* BRD2File.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BRD2File.h; path = ../../openboardview/BRD2File.h; sourceTree = "<group>"; };
+		1F03F8741D4E35CF00477A74 /* BVRFile.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = BVRFile.cpp; path = ../../openboardview/BVRFile.cpp; sourceTree = "<group>"; };
+		1F03F8751D4E35CF00477A74 /* BVRFile.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BVRFile.h; path = ../../openboardview/BVRFile.h; sourceTree = "<group>"; };
+		1F03F8761D4E35CF00477A74 /* confparse.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = confparse.cpp; path = ../../openboardview/confparse.cpp; sourceTree = "<group>"; };
+		1F03F8771D4E35CF00477A74 /* confparse.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = confparse.h; path = ../../openboardview/confparse.h; sourceTree = "<group>"; };
+		1F03F8781D4E35CF00477A74 /* history.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = history.cpp; path = ../../openboardview/history.cpp; sourceTree = "<group>"; };
+		1F03F8791D4E35CF00477A74 /* history.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = history.h; path = ../../openboardview/history.h; sourceTree = "<group>"; };
+		1F03F87A1D4E35CF00477A74 /* vectorhulls.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vectorhulls.cpp; path = ../../openboardview/vectorhulls.cpp; sourceTree = "<group>"; };
+		1F03F87B1D4E35CF00477A74 /* vectorhulls.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vectorhulls.h; path = ../../openboardview/vectorhulls.h; sourceTree = "<group>"; };
+		1F03F8811D4E367200477A74 /* DroidSans.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = DroidSans.ttf; path = ../../asset/DroidSans.ttf; sourceTree = "<group>"; };
 		1F9260A11D2AFCBD003EA5EA /* FZFile.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = FZFile.cpp; path = ../../openboardview/FZFile.cpp; sourceTree = "<group>"; };
 		1F9260A21D2AFCBD003EA5EA /* FZFile.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = FZFile.h; path = ../../openboardview/FZFile.h; sourceTree = "<group>"; };
 		1F9260A41D2AFDB7003EA5EA /* libz.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.tbd; path = usr/lib/libz.tbd; sourceTree = SDKROOT; };
@@ -142,6 +159,7 @@
 		1FD7C81C1D09D6BD00B7D3D6 /* Assets */ = {
 			isa = PBXGroup;
 			children = (
+				1F03F8811D4E367200477A74 /* DroidSans.ttf */,
 				1FD7C81F1D09DDF800B7D3D6 /* empty_circle.dds */,
 				1FD7C81D1D09D6CB00B7D3D6 /* FiraSans-Medium.ttf */,
 			);
@@ -173,6 +191,16 @@
 		1FD7D4191D09D03D0092E863 /* OpenBoardView */ = {
 			isa = PBXGroup;
 			children = (
+				1F03F8721D4E35CF00477A74 /* BRD2File.cpp */,
+				1F03F8731D4E35CF00477A74 /* BRD2File.h */,
+				1F03F8741D4E35CF00477A74 /* BVRFile.cpp */,
+				1F03F8751D4E35CF00477A74 /* BVRFile.h */,
+				1F03F8761D4E35CF00477A74 /* confparse.cpp */,
+				1F03F8771D4E35CF00477A74 /* confparse.h */,
+				1F03F8781D4E35CF00477A74 /* history.cpp */,
+				1F03F8791D4E35CF00477A74 /* history.h */,
+				1F03F87A1D4E35CF00477A74 /* vectorhulls.cpp */,
+				1F03F87B1D4E35CF00477A74 /* vectorhulls.h */,
 				1F9260A11D2AFCBD003EA5EA /* FZFile.cpp */,
 				1F9260A21D2AFCBD003EA5EA /* FZFile.h */,
 				1FDF2DF11D2AC26000DB8A6C /* BDVFile.cpp */,
@@ -269,6 +297,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1F03F8821D4E367200477A74 /* DroidSans.ttf in Resources */,
 				1FD7C8201D09DDF800B7D3D6 /* empty_circle.dds in Resources */,
 				1FD7C81E1D09D6CB00B7D3D6 /* FiraSans-Medium.ttf in Resources */,
 				1FD7C7DE1D09D3BA00B7D3D6 /* SDL2.framework in Resources */,
@@ -314,9 +343,14 @@
 			files = (
 				1FD7C7FC1D09D42B00B7D3D6 /* PartList.cpp in Sources */,
 				1FD7C7F51D09D42B00B7D3D6 /* BoardView.cpp in Sources */,
+				1F03F87D1D4E35CF00477A74 /* BVRFile.cpp in Sources */,
+				1F03F87C1D4E35CF00477A74 /* BRD2File.cpp in Sources */,
 				1FD7C7FA1D09D42B00B7D3D6 /* NetList.cpp in Sources */,
 				1FD7C8191D09D4B300B7D3D6 /* json11.cpp in Sources */,
+				1F03F8801D4E35CF00477A74 /* vectorhulls.cpp in Sources */,
+				1F03F87F1D4E35CF00477A74 /* history.cpp in Sources */,
 				1FD7C7FE1D09D42B00B7D3D6 /* unix.cpp in Sources */,
+				1F03F87E1D4E35CF00477A74 /* confparse.cpp in Sources */,
 				1FD7C7FB1D09D42B00B7D3D6 /* osx.mm in Sources */,
 				1FD7C80C1D09D46000B7D3D6 /* imgui.cpp in Sources */,
 				1FD7C7F91D09D42B00B7D3D6 /* main_opengl.cpp in Sources */,
