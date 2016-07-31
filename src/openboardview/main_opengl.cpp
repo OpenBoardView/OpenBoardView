@@ -200,7 +200,11 @@ int main(int argc, char **argv) {
 	if (homepath) {
 		struct stat st;
 		int sr;
+#ifdef __APPLE__
+		snprintf(s, sizeof(s), "%s/Library/Application Support/OpenBoardView", homepath);
+#else
 		snprintf(s, sizeof(s), "%s/.config/openboardview", homepath);
+#endif
 		sr = stat(s, &st);
 		if (sr == -1) {
 			mkdir(s, S_IRWXU);
@@ -212,10 +216,18 @@ int main(int argc, char **argv) {
 		 * filenames and load up
 		 */
 		if ((sr == 0) && (S_ISDIR(st.st_mode))) {
+#ifdef __APPLE__
+			snprintf(s, sizeof(s), "%s/Library/Application Support/OpenBoardView/obv.conf", homepath);
+#else
 			snprintf(s, sizeof(s), "%s/.config/openboardview/obv.conf", homepath);
+#endif
 			app.obvconfig.Load(s);
 
+#ifdef __APPLE__
+			snprintf(s, sizeof(s), "%s/Library/Application Support/OpenBoardView/obv.history", homepath);
+#else
 			snprintf(s, sizeof(s), "%s/.config/openboardview/obv.history", homepath);
+#endif
 			app.fhistory.Set_filename(s);
 			app.fhistory.Load();
 		}
