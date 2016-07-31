@@ -76,6 +76,14 @@ struct ColorScheme {
 
 enum DrawChannel { kChannelImages = 0, kChannelPolylines = 1, kChannelText = 2, kChannelAnnotations = 3, NUM_DRAW_CHANNELS = 4 };
 
+struct Annotation {
+	int id;
+	int side;
+	string note, net, part, pin;
+	double x, y;
+	bool hovered;
+};
+
 struct BoardView {
 	BRDFile *m_file;
 	Board *m_board;
@@ -116,9 +124,20 @@ struct BoardView {
 	void SearchComponent(void);
 
 	/* Context menu, sql stuff */
+	vector<Annotation> m_annotations;
 	void ContextMenu(void);
 	int sqlInit(void);
+	void AnnotationRemove(int id);
+	void AnnotationUpdate(int id, char *note);
 	void AnnotationAdd(int side, double x, double y, char *net, char *part, char *pin, char *note);
+	void AnnotationGenerateList(void);
+	int AnnotationIsHovered(void);
+	bool AnnotationWasHovered     = false;
+	bool m_annotationnew_retain   = false;
+	bool m_annotationedit_retain  = false;
+	bool m_tooltips_enabled       = true;
+	int m_annotation_last_hovered = 0;
+	int m_annotation_clicked_id   = 0;
 
 	ImVec2 m_showContextMenuPos;
 

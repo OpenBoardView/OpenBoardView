@@ -63,6 +63,7 @@ int BoardView::sqlInit(void) {
 	char sql_table_create[] =
 	    "CREATE TABLE annotations("
 	    "ID INTEGER PRIMARY KEY AUTOINCREMENT,"
+	    "VISIBLE INTEGER,"
 	    "PIN TEXT,"
 	    "PART TEXT,"
 	    "NET TEXT,"
@@ -301,6 +302,7 @@ int BoardView::LoadFile(char *filename) {
 					} else {
 						if (debug) fprintf(stderr, "Opened database successfully\n");
 						sqlInit();
+						AnnotationGenerateList();
 					}
 				}
 
@@ -522,6 +524,62 @@ void BoardView::HelpControls(void) {
 	}
 }
 
+void BoardView::AnnotationGenerateList(void) {
+	sqlite3_stmt *stmt;
+	char sql[]    = "SELECT id,side,posx,posy,net,part,pin,note from annotations where visible=1;";
+	char *zErrMsg = 0;
+	int rc;
+
+	rc = sqlite3_prepare_v2(m_sql, sql, -1, &stmt, NULL);
+	if (rc != SQLITE_OK) {
+		if (debug) cerr << "SELECT failed: " << sqlite3_errmsg(m_sql) << endl;
+		return; // or throw
+	}
+
+	m_annotations.clear();
+	while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) {
+		Annotation ann;
+		ann.id      = sqlite3_column_int(stmt, 0);
+		ann.side    = sqlite3_column_int(stmt, 1);
+		ann.x       = sqlite3_column_int(stmt, 2);
+		ann.y       = sqlite3_column_int(stmt, 3);
+		ann.hovered = false;
+
+		const char *p = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 4));
+		if (!p) p     = "";
+		ann.net       = p;
+
+		p         = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 5));
+		if (!p) p = "";
+		ann.part  = p;
+
+		p         = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 6));
+		if (!p) p = "";
+		ann.pin   = p;
+
+		p         = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 7));
+		if (!p) p = "";
+		ann.note  = p;
+
+		fprintf(stderr,
+		        "%d(%d:%f,%f) Net:%s Part:%s Pin:%s: Note:%s\nAdded\n",
+		        ann.id,
+		        ann.side,
+		        ann.x,
+		        ann.y,
+		        ann.net.c_str(),
+		        ann.part.c_str(),
+		        ann.pin.c_str(),
+		        ann.note.c_str());
+		m_annotations.push_back(ann);
+	}
+	if (rc != SQLITE_DONE) {
+		if (debug) cerr << "SELECT failed: " << sqlite3_errmsg(m_sql) << endl;
+		// if you return/throw here, don't forget the finalize
+	}
+	sqlite3_finalize(stmt);
+}
+
 void BoardView::AnnotationAdd(int side, double x, double y, char *net, char *part, char *pin, char *note) {
 	char sql[10240];
 	char *zErrMsg = 0;
@@ -529,8 +587,8 @@ void BoardView::AnnotationAdd(int side, double x, double y, char *net, char *par
 
 	sqlite3_snprintf(sizeof(sql),
 	                 sql,
-	                 "INSERT into annotations ( side, posx, posy, net, part, pin, note ) \
-			values ( %d, %0.0f, %0.0f, '%s', '%s', '%s', '%q' );",
+	                 "INSERT into annotations ( visible, side, posx, posy, net, part, pin, note ) \
+			values ( 1, %d, %0.0f, %0.0f, '%s', '%s', '%s', '%q' );",
 	                 side,
 	                 x,
 	                 y,
@@ -548,8 +606,38 @@ void BoardView::AnnotationAdd(int side, double x, double y, char *net, char *par
 	}
 }
 
+void BoardView::AnnotationRemove(int id) {
+	char sql[1024];
+	char *zErrMsg = 0;
+	int r;
+
+	sqlite3_snprintf(sizeof(sql), sql, "UPDATE annotations set visible = 0 where id=%d;", id);
+	r = sqlite3_exec(m_sql, sql, NULL, 0, &zErrMsg);
+	if (r != SQLITE_OK) {
+		if (debug) fprintf(stderr, "SQL error: %s\n", zErrMsg);
+		sqlite3_free(zErrMsg);
+	} else {
+		if (debug) fprintf(stdout, "Records created successfully\n");
+	}
+}
+
+void BoardView::AnnotationUpdate(int id, char *note) {
+	char sql[10240];
+	char *zErrMsg = 0;
+	int r;
+
+	sqlite3_snprintf(sizeof(sql), sql, "UPDATE annotations set note = '%q' where id=%d;", note, id);
+	r = sqlite3_exec(m_sql, sql, NULL, 0, &zErrMsg);
+	if (r != SQLITE_OK) {
+		if (debug) fprintf(stderr, "SQL error: %s\n", zErrMsg);
+		sqlite3_free(zErrMsg);
+	} else {
+		if (debug) fprintf(stdout, "Records created successfully\n");
+	}
+}
+
 void BoardView::ContextMenu(void) {
-	static char buf[10240] = "";
+	static char contextbuf[10240] = "";
 	char *pin, *partn, *net;
 	char empty[] = "";
 
@@ -565,7 +653,7 @@ void BoardView::ContextMenu(void) {
 	if (ImGui::BeginPopupModal("ContextOptions", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_ShowBorders)) {
 
 		if (m_showContextMenu) {
-			buf[0]            = 0;
+			contextbuf[0]     = 0;
 			m_showContextMenu = false;
 		}
 
@@ -575,6 +663,7 @@ void BoardView::ContextMenu(void) {
 
 		ImGui::Text("POS:%0.0f,%0.0f (%c) ", tx, ty, m_current_side == 0 ? 'T' : 'B');
 		ImGui::SameLine();
+
 		{
 			/*
 			 * we're going to go through all the possible items we can annotate at this position and offer them
@@ -642,29 +731,90 @@ void BoardView::ContextMenu(void) {
 				            selection->number.c_str(),
 				            selection->net->name.c_str());
 			}
+
 			{
 
-				ImGui::Spacing();
-				ImGui::InputTextMultiline("##annotation", buf, sizeof(buf), ImVec2(600, ImGui::GetTextLineHeight() * 16));
+				ImGui::NewLine();
+				ImGui::Text("Annotation");
+				if (m_annotation_clicked_id) {
+					if (ImGui::Button("View/Edit") || m_annotationedit_retain) {
+						if (!m_annotationedit_retain) {
+							snprintf(contextbuf, sizeof(contextbuf), "%s", m_annotations[m_annotation_clicked_id].note.c_str());
+							m_annotationedit_retain = true;
+							m_annotationnew_retain  = false;
+						}
+						ImGui::Spacing();
+						ImGui::InputTextMultiline(
+						    "##annotationedit", contextbuf, sizeof(contextbuf), ImVec2(600, ImGui::GetTextLineHeight() * 16));
 
-				if (ImGui::Button("Apply") || (ImGui::IsKeyPressed(SDLK_RETURN) && io.KeyShift)) {
-					if (debug) fprintf(stderr, "DATA:'%s'\n\n", buf);
-					if (selection != nullptr) {
-						pin   = strdup(selection->number.c_str());
-						partn = strdup(selection->component->name.c_str());
-						net   = strdup(selection->net->name.c_str());
-					} else {
-						pin = empty;
-						net = empty;
+						if (ImGui::Button("Update") || (ImGui::IsKeyPressed(SDLK_RETURN) && io.KeyShift)) {
+							m_annotationedit_retain = false;
+							if (debug) fprintf(stderr, "EDITDATA:'%s'\n\n", contextbuf);
+							AnnotationUpdate(m_annotations[m_annotation_clicked_id].id, contextbuf);
+							if (debug) fprintf(stderr, "DB updated\n");
+							AnnotationGenerateList();
+							if (debug) fprintf(stderr, "Ann list updated\n");
+							m_needsRedraw      = true;
+							m_tooltips_enabled = true;
+							ImGui::CloseCurrentPopup();
+						}
+						ImGui::SameLine();
+						if (ImGui::Button("Cancel")) {
+							ImGui::CloseCurrentPopup();
+							m_annotationnew_retain = false;
+							m_tooltips_enabled     = true;
+						}
+						ImGui::Separator();
 					}
+				}
 
-					AnnotationAdd(m_current_side, tx, ty, net, partn, pin, buf);
-
-					if (selection != nullptr) {
-						free(pin);
-						free(partn);
-						free(net);
+				if (ImGui::Button("Add New") || m_annotationnew_retain) {
+					if (m_annotationnew_retain == false) {
+						contextbuf[0]          = 0;
+						m_annotationnew_retain = true;
 					}
+					m_annotationedit_retain = false;
+					ImGui::Spacing();
+					ImGui::InputTextMultiline(
+					    "##annotationnew", contextbuf, sizeof(contextbuf), ImVec2(600, ImGui::GetTextLineHeight() * 16));
+
+					if (ImGui::Button("Apply") || (ImGui::IsKeyPressed(SDLK_RETURN) && io.KeyShift)) {
+						m_tooltips_enabled     = true;
+						m_annotationnew_retain = false;
+						if (debug) fprintf(stderr, "DATA:'%s'\n\n", contextbuf);
+						if (selection != nullptr) {
+							pin   = strdup(selection->number.c_str());
+							partn = strdup(selection->component->name.c_str());
+							net   = strdup(selection->net->name.c_str());
+						} else {
+							pin = empty;
+							net = empty;
+						}
+
+						AnnotationAdd(m_current_side, tx, ty, net, partn, pin, contextbuf);
+						AnnotationGenerateList();
+						m_needsRedraw = true;
+
+						if (selection != nullptr) {
+							free(pin);
+							free(partn);
+							free(net);
+						}
+						ImGui::CloseCurrentPopup();
+					}
+					ImGui::SameLine();
+					if (ImGui::Button("Cancel")) {
+						ImGui::CloseCurrentPopup();
+						m_tooltips_enabled     = true;
+						m_annotationnew_retain = false;
+					}
+					ImGui::Separator();
+				}
+
+				if (ImGui::Button("Remove")) {
+					AnnotationRemove(m_annotations[m_annotation_clicked_id].id);
+					AnnotationGenerateList();
+					m_needsRedraw = true;
 					ImGui::CloseCurrentPopup();
 				}
 			}
@@ -674,9 +824,13 @@ void BoardView::ContextMenu(void) {
 
 		ImGui::SameLine();
 		if (ImGui::Button("Exit") || ImGui::IsKeyPressed(SDLK_ESCAPE)) {
+			m_annotationnew_retain  = false;
+			m_annotationedit_retain = false;
+			m_tooltips_enabled      = true;
 			ImGui::CloseCurrentPopup();
 		}
 		ImGui::EndPopup();
+		m_tooltips_enabled = true;
 	}
 }
 
@@ -1129,6 +1283,11 @@ void BoardView::Update() {
 			ImGui::SameLine();
 		}
 
+		if (debug) {
+			ImGui::Text("AnnID:%d ", m_annotation_clicked_id);
+			ImGui::SameLine();
+		}
+
 		if (showPosition == true) {
 			ImGui::Text("Position: %0.3f\", %0.3f\" (%0.2f, %0.2fmm)", pos.x / 1000, pos.y / 1000, pos.x * 0.0254, pos.y * 0.0254);
 			ImGui::SameLine();
@@ -1239,6 +1398,7 @@ void BoardView::HandleInput() {
 	const ImGuiIO &io = ImGui::GetIO();
 
 	if (ImGui::IsWindowHovered()) {
+
 		if (ImGui::IsMouseDragging()) {
 			ImVec2 delta = ImGui::GetMouseDragDelta();
 			if ((abs(delta.x) > 500) || (abs(delta.y) > 500)) {
@@ -1258,9 +1418,13 @@ void BoardView::HandleInput() {
 			if (m_file && m_board && ImGui::IsMouseClicked(1)) {
 				// Build context menu here, for annotations and inspection
 				//
-				ImVec2 spos          = ImGui::GetMousePos();
+				ImVec2 spos                                        = ImGui::GetMousePos();
+				if (AnnotationIsHovered()) m_annotation_clicked_id = m_annotation_last_hovered;
+
 				m_showContextMenu    = true;
 				m_showContextMenuPos = spos;
+				m_tooltips_enabled   = false;
+				m_needsRedraw        = true;
 				if (debug) fprintf(stderr, "context click request at (%f %f)\n", spos.x, spos.y);
 
 				// Flip the board with the middle click
@@ -1318,7 +1482,18 @@ void BoardView::HandleInput() {
 						m_partHighlighted.push_back(p_part);
 					}
 				}
+			} else {
+				if (!m_showContextMenu) {
+					if (AnnotationIsHovered()) {
+						m_needsRedraw        = true;
+						AnnotationWasHovered = true;
+					}
+				} else {
+					AnnotationWasHovered = false;
+					m_needsRedraw        = true;
+				}
 			}
+
 			m_draggingLastFrame = false;
 		}
 
@@ -1331,7 +1506,8 @@ void BoardView::HandleInput() {
 		}
 	}
 
-	if (!io.WantCaptureKeyboard) {
+	// if ((!io.WantCaptureKeyboard)&&(!m_annotationedit_retain)&&(!m_annotationnew_retain)) {
+	if ((!io.WantCaptureKeyboard)) {
 
 		if (ImGui::IsKeyPressed(SDLK_n)) {
 			// Search for net
@@ -2144,6 +2320,54 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 
 inline void BoardView::DrawAnnotations(ImDrawList *draw) {
 	draw->ChannelsSetCurrent(kChannelAnnotations);
+	for (auto &ann : m_annotations) {
+		if (ann.side == m_current_side) {
+			ImVec2 a, b, s;
+			if (debug) fprintf(stderr, "%d:%d:%f %f: %s\n", ann.id, ann.side, ann.x, ann.y, ann.note.c_str());
+			a = s = CoordToScreen(ann.x, ann.y);
+			a.x += 10;
+			a.y -= 10;
+			b = ImVec2(a.x + 10, a.y - 10);
+
+			if ((ann.hovered == true) && (m_tooltips_enabled)) {
+				char buf[10240];
+				snprintf(buf, sizeof(buf), "%s", ann.note.c_str());
+				ImGui::BeginTooltip();
+				ImGui::Text(buf);
+				ImGui::EndTooltip();
+			} else {
+			}
+			draw->AddRectFilled(a, b, 0x880000ff);
+			draw->AddRect(a, b, 0xff000000);
+			draw->AddLine(s, a, 0xff000000);
+		}
+	}
+}
+
+int BoardView::AnnotationIsHovered(void) {
+	//	const ImGuiIO &io = ImGui::GetIO();
+	ImVec2 mp       = ImGui::GetMousePos();
+	bool is_hovered = false;
+	int i           = 0;
+
+	m_annotation_last_hovered = 0;
+
+	for (auto &ann : m_annotations) {
+		ImVec2 a = CoordToScreen(ann.x, ann.y);
+		if ((mp.x > a.x + 10) && (mp.x < a.x + 20) && (mp.y > a.y - 20) && (mp.y < a.y - 10)) {
+			if (debug) fprintf(stderr, "Hovering in annotation:%d\n", i);
+			ann.hovered               = true;
+			is_hovered                = true;
+			m_annotation_last_hovered = i;
+		} else {
+			ann.hovered = false;
+		}
+		i++;
+	}
+
+	if (is_hovered == false) m_annotation_clicked_id = 0;
+
+	return is_hovered;
 }
 
 void BoardView::DrawBoard() {
