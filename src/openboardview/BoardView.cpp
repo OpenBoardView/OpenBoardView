@@ -7,10 +7,12 @@
 #include <iostream>
 #include <limits.h>
 #include <memory>
-#include <sqlite3.h>
 #include <stdio.h>
-#ifndef _WIN32 // SDL not used on Windows
+#ifndef _WIN32
 #include <SDL2/SDL.h>
+#include <sqlite3.h>
+#else
+#include <winsqlite3/winsqlite.h>
 #endif
 
 #include "BDVFile.h"
@@ -639,7 +641,8 @@ void BoardView::AnnotationUpdate(int id, char *note) {
 }
 
 void BoardView::ContextMenu(void) {
-	static char contextbuf[10240] = "";
+	static char contextbuf[10240]    = "";
+	static char contextbufnew[10240] = "";
 	double tx, ty;
 	char *pin, *partn, *net;
 	char empty[] = "";
@@ -651,6 +654,7 @@ void BoardView::ContextMenu(void) {
 	tx = trunc(pos.x);
 	ty = trunc(pos.y);
 
+	//	fprintf(stderr,".");
 	ImGui::SetNextWindowPos(ImVec2(50, 50));
 
 	if (ImGui::BeginPopupModal("ContextOptions", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_ShowBorders)) {
@@ -661,9 +665,11 @@ void BoardView::ContextMenu(void) {
 			m_showContextMenu = false;
 		}
 
-		if (ImGui::IsRootWindowOrAnyChildFocused() && !ImGui::IsAnyItemActive() && !ImGui::IsMouseClicked(0)) {
-			ImGui::SetKeyboardFocusHere(-1);
-		} // set keyboard focus
+		{}
+
+		//		if (ImGui::IsRootWindowOrAnyChildFocused() && !ImGui::IsAnyItemActive() && !ImGui::IsMouseClicked(0)) {
+		//			ImGui::SetKeyboardFocusHere(-1);
+		//		} // set keyboard focus
 
 		ImGui::Text("POS:%0.0f,%0.0f (%c) ", tx, ty, m_current_side == 0 ? 'T' : 'B');
 		ImGui::SameLine();
@@ -747,7 +753,7 @@ void BoardView::ContextMenu(void) {
 							m_annotationnew_retain  = false;
 						}
 						ImGui::Spacing();
-						ImGui::InputTextMultiline("##annotationedit",
+						ImGui::InputTextMultiline("Edit##annotationedit",
 						                          contextbuf,
 						                          sizeof(contextbuf),
 						                          ImVec2(600, ImGui::GetTextLineHeight() * 16),
@@ -757,11 +763,8 @@ void BoardView::ContextMenu(void) {
 
 						if (ImGui::Button("Update") || (ImGui::IsKeyPressed(SDLK_RETURN) && io.KeyShift)) {
 							m_annotationedit_retain = false;
-							if (debug) fprintf(stderr, "EDITDATA:'%s'\n\n", contextbuf);
 							AnnotationUpdate(m_annotations[m_annotation_clicked_id].id, contextbuf);
-							if (debug) fprintf(stderr, "DB updated\n");
 							AnnotationGenerateList();
-							if (debug) fprintf(stderr, "Ann list updated\n");
 							m_needsRedraw      = true;
 							m_tooltips_enabled = true;
 							ImGui::CloseCurrentPopup();
@@ -778,24 +781,24 @@ void BoardView::ContextMenu(void) {
 
 				if (ImGui::Button("Add New") || m_annotationnew_retain) {
 					if (m_annotationnew_retain == false) {
-						contextbuf[0]           = 0;
+						contextbufnew[0]        = 0;
 						m_annotationnew_retain  = true;
 						m_annotation_clicked_id = -1;
 						m_annotationedit_retain = false;
 					}
 					ImGui::Spacing();
-					ImGui::InputTextMultiline("##annotationnew",
-					                          contextbuf,
-					                          sizeof(contextbuf),
+					ImGui::InputTextMultiline("New##annotationnew",
+					                          contextbufnew,
+					                          sizeof(contextbufnew),
 					                          ImVec2(600, ImGui::GetTextLineHeight() * 16),
 					                          0,
 					                          NULL,
-					                          contextbuf);
+					                          contextbufnew);
 
 					if (ImGui::Button("Apply") || (ImGui::IsKeyPressed(SDLK_RETURN) && io.KeyShift)) {
 						m_tooltips_enabled     = true;
 						m_annotationnew_retain = false;
-						if (debug) fprintf(stderr, "DATA:'%s'\n\n", contextbuf);
+						if (debug) fprintf(stderr, "DATA:'%s'\n\n", contextbufnew);
 						if (selection != nullptr) {
 							pin   = strdup(selection->number.c_str());
 							partn = strdup(selection->component->name.c_str());
@@ -805,7 +808,7 @@ void BoardView::ContextMenu(void) {
 							net = empty;
 						}
 
-						AnnotationAdd(m_current_side, tx, ty, net, partn, pin, contextbuf);
+						AnnotationAdd(m_current_side, tx, ty, net, partn, pin, contextbufnew);
 						AnnotationGenerateList();
 						m_needsRedraw = true;
 
@@ -1068,8 +1071,8 @@ void BoardView::Update() {
 		SearchNet();
 		SearchComponent();
 		HelpControls();
-		ContextMenu();
 		HelpAbout();
+		ContextMenu();
 
 		// ImGui::PushStyleColor(0xeeeeeeee);
 
@@ -1327,7 +1330,8 @@ void BoardView::Update() {
 	}
 	ImGui::SetNextWindowSize(ImVec2(io.DisplaySize.x, io.DisplaySize.y - (status_height + menu_height)));
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
-	ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
+	// ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
+	ImGui::PushStyleColor(ImGuiCol_WindowBg, ImColor(m_colors.backgroundColor));
 
 	ImGui::Begin("surface", nullptr, draw_surface_flags);
 	HandleInput();
@@ -1507,10 +1511,10 @@ void BoardView::HandleInput() {
 					if (AnnotationIsHovered()) {
 						m_needsRedraw        = true;
 						AnnotationWasHovered = true;
+					} else {
+						AnnotationWasHovered = false;
+						m_needsRedraw        = true;
 					}
-				} else {
-					AnnotationWasHovered = false;
-					m_needsRedraw        = true;
 				}
 			}
 
@@ -1526,7 +1530,6 @@ void BoardView::HandleInput() {
 		}
 	}
 
-	// if ((!io.WantCaptureKeyboard)&&(!m_annotationedit_retain)&&(!m_annotationnew_retain)) {
 	if ((!io.WantCaptureKeyboard)) {
 
 		if (ImGui::IsKeyPressed(SDLK_n)) {
@@ -1587,6 +1590,7 @@ void BoardView::HandleInput() {
 			Zoom(m_lastWidth / 2, m_lastHeight / 2, -zoomFactor);
 
 		} else if (ImGui::IsKeyPressed(KM(SDL_SCANCODE_KP_2)) || ImGui::IsKeyPressed(SDLK_s)) {
+			fprintf(stderr, "D");
 			Pan(DIR_DOWN, panFactor);
 
 		} else if (ImGui::IsKeyPressed(KM(SDL_SCANCODE_KP_8)) || ImGui::IsKeyPressed(SDLK_w)) {
@@ -1610,6 +1614,8 @@ void BoardView::HandleInput() {
 			m_search2[0]  = '\0';
 			m_search3[0]  = '\0';
 			m_needsRedraw = true;
+		} else {
+			// fprintf(stderr,"F");
 		}
 	}
 }
@@ -1631,6 +1637,7 @@ void BoardView::ShowPartList(bool *p_open) {
 }
 
 void BoardView::RenderOverlay() {
+
 	// Listing of Net elements
 	if (m_showNetList) {
 		ShowNetList(&m_showNetList);
