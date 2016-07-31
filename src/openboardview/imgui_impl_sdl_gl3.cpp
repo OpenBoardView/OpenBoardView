@@ -193,7 +193,6 @@ bool ImGui_ImplSdlGL3_ProcessEvent(SDL_Event *event) {
 		}
 		case SDL_KEYDOWN:
 		case SDL_KEYUP: {
-			// int key = event->key.keysym.sym & ~SDLK_SCANCODE_MASK;
 			int key = event->key.keysym.sym & ~SDLK_SCANCODE_MASK;
 			if (event->key.keysym.sym & (1 << 30)) {
 				int tkey          = key | 0x100;
