@@ -196,7 +196,8 @@ bool ImGui_ImplSdlGL3_ProcessEvent(SDL_Event *event) {
 			// int key = event->key.keysym.sym & ~SDLK_SCANCODE_MASK;
 			int key = event->key.keysym.sym & ~SDLK_SCANCODE_MASK;
 			if (event->key.keysym.sym & (1 << 30)) {
-				key |= 0x100;
+				int tkey          = key | 0x100;
+				io.KeysDown[tkey] = (event->type == SDL_KEYDOWN);
 				//					fprintf(stderr,"SDL Highbit
 				// remask %x -> %x\n",
 				// event->key.keysym.sym, key);
