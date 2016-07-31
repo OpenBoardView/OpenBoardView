@@ -3,6 +3,7 @@
 #include <string>
 #import <Cocoa/Cocoa.h>
 
+#ifndef ENABLE_GTK
 char *show_file_picker() {
 	std::string filename;
 	NSOpenPanel *op = [NSOpenPanel openPanel];
@@ -18,6 +19,7 @@ char *show_file_picker() {
 
 	return path;
 }
+#endif
 
 std::string get_asset_path(const char* asset) {
 	std::string path = std::string([[[NSBundle mainBundle] resourcePath] UTF8String]);

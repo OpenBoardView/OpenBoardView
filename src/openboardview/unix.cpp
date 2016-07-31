@@ -3,12 +3,13 @@
 #define _CRT_SECURE_NO_WARNINGS 1
 #include "platform.h"
 #include "imgui/imgui.h"
+#include <SDL2/SDL.h>
 #include <assert.h>
 #include <fstream>
 #include <iostream>
 #include <stdint.h>
 
-#ifndef __APPLE__
+#ifdef ENABLE_GTK
 #include <gtk/gtk.h>
 #endif
 
@@ -32,9 +33,86 @@ char *file_as_buffer(size_t *buffer_size, const char *utf8_filename) {
 	return buf;
 }
 
-#ifndef __APPLE__
+#ifdef ENABLE_GTK
+#define declareFunc(x) decltype(x) *x
+#define loadFunc(x) x = reinterpret_cast<decltype(x)>(SDL_LoadFunction(lib, #x));
+namespace GTK {
+bool loaded = false;
+void *lib;
+
+declareFunc(g_free);
+declareFunc(gtk_dialog_get_type);
+declareFunc(gtk_dialog_run);
+declareFunc(gtk_events_pending);
+declareFunc(gtk_file_chooser_add_filter);
+declareFunc(gtk_file_chooser_dialog_new);
+declareFunc(gtk_file_chooser_get_filename);
+declareFunc(gtk_file_chooser_get_type);
+declareFunc(gtk_file_filter_add_pattern);
+declareFunc(gtk_file_filter_new);
+declareFunc(gtk_file_filter_set_name);
+declareFunc(gtk_init_check);
+declareFunc(gtk_main_iteration);
+declareFunc(gtk_widget_destroy);
+declareFunc(gtk_window_get_type);
+declareFunc(gtk_window_new);
+declareFunc(g_type_check_instance_cast);
+
+bool load() {
+	if (loaded) return true;
+	lib           = SDL_LoadObject("libgtk-3.so.0");
+	if (!lib) lib = SDL_LoadObject("libgtk-x11-2.0.so.0");
+	if (!lib) {
+		SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Cannot show open file dialog: no GTK library available.");
+		return false;
+	}
+
+	loadFunc(g_free);
+	loadFunc(gtk_dialog_get_type);
+	loadFunc(gtk_dialog_run);
+	loadFunc(gtk_events_pending);
+	loadFunc(gtk_file_chooser_add_filter);
+	loadFunc(gtk_file_chooser_dialog_new);
+	loadFunc(gtk_file_chooser_get_filename);
+	loadFunc(gtk_file_chooser_get_type);
+	loadFunc(gtk_file_filter_add_pattern);
+	loadFunc(gtk_file_filter_new);
+	loadFunc(gtk_file_filter_set_name);
+	loadFunc(gtk_init_check);
+	loadFunc(gtk_main_iteration);
+	loadFunc(gtk_widget_destroy);
+	loadFunc(gtk_window_get_type);
+	loadFunc(gtk_window_new);
+	loadFunc(g_type_check_instance_cast);
+
+	loaded = true;
+	return true;
+}
+}
+#undef declareFunc
+#undef loadFunc
+#define g_free GTK::g_free
+#define gtk_dialog_get_type GTK::gtk_dialog_get_type
+#define gtk_dialog_run GTK::gtk_dialog_run
+#define gtk_events_pending GTK::gtk_events_pending
+#define gtk_file_chooser_add_filter GTK::gtk_file_chooser_add_filter
+#define gtk_file_chooser_dialog_new GTK::gtk_file_chooser_dialog_new
+#define gtk_file_chooser_get_filename GTK::gtk_file_chooser_get_filename
+#define gtk_file_chooser_get_type GTK::gtk_file_chooser_get_type
+#define gtk_file_filter_add_pattern GTK::gtk_file_filter_add_pattern
+#define gtk_file_filter_new GTK::gtk_file_filter_new
+#define gtk_file_filter_set_name GTK::gtk_file_filter_set_name
+#define gtk_init_check GTK::gtk_init_check
+#define gtk_main_iteration GTK::gtk_main_iteration
+#define gtk_widget_destroy GTK::gtk_widget_destroy
+#define gtk_window_get_type GTK::gtk_window_get_type
+#define gtk_window_new GTK::gtk_window_new
+#define g_type_check_instance_cast GTK::g_type_check_instance_cast
+
 char *show_file_picker() {
 	char *path = nullptr;
+	if (!GTK::load()) return path;
+
 	GtkWidget *parent, *dialog;
 	GtkFileFilter *filter            = gtk_file_filter_new();
 	GtkFileFilter *filter_everything = gtk_file_filter_new();
@@ -86,7 +164,14 @@ char *show_file_picker() {
 
 	return path;
 }
+#elif !defined(__APPLE__)
+char *show_file_picker() { // dummy function when not building for OS X and GTK not available
+	SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Cannot show open file dialog: not built in.");
+	return nullptr;
+}
+#endif
 
+#ifndef __APPLE__
 std::string get_asset_path(const char *asset) {
 	std::string path = "asset";
 	path += "/";

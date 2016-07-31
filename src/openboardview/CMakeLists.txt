@@ -4,6 +4,7 @@ option(ENABLE_GL3 "Build OpenGL 3 renderer." ON)
 option(ENABLE_GLES2 "Build OpenGL ES 2 renderer." ON)
 
 # Link with Cocoa on OS X and GTK3 on other Unix (or MinGW)
+# Used for open file dialog
 if(UNIX)
 if(APPLE)
         find_library(COCOA_LIBRARY Cocoa)
@@ -11,10 +12,16 @@ if(APPLE)
 	set(OPENGL_INCLUDE_DIR ${OPENGL_INCLUDE_DIR}/Headers)
 	else(APPLE)
 find_package(PkgConfig REQUIRED)
-pkg_check_modules(GTK3 REQUIRED gtk+-3.0)
+		pkg_search_module(GTK REQUIRED gtk+-3.0 gtk+-2.0) # gtk2 fallback if gtk3 not found
 
-link_directories(${GTK3_LIBRARY_DIRS})
-add_definitions(${GTK3_CFLAGS_OTHER})
+		if(GTK_FOUND)
+			message(STATUS "Found GTK version ${GTK_VERSION}")
+			link_directories(${GTK_LIBRARY_DIRS}) # not linked since we load it at runtime
+			add_definitions(${GTK_CFLAGS_OTHER})
+			add_definitions(-DENABLE_GTK)
+		else()
+			message(WARNING "GTK not found, file picker will be unavailable.")
+		endif()
 	endif(APPLE)
 endif(UNIX)
 
@@ -24,7 +31,7 @@ include_directories(
 	${CMAKE_CURRENT_SOURCE_DIR}/../imgui
 	${GLAD_INCLUDE_DIRS}
 	${SDL2_INCLUDE_DIR}
-	${GTK3_INCLUDE_DIRS}
+	${GTK_INCLUDE_DIRS}
 	${OPENGL_INCLUDE_DIR}
 	${ZLIB_INCLUDE_DIRS}
 	${SQLITE3_INCLUDE_DIRS}
@@ -97,7 +104,6 @@ target_link_libraries(openboardview
 	${GLAD_LIBRARIES}
 	${COCOA_LIBRARY}
 	${SDL2_LIBRARY}
-	${GTK3_LIBRARIES}
 	${ZLIB_LIBRARIES}
 	${SQLITE3_LIBRARIES}
 )
@@ -117,7 +123,6 @@ install(TARGETS
 if (MINGW)
 	install(DIRECTORY ${PROJECT_SOURCE_DIR}/${INSTALL_ASSET_DIR} DESTINATION ${INSTALL_RUNTIME_DIR})
 endif ()
-
 
 add_custom_target(install_obv
 	${CMAKE_MAKE_PROGRAM} install
