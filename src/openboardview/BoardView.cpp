@@ -77,10 +77,10 @@ int BoardView::sqlInit(void) {
 	/* Execute SQL statement */
 	rc = sqlite3_exec(m_sql, sql_table_create, sqlCallback, 0, &zErrMsg);
 	if (rc != SQLITE_OK) {
-		fprintf(stderr, "SQL error: %s\n", zErrMsg);
+		if (debug) fprintf(stderr, "SQL error: %s\n", zErrMsg);
 		sqlite3_free(zErrMsg);
 	} else {
-		fprintf(stdout, "Table created successfully\n");
+		if (debug) fprintf(stdout, "Table created successfully\n");
 	}
 
 	return 0;
@@ -561,16 +561,18 @@ void BoardView::AnnotationGenerateList(void) {
 		if (!p) p = "";
 		ann.note  = p;
 
-		fprintf(stderr,
-		        "%d(%d:%f,%f) Net:%s Part:%s Pin:%s: Note:%s\nAdded\n",
-		        ann.id,
-		        ann.side,
-		        ann.x,
-		        ann.y,
-		        ann.net.c_str(),
-		        ann.part.c_str(),
-		        ann.pin.c_str(),
-		        ann.note.c_str());
+		if (debug)
+			fprintf(stderr,
+			        "%d(%d:%f,%f) Net:%s Part:%s Pin:%s: Note:%s\nAdded\n",
+			        ann.id,
+			        ann.side,
+			        ann.x,
+			        ann.y,
+			        ann.net.c_str(),
+			        ann.part.c_str(),
+			        ann.pin.c_str(),
+			        ann.note.c_str());
+
 		m_annotations.push_back(ann);
 	}
 	if (rc != SQLITE_DONE) {
@@ -638,15 +640,16 @@ void BoardView::AnnotationUpdate(int id, char *note) {
 
 void BoardView::ContextMenu(void) {
 	static char contextbuf[10240] = "";
+	double tx, ty;
 	char *pin, *partn, *net;
 	char empty[] = "";
 
-	double tx, ty;
 	ImGuiIO &io = ImGui::GetIO();
 
 	ImVec2 pos = ScreenToCoord(m_showContextMenuPos.x, m_showContextMenuPos.y);
-	tx         = trunc(pos.x / 10) * 10;
-	ty         = trunc(pos.y / 10) * 10;
+
+	tx = trunc(pos.x);
+	ty = trunc(pos.y);
 
 	ImGui::SetNextWindowPos(m_showContextMenuPos);
 
@@ -744,8 +747,13 @@ void BoardView::ContextMenu(void) {
 							m_annotationnew_retain  = false;
 						}
 						ImGui::Spacing();
-						ImGui::InputTextMultiline(
-						    "##annotationedit", contextbuf, sizeof(contextbuf), ImVec2(600, ImGui::GetTextLineHeight() * 16));
+						ImGui::InputTextMultiline("##annotationedit",
+						                          contextbuf,
+						                          sizeof(contextbuf),
+						                          ImVec2(600, ImGui::GetTextLineHeight() * 16),
+						                          0,
+						                          NULL,
+						                          contextbuf);
 
 						if (ImGui::Button("Update") || (ImGui::IsKeyPressed(SDLK_RETURN) && io.KeyShift)) {
 							m_annotationedit_retain = false;
@@ -775,8 +783,13 @@ void BoardView::ContextMenu(void) {
 					}
 					m_annotationedit_retain = false;
 					ImGui::Spacing();
-					ImGui::InputTextMultiline(
-					    "##annotationnew", contextbuf, sizeof(contextbuf), ImVec2(600, ImGui::GetTextLineHeight() * 16));
+					ImGui::InputTextMultiline("##annotationnew",
+					                          contextbuf,
+					                          sizeof(contextbuf),
+					                          ImVec2(600, ImGui::GetTextLineHeight() * 16),
+					                          0,
+					                          NULL,
+					                          contextbuf);
 
 					if (ImGui::Button("Apply") || (ImGui::IsKeyPressed(SDLK_RETURN) && io.KeyShift)) {
 						m_tooltips_enabled     = true;
