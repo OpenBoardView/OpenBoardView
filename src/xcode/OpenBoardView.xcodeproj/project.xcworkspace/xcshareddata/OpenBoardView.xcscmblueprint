@@ -5,6 +5,7 @@
   },
   "DVTSourceControlWorkspaceBlueprintWorkingCopyStatesKey" : {
     "67A9FCB5E019D9B2C64B369FC8E0D3EFAB25399F" : 0,
+    "2D25A9446AE9548B6B39B42A8BA01867EC538F3F" : 0,
     "B08156DDD97AB15A5D356D4D56FBF652F9A3C89E" : 0,
     "868CFA99B09E1804C474528080A9A26F85D52D1A" : 0,
     "0C95EEA8FF0C0E695973CB8EA4E7E70E385D606F" : 0
@@ -12,6 +13,7 @@
   "DVTSourceControlWorkspaceBlueprintIdentifierKey" : "B4462D07-E687-4F6D-8DE2-84DAA904CE3C",
   "DVTSourceControlWorkspaceBlueprintWorkingCopyPathsKey" : {
     "67A9FCB5E019D9B2C64B369FC8E0D3EFAB25399F" : "OpenBoardView\/",
+    "2D25A9446AE9548B6B39B42A8BA01867EC538F3F" : "OpenBoardView-gles2\/src\/glad\/",
     "B08156DDD97AB15A5D356D4D56FBF652F9A3C89E" : "OpenBoardView\/src\/json11\/",
     "868CFA99B09E1804C474528080A9A26F85D52D1A" : "OpenBoardView\/src\/gl3w\/",
     "0C95EEA8FF0C0E695973CB8EA4E7E70E385D606F" : "OpenBoardView\/src\/imgui\/"
@@ -24,6 +26,11 @@
       "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/ocornut\/imgui.git",
       "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
       "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "0C95EEA8FF0C0E695973CB8EA4E7E70E385D606F"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/Dav1dde\/glad.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "2D25A9446AE9548B6B39B42A8BA01867EC538F3F"
     },
     {
       "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/piernov\/OpenBoardView",

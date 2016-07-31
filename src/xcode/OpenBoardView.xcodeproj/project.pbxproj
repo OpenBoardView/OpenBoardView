@@ -13,6 +13,8 @@
 		1F03F87F1D4E35CF00477A74 /* history.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F03F8781D4E35CF00477A74 /* history.cpp */; };
 		1F03F8801D4E35CF00477A74 /* vectorhulls.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F03F87A1D4E35CF00477A74 /* vectorhulls.cpp */; };
 		1F03F8821D4E367200477A74 /* DroidSans.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 1F03F8811D4E367200477A74 /* DroidSans.ttf */; };
+		1F5168091D4E3BCB00998BC6 /* glad.c in Sources */ = {isa = PBXBuildFile; fileRef = 1F5168081D4E3BCB00998BC6 /* glad.c */; };
+		1F51680C1D4E3D2E00998BC6 /* imgui_impl_sdl_gles2.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F51680A1D4E3D2E00998BC6 /* imgui_impl_sdl_gles2.cpp */; };
 		1F9260A31D2AFCBD003EA5EA /* FZFile.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1F9260A11D2AFCBD003EA5EA /* FZFile.cpp */; };
 		1F9260A51D2AFDB7003EA5EA /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F9260A41D2AFDB7003EA5EA /* libz.tbd */; };
 		1FD7C7DD1D09D2B800B7D3D6 /* SDL2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FD7C7DC1D09D2B800B7D3D6 /* SDL2.framework */; };
@@ -29,7 +31,6 @@
 		1FD7C7FE1D09D42B00B7D3D6 /* unix.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1FD7C7F41D09D42B00B7D3D6 /* unix.cpp */; };
 		1FD7C80B1D09D46000B7D3D6 /* imgui_draw.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1FD7C8041D09D46000B7D3D6 /* imgui_draw.cpp */; };
 		1FD7C80C1D09D46000B7D3D6 /* imgui.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1FD7C8061D09D46000B7D3D6 /* imgui.cpp */; };
-		1FD7C8111D09D47700B7D3D6 /* gl3w.c in Sources */ = {isa = PBXBuildFile; fileRef = 1FD7C8101D09D47700B7D3D6 /* gl3w.c */; };
 		1FD7C8191D09D4B300B7D3D6 /* json11.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1FD7C8171D09D4B300B7D3D6 /* json11.cpp */; };
 		1FD7C81E1D09D6CB00B7D3D6 /* FiraSans-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 1FD7C81D1D09D6CB00B7D3D6 /* FiraSans-Medium.ttf */; };
 		1FD7C8201D09DDF800B7D3D6 /* empty_circle.dds in Resources */ = {isa = PBXBuildFile; fileRef = 1FD7C81F1D09DDF800B7D3D6 /* empty_circle.dds */; };
@@ -50,6 +51,10 @@
 		1F03F87A1D4E35CF00477A74 /* vectorhulls.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vectorhulls.cpp; path = ../../openboardview/vectorhulls.cpp; sourceTree = "<group>"; };
 		1F03F87B1D4E35CF00477A74 /* vectorhulls.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vectorhulls.h; path = ../../openboardview/vectorhulls.h; sourceTree = "<group>"; };
 		1F03F8811D4E367200477A74 /* DroidSans.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = DroidSans.ttf; path = ../../asset/DroidSans.ttf; sourceTree = "<group>"; };
+		1F5168071D4E3BBE00998BC6 /* glad.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = glad.h; path = ../glad/include/glad/glad.h; sourceTree = "<group>"; };
+		1F5168081D4E3BCB00998BC6 /* glad.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = glad.c; path = ../glad/src/glad.c; sourceTree = "<group>"; };
+		1F51680A1D4E3D2E00998BC6 /* imgui_impl_sdl_gles2.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = imgui_impl_sdl_gles2.cpp; path = ../../openboardview/imgui_impl_sdl_gles2.cpp; sourceTree = "<group>"; };
+		1F51680B1D4E3D2E00998BC6 /* imgui_impl_sdl_gles2.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = imgui_impl_sdl_gles2.h; path = ../../openboardview/imgui_impl_sdl_gles2.h; sourceTree = "<group>"; };
 		1F9260A11D2AFCBD003EA5EA /* FZFile.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = FZFile.cpp; path = ../../openboardview/FZFile.cpp; sourceTree = "<group>"; };
 		1F9260A21D2AFCBD003EA5EA /* FZFile.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = FZFile.h; path = ../../openboardview/FZFile.h; sourceTree = "<group>"; };
 		1F9260A41D2AFDB7003EA5EA /* libz.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.tbd; path = usr/lib/libz.tbd; sourceTree = SDKROOT; };
@@ -82,11 +87,8 @@
 		1FD7C8081D09D46000B7D3D6 /* stb_rect_pack.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = stb_rect_pack.h; path = ../imgui/stb_rect_pack.h; sourceTree = "<group>"; };
 		1FD7C8091D09D46000B7D3D6 /* stb_textedit.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = stb_textedit.h; path = ../imgui/stb_textedit.h; sourceTree = "<group>"; };
 		1FD7C80A1D09D46000B7D3D6 /* stb_truetype.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = stb_truetype.h; path = ../imgui/stb_truetype.h; sourceTree = "<group>"; };
-		1FD7C8101D09D47700B7D3D6 /* gl3w.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = gl3w.c; path = ../gl3w/src/gl3w.c; sourceTree = "<group>"; };
 		1FD7C8171D09D4B300B7D3D6 /* json11.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = json11.cpp; path = ../json11/json11.cpp; sourceTree = "<group>"; };
 		1FD7C8181D09D4B300B7D3D6 /* json11.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = json11.hpp; path = ../json11/json11.hpp; sourceTree = "<group>"; };
-		1FD7C81A1D09D4C200B7D3D6 /* gl3w.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = gl3w.h; path = ../gl3w/include/GL/gl3w.h; sourceTree = "<group>"; };
-		1FD7C81B1D09D4C200B7D3D6 /* glcorearb.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = glcorearb.h; path = ../gl3w/include/GL/glcorearb.h; sourceTree = "<group>"; };
 		1FD7C81D1D09D6CB00B7D3D6 /* FiraSans-Medium.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = "FiraSans-Medium.ttf"; path = "../../asset/FiraSans-Medium.ttf"; sourceTree = "<group>"; };
 		1FD7C81F1D09DDF800B7D3D6 /* empty_circle.dds */ = {isa = PBXFileReference; lastKnownFileType = file; name = empty_circle.dds; path = ../../asset/empty_circle.dds; sourceTree = "<group>"; };
 		1FD7D4171D09D03D0092E863 /* OpenBoardView.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = OpenBoardView.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -112,24 +114,23 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		1F5168051D4E3AAD00998BC6 /* glad */ = {
+			isa = PBXGroup;
+			children = (
+				1F5168081D4E3BCB00998BC6 /* glad.c */,
+				1F5168071D4E3BBE00998BC6 /* glad.h */,
+			);
+			name = glad;
+			sourceTree = "<group>";
+		};
 		1FD7C7FF1D09D44000B7D3D6 /* Libraries */ = {
 			isa = PBXGroup;
 			children = (
+				1F5168051D4E3AAD00998BC6 /* glad */,
 				1FD7C8161D09D4A900B7D3D6 /* json11 */,
 				1FD7C8021D09D45000B7D3D6 /* imgui */,
-				1FD7C8001D09D44500B7D3D6 /* gl3w */,
 			);
 			name = Libraries;
-			sourceTree = "<group>";
-		};
-		1FD7C8001D09D44500B7D3D6 /* gl3w */ = {
-			isa = PBXGroup;
-			children = (
-				1FD7C81A1D09D4C200B7D3D6 /* gl3w.h */,
-				1FD7C81B1D09D4C200B7D3D6 /* glcorearb.h */,
-				1FD7C8101D09D47700B7D3D6 /* gl3w.c */,
-			);
-			name = gl3w;
 			sourceTree = "<group>";
 		};
 		1FD7C8021D09D45000B7D3D6 /* imgui */ = {
@@ -191,6 +192,8 @@
 		1FD7D4191D09D03D0092E863 /* OpenBoardView */ = {
 			isa = PBXGroup;
 			children = (
+				1F51680A1D4E3D2E00998BC6 /* imgui_impl_sdl_gles2.cpp */,
+				1F51680B1D4E3D2E00998BC6 /* imgui_impl_sdl_gles2.h */,
 				1F03F8721D4E35CF00477A74 /* BRD2File.cpp */,
 				1F03F8731D4E35CF00477A74 /* BRD2File.h */,
 				1F03F8741D4E35CF00477A74 /* BVRFile.cpp */,
@@ -245,6 +248,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 1FD7D4281D09D03D0092E863 /* Build configuration list for PBXNativeTarget "OpenBoardView" */;
 			buildPhases = (
+				1F5168061D4E3AC800998BC6 /* ShellScript */,
 				1F0C90F21D2BD28400EDEAFE /* Run Script */,
 				1FD7D4131D09D03D0092E863 /* Sources */,
 				1FD7D4141D09D03D0092E863 /* Frameworks */,
@@ -319,7 +323,20 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "cd \"${SRCROOT}/../gl3w\"\n./gl3w_gen.py";
+			shellScript = "cd \"${SRCROOT}/../glad\"\npython -m glad \\\n    --out-path=\"./\" \\\n    --profile=\"core\" \\\n    --api=\"gl=3.2,gles2=2.0\" \\\n    --generator=\"c\" \\\n    --spec=\"gl\" \\\n    --no-loader \\\n    --extensions=\"GL_EXT_texture_compression_s3tc,GL_OES_element_index_uint\"";
+		};
+		1F5168061D4E3AC800998BC6 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "cd \"${SRCROOT}/../..\"\ngit submodule update --init --recursive";
 		};
 		1FD7C8281D09E5D100B7D3D6 /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -344,6 +361,7 @@
 				1FD7C7FC1D09D42B00B7D3D6 /* PartList.cpp in Sources */,
 				1FD7C7F51D09D42B00B7D3D6 /* BoardView.cpp in Sources */,
 				1F03F87D1D4E35CF00477A74 /* BVRFile.cpp in Sources */,
+				1F51680C1D4E3D2E00998BC6 /* imgui_impl_sdl_gles2.cpp in Sources */,
 				1F03F87C1D4E35CF00477A74 /* BRD2File.cpp in Sources */,
 				1FD7C7FA1D09D42B00B7D3D6 /* NetList.cpp in Sources */,
 				1FD7C8191D09D4B300B7D3D6 /* json11.cpp in Sources */,
@@ -360,8 +378,8 @@
 				1F9260A31D2AFCBD003EA5EA /* FZFile.cpp in Sources */,
 				1FDF2DF31D2AC26000DB8A6C /* BDVFile.cpp in Sources */,
 				1FD7C7F81D09D42B00B7D3D6 /* imgui_impl_sdl_gl3.cpp in Sources */,
-				1FD7C8111D09D47700B7D3D6 /* gl3w.c in Sources */,
 				1FD7C7F71D09D42B00B7D3D6 /* BRDFile.cpp in Sources */,
+				1F5168091D4E3BCB00998BC6 /* glad.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -459,11 +477,13 @@
 				);
 				"GCC_PREPROCESSOR_DEFINITIONS[arch=*]" = (
 					"\"ImDrawIdx=unsigned int\"",
+					ENABLE_GLES2,
+					ENABLE_GL3,
 					"$(inherited)",
 				);
 				HEADER_SEARCH_PATHS = (
 					..,
-					../gl3w/include,
+					../glad/include,
 					SDL2,
 				);
 				INFOPLIST_FILE = OpenBoardView/Info.plist;
@@ -481,10 +501,14 @@
 					"$(inherited)",
 					"$(LOCAL_LIBRARY_DIR)/Frameworks",
 				);
-				"GCC_PREPROCESSOR_DEFINITIONS[arch=*]" = "\"ImDrawIdx=unsigned int\"";
+				"GCC_PREPROCESSOR_DEFINITIONS[arch=*]" = (
+					"\"ImDrawIdx=unsigned int\"",
+					ENABLE_GLES2,
+					ENABLE_GL3,
+				);
 				HEADER_SEARCH_PATHS = (
 					..,
-					../gl3w/include,
+					../glad/include,
 					SDL2,
 				);
 				INFOPLIST_FILE = OpenBoardView/Info.plist;
