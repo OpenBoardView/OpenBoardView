@@ -32,6 +32,7 @@ add_subdirectory(src)
 set(CPACK_BUNDLE_NAME OpenBoardView)
 set(CPACK_PACKAGE_NAME OpenBoardView)
 set(CPACK_PACKAGE_VERSION 3.2)
+set(CPACK_OUTPUT_FILE_PREFIX  "${CMAKE_CURRENT_SOURCE_DIR}")
 
 if(APPLE)
 	set(CPACK_GENERATOR DragNDrop CACHE STRING "List of generators to build packages with")
