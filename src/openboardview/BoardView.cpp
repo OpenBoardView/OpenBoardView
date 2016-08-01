@@ -126,7 +126,13 @@ int BoardView::ConfigParse(void) {
 		pinShapeSquare = true;
 	}
 
-	dpi       = obvconfig.ParseInt("dpi", 100);
+	// Special test here, in case we've already set the dpi from external
+	// such as command line.
+	if (!dpi) dpi      = obvconfig.ParseInt("dpi", 100);
+	if (dpi < 50) dpi  = 50;
+	if (dpi > 400) dpi = 400;
+	dpiscale           = dpi / 100.0f;
+
 	pinHalo   = obvconfig.ParseBool("pinHalo", true);
 	showFPS   = obvconfig.ParseBool("showFPS", false);
 	fillParts = obvconfig.ParseBool("fillParts", true);
@@ -134,11 +140,17 @@ int BoardView::ConfigParse(void) {
 	zoomFactor   = obvconfig.ParseInt("zoomFactor", 10) / 10.0f;
 	zoomModifier = obvconfig.ParseInt("zoomModifier", 5);
 
-	panFactor   = obvconfig.ParseInt("panFactor", 30);
+	panFactor = obvconfig.ParseInt("panFactor", 30);
+	panFactor = DPI(panFactor);
+
 	panModifier = obvconfig.ParseInt("panModifier", 5);
 
-	annotationBoxSize             = obvconfig.ParseInt("annotationBoxSize", 15);
-	annotationBoxOffset           = obvconfig.ParseInt("annotationBoxOffset", 15);
+	annotationBoxSize = obvconfig.ParseInt("annotationBoxSize", 15);
+	annotationBoxSize = DPI(annotationBoxSize);
+
+	annotationBoxOffset = obvconfig.ParseInt("annotationBoxOffset", 15);
+	annotationBoxOffset = DPI(annotationBoxOffset);
+
 	m_colors.annotationBoxColor   = byte4swap(obvconfig.ParseHex("annotationBoxColor", 0xff0000aa));
 	m_colors.annotationStalkColor = byte4swap(obvconfig.ParseHex("annotationStalkColor", 0x000000ff));
 
@@ -497,7 +509,7 @@ void BoardView::ContextMenu(void) {
 	 *
 	 * Now it's kept at a fixed point.
 	 */
-	ImGui::SetNextWindowPos(ImVec2(50, 50));
+	ImGui::SetNextWindowPos(ImVec2(DPIF(50), DPIF(50)));
 
 	if (ImGui::BeginPopupModal("ContextOptions", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_ShowBorders)) {
 		ImGui::Text("Annotation Add/Edit/Remove");
@@ -1046,7 +1058,7 @@ void BoardView::Update() {
 		}
 
 		ImGui::SameLine();
-		ImGui::Dummy(ImVec2(60, 1));
+		ImGui::Dummy(ImVec2(DPI(60), 1));
 
 		ImGui::SameLine();
 		if (ImGui::Button(" - ")) {
@@ -1057,7 +1069,7 @@ void BoardView::Update() {
 			Zoom(m_lastWidth / 2, m_lastHeight / 2, +zoomFactor);
 		}
 		ImGui::SameLine();
-		ImGui::Dummy(ImVec2(20, 1));
+		ImGui::Dummy(ImVec2(DPI(20), 1));
 		ImGui::SameLine();
 		if (ImGui::Button("-")) {
 			Zoom(m_lastWidth / 2, m_lastHeight / 2, -zoomFactor / zoomModifier);
@@ -1068,7 +1080,7 @@ void BoardView::Update() {
 		}
 
 		ImGui::SameLine();
-		ImGui::Dummy(ImVec2(20, 1));
+		ImGui::Dummy(ImVec2(DPI(20), 1));
 		ImGui::SameLine();
 		if (ImGui::Button(" < ")) {
 			Rotate(-1);
@@ -1160,8 +1172,8 @@ void BoardView::Update() {
 	/*
 	 * Status footer
 	 */
-	float status_height = (10.0f + ImGui::GetFontSize());
-	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(4.0f, 3.0f));
+	float status_height = (DPIF(10.0f) + ImGui::GetFontSize());
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(DPIF(4.0f), DPIF(3.0f)));
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
 	ImGui::SetNextWindowPos(ImVec2{0, io.DisplaySize.y - status_height});
 	ImGui::SetNextWindowSize(ImVec2(io.DisplaySize.x, status_height));
@@ -1799,9 +1811,11 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 			ppp = &pva[0];
 			if (part->pins.size() == 0) {
 				if (debug) fprintf(stderr, "WARNING: Drawing empty part %s\n", part->name.c_str());
-				draw->AddRect(
-				    CoordToScreen(part->p1.x + 10, part->p1.y + 10), CoordToScreen(part->p2.x - 10, part->p2.y - 10), 0xff0000ff);
-				draw->AddText(CoordToScreen(part->p1.x + 10, part->p1.y - 50), m_colors.partTextColor, part->name.c_str());
+				draw->AddRect(CoordToScreen(part->p1.x + DPIF(10), part->p1.y + DPIF(10)),
+				              CoordToScreen(part->p2.x - DPIF(10), part->p2.y - DPIF(10)),
+				              0xff0000ff);
+				draw->AddText(
+				    CoordToScreen(part->p1.x + DPIF(10), part->p1.y - DPIF(50)), m_colors.partTextColor, part->name.c_str());
 				//				part->component_type = part->kComponentTypeDummy;
 				//				part->outline_done = true;
 				continue;
@@ -2260,7 +2274,7 @@ inline void BoardView::DrawAnnotations(ImDrawList *draw) {
 				ImGui::EndTooltip();
 			} else {
 			}
-			draw->AddCircleFilled(s, 2, m_colors.annotationStalkColor, 8);
+			draw->AddCircleFilled(s, DPIF(2), m_colors.annotationStalkColor, 8);
 			draw->AddRectFilled(a, b, m_colors.annotationBoxColor);
 			draw->AddRect(a, b, m_colors.annotationStalkColor);
 			draw->AddLine(s, a, m_colors.annotationStalkColor);
