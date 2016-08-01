@@ -22,6 +22,7 @@
 #include "BVRFile.h"
 #include "Board.h"
 #include "FZFile.h"
+#include "annotations.h"
 #include "imgui/imgui.h"
 
 #include "NetList.h"
@@ -44,50 +45,9 @@ using namespace std::placeholders;
 BoardView::~BoardView() {
 	delete m_file;
 	delete m_board;
-	sqlite3_close(m_sql);
+	m_annotations.Close();
 	free(m_lastFileOpenName);
 }
-
-static int sqlCallback(void *NotUsed, int argc, char **argv, char **azColName) {
-	int i;
-	for (i = 0; i < argc; i++) {
-		printf("%s = %s\n", azColName[i], argv[i] ? argv[i] : "NULL");
-	}
-	printf("\n");
-	return 0;
-}
-
-int BoardView::sqlInit(void) {
-
-	char *zErrMsg = 0;
-	int rc;
-	char sql_table_test[] = "SELECT name FROM sqlite_master WHERE type='table' AND name='annotations'";
-	char sql_table_create[] =
-	    "CREATE TABLE annotations("
-	    "ID INTEGER PRIMARY KEY AUTOINCREMENT,"
-	    "VISIBLE INTEGER,"
-	    "PIN TEXT,"
-	    "PART TEXT,"
-	    "NET TEXT,"
-	    "POSX INTEGER,"
-	    "POSY INTEGER,"
-	    "SIDE INTEGER,"
-	    "NOTE TEXT );";
-
-	if (!m_sql) return 1;
-
-	/* Execute SQL statement */
-	rc = sqlite3_exec(m_sql, sql_table_create, sqlCallback, 0, &zErrMsg);
-	if (rc != SQLITE_OK) {
-		if (debug) fprintf(stderr, "SQL error: %s\n", zErrMsg);
-		sqlite3_free(zErrMsg);
-	} else {
-		if (debug) fprintf(stdout, "Table created successfully\n");
-	}
-
-	return 0;
-}
-
 uint32_t BoardView::byte4swap(uint32_t x) {
 	/*
 	 * used to convert RGBA -> ABGR etc
@@ -286,27 +246,8 @@ int BoardView::LoadFile(char *filename) {
 				fhistory.Prepend_save(filename);
 				history_file_has_changed = 1; // used by main to know when to update the window title
 
-				/*
-				 * Now try load the DB associated with this file
-				 */
-				{
-					int r;
-					char sqlfn[1024];
-
-					if (*ext) *ext = '_';
-					snprintf(sqlfn, 1024, "%s.sqlite3", filename);
-					if (*ext) *ext = '.';
-					m_sql          = nullptr;
-
-					r = sqlite3_open(sqlfn, &m_sql);
-					if (r) {
-						fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(m_sql));
-					} else {
-						if (debug) fprintf(stderr, "Opened database successfully\n");
-						sqlInit();
-						AnnotationGenerateList();
-					}
-				}
+				m_annotations.SetFilename(filename);
+				m_annotations.Load();
 
 			} else {
 				m_lastFileOpenWasInvalid = true;
@@ -526,120 +467,6 @@ void BoardView::HelpControls(void) {
 	}
 }
 
-void BoardView::AnnotationGenerateList(void) {
-	sqlite3_stmt *stmt;
-	char sql[]    = "SELECT id,side,posx,posy,net,part,pin,note from annotations where visible=1;";
-	char *zErrMsg = 0;
-	int rc;
-
-	rc = sqlite3_prepare_v2(m_sql, sql, -1, &stmt, NULL);
-	if (rc != SQLITE_OK) {
-		if (debug) cerr << "SELECT failed: " << sqlite3_errmsg(m_sql) << endl;
-		return; // or throw
-	}
-
-	m_annotations.clear();
-	while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) {
-		Annotation ann;
-		ann.id      = sqlite3_column_int(stmt, 0);
-		ann.side    = sqlite3_column_int(stmt, 1);
-		ann.x       = sqlite3_column_int(stmt, 2);
-		ann.y       = sqlite3_column_int(stmt, 3);
-		ann.hovered = false;
-
-		const char *p = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 4));
-		if (!p) p     = "";
-		ann.net       = p;
-
-		p         = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 5));
-		if (!p) p = "";
-		ann.part  = p;
-
-		p         = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 6));
-		if (!p) p = "";
-		ann.pin   = p;
-
-		p         = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 7));
-		if (!p) p = "";
-		ann.note  = p;
-
-		if (debug)
-			fprintf(stderr,
-			        "%d(%d:%f,%f) Net:%s Part:%s Pin:%s: Note:%s\nAdded\n",
-			        ann.id,
-			        ann.side,
-			        ann.x,
-			        ann.y,
-			        ann.net.c_str(),
-			        ann.part.c_str(),
-			        ann.pin.c_str(),
-			        ann.note.c_str());
-
-		m_annotations.push_back(ann);
-	}
-	if (rc != SQLITE_DONE) {
-		if (debug) cerr << "SELECT failed: " << sqlite3_errmsg(m_sql) << endl;
-		// if you return/throw here, don't forget the finalize
-	}
-	sqlite3_finalize(stmt);
-}
-
-void BoardView::AnnotationAdd(int side, double x, double y, char *net, char *part, char *pin, char *note) {
-	char sql[10240];
-	char *zErrMsg = 0;
-	int r;
-
-	sqlite3_snprintf(sizeof(sql),
-	                 sql,
-	                 "INSERT into annotations ( visible, side, posx, posy, net, part, pin, note ) \
-			values ( 1, %d, %0.0f, %0.0f, '%s', '%s', '%s', '%q' );",
-	                 side,
-	                 x,
-	                 y,
-	                 net,
-	                 part,
-	                 pin,
-	                 note);
-
-	r = sqlite3_exec(m_sql, sql, NULL, 0, &zErrMsg);
-	if (r != SQLITE_OK) {
-		if (debug) fprintf(stderr, "SQL error: %s\n", zErrMsg);
-		sqlite3_free(zErrMsg);
-	} else {
-		if (debug) fprintf(stdout, "Records created successfully\n");
-	}
-}
-
-void BoardView::AnnotationRemove(int id) {
-	char sql[1024];
-	char *zErrMsg = 0;
-	int r;
-
-	sqlite3_snprintf(sizeof(sql), sql, "UPDATE annotations set visible = 0 where id=%d;", id);
-	r = sqlite3_exec(m_sql, sql, NULL, 0, &zErrMsg);
-	if (r != SQLITE_OK) {
-		if (debug) fprintf(stderr, "SQL error: %s\n", zErrMsg);
-		sqlite3_free(zErrMsg);
-	} else {
-		if (debug) fprintf(stdout, "Records created successfully\n");
-	}
-}
-
-void BoardView::AnnotationUpdate(int id, char *note) {
-	char sql[10240];
-	char *zErrMsg = 0;
-	int r;
-
-	sqlite3_snprintf(sizeof(sql), sql, "UPDATE annotations set note = '%q' where id=%d;", note, id);
-	r = sqlite3_exec(m_sql, sql, NULL, 0, &zErrMsg);
-	if (r != SQLITE_OK) {
-		if (debug) fprintf(stderr, "SQL error: %s\n", zErrMsg);
-		sqlite3_free(zErrMsg);
-	} else {
-		if (debug) fprintf(stdout, "Records created successfully\n");
-	}
-}
-
 void BoardView::ContextMenu(void) {
 	static char contextbuf[10240]    = "";
 	static char contextbufnew[10240] = "";
@@ -748,7 +575,10 @@ void BoardView::ContextMenu(void) {
 				if (m_annotation_clicked_id >= 0) {
 					if (m_annotationedit_retain || (m_annotation_clicked_id >= 0)) {
 						if (!m_annotationedit_retain) {
-							snprintf(contextbuf, sizeof(contextbuf), "%s", m_annotations[m_annotation_clicked_id].note.c_str());
+							snprintf(contextbuf,
+							         sizeof(contextbuf),
+							         "%s",
+							         m_annotations.annotations[m_annotation_clicked_id].note.c_str());
 							m_annotationedit_retain = true;
 							m_annotationnew_retain  = false;
 						}
@@ -763,8 +593,8 @@ void BoardView::ContextMenu(void) {
 
 						if (ImGui::Button("Update") || (ImGui::IsKeyPressed(SDLK_RETURN) && io.KeyShift)) {
 							m_annotationedit_retain = false;
-							AnnotationUpdate(m_annotations[m_annotation_clicked_id].id, contextbuf);
-							AnnotationGenerateList();
+							m_annotations.Update(m_annotations.annotations[m_annotation_clicked_id].id, contextbuf);
+							m_annotations.GenerateList();
 							m_needsRedraw      = true;
 							m_tooltips_enabled = true;
 							ImGui::CloseCurrentPopup();
@@ -808,8 +638,8 @@ void BoardView::ContextMenu(void) {
 							net = empty;
 						}
 
-						AnnotationAdd(m_current_side, tx, ty, net, partn, pin, contextbufnew);
-						AnnotationGenerateList();
+						m_annotations.Add(m_current_side, tx, ty, net, partn, pin, contextbufnew);
+						m_annotations.GenerateList();
 						m_needsRedraw = true;
 
 						if (selection != nullptr) {
@@ -829,8 +659,8 @@ void BoardView::ContextMenu(void) {
 				}
 
 				if ((m_annotation_clicked_id >= 0) && (ImGui::Button("Remove"))) {
-					AnnotationRemove(m_annotations[m_annotation_clicked_id].id);
-					AnnotationGenerateList();
+					m_annotations.Remove(m_annotations.annotations[m_annotation_clicked_id].id);
+					m_annotations.GenerateList();
 					m_needsRedraw = true;
 					ImGui::CloseCurrentPopup();
 				}
@@ -2347,7 +2177,7 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 
 inline void BoardView::DrawAnnotations(ImDrawList *draw) {
 	draw->ChannelsSetCurrent(kChannelAnnotations);
-	for (auto &ann : m_annotations) {
+	for (auto &ann : m_annotations.annotations) {
 		if (ann.side == m_current_side) {
 			ImVec2 a, b, s;
 			if (debug) fprintf(stderr, "%d:%d:%f %f: %s\n", ann.id, ann.side, ann.x, ann.y, ann.note.c_str());
@@ -2379,7 +2209,7 @@ int BoardView::AnnotationIsHovered(void) {
 
 	m_annotation_last_hovered = 0;
 
-	for (auto &ann : m_annotations) {
+	for (auto &ann : m_annotations.annotations) {
 		ImVec2 a = CoordToScreen(ann.x, ann.y);
 		if ((mp.x > a.x + 10) && (mp.x < a.x + 20) && (mp.y > a.y - 20) && (mp.y < a.y - 10)) {
 			if (debug) fprintf(stderr, "Hovering in annotation:%d\n", i);

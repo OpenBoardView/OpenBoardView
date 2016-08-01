@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Board.h"
+#include "annotations.h"
 #include "confparse.h"
 #include "history.h"
 #include "imgui/imgui.h"
@@ -81,18 +82,9 @@ struct ColorScheme {
 
 enum DrawChannel { kChannelImages = 0, kChannelPolylines = 1, kChannelText = 2, kChannelAnnotations = 3, NUM_DRAW_CHANNELS = 4 };
 
-struct Annotation {
-	int id;
-	int side;
-	string note, net, part, pin;
-	double x, y;
-	bool hovered;
-};
-
 struct BoardView {
 	BRDFile *m_file;
 	Board *m_board;
-	sqlite3 *m_sql;
 
 	Confparse obvconfig;
 	FHistory fhistory;
@@ -129,13 +121,8 @@ struct BoardView {
 	void SearchComponent(void);
 
 	/* Context menu, sql stuff */
-	vector<Annotation> m_annotations;
+	Annotations m_annotations;
 	void ContextMenu(void);
-	int sqlInit(void);
-	void AnnotationRemove(int id);
-	void AnnotationUpdate(int id, char *note);
-	void AnnotationAdd(int side, double x, double y, char *net, char *part, char *pin, char *note);
-	void AnnotationGenerateList(void);
 	int AnnotationIsHovered(void);
 	bool m_annotations_active     = true;
 	bool AnnotationWasHovered     = false;

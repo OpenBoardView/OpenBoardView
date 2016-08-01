@@ -33,6 +33,7 @@ endif()
 
 
 set(SOURCES
+		annotations.cpp
 	confparse.cpp
 	vectorhulls.cpp
 	history.cpp
