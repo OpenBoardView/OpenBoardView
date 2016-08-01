@@ -14,7 +14,7 @@ if(MINGW)
 	set(INSTALL_LIBRARY_DIR ${INSTALL_RUNTIME_DIR})
 elseif(APPLE)
 	set(BUNDLE_OUTPUT_PATH "${CMAKE_BINARY_DIR}/src/openboardview/openboardview.app")
-	set(LIBRARY_OUTPUT_PATH "${BUNDLE_OUTPUT_PATH}/Contents/MacOS")
+#	set(LIBRARY_OUTPUT_PATH "${BUNDLE_OUTPUT_PATH}/Contents/MacOS") # We don't want to put static lib inside the bundle
 	set(INSTALL_LIBRARY_DIR "openboardview.app/Contents/MacOS")
 	set(INSTALL_BUNDLE_DIR .)
 else()
