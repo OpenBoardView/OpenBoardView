@@ -126,6 +126,7 @@ int BoardView::ConfigParse(void) {
 		pinShapeSquare = true;
 	}
 
+	dpi       = obvconfig.ParseInt("dpi", 100);
 	pinHalo   = obvconfig.ParseBool("pinHalo", true);
 	showFPS   = obvconfig.ParseBool("showFPS", false);
 	fillParts = obvconfig.ParseBool("fillParts", true);

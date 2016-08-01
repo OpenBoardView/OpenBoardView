@@ -88,6 +88,7 @@ struct BoardView {
 	FHistory fhistory;
 	bool debug                   = false;
 	int history_file_has_changed = 0;
+	int dpi                      = 100;
 	float zoomFactor             = 0.5f;
 	int zoomModifier             = 5;
 	int panFactor                = 30;

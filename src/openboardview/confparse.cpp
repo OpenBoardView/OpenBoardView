@@ -17,6 +17,10 @@ char default_conf[] =
 #\r\n\
 windowX=900\r\n\
 windowY=600\r\n\
+\r\n\
+# Reference DPI is 100, increase if you have a higher density (ie, small 4K or 2K screen)\r\n\
+dpi=100\r\n\
+\r\n\
 #fontPath=FiraSans-Medium.ttf\r\n\
 fontSize=20\r\n\
 pinSizeThresholdLow = 0\r\n\
