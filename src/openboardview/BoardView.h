@@ -5,11 +5,7 @@
 #include "confparse.h"
 #include "history.h"
 #include "imgui/imgui.h"
-#ifndef _WIN32
-#include <sqlite3.h>
-#else
-#include <winsqlite3/winsqlite.h>
-#endif
+#include "sqlite3.h"
 #include <stdint.h>
 #include <vector>
 
