@@ -470,18 +470,29 @@ void BoardView::HelpControls(void) {
 void BoardView::ContextMenu(void) {
 	static char contextbuf[10240]    = "";
 	static char contextbufnew[10240] = "";
+	static char *pin, *partn, *net;
+	static char empty[] = "";
 	double tx, ty;
-	char *pin, *partn, *net;
-	char empty[] = "";
 
-	ImGuiIO &io = ImGui::GetIO();
+	pin = partn = net = empty;
+	ImGuiIO &io       = ImGui::GetIO();
 
 	ImVec2 pos = ScreenToCoord(m_showContextMenuPos.x, m_showContextMenuPos.y);
 
+	/*
+	 * So we don't have dozens of near-same-spot annotation points, we truncate
+	 * back to integer levels, which still gives us 1-thou precision
+	 */
 	tx = trunc(pos.x);
 	ty = trunc(pos.y);
 
-	//	fprintf(stderr,".");
+	/*
+	 * Originally the dialog was to follow the cursor but it proved to be an overkill
+	 * to try adjust things to keep it within the bounds of the window so as to not
+	 * lose the buttons.
+	 *
+	 * Now it's kept at a fixed point.
+	 */
 	ImGui::SetNextWindowPos(ImVec2(50, 50));
 
 	if (ImGui::BeginPopupModal("ContextOptions", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_ShowBorders)) {
@@ -492,23 +503,24 @@ void BoardView::ContextMenu(void) {
 			m_showContextMenu = false;
 		}
 
-		{}
-
-		//		if (ImGui::IsRootWindowOrAnyChildFocused() && !ImGui::IsAnyItemActive() && !ImGui::IsMouseClicked(0)) {
-		//			ImGui::SetKeyboardFocusHere(-1);
-		//		} // set keyboard focus
-
-		ImGui::Text("POS:%0.0f,%0.0f (%c) ", tx, ty, m_current_side == 0 ? 'T' : 'B');
-		ImGui::SameLine();
+		/*
+		 * For the new annotation possibility, we need to detect our various
+		 * attributes that we can bind to, such as pin, net, part
+		 */
+		//		ImGui::Text("POS:%0.0f,%0.0f (%c) ", tx, ty, m_current_side == 0 ? 'T' : 'B');
+		//		ImGui::SameLine();
 
 		{
 			/*
 			 * we're going to go through all the possible items we can annotate at this position and offer them
 			 */
 
-			// threshold to within a pin's diameter of the pin center
 			float min_dist = m_pinDiameter * 1.0f;
 
+			/*
+			 * find the closest pin, starting at no more than
+			 * 1 radius away
+			 */
 			min_dist *= min_dist; // all distance squared
 			Pin *selection = nullptr;
 			for (auto &pin : m_board->Pins()) {
@@ -524,66 +536,86 @@ void BoardView::ContextMenu(void) {
 			}
 
 			/*
-			    pin->component->name.c_str(),
-			    pin->number.c_str(),
-			    pin->net->name.c_str(),
-			    pin->net->number,
-			    pin->component->mount_type_str().c_str());
+		 * If there was a pin selected, we can extract net/part off it
 			    */
 
-			m_partHighlighted.clear();
-			for (auto &part : m_board->Components()) {
-				int hit     = 0;
-				auto p_part = part.get();
-
-				if (!ComponentIsVisible(p_part)) continue;
-
-				// Work out if the point is inside the hull
-				{
-					int i, j, n;
-					outline_pt *poly;
-
-					n    = 4;
-					poly = p_part->outline;
-
-					for (i = 0, j = n - 1; i < n; j = i++) {
-						if (((poly[i].y > pos.y) != (poly[j].y > pos.y)) &&
-						    (pos.x < (poly[j].x - poly[i].x) * (pos.y - poly[i].y) / (poly[j].y - poly[i].y) + poly[i].x))
-							hit = !hit;
-					}
-				} // hull test
-				if (hit) {
-					ImGui::Text("Part: %s", p_part->name.c_str());
-					partn = strdup(p_part->name.c_str());
-
-					ImGui::SameLine();
-				}
-
-			} // for each part
-
 			if (selection != nullptr) {
-				// snprintf(s, sizeof(s),"Pin %s[%s]", selection->component->name.c_str(), selection->number.c_str());
+				pin   = strdup(selection->number.c_str());
+				partn = strdup(selection->component->name.c_str());
+				net   = strdup(selection->net->name.c_str());
+				/*
 				ImGui::Text("Pin: %s[%s], Net: %s",
 				            selection->component->name.c_str(),
 				            selection->number.c_str(),
 				            selection->net->name.c_str());
+				            */
+			} else {
+
+				/*
+				 * ELSE if we didn't get a pin selected, we can still
+				 * check for a part.
+				 *
+				 * There is a problem where we can be on two parts
+				 * but haven't decided what to do in such a situation
+				 */
+
+				//			m_partHighlighted.clear(); // I don't think this was intentionally meant to be here *whoops*
+				//
+				for (auto &part : m_board->Components()) {
+					int hit     = 0;
+					auto p_part = part.get();
+
+					if (!ComponentIsVisible(p_part)) continue;
+
+					// Work out if the point is inside the hull
+					{
+						int i, j, n;
+						outline_pt *poly;
+
+						n    = 4;
+						poly = p_part->outline;
+
+						for (i = 0, j = n - 1; i < n; j = i++) {
+							if (((poly[i].y > pos.y) != (poly[j].y > pos.y)) &&
+							    (pos.x < (poly[j].x - poly[i].x) * (pos.y - poly[i].y) / (poly[j].y - poly[i].y) + poly[i].x))
+								hit = !hit;
+						}
+					} // hull test
+					if (hit) {
+						//		ImGui::Text("Part: %s", p_part->name.c_str());
+						partn = strdup(p_part->name.c_str());
+
+						ImGui::SameLine();
+					}
+
+				} // for each part
 			}
 
 			{
 
 				ImGui::NewLine();
+				/*
+				 * For existing annotations
+				 */
 				if (m_annotation_clicked_id >= 0) {
 					if (m_annotationedit_retain || (m_annotation_clicked_id >= 0)) {
+						Annotation ann = m_annotations.annotations[m_annotation_clicked_id];
 						if (!m_annotationedit_retain) {
-							snprintf(contextbuf,
-							         sizeof(contextbuf),
-							         "%s",
-							         m_annotations.annotations[m_annotation_clicked_id].note.c_str());
+							snprintf(contextbuf, sizeof(contextbuf), "%s", ann.note.c_str());
 							m_annotationedit_retain = true;
 							m_annotationnew_retain  = false;
 						}
 						ImGui::Spacing();
-						ImGui::InputTextMultiline("Edit##annotationedit",
+						ImGui::Text("%c(%0.0f,%0.0f) %s, %s%c%s%c",
+						            m_current_side ? 'B' : 'T',
+						            tx,
+						            ty,
+						            ann.net.c_str(),
+						            ann.part.c_str(),
+						            ann.part.size() && ann.pin.size() ? '[' : ' ',
+						            ann.pin.c_str(),
+						            ann.part.size() && ann.pin.size() ? ']' : ' ');
+						ImGui::InputTextMultiline("##annotationedit",
 						                          contextbuf,
 						                          sizeof(contextbuf),
 						                          ImVec2(600, ImGui::GetTextLineHeight() * 16),
@@ -609,6 +641,20 @@ void BoardView::ContextMenu(void) {
 					}
 				}
 
+				/*
+				 * For generating a new annotation
+				 */
+				if ((m_annotation_clicked_id < 0) && (m_annotationnew_retain == false)) {
+					ImGui::Text("%c(%0.0f,%0.0f) %s %s%c%s%c",
+					            m_current_side ? 'B' : 'T',
+					            tx,
+					            ty,
+					            net,
+					            partn,
+					            partn == empty || pin == empty ? ' ' : '[',
+					            pin,
+					            partn == empty || pin == empty ? ' ' : ']');
+				}
 				if (ImGui::Button("Add New") || m_annotationnew_retain) {
 					if (m_annotationnew_retain == false) {
 						contextbufnew[0]        = 0;
@@ -616,6 +662,17 @@ void BoardView::ContextMenu(void) {
 						m_annotation_clicked_id = -1;
 						m_annotationedit_retain = false;
 					}
+
+					// ImGui::Text("%c(%0.0f,%0.0f) %s, %s[%s]", m_current_side?'B':'T', tx, ty, net, partn, pin);
+					ImGui::Text("%c(%0.0f,%0.0f) %s %s%c%s%c",
+					            m_current_side ? 'B' : 'T',
+					            tx,
+					            ty,
+					            net,
+					            partn,
+					            partn == empty || pin == empty ? ' ' : '[',
+					            pin,
+					            partn == empty || pin == empty ? ' ' : ']');
 					ImGui::Spacing();
 					ImGui::InputTextMultiline("New##annotationnew",
 					                          contextbufnew,
@@ -629,14 +686,6 @@ void BoardView::ContextMenu(void) {
 						m_tooltips_enabled     = true;
 						m_annotationnew_retain = false;
 						if (debug) fprintf(stderr, "DATA:'%s'\n\n", contextbufnew);
-						if (selection != nullptr) {
-							pin   = strdup(selection->number.c_str());
-							partn = strdup(selection->component->name.c_str());
-							net   = strdup(selection->net->name.c_str());
-						} else {
-							pin = empty;
-							net = empty;
-						}
 
 						m_annotations.Add(m_current_side, tx, ty, net, partn, pin, contextbufnew);
 						m_annotations.GenerateList();
@@ -669,7 +718,6 @@ void BoardView::ContextMenu(void) {
 			// the position.
 		}
 
-		ImGui::SameLine();
 		if (ImGui::Button("Exit") || ImGui::IsKeyPressed(SDLK_ESCAPE)) {
 			m_annotationnew_retain  = false;
 			m_annotationedit_retain = false;
@@ -2187,13 +2235,31 @@ inline void BoardView::DrawAnnotations(ImDrawList *draw) {
 			b = ImVec2(a.x + 10, a.y - 10);
 
 			if ((ann.hovered == true) && (m_tooltips_enabled)) {
-				char buf[10240];
+				char buf[60];
+
 				snprintf(buf, sizeof(buf), "%s", ann.note.c_str());
+				buf[50] = '\0';
+
 				ImGui::BeginTooltip();
-				ImGui::Text(buf);
+				ImGui::Text("%c(%0.0f,%0.0f) %s %s%c%s%c\n%s%s",
+				            m_current_side ? 'B' : 'T',
+				            ann.x,
+				            ann.y,
+				            ann.net.c_str(),
+				            ann.part.c_str(),
+				            ann.part.size() && ann.pin.size() ? '[' : ' ',
+				            ann.pin.c_str(),
+				            ann.part.size() && ann.pin.size() ? ']' : ' ',
+				            buf,
+				            ann.note.size() > 50 ? "..." : "");
+
+				//				ImGui::Text("%c(%0.0f,%0.0f) %s, %s[%s]\n%s%s", m_current_side?'B':'T', ann.x, ann.y,
+				// ann.net.c_str(),
+				// ann.part.c_str(), ann.pin.c_str(),buf, ann.note.size()>50?"...":"");
 				ImGui::EndTooltip();
 			} else {
 			}
+			draw->AddCircleFilled(s, 2, 0x88000000, 8);
 			draw->AddRectFilled(a, b, 0x880000ff);
 			draw->AddRect(a, b, 0xff000000);
 			draw->AddLine(s, a, 0xff000000);

@@ -22,7 +22,7 @@ struct Annotations {
 
 	char filename[ANNOTATION_FNAME_LEN_MAX + 1];
 	sqlite3 *sqldb;
-	bool debug;
+	bool debug = false;
 	vector<Annotation> annotations;
 
 	int Init(void);
