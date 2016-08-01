@@ -634,7 +634,7 @@ void BoardView::ContextMenu(void) {
 						ImGui::InputTextMultiline("##annotationedit",
 						                          contextbuf,
 						                          sizeof(contextbuf),
-						                          ImVec2(600, ImGui::GetTextLineHeight() * 16),
+						                          ImVec2(DPI(600), ImGui::GetTextLineHeight() * 8),
 						                          0,
 						                          NULL,
 						                          contextbuf);
@@ -693,7 +693,7 @@ void BoardView::ContextMenu(void) {
 					ImGui::InputTextMultiline("New##annotationnew",
 					                          contextbufnew,
 					                          sizeof(contextbufnew),
-					                          ImVec2(600, ImGui::GetTextLineHeight() * 16),
+					                          ImVec2(DPI(600), ImGui::GetTextLineHeight() * 8),
 					                          0,
 					                          NULL,
 					                          contextbufnew);
