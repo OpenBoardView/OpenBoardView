@@ -34,6 +34,10 @@ zoomModifier = 5\r\n\
 panFactor = 30\r\n\
 panModifier = 5\r\n\
 \r\n\
+annotationBoxSize = 10\r\n\
+annotationBoxOffset = 15\r\n\
+annotationBoxColor = 0xff0000aa\r\n\
+annotationStalkColor = 0x000000ff\r\n\
 #\r\n\
 # \"XRayBlue\" Theme by Inflex (20160724)\r\n\
 # Colors, format is 0xRRGGBBAA\r\n\

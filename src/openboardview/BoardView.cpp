@@ -138,6 +138,11 @@ int BoardView::ConfigParse(void) {
 	panFactor   = obvconfig.ParseInt("panFactor", 30);
 	panModifier = obvconfig.ParseInt("panModifier", 5);
 
+	annotationBoxSize             = obvconfig.ParseInt("annotationBoxSize", 15);
+	annotationBoxOffset           = obvconfig.ParseInt("annotationBoxOffset", 15);
+	m_colors.annotationBoxColor   = byte4swap(obvconfig.ParseHex("annotationBoxColor", 0xff0000aa));
+	m_colors.annotationStalkColor = byte4swap(obvconfig.ParseHex("annotationStalkColor", 0x000000ff));
+
 	/*
 	 * Colours in ImGui can be represented as a 4-byte packed uint32_t as ABGR
 	 * but most humans are more accustomed to RBGA, so for the sake of readability
@@ -2230,9 +2235,9 @@ inline void BoardView::DrawAnnotations(ImDrawList *draw) {
 			ImVec2 a, b, s;
 			if (debug) fprintf(stderr, "%d:%d:%f %f: %s\n", ann.id, ann.side, ann.x, ann.y, ann.note.c_str());
 			a = s = CoordToScreen(ann.x, ann.y);
-			a.x += 10;
-			a.y -= 10;
-			b = ImVec2(a.x + 10, a.y - 10);
+			a.x += annotationBoxOffset;
+			a.y -= annotationBoxOffset;
+			b = ImVec2(a.x + annotationBoxSize, a.y - annotationBoxSize);
 
 			if ((ann.hovered == true) && (m_tooltips_enabled)) {
 				char buf[60];
@@ -2259,10 +2264,10 @@ inline void BoardView::DrawAnnotations(ImDrawList *draw) {
 				ImGui::EndTooltip();
 			} else {
 			}
-			draw->AddCircleFilled(s, 2, 0x88000000, 8);
-			draw->AddRectFilled(a, b, 0x880000ff);
-			draw->AddRect(a, b, 0xff000000);
-			draw->AddLine(s, a, 0xff000000);
+			draw->AddCircleFilled(s, 2, m_colors.annotationStalkColor, 8);
+			draw->AddRectFilled(a, b, m_colors.annotationBoxColor);
+			draw->AddRect(a, b, m_colors.annotationStalkColor);
+			draw->AddLine(s, a, m_colors.annotationStalkColor);
 		}
 	}
 }
@@ -2277,8 +2282,8 @@ int BoardView::AnnotationIsHovered(void) {
 
 	for (auto &ann : m_annotations.annotations) {
 		ImVec2 a = CoordToScreen(ann.x, ann.y);
-		if ((mp.x > a.x + 10) && (mp.x < a.x + 20) && (mp.y > a.y - 20) && (mp.y < a.y - 10)) {
-			if (debug) fprintf(stderr, "Hovering in annotation:%d\n", i);
+		if ((mp.x > a.x + annotationBoxOffset) && (mp.x < a.x + (annotationBoxOffset + annotationBoxSize)) &&
+		    (mp.y < a.y - annotationBoxOffset) && (mp.y > a.y - (annotationBoxOffset + annotationBoxSize))) {
 			ann.hovered               = true;
 			is_hovered                = true;
 			m_annotation_last_hovered = i;
