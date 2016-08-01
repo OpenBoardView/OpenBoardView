@@ -1,5 +1,8 @@
 find_package(SDL2 REQUIRED) # is this really required by windows?
 
+option(ENABLE_GL3 "Build OpenGL 3 renderer." ON)
+option(ENABLE_GLES2 "Build OpenGL ES 2 renderer." ON)
+
 # Link with Cocoa on OS X and GTK3 on other Unix (or MinGW)
 if(UNIX)
 if(APPLE)
@@ -19,7 +22,7 @@ include_directories(
 	${CMAKE_CURRENT_SOURCE_DIR}
 	${CMAKE_CURRENT_SOURCE_DIR}/..
 	${CMAKE_CURRENT_SOURCE_DIR}/../imgui
-	${CMAKE_CURRENT_SOURCE_DIR}/../gl3w/include
+	${GLAD_INCLUDE_DIRS}
 	${SDL2_INCLUDE_DIR}
 	${GTK3_INCLUDE_DIRS}
 	${OPENGL_INCLUDE_DIR}
@@ -45,12 +48,22 @@ set(SOURCES
 	BRDBoard.cpp
 	BRDFile.cpp
 	FZFile.cpp
-	imgui_impl_sdl_gl3.cpp
 	main_opengl.cpp
 	NetList.cpp
 	PartList.cpp
 	TextureDDS.cpp
 )
+
+if(ENABLE_GL3)
+	LIST(APPEND SOURCES
+		imgui_impl_sdl_gl3.cpp
+	)
+endif()
+if(ENABLE_GLES2)
+	LIST(APPEND SOURCES
+		imgui_impl_sdl_gles2.cpp
+	)
+endif()
 
 if(UNIX)
 if(APPLE)
@@ -77,14 +90,21 @@ add_executable(openboardview
 
 target_link_libraries(openboardview
 	dl
-	gl3w
 	imgui
+	${GLAD_LIBRARIES}
 	${COCOA_LIBRARY}
 	${SDL2_LIBRARY}
 	${GTK3_LIBRARIES}
 	${ZLIB_LIBRARIES}
 	${SQLITE3_LIBRARIES}
 )
+
+if(ENABLE_GL3)
+	add_definitions(-DENABLE_GL3)
+endif()
+if(ENABLE_GLES2)
+	add_definitions(-DENABLE_GLES2)
+endif()
 
 install(TARGETS
 	openboardview
