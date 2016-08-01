@@ -77,8 +77,8 @@ add_executable(openboardview
 
 target_link_libraries(openboardview
 	dl
-	imgui
 	gl3w
+	imgui
 	${COCOA_LIBRARY}
 	${SDL2_LIBRARY}
 	${GTK3_LIBRARIES}

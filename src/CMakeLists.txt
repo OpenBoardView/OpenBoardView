@@ -30,7 +30,7 @@ execute_process(
 	WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
 )
 add_definitions("-DImDrawIdx=unsigned int") # short is not enough for us
-add_library(imgui SHARED imgui/imgui.cpp imgui/imgui_draw.cpp)
+add_library(imgui STATIC imgui/imgui.cpp imgui/imgui_draw.cpp)
 target_link_libraries(imgui ${PLATFORM_TARGET_LIBS})
 install(TARGETS imgui DESTINATION ${INSTALL_LIBRARY_DIR})
 
