@@ -51,4 +51,10 @@ if(NOT ZLIB_FOUND)
 	set(ZLIB_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/zlib)
 endif()
 
+## SQLite3 ##
+find_package(SQLite3)
+if(NOT SQLITE3_FOUND)
+	add_subdirectory(sqlite3)
+endif()
+
 add_subdirectory(openboardview)

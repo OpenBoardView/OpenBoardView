@@ -24,6 +24,7 @@ include_directories(
 	${GTK3_INCLUDE_DIRS}
 	${OPENGL_INCLUDE_DIR}
 	${ZLIB_INCLUDE_DIRS}
+	${SQLITE3_INCLUDE_DIRS}
 )
 
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
@@ -33,7 +34,6 @@ endif()
 
 
 set(SOURCES
-	sqlite3.c
 		annotations.cpp
 	confparse.cpp
 	vectorhulls.cpp
@@ -83,6 +83,7 @@ target_link_libraries(openboardview
 	${SDL2_LIBRARY}
 	${GTK3_LIBRARIES}
 	${ZLIB_LIBRARIES}
+	${SQLITE3_LIBRARIES}
 )
 
 install(TARGETS
