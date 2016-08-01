@@ -523,9 +523,6 @@ void BoardView::ContextMenu(void) {
 		 * For the new annotation possibility, we need to detect our various
 		 * attributes that we can bind to, such as pin, net, part
 		 */
-		//		ImGui::Text("POS:%0.0f,%0.0f (%c) ", tx, ty, m_current_side == 0 ? 'T' : 'B');
-		//		ImGui::SameLine();
-
 		{
 			/*
 			 * we're going to go through all the possible items we can annotate at this position and offer them
@@ -559,12 +556,6 @@ void BoardView::ContextMenu(void) {
 				pin   = strdup(selection->number.c_str());
 				partn = strdup(selection->component->name.c_str());
 				net   = strdup(selection->net->name.c_str());
-				/*
-				ImGui::Text("Pin: %s[%s], Net: %s",
-				            selection->component->name.c_str(),
-				            selection->number.c_str(),
-				            selection->net->name.c_str());
-				            */
 			} else {
 
 				/*
@@ -598,7 +589,6 @@ void BoardView::ContextMenu(void) {
 						}
 					} // hull test
 					if (hit) {
-						//		ImGui::Text("Part: %s", p_part->name.c_str());
 						partn = strdup(p_part->name.c_str());
 
 						ImGui::SameLine();
@@ -609,10 +599,10 @@ void BoardView::ContextMenu(void) {
 
 			{
 
-				ImGui::NewLine();
 				/*
 				 * For existing annotations
 				 */
+				ImGui::NewLine();
 				if (m_annotation_clicked_id >= 0) {
 					if (m_annotationedit_retain || (m_annotation_clicked_id >= 0)) {
 						Annotation ann = m_annotations.annotations[m_annotation_clicked_id];
@@ -679,7 +669,6 @@ void BoardView::ContextMenu(void) {
 						m_annotationedit_retain = false;
 					}
 
-					// ImGui::Text("%c(%0.0f,%0.0f) %s, %s[%s]", m_current_side?'B':'T', tx, ty, net, partn, pin);
 					ImGui::Text("%c(%0.0f,%0.0f) %s %s%c%s%c",
 					            m_current_side ? 'B' : 'T',
 					            tx,
@@ -793,7 +782,7 @@ void BoardView::SearchComponent(void) {
 		if (ImGui::InputText("##search2", m_search2, 128, ImGuiInputTextFlags_CharsNoBlank)) {
 			FindComponent(m_search2);
 		}
-		//			const char *first_button2 = m_search2;
+
 		int buttons_left2 = 10;
 		for (int i = 0; buttons_left2 && i < m_file->num_parts; i++) {
 			const BRDPart &part2 = m_file->parts[i];
@@ -801,13 +790,9 @@ void BoardView::SearchComponent(void) {
 				snprintf(cs, sizeof(cs), "%s##2", part2.name);
 				if (ImGui::SmallButton(cs)) {
 					FindComponent(part2.name);
-					//		ImGui::CloseCurrentPopup();
 					snprintf(m_search2, sizeof(m_search2), "%s", part2.name);
 					first_button2 = part2.name;
 				}
-				//				if (buttons_left2 == 10) {
-				//					first_button2 = part2.name;
-				//				}
 				buttons_left2--;
 			}
 		}
@@ -817,7 +802,6 @@ void BoardView::SearchComponent(void) {
 		if (ImGui::InputText("##search3", m_search3, 128, ImGuiInputTextFlags_CharsNoBlank)) {
 			FindComponent(m_search3);
 		}
-		//			const char *first_button3 = m_search3;
 		int buttons_left3 = 10;
 		for (int i = 0; buttons_left3 && i < m_file->num_parts; i++) {
 			const BRDPart &part3 = m_file->parts[i];
@@ -828,9 +812,6 @@ void BoardView::SearchComponent(void) {
 					snprintf(m_search3, sizeof(m_search3), "%s", part3.name);
 					first_button3 = part3.name;
 				}
-				//				if (buttons_left3 == 10) {
-				//					first_button3 = part3.name;
-				//				}
 				buttons_left3--;
 			}
 		}
@@ -967,8 +948,6 @@ void BoardView::Update() {
 		HelpControls();
 		HelpAbout();
 		ContextMenu();
-
-		// ImGui::PushStyleColor(0xeeeeeeee);
 
 		if (ImGui::BeginMenu("File")) {
 			if (ImGui::MenuItem("Open", "Ctrl+O")) {
@@ -1224,7 +1203,6 @@ void BoardView::Update() {
 	}
 	ImGui::SetNextWindowSize(ImVec2(io.DisplaySize.x, io.DisplaySize.y - (status_height + menu_height)));
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
-	// ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
 	ImGui::PushStyleColor(ImGuiCol_WindowBg, ImColor(m_colors.backgroundColor));
 
 	ImGui::Begin("surface", nullptr, draw_surface_flags);
@@ -1816,8 +1794,6 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 				              0xff0000ff);
 				draw->AddText(
 				    CoordToScreen(part->p1.x + DPIF(10), part->p1.y - DPIF(50)), m_colors.partTextColor, part->name.c_str());
-				//				part->component_type = part->kComponentTypeDummy;
-				//				part->outline_done = true;
 				continue;
 			}
 
@@ -1950,10 +1926,6 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 			dbox[1].x = dbox[2].x = max_x;
 			dbox[0].y = dbox[1].y = min_y;
 			dbox[3].y = dbox[2].y = max_y;
-			//		bool bb_y_resized = false; // not sure why this is here PLD20160727
-
-			//			ImVec2 min = CoordToScreen(min_x, min_y);
-			//			ImVec2 max = CoordToScreen(max_x, max_y);
 
 			p0 = p_part->name[0];
 			p1 = p_part->name[1];
@@ -1982,7 +1954,6 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 				 * handle all other devices not specifically handled above
 				 */
 			} else if ((pincount > 1) && (pincount < 4) && ((strchr("CRLD", p0) || (strchr("CRLD", p1))))) {
-				//				ImVec2 a, b, c, d;
 				double dx, dy;
 				double tx, ty;
 				double armx, army;
@@ -2016,19 +1987,6 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 					p_part->centerpoint.x  = mpx;
 					p_part->centerpoint.y  = mpy;
 					p_part->component_type = p_part->kComponentTypeCapacitor;
-
-					/*
-					 * Need to work out how to icon/mark the parts in the Component
-					 * class so we don't have to recompute this each time.
-					 */
-					/*
-				// for the round pin representations, choose how many circle segments
-				// need based on the pin size
-				segments = trunc(distance);
-				if (segments < 8) segments = 8;
-				if (segments > 36) segments = 36;
-					draw->AddCircle(mp, (distance / 3) * m_scale, m_colors.boxColor & 0x8fffffff, segments);
-					*/
 
 				} else {
 					armx = army = pin_radius;
@@ -2116,12 +2074,7 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 							 * such as a sequence of pins in a line, might be an overkill
 							 */
 							// hpc = TightenHull(hull, hpc, 0.1f);
-							//							rendered = 1;
 						}
-						// 	else {
-						//	draw->AddRect(min, max, 0xff0000ff);
-						//	rendered = 1;
-						//						}
 
 						free(hull);
 					} else {
@@ -2138,9 +2091,6 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 					// type part, then this is where we'll likely end up
 					memcpy(part->outline, dbox, sizeof(dbox));
 					part->outline_done = true;
-					//					draw->AddRect(min, max, color);
-					//					if (fillParts) draw->AddRectFilled(min, max, color & 0x0fffffff);
-					//					rendered = 1;
 				}
 			}
 
@@ -2148,17 +2098,6 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 			//				fprintf(stderr, "Part wasn't rendered (%s)\n", part->name.c_str());
 			//			}
 
-			// if (m_annotationsVisible && part->annotation) {
-			//    char *annotation = component.annotation;
-			//    ImVec2 text_size = ImGui::CalcTextSize(annotation);
-
-			//    float mid_y = (min.y + max.y) * 0.5f - text_size.y * 0.5f;
-			//    ImVec2 pos = ImVec2((min.x + max.x) * 0.5f, mid_y);
-			//    pos.x -= text_size.x * 0.5f;
-
-			//    draw->ChannelsSetCurrent(kChannelAnnotations);
-			//    draw->AddText(pos, m_colors.annotationPartAlias, annotation);
-			//}
 		} // if outline_done
 
 		if (part->outline_done) {
@@ -2214,21 +2153,10 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 				if (c.y < top_y) top_y = c.y;
 				ImVec2 pos             = ImVec2((a.x + c.x) * 0.5f, top_y);
 
-				// I'm really not sure why this bb_y_resize code is here, I'm sure it had
-				// a purpose I'm just not sure what :(
-				//
-				//			if (bb_y_resized) {
-				//				pos.y -= text_size.y + 2.0f * psz;
-				//			} else {
-				//				pos.y -= text_size.y *2;
-				//			}
-				//
 				pos.y -= text_size.y * 2;
 				pos.x -= text_size.x * 0.5f;
 				draw->ChannelsSetCurrent(kChannelPolylines);
-				// draw->AddRectFilled(ImVec2(pos.x - 2.0f, pos.y - 1.0f), ImVec2(pos.x + text_size.x + 2.0f, pos.y +
-				// text_size.y +
-				// 1.0f), m_colors.backgroundColor, 3.0f);
+
 				// This is the background of the part text.
 				draw->AddRectFilled(ImVec2(pos.x - 2.0f, pos.y - 2.0f),
 				                    ImVec2(pos.x + text_size.x + 2.0f, pos.y + text_size.y + 2.0f),

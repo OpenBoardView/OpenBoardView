@@ -10,4 +10,6 @@ int VHConvexHull(ImVec2 hull[], ImVec2 points[], int n);
 int VHTightenHull(ImVec2 hull[], int n, double threshold);
 void VHMBBCalculate(ImVec2 box[], ImVec2 *hull, int n, double psz);
 
+bool GetIntersection(ImVec2 p0, ImVec2 p1, ImVec2 p2, ImVec2 p3, ImVec2 *i);
+
 #endif

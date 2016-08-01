@@ -239,3 +239,27 @@ int VHTightenHull(ImVec2 hull[], int n, double threshold) {
 
 	return output_index;
 }
+
+bool GetIntersection(ImVec2 p0, ImVec2 p1, ImVec2 p2, ImVec2 p3, ImVec2 *i) {
+
+	ImVec2 s1, s2;
+	s1.x = p1.x - p0.x;
+	s1.y = p1.y - p0.y;
+	s2.x = p3.x - p2.x;
+	s2.y = p3.y - p2.y;
+
+	double s = (-s1.y * (p0.x - p2.x) + s1.x * (p0.y - p2.y)) / (-s2.x * s1.y + s1.x * s2.y);
+	double t = (s2.x * (p0.y - p2.y) - s2.y * (p0.x - p2.x)) / (-s2.x * s1.y + s1.x * s2.y);
+
+	if (s >= 0 && s <= 1 && t >= 0 && t <= 1) {
+		// Collision detected
+		//
+		if (i) {
+			i->x = p0.x + (t * s1.x);
+			i->y = p0.y + (t * s1.y);
+		}
+		return true;
+	}
+
+	return false; // No collision
+}
