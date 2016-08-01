@@ -10,9 +10,6 @@
 #include <stdio.h>
 #ifndef _WIN32
 #include <SDL2/SDL.h>
-#include <sqlite3.h>
-#else
-#include <winsqlite3/winsqlite.h>
 #endif
 
 #include "BDVFile.h"
@@ -24,6 +21,7 @@
 #include "FZFile.h"
 #include "annotations.h"
 #include "imgui/imgui.h"
+#include "sqlite3.h"
 
 #include "NetList.h"
 #include "PartList.h"
@@ -2258,9 +2256,6 @@ inline void BoardView::DrawAnnotations(ImDrawList *draw) {
 				            buf,
 				            ann.note.size() > 50 ? "..." : "");
 
-				//				ImGui::Text("%c(%0.0f,%0.0f) %s, %s[%s]\n%s%s", m_current_side?'B':'T', ann.x, ann.y,
-				// ann.net.c_str(),
-				// ann.part.c_str(), ann.pin.c_str(),buf, ann.note.size()>50?"...":"");
 				ImGui::EndTooltip();
 			} else {
 			}
@@ -2273,7 +2268,6 @@ inline void BoardView::DrawAnnotations(ImDrawList *draw) {
 }
 
 int BoardView::AnnotationIsHovered(void) {
-	//	const ImGuiIO &io = ImGui::GetIO();
 	ImVec2 mp       = ImGui::GetMousePos();
 	bool is_hovered = false;
 	int i           = 0;

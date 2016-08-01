@@ -1,10 +1,6 @@
 
 
-#ifndef _WIN32
-#include <sqlite3.h>
-#else
-#include <winsqlite3/winsqlite.h>
-#endif
+#include "sqlite3.h"
 
 #ifndef __ANNOTATIONS
 #define __ANNOTATIONS

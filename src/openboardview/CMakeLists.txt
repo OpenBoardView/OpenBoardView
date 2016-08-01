@@ -33,6 +33,7 @@ endif()
 
 
 set(SOURCES
+	sqlite3.c
 		annotations.cpp
 	confparse.cpp
 	vectorhulls.cpp
@@ -75,7 +76,6 @@ add_executable(openboardview
 )
 
 target_link_libraries(openboardview
-		sqlite3
 	dl
 	imgui
 	gl3w
