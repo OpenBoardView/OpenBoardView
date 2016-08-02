@@ -14,11 +14,13 @@ replacement for the "Test_Link" software.
 
 ### Features
 
+- Annotations (per board database file)
 - Part and pin sizes better represented
 - Better outlining of irregular objects (such as connectors)
 - Drag and drop
 - Recently used file history
 - Non-orthagonally orientated caps/resistors/diodes now drawn more realistically
+- Adjustable DPI (for working on 2K/4K screens)
 - Works with multiple concurrent instances
 
 
