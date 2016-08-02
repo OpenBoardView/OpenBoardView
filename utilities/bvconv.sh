@@ -1,6 +1,6 @@
 #!/bin/sh
 
-if [ $# -ne 2 ]; then
+if [ $# -ne 1 ]; then
 echo "This tool converts the .bv board format file in to a format that can be read by the boardviewer"
 echo
 echo "BV files are Microsoft Access DB format files, so you need to install the mdb-tools package and"

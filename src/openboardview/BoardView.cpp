@@ -2455,6 +2455,8 @@ inline void BoardView::DrawAnnotations(ImDrawList *draw) {
 				snprintf(buf, sizeof(buf), "%s", ann.note.c_str());
 				buf[50] = '\0';
 
+				ImGui::PushStyleColor(ImGuiCol_Text, ImColor(0xff333333));
+				ImGui::PushStyleColor(ImGuiCol_PopupBg, ImColor(0xffdddddd));
 				ImGui::BeginTooltip();
 				ImGui::Text("%c(%0.0f,%0.0f) %s %s%c%s%c\n%s%s",
 				            m_current_side ? 'B' : 'T',
@@ -2469,6 +2471,7 @@ inline void BoardView::DrawAnnotations(ImDrawList *draw) {
 				            ann.note.size() > 50 ? "..." : "");
 
 				ImGui::EndTooltip();
+				ImGui::PopStyleColor(2);
 			} else {
 			}
 			draw->AddCircleFilled(s, DPIF(2), m_colors.annotationStalkColor, 8);
