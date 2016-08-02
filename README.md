@@ -46,6 +46,8 @@ For Ubuntu developers, you'll need the following packages at a minium;
 
 3. Run it!
 
+	$ ./bin/openboardview
+	...or...
 	$ ./openboardview.sh
 
 
