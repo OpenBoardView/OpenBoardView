@@ -490,6 +490,7 @@ void BoardView::ContextMenu(void) {
 	ImGui::SetNextWindowPos(ImVec2(DPIF(50), DPIF(50)));
 
 	if (ImGui::BeginPopupModal("ContextOptions", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_ShowBorders)) {
+
 		ImGui::Text("Annotation Add/Edit/Remove");
 
 		if (m_showContextMenu) {
@@ -580,7 +581,6 @@ void BoardView::ContextMenu(void) {
 				/*
 				 * For existing annotations
 				 */
-				ImGui::NewLine();
 				if (m_annotation_clicked_id >= 0) {
 					if (m_annotationedit_retain || (m_annotation_clicked_id >= 0)) {
 						Annotation ann = m_annotations.annotations[m_annotation_clicked_id];
@@ -589,7 +589,6 @@ void BoardView::ContextMenu(void) {
 							m_annotationedit_retain = true;
 							m_annotationnew_retain  = false;
 						}
-						ImGui::Spacing();
 						ImGui::Text("%c(%0.0f,%0.0f) %s, %s%c%s%c",
 						            m_current_side ? 'B' : 'T',
 						            tx,
@@ -1066,6 +1065,18 @@ void BoardView::Update() {
 		if (ImGui::Button("X")) {
 			CenterView();
 		}
+
+		/*
+		ImGui::SameLine();
+		ImVec2 tz = ImGui::CalcTextSize("Search             ");
+		ImGui::PushItemWidth(-tz.x);
+		ImGui::Text("Search");
+		ImGui::SameLine();
+		ImGui::PushItemWidth(-DPI(1));
+		if (ImGui::InputText("##ansearch", m_search, 128, 0)) {
+		}
+		ImGui::PopItemWidth();
+		*/
 
 		if (m_showContextMenu && m_file && m_annotations_active) {
 			ImGui::OpenPopup("ContextOptions");
