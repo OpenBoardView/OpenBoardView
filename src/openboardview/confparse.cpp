@@ -31,6 +31,8 @@ slowCPU =       false\r\n\
 showFPS =       false\r\n\
 pinHalo =       true\r\n\
 fillParts =		true\r\n\
+boardFill =		true\r\n\
+boardFillSpacing = 5\r\n\
 \r\n\
 zoomFactor = 5\r\n\
 zoomModifier = 5\r\n\
@@ -47,11 +49,13 @@ annotationStalkColor = 0x000000ff\r\n\
 # Colors, format is 0xRRGGBBAA\r\n\
 #\r\n\
 lightTheme = true\r\n\
-backgroundColor		= 0xeeeeeeff\r\n\
+backgroundColor		= 0xffffffff\r\n\
+boardFillColor	= 0xddddddff\r\n\
+partOutlineColor = 0x444444ff\r\n\
+partFillColor = 0xffffffff\r\n\
 partTextColor			= 0xff3030ff\r\n\
 partTextBackgroundColor			= 0xffff00ff\r\n\
 boardOutline			= 0x444444ff\r\n\
-boxColor					= 0x444444ff\r\n\
 pinDefault				= 0x8888ffff\r\n\
 pinGround				= 0x2222aaff\r\n\
 pinNotConnected		= 0xaaaaaaff\r\n\

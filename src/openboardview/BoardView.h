@@ -49,12 +49,15 @@ struct ColorScheme {
 	 * Take note, because these are directly set
 	 * the packing format is ABGR,  not RGBA
 	 */
-	uint32_t backgroundColor         = 0xa0000000;
+	uint32_t backgroundColor         = 0xffffffff;
+	uint32_t boardFillColor          = 0xffdddddd;
 	uint32_t partTextColor           = 0xff808000;
 	uint32_t partTextBackgroundColor = 0xff00eeee;
+	uint32_t partOutlineColor        = 0xff444444;
+	uint32_t partFillColor           = 0xffffffff;
 	uint32_t boardOutline            = 0xff00ffff;
 
-	uint32_t boxColor = 0xffcccccc;
+	//	uint32_t boxColor = 0xffcccccc;
 
 	uint32_t pinDefault      = 0xffff0000;
 	uint32_t pinGround       = 0xffdd0000;
@@ -81,7 +84,17 @@ struct ColorScheme {
 	uint32_t orMaskOutline = 0x00000000;
 };
 
-enum DrawChannel { kChannelImages = 0, kChannelPolylines = 1, kChannelText = 2, kChannelAnnotations = 3, NUM_DRAW_CHANNELS = 4 };
+// enum DrawChannel { kChannelImages = 0, kChannelFill, kChannelPolylines = 1, kChannelPins = 2, kChannelText = 3,
+// kChannelAnnotations = 4, NUM_DRAW_CHANNELS = 5 };
+enum DrawChannel {
+	kChannelImages = 0,
+	kChannelFill,
+	kChannelPolylines,
+	kChannelPins,
+	kChannelText,
+	kChannelAnnotations,
+	NUM_DRAW_CHANNELS
+};
 
 struct BoardView {
 	BRDFile *m_file;
@@ -108,10 +121,14 @@ struct BoardView {
 	bool showFPS              = false;
 	bool pinHalo              = true;
 	bool fillParts            = true;
-	bool showPosition         = true;
-	bool reloadConfig         = false;
-	int pinBlank              = 0;
-	uint32_t FZKey[44]        = {0};
+	bool boardFill            = true;
+	int boardFillSpacing      = 5;
+	bool boardMinMaxDone      = false;
+
+	bool showPosition  = true;
+	bool reloadConfig  = false;
+	int pinBlank       = 0;
+	uint32_t FZKey[44] = {0};
 
 	int ConfigParse(void);
 	uint32_t byte4swap(uint32_t x);
@@ -126,6 +143,11 @@ struct BoardView {
 	void HelpControls(void);
 	void SearchNet(void);
 	void SearchComponent(void);
+
+	vector<ImVec2> linepile;
+	void OutlineGenFillDraw(ImDrawList *draw, int ydelta, double thickness);
+	void OutlineGenerateFill(void);
+	void DrawFill(ImDrawList *draw);
 
 	/* Context menu, sql stuff */
 	Annotations m_annotations;

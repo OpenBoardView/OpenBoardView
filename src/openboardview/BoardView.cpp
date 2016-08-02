@@ -137,6 +137,9 @@ int BoardView::ConfigParse(void) {
 	showFPS   = obvconfig.ParseBool("showFPS", false);
 	fillParts = obvconfig.ParseBool("fillParts", true);
 
+	boardFill        = obvconfig.ParseBool("boardFill", true);
+	boardFillSpacing = obvconfig.ParseInt("boardFillSpacing", 5);
+
 	zoomFactor   = obvconfig.ParseInt("zoomFactor", 10) / 10.0f;
 	zoomModifier = obvconfig.ParseInt("zoomModifier", 5);
 
@@ -164,22 +167,26 @@ int BoardView::ConfigParse(void) {
 	/*
 	 * XRayBlue theme
 	 */
-	m_colors.backgroundColor         = byte4swap(obvconfig.ParseHex("backgroundColor", 0xeeeeeeff));
+	m_colors.backgroundColor         = byte4swap(obvconfig.ParseHex("backgroundColor", 0xffffffff));
+	m_colors.boardFillColor          = byte4swap(obvconfig.ParseHex("boardFillColor", 0xddddddff));
+	m_colors.partOutlineColor        = byte4swap(obvconfig.ParseHex("partOutlineColor", 0x444444ff));
+	m_colors.partFillColor           = byte4swap(obvconfig.ParseHex("partFillColor", 0xffffffff));
 	m_colors.partTextColor           = byte4swap(obvconfig.ParseHex("partTextColor", 0xff3030ff));
 	m_colors.partTextBackgroundColor = byte4swap(obvconfig.ParseHex("partTextBackgroundColor", 0xffff00ff));
 	m_colors.boardOutline            = byte4swap(obvconfig.ParseHex("boardOutline", 0x444444ff));
-	m_colors.boxColor                = byte4swap(obvconfig.ParseHex("boxColor", 0x444444ff));
-	m_colors.pinDefault              = byte4swap(obvconfig.ParseHex("pinDefault", 0x8888ffff));
-	m_colors.pinGround               = byte4swap(obvconfig.ParseHex("pinGround", 0x2222aaff));
-	m_colors.pinNotConnected         = byte4swap(obvconfig.ParseHex("pinNotConnected", 0xaaaaaaff));
-	m_colors.pinTestPad              = byte4swap(obvconfig.ParseHex("pinTestPad", 0x888888ff));
-	m_colors.pinSelectedText         = byte4swap(obvconfig.ParseHex("pinSelectedText", 0xff0000ff));
-	m_colors.pinSelected             = byte4swap(obvconfig.ParseHex("pinSelected", 0x0000ffff));
-	m_colors.pinHalo                 = byte4swap(obvconfig.ParseHex("pinHaloColor", 0x00aa00ff));
-	m_colors.pinHighlighted          = byte4swap(obvconfig.ParseHex("pinHighlighted", 0x0000ffff));
-	m_colors.pinHighlightSameNet     = byte4swap(obvconfig.ParseHex("pinHighlightSameNet", 0x000000ff));
-	m_colors.annotationPartAlias     = byte4swap(obvconfig.ParseHex("annotationPartAlias", 0xffff00ff));
-	m_colors.partHullColor           = byte4swap(obvconfig.ParseHex("partHullColor", 0x80808080));
+	//	m_colors.boxColor                = byte4swap(obvconfig.ParseHex("boxColor", 0x444444ff)); // replaced with partFill and
+	// partOutline
+	m_colors.pinDefault          = byte4swap(obvconfig.ParseHex("pinDefault", 0x8888ffff));
+	m_colors.pinGround           = byte4swap(obvconfig.ParseHex("pinGround", 0x2222aaff));
+	m_colors.pinNotConnected     = byte4swap(obvconfig.ParseHex("pinNotConnected", 0xaaaaaaff));
+	m_colors.pinTestPad          = byte4swap(obvconfig.ParseHex("pinTestPad", 0x888888ff));
+	m_colors.pinSelectedText     = byte4swap(obvconfig.ParseHex("pinSelectedText", 0xff0000ff));
+	m_colors.pinSelected         = byte4swap(obvconfig.ParseHex("pinSelected", 0x0000ffff));
+	m_colors.pinHalo             = byte4swap(obvconfig.ParseHex("pinHaloColor", 0x00aa00ff));
+	m_colors.pinHighlighted      = byte4swap(obvconfig.ParseHex("pinHighlighted", 0x0000ffff));
+	m_colors.pinHighlightSameNet = byte4swap(obvconfig.ParseHex("pinHighlightSameNet", 0x000000ff));
+	m_colors.annotationPartAlias = byte4swap(obvconfig.ParseHex("annotationPartAlias", 0xffff00ff));
+	m_colors.partHullColor       = byte4swap(obvconfig.ParseHex("partHullColor", 0x80808080));
 
 	m_colors.selectedMaskPins    = byte4swap(obvconfig.ParseHex("selectedMaskPins", 0xffffffff));
 	m_colors.selectedMaskParts   = byte4swap(obvconfig.ParseHex("selectedMaskParts", 0xffffffff));
@@ -261,6 +268,7 @@ int BoardView::LoadFile(char *filename) {
 				SetFile(file);
 				fhistory.Prepend_save(filename);
 				history_file_has_changed = 1; // used by main to know when to update the window title
+				boardMinMaxDone          = false;
 
 				m_annotations.SetFilename(filename);
 				m_annotations.Load();
@@ -999,7 +1007,16 @@ void BoardView::Update() {
 				m_needsRedraw = true;
 			}
 			ImGui::Separator();
+			ImGui::Text("Edit config to set permanently");
 			if (ImGui::Checkbox("Annotations", &m_annotations_active)) {
+				m_needsRedraw = true;
+			}
+
+			if (ImGui::Checkbox("Board fill", &boardFill)) {
+				m_needsRedraw = true;
+			}
+
+			if (ImGui::Checkbox("Part fill", &fillParts)) {
 				m_needsRedraw = true;
 			}
 
@@ -1140,6 +1157,8 @@ void BoardView::Update() {
 
 		if (filename) {
 			LoadFile(filename);
+			linepile.clear();
+			OutlineGenerateFill();
 		}
 	}
 
@@ -1284,11 +1303,13 @@ void BoardView::Pan(int direction, int amount) {
  * for menus is handled within the menu generation itself.
  */
 void BoardView::HandleInput() {
+
 #ifdef _WIN32
 #define KM(x) (x)
 #else
 #define KM(x) (((x)&0xFF) | 0x100)
 #endif
+
 	const ImGuiIO &io = ImGui::GetIO();
 
 	if (ImGui::IsWindowHovered()) {
@@ -1447,12 +1468,13 @@ void BoardView::HandleInput() {
 			reloadConfig  = true;
 			m_needsRedraw = true;
 
-		} else if (ImGui::IsKeyPressed(KM(SDLK_KP_PERIOD)) || ImGui::IsKeyPressed(SDLK_r) || ImGui::IsKeyPressed(SDLK_PERIOD)) {
+		} else if (ImGui::IsKeyPressed(KM(SDL_SCANCODE_KP_PERIOD)) || ImGui::IsKeyPressed(SDLK_r) ||
+		           ImGui::IsKeyPressed(SDLK_PERIOD)) {
 			// Rotate board: R and period rotate clockwise; comma rotates
 			// counter-clockwise
 			Rotate(1);
 
-		} else if (ImGui::IsKeyPressed(KM(SDLK_KP_0)) || ImGui::IsKeyPressed(SDLK_COMMA)) {
+		} else if (ImGui::IsKeyPressed(KM(SDL_SCANCODE_KP_0)) || ImGui::IsKeyPressed(SDLK_COMMA)) {
 			Rotate(-1);
 
 		} else if (ImGui::IsKeyPressed(KM(SDL_SCANCODE_KP_PLUS)) || ImGui::IsKeyPressed(SDLK_EQUALS)) {
@@ -1462,7 +1484,6 @@ void BoardView::HandleInput() {
 			Zoom(m_lastWidth / 2, m_lastHeight / 2, -zoomFactor);
 
 		} else if (ImGui::IsKeyPressed(KM(SDL_SCANCODE_KP_2)) || ImGui::IsKeyPressed(SDLK_s)) {
-			fprintf(stderr, "D");
 			Pan(DIR_DOWN, panFactor);
 
 		} else if (ImGui::IsKeyPressed(KM(SDL_SCANCODE_KP_8)) || ImGui::IsKeyPressed(SDLK_w)) {
@@ -1528,6 +1549,258 @@ void BoardView::RenderOverlay() {
  *
  */
 
+/*
+ * Experimenting to see how much CPU hit rescanning and
+ * drawing the flood fill is (as pin-stripe) each time
+ * as opposed to precalculated line list
+ *
+ * We also do this slightly differently, we ask for a
+ * y-pixel delta and thickness of line
+ *
+ */
+void BoardView::OutlineGenFillDraw(ImDrawList *draw, int ydelta, double thickness = 0.0f) {
+
+	auto io = ImGui::GetIO();
+	vector<ImVec2> scanhits;
+	auto &outline = m_board->OutlinePoints();
+	static ImVec2 min, max; // board min/max points
+	double steps = 500;
+	double vdelta;
+	double y, ystart, yend;
+
+	if (!boardFill) return;
+
+	draw->ChannelsSetCurrent(kChannelFill);
+
+	// find the orthagonal bounding box
+	// probably can put this as a predefined
+	if (!boardMinMaxDone) {
+		min.x = min.y = 100000000000;
+		max.x = max.y = -100000000000;
+		for (auto &p : outline) {
+			if (p->x < min.x) min.x = p->x;
+			if (p->y < min.y) min.y = p->y;
+			if (p->x > max.x) max.x = p->x;
+			if (p->y > max.y) max.y = p->y;
+		}
+		boardMinMaxDone = true;
+	}
+
+	// so we know we start on the outside of the object
+	// we step away
+	min.x -= 1;
+
+	max.x += 1;
+
+	// Get the viewport limits, so we don't waste time scanning what we don't need
+	ImVec2 vpa = ScreenToCoord(0, 0);
+	ImVec2 vpb = ScreenToCoord(io.DisplaySize.x, io.DisplaySize.y);
+
+	if (vpa.y > vpb.y) {
+		ystart = vpb.y;
+		yend   = vpa.y;
+	} else {
+		ystart = vpa.y;
+		yend   = vpb.y;
+	}
+
+	if (ystart < min.y) ystart = min.y;
+	if (yend > max.y) yend     = max.y;
+
+	// so we know we start on the outside of the object
+	// we step away
+	min.x -= 1;
+
+	max.x += 1;
+
+	vdelta = (ystart - yend) / steps;
+
+	vdelta = ydelta / m_scale;
+
+	/*
+	 * Go through each scan line
+	 */
+	y = min.y;
+	while (y < max.y) {
+		ImVec2 a, b, c, d, intersect;
+
+		scanhits.clear();
+		// scan outline segments to see if any intersect with our horizontal scan line
+
+		// our scan line.
+		a.x = min.x;
+		a.y = y;
+		b.x = max.y;
+		b.y = y;
+
+		/*
+		 * While we haven't yet exhausted possible scan hits
+		 */
+
+		{
+
+			int jump = 1;
+			Point fp;
+
+			auto &outline = m_board->OutlinePoints();
+
+			// set our initial draw point, so we can detect when we encounter it again
+			fp = *outline[0];
+
+			for (size_t i = 0; i < outline.size() - 1; i++) {
+				Point &pa = *outline[i];
+				Point &pb = *outline[i + 1];
+
+				// jump double/dud points
+				if (pa.x == pb.x && pa.y == pb.y) continue;
+
+				// if we encounter our hull/poly start point, then we've now created the
+				// closed
+				// hull, jump the next segment and reset the first-point
+				if ((!jump) && (fp.x == pb.x) && (fp.y == pb.y)) {
+					if (i < outline.size() - 2) {
+						fp   = *outline[i + 2];
+						jump = 1;
+						i++;
+					}
+				} else {
+					jump = 0;
+				}
+
+				// test to see if this segment makes the scan-cut.
+				if ((pa.y > pb.y && y < pa.y && y > pb.y) || (pa.y < pb.y && y > pa.y && y < pb.y)) {
+					intersect.y = y;
+					if (pa.x == pb.x)
+						intersect.x = pa.x;
+					else
+						intersect.x = (pb.x - pa.x) / (pb.y - pa.y) * (y - pa.y) + pa.x;
+					scanhits.push_back(intersect);
+				}
+			} // if we did get an intersection
+
+			sort(scanhits.begin(), scanhits.end(), [](ImVec2 const &a, ImVec2 const &b) { return a.x < b.x; });
+
+			// now finally generate the lines.
+			{
+				int i = 0;
+				int l = scanhits.size();
+				for (i = 0; i < l; i += 2) {
+					draw->AddLine(CoordToScreen(scanhits[i].x, y), CoordToScreen(scanhits[i + 1].x, y), m_colors.boardFillColor);
+				}
+			}
+		}
+		y += vdelta;
+	} // for each scan line
+}
+
+/*
+ * We only need to call this initially to build the MBB
+ * and hull so we don't do it 50 times a second, as in the end
+ * we just want a sequence of line segments that we can render
+ */
+void BoardView::OutlineGenerateFill(void) {
+	auto &outline = m_board->OutlinePoints();
+	ImVec2 min, max; // board min/max points
+	double steps = 500;
+	double vdelta;
+	double y;
+	int i;
+
+	if (linepile.size()) return;
+
+	min.x = min.y = 100000000000;
+	max.x = max.y = -100000000000;
+
+	linepile.clear();
+
+	// find the orthagonal bounding box
+	for (auto &p : outline) {
+		if (p->x < min.x) min.x = p->x;
+		if (p->y < min.y) min.y = p->y;
+		if (p->x > max.x) max.x = p->x;
+		if (p->y > max.y) max.y = p->y;
+	}
+
+	// so we know we start on the outside of the object
+	// we step away
+	min.x -= 1;
+
+	max.x += 1;
+
+	vdelta = (max.y - min.y) / steps;
+
+	/*
+	 * Go through each scan line
+	 */
+	y = min.y;
+	for (i = 0; i < steps; i++) {
+		vector<ImVec2> scanhits;
+		ImVec2 a, b, c, d, intersect;
+		y += vdelta;
+
+		scanhits.clear();
+		// scan outline segments to see if any intersect with our horizontal scan line
+
+		// our scan line.
+		a.x = min.x;
+		a.y = y;
+		b.x = max.y;
+		b.y = y;
+
+		/*
+		 * While we haven't yet exhausted possible scan hits
+		 */
+
+		{
+
+			int jump = 1;
+			Point fp;
+
+			auto &outline = m_board->OutlinePoints();
+
+			// set our initial draw point, so we can detect when we encounter it again
+			fp = *outline[0];
+
+			for (size_t i = 0; i < outline.size() - 1; i++) {
+				Point &pa = *outline[i];
+				Point &pb = *outline[i + 1];
+
+				// jump double/dud points
+				if (pa.x == pb.x && pa.y == pb.y) continue;
+
+				// if we encounter our hull/poly start point, then we've now created the
+				// closed
+				// hull, jump the next segment and reset the first-point
+				if ((!jump) && (fp.x == pb.x) && (fp.y == pb.y)) {
+					if (i < outline.size() - 2) {
+						fp   = *outline[i + 2];
+						jump = 1;
+						i++;
+					}
+				} else {
+					jump = 0;
+				}
+
+				// test to see if this segment makes the scan-cut.
+				if ((pa.y > pb.y && y < pa.y && y > pb.y) || (pa.y < pb.y && y > pa.y && y < pb.y)) {
+					intersect.y = y;
+					if (pa.x == pb.x)
+						intersect.x = pa.x;
+					else
+						intersect.x = (pb.x - pa.x) / (pb.y - pa.y) * (y - pa.y) + pa.x;
+					scanhits.push_back(intersect);
+				}
+			} // if we did get an intersection
+			sort(scanhits.begin(), scanhits.end(), [](ImVec2 const &a, ImVec2 const &b) { return a.x < b.x; });
+
+			// now finally generate the lines.
+			for (auto &p : scanhits) {
+				linepile.push_back(ImVec2(p.x, y));
+			}
+		}
+	} // for each scan line
+}
+
 void BoardView::DrawDiamond(ImDrawList *draw, ImVec2 c, double r, uint32_t color) {
 	ImVec2 dia[4];
 
@@ -1554,6 +1827,18 @@ void BoardView::DrawHex(ImDrawList *draw, ImVec2 c, double r, uint32_t color) {
 	hex[5] = ImVec2(c.x - da, c.y + db);
 
 	draw->AddPolyline(hex, 6, color, true, 1.0f, true);
+}
+
+void BoardView::DrawFill(ImDrawList *draw) {
+	int i;
+	int l = linepile.size();
+
+	draw->ChannelsSetCurrent(kChannelFill);
+	for (i = 0; i < l; i += 2) {
+		draw->AddLine(CoordToScreen(linepile[i].x, linepile[i].y),
+		              CoordToScreen(linepile[i + 1].x, linepile[i + 1].y),
+		              m_colors.boardFillColor);
+	}
 }
 
 inline void BoardView::DrawOutline(ImDrawList *draw) {
@@ -1628,6 +1913,8 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 	}
 	if (pinSizeThresholdLow > threshold) threshold = pinSizeThresholdLow;
 
+	draw->ChannelsSetCurrent(kChannelPins);
+
 	for (auto &pin : m_board->Pins()) {
 		auto p_pin = pin.get();
 		float psz  = pin->diameter * m_scale * 20.0f;
@@ -1695,7 +1982,7 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 		// Drawing
 		{
 			int segments;
-			draw->ChannelsSetCurrent(kChannelImages);
+			//			draw->ChannelsSetCurrent(kChannelImages);
 
 			// for the round pin representations, choose how many circle segments need
 			// based on the pin size
@@ -1744,6 +2031,7 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 				                    3.0f);
 				draw->ChannelsSetCurrent(kChannelText);
 				draw->AddText(pos_adj, text_color, pin_number);
+				draw->ChannelsSetCurrent(kChannelPins);
 			}
 		}
 	}
@@ -1754,16 +2042,17 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 	double angle;
 	double distance = 0;
 	struct ImVec2 pva[1000], *ppp;
-	uint32_t color = m_colors.boxColor;
+	uint32_t color = m_colors.partOutlineColor;
 	//	int rendered   = 0;
 	char p0, p1; // first two characters of the part name, code-writing
 	             // convenience more than anything else
 
+	draw->ChannelsSetCurrent(kChannelPolylines);
 	/*
 	 * If a pin has been selected, we mask out the colour to
 	 * enhance (relatively) the appearance of the pin(s)
 	 */
-	if (m_pinSelected) color = (m_colors.boxColor & m_colors.selectedMaskParts) | m_colors.orMaskParts;
+	if (m_pinSelected) color = (m_colors.partOutlineColor & m_colors.selectedMaskParts) | m_colors.orMaskParts;
 
 	for (auto &part : m_board->Components()) {
 		int pincount = 0;
@@ -2112,7 +2401,8 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 			c = ImVec2(CoordToScreen(part->outline[2].x, part->outline[2].y));
 			d = ImVec2(CoordToScreen(part->outline[3].x, part->outline[3].y));
 
-			if (fillParts) draw->AddQuadFilled(a, b, c, d, color & 0x0fFFFFFF);
+			// if (fillParts) draw->AddQuadFilled(a, b, c, d, color & 0xffeeeeee);
+			if (fillParts) draw->AddQuadFilled(a, b, c, d, m_colors.partFillColor);
 			draw->AddQuad(a, b, c, d, color);
 
 			/*
@@ -2138,7 +2428,7 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 					if (segments > 36) segments = 36;
 					draw->AddCircle(CoordToScreen(part->centerpoint.x, part->centerpoint.y),
 					                (part->expanse / 3) * m_scale,
-					                m_colors.boxColor & 0x8fffffff,
+					                m_colors.partOutlineColor & 0x8fffffff,
 					                segments);
 				}
 			}
@@ -2155,15 +2445,15 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 
 				pos.y -= text_size.y * 2;
 				pos.x -= text_size.x * 0.5f;
-				draw->ChannelsSetCurrent(kChannelPolylines);
+				draw->ChannelsSetCurrent(kChannelText);
 
 				// This is the background of the part text.
 				draw->AddRectFilled(ImVec2(pos.x - 2.0f, pos.y - 2.0f),
 				                    ImVec2(pos.x + text_size.x + 2.0f, pos.y + text_size.y + 2.0f),
 				                    m_colors.partTextBackgroundColor,
 				                    0.0f);
-				draw->ChannelsSetCurrent(kChannelText);
 				draw->AddText(pos, m_colors.partTextColor, part->name.c_str());
+				draw->ChannelsSetCurrent(kChannelPolylines);
 			}
 		}
 	} // for each part
@@ -2247,10 +2537,12 @@ void BoardView::DrawBoard() {
 
 	// Splitting channels, drawing onto those and merging back.
 	draw->ChannelsSplit(NUM_DRAW_CHANNELS);
-	draw->ChannelsSetCurrent(kChannelPolylines);
 
 	// We draw the Parts before the Pins so that we can ascertain the needed pin
 	// size for the parts based on the part/pad geometry and spacing. -Inflex
+	// OutlineGenerateFill();
+	//	DrawFill(draw);
+	OutlineGenFillDraw(draw, boardFillSpacing, 1);
 	DrawOutline(draw);
 	DrawParts(draw);
 	DrawPins(draw);
