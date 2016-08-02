@@ -15,8 +15,8 @@ char default_conf[] =
     "#\r\n\
 # OpenFlex Board View configuration file (inflex-ui)\r\n\
 #\r\n\
-windowX=900\r\n\
-windowY=600\r\n\
+windowX=1100\r\n\
+windowY=700\r\n\
 \r\n\
 # Reference DPI is 100, increase if you have a higher density (ie, small 4K or 2K screen)\r\n\
 dpi=100\r\n\
@@ -40,8 +40,8 @@ zoomModifier = 5\r\n\
 panFactor = 30\r\n\
 panModifier = 5\r\n\
 \r\n\
-annotationBoxSize = 10\r\n\
-annotationBoxOffset = 15\r\n\
+annotationBoxSize = 15\r\n\
+annotationBoxOffset = 8\r\n\
 annotationBoxColor = 0xff0000aa\r\n\
 annotationStalkColor = 0x000000ff\r\n\
 #\r\n\

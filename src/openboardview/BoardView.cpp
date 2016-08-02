@@ -151,7 +151,7 @@ int BoardView::ConfigParse(void) {
 	annotationBoxSize = obvconfig.ParseInt("annotationBoxSize", 15);
 	annotationBoxSize = DPI(annotationBoxSize);
 
-	annotationBoxOffset = obvconfig.ParseInt("annotationBoxOffset", 15);
+	annotationBoxOffset = obvconfig.ParseInt("annotationBoxOffset", 8);
 	annotationBoxOffset = DPI(annotationBoxOffset);
 
 	/*
