@@ -233,7 +233,10 @@ int BoardView::ConfigParse(void) {
 	 * of comma/space separated 32-bit hex values 0x1234abcd etc.
 	 *
 	 */
-	SetFZKey(obvconfig.ParseStr("FZKey", ""));
+	{
+		char noKey[] = "";
+		SetFZKey(obvconfig.ParseStr("FZKey", noKey));
+	}
 
 	return 0;
 }
