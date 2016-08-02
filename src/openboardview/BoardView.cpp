@@ -1429,6 +1429,37 @@ void BoardView::HandleInput() {
 			// Search for net
 			m_showNetfilterSearch = true;
 
+		} else if (ImGui::IsKeyPressed(KM(SDL_SCANCODE_KP_PERIOD)) || ImGui::IsKeyPressed(SDLK_r) ||
+		           ImGui::IsKeyPressed(SDLK_PERIOD)) {
+			// Rotate board: R and period rotate clockwise; comma rotates
+			// counter-clockwise
+			Rotate(1);
+
+		} else if (ImGui::IsKeyPressed(KM(SDL_SCANCODE_KP_0)) || ImGui::IsKeyPressed(SDLK_COMMA)) {
+			Rotate(-1);
+
+		} else if (ImGui::IsKeyPressed(KM(SDL_SCANCODE_KP_PLUS)) || ImGui::IsKeyPressed(SDLK_EQUALS)) {
+			Zoom(m_lastWidth / 2, m_lastHeight / 2, zoomFactor);
+
+		} else if (ImGui::IsKeyPressed(KM(SDL_SCANCODE_KP_MINUS)) || ImGui::IsKeyPressed(SDLK_MINUS)) {
+			Zoom(m_lastWidth / 2, m_lastHeight / 2, -zoomFactor);
+
+		} else if (ImGui::IsKeyPressed(KM(SDL_SCANCODE_KP_2)) || ImGui::IsKeyPressed(SDLK_s)) {
+			Pan(DIR_DOWN, panFactor);
+
+		} else if (ImGui::IsKeyPressed(KM(SDL_SCANCODE_KP_8)) || ImGui::IsKeyPressed(SDLK_w)) {
+			Pan(DIR_UP, panFactor);
+
+		} else if (ImGui::IsKeyPressed(KM(SDL_SCANCODE_KP_4)) || ImGui::IsKeyPressed(SDLK_a)) {
+			Pan(DIR_LEFT, panFactor);
+
+		} else if (ImGui::IsKeyPressed(KM(SDL_SCANCODE_KP_6)) || ImGui::IsKeyPressed(SDLK_d)) {
+			Pan(DIR_RIGHT, panFactor);
+
+		} else if (ImGui::IsKeyPressed(KM(SDL_SCANCODE_KP_5)) || ImGui::IsKeyPressed(SDLK_x)) {
+			// Center and reset zoom
+			CenterView();
+
 		} else if (ImGui::IsKeyPressed(SDLK_c)) {
 			// Search for component
 			m_showComponentSearch = true;
@@ -1467,37 +1498,6 @@ void BoardView::HandleInput() {
 		} else if (ImGui::IsKeyPressed(SDLK_z)) {
 			reloadConfig  = true;
 			m_needsRedraw = true;
-
-		} else if (ImGui::IsKeyPressed(KM(SDL_SCANCODE_KP_PERIOD)) || ImGui::IsKeyPressed(SDLK_r) ||
-		           ImGui::IsKeyPressed(SDLK_PERIOD)) {
-			// Rotate board: R and period rotate clockwise; comma rotates
-			// counter-clockwise
-			Rotate(1);
-
-		} else if (ImGui::IsKeyPressed(KM(SDL_SCANCODE_KP_0)) || ImGui::IsKeyPressed(SDLK_COMMA)) {
-			Rotate(-1);
-
-		} else if (ImGui::IsKeyPressed(KM(SDL_SCANCODE_KP_PLUS)) || ImGui::IsKeyPressed(SDLK_EQUALS)) {
-			Zoom(m_lastWidth / 2, m_lastHeight / 2, zoomFactor);
-
-		} else if (ImGui::IsKeyPressed(KM(SDL_SCANCODE_KP_MINUS)) || ImGui::IsKeyPressed(SDLK_MINUS)) {
-			Zoom(m_lastWidth / 2, m_lastHeight / 2, -zoomFactor);
-
-		} else if (ImGui::IsKeyPressed(KM(SDL_SCANCODE_KP_2)) || ImGui::IsKeyPressed(SDLK_s)) {
-			Pan(DIR_DOWN, panFactor);
-
-		} else if (ImGui::IsKeyPressed(KM(SDL_SCANCODE_KP_8)) || ImGui::IsKeyPressed(SDLK_w)) {
-			Pan(DIR_UP, panFactor);
-
-		} else if (ImGui::IsKeyPressed(KM(SDL_SCANCODE_KP_4)) || ImGui::IsKeyPressed(SDLK_a)) {
-			Pan(DIR_LEFT, panFactor);
-
-		} else if (ImGui::IsKeyPressed(KM(SDL_SCANCODE_KP_6)) || ImGui::IsKeyPressed(SDLK_d)) {
-			Pan(DIR_RIGHT, panFactor);
-
-		} else if (ImGui::IsKeyPressed(KM(SDL_SCANCODE_KP_5)) || ImGui::IsKeyPressed(SDLK_x)) {
-			// Center and reset zoom
-			CenterView();
 
 		} else if (ImGui::IsKeyPressed(SDLK_ESCAPE)) {
 			m_pinSelected = nullptr;
