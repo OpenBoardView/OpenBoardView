@@ -1,4 +1,4 @@
-## Open Board Viewer
+## Open Board Viewer [![Build Status](https://travis-ci.org/inflex/OpenBoardView.svg?branch=inflex-ui-features)](https://travis-ci.org/inflex/OpenBoardView)
 
 Linux SDL/ImGui edition software for viewing .brd files, intended as a drop-in
 replacement for the "Test_Link" software.
