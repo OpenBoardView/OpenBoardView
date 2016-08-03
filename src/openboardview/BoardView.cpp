@@ -169,7 +169,7 @@ int BoardView::ConfigParse(void) {
 	m_colors.backgroundColor         = byte4swap(obvconfig.ParseHex("backgroundColor", 0xffffffff));
 	m_colors.boardFillColor          = byte4swap(obvconfig.ParseHex("boardFillColor", 0xddddddff));
 	m_colors.partOutlineColor        = byte4swap(obvconfig.ParseHex("partOutlineColor", 0x444444ff));
-	m_colors.partFillColor           = byte4swap(obvconfig.ParseHex("partFillColor", 0xffffffaf));
+	m_colors.partFillColor           = byte4swap(obvconfig.ParseHex("partFillColor", 0xffffffbb));
 	m_colors.partTextColor           = byte4swap(obvconfig.ParseHex("partTextColor", 0xff3030ff));
 	m_colors.partTextBackgroundColor = byte4swap(obvconfig.ParseHex("partTextBackgroundColor", 0xffff00ff));
 	m_colors.boardOutline            = byte4swap(obvconfig.ParseHex("boardOutline", 0x444444ff));
@@ -1673,7 +1673,7 @@ void BoardView::OutlineGenFillDraw(ImDrawList *draw, int ydelta, double thicknes
 			// now finally generate the lines.
 			{
 				int i = 0;
-				int l = scanhits.size();
+				int l = scanhits.size() - 1;
 				for (i = 0; i < l; i += 2) {
 					draw->AddLine(CoordToScreen(scanhits[i].x, y), CoordToScreen(scanhits[i + 1].x, y), m_colors.boardFillColor);
 				}
