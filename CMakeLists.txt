@@ -44,6 +44,7 @@ if(APPLE)
 	set(DIRS "\${LIBRARY_OUTPUT_PATH};/Library/Frameworks")
 
 	INSTALL(CODE "
+		set(BU_CHMOD_BUNDLE_ITEMS ON)
 		file(GLOB_RECURSE LIBS
 			\"${BUNDLE_OUTPUT_PATH}/Contents/MacOS/*${CMAKE_SHARED_LIBRARY_SUFFIX}\")
 		include(BundleUtilities)

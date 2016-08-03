@@ -1,0 +1,48 @@
+os:
+  - linux
+
+compiler:
+  - gcc
+  - clang
+
+matrix:
+  include:
+    - os: osx
+      compiler: clang
+
+dist: trusty
+sudo: required
+language: cpp
+
+addons:
+  apt:
+    sources:
+    - ubuntu-toolchain-r-test
+    packages:
+    - gcc-6
+    - g++-6
+
+install: |-
+  if [ "$TRAVIS_OS_NAME" == "linux" ]
+  then
+    sudo apt-get -qy install libsdl2-dev libgtk-3-dev
+  elif [ "$TRAVIS_OS_NAME" == "osx" ]
+  then
+    brew update
+    brew install sdl2
+  fi
+
+script: |-
+  if [ "$CXX" = "g++" ]; then export CXX="g++-6" CC="gcc-6"; fi
+  ./build.sh
+
+deploy:
+  provider: releases
+  api_key:
+    secure: ENCRYPTED_API_KEY
+  file_glob: true
+  file: OpenBoardView-*.dmg
+  skip_cleanup: true
+  on:
+    tags: true
+    condition: "$TRAVIS_OS_NAME == osx"
