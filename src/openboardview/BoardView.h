@@ -144,10 +144,7 @@ struct BoardView {
 	void SearchNet(void);
 	void SearchComponent(void);
 
-	vector<ImVec2> linepile;
 	void OutlineGenFillDraw(ImDrawList *draw, int ydelta, double thickness);
-	void OutlineGenerateFill(void);
-	void DrawFill(ImDrawList *draw);
 
 	/* Context menu, sql stuff */
 	Annotations m_annotations;

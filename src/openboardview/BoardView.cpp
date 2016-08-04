@@ -1138,8 +1138,6 @@ void BoardView::Update() {
 
 		if (filename) {
 			LoadFile(filename);
-			linepile.clear();
-			OutlineGenerateFill();
 		}
 	}
 
@@ -1216,7 +1214,7 @@ void BoardView::Update() {
 
 	ImGui::Begin("surface", nullptr, draw_surface_flags);
 	HandleInput();
-	DrawBoard();
+	if (m_file) DrawBoard();
 	ImGui::End();
 	ImGui::PopStyleColor();
 
@@ -1559,6 +1557,9 @@ void BoardView::OutlineGenFillDraw(ImDrawList *draw, int ydelta, double thicknes
 	double y, ystart, yend;
 
 	if (!boardFill) return;
+	if (!m_file) return;
+
+	scanhits.reserve(20);
 
 	draw->ChannelsSetCurrent(kChannelFill);
 
@@ -1576,12 +1577,6 @@ void BoardView::OutlineGenFillDraw(ImDrawList *draw, int ydelta, double thicknes
 		boardMinMaxDone = true;
 	}
 
-	// so we know we start on the outside of the object
-	// we step away
-	min.x -= 1;
-
-	max.x += 1;
-
 	// Get the viewport limits, so we don't waste time scanning what we don't need
 	ImVec2 vpa = ScreenToCoord(0, 0);
 	ImVec2 vpb = ScreenToCoord(io.DisplaySize.x, io.DisplaySize.y);
@@ -1597,12 +1592,6 @@ void BoardView::OutlineGenFillDraw(ImDrawList *draw, int ydelta, double thicknes
 	if (ystart < min.y) ystart = min.y;
 	if (yend > max.y) yend     = max.y;
 
-	// so we know we start on the outside of the object
-	// we step away
-	min.x -= 1;
-
-	max.x += 1;
-
 	vdelta = (ystart - yend) / steps;
 
 	vdelta = ydelta / m_scale;
@@ -1612,16 +1601,9 @@ void BoardView::OutlineGenFillDraw(ImDrawList *draw, int ydelta, double thicknes
 	 */
 	y = min.y;
 	while (y < max.y) {
-		ImVec2 a, b, c, d, intersect;
 
-		scanhits.clear();
+		scanhits.resize(0);
 		// scan outline segments to see if any intersect with our horizontal scan line
-
-		// our scan line.
-		a.x = min.x;
-		a.y = y;
-		b.x = max.y;
-		b.y = y;
 
 		/*
 		 * While we haven't yet exhausted possible scan hits
@@ -1659,6 +1641,8 @@ void BoardView::OutlineGenFillDraw(ImDrawList *draw, int ydelta, double thicknes
 
 				// test to see if this segment makes the scan-cut.
 				if ((pa.y > pb.y && y < pa.y && y > pb.y) || (pa.y < pb.y && y > pa.y && y < pb.y)) {
+					ImVec2 intersect;
+
 					intersect.y = y;
 					if (pa.x == pb.x)
 						intersect.x = pa.x;
@@ -1680,114 +1664,6 @@ void BoardView::OutlineGenFillDraw(ImDrawList *draw, int ydelta, double thicknes
 			}
 		}
 		y += vdelta;
-	} // for each scan line
-}
-
-/*
- * We only need to call this initially to build the MBB
- * and hull so we don't do it 50 times a second, as in the end
- * we just want a sequence of line segments that we can render
- */
-void BoardView::OutlineGenerateFill(void) {
-	auto &outline = m_board->OutlinePoints();
-	ImVec2 min, max; // board min/max points
-	double steps = 500;
-	double vdelta;
-	double y;
-	int i;
-
-	if (linepile.size()) return;
-
-	min.x = min.y = 100000000000;
-	max.x = max.y = -100000000000;
-
-	linepile.clear();
-
-	// find the orthagonal bounding box
-	for (auto &p : outline) {
-		if (p->x < min.x) min.x = p->x;
-		if (p->y < min.y) min.y = p->y;
-		if (p->x > max.x) max.x = p->x;
-		if (p->y > max.y) max.y = p->y;
-	}
-
-	// so we know we start on the outside of the object
-	// we step away
-	min.x -= 1;
-
-	max.x += 1;
-
-	vdelta = (max.y - min.y) / steps;
-
-	/*
-	 * Go through each scan line
-	 */
-	y = min.y;
-	for (i = 0; i < steps; i++) {
-		vector<ImVec2> scanhits;
-		ImVec2 a, b, c, d, intersect;
-		y += vdelta;
-
-		scanhits.clear();
-		// scan outline segments to see if any intersect with our horizontal scan line
-
-		// our scan line.
-		a.x = min.x;
-		a.y = y;
-		b.x = max.y;
-		b.y = y;
-
-		/*
-		 * While we haven't yet exhausted possible scan hits
-		 */
-
-		{
-
-			int jump = 1;
-			Point fp;
-
-			auto &outline = m_board->OutlinePoints();
-
-			// set our initial draw point, so we can detect when we encounter it again
-			fp = *outline[0];
-
-			for (size_t i = 0; i < outline.size() - 1; i++) {
-				Point &pa = *outline[i];
-				Point &pb = *outline[i + 1];
-
-				// jump double/dud points
-				if (pa.x == pb.x && pa.y == pb.y) continue;
-
-				// if we encounter our hull/poly start point, then we've now created the
-				// closed
-				// hull, jump the next segment and reset the first-point
-				if ((!jump) && (fp.x == pb.x) && (fp.y == pb.y)) {
-					if (i < outline.size() - 2) {
-						fp   = *outline[i + 2];
-						jump = 1;
-						i++;
-					}
-				} else {
-					jump = 0;
-				}
-
-				// test to see if this segment makes the scan-cut.
-				if ((pa.y > pb.y && y < pa.y && y > pb.y) || (pa.y < pb.y && y > pa.y && y < pb.y)) {
-					intersect.y = y;
-					if (pa.x == pb.x)
-						intersect.x = pa.x;
-					else
-						intersect.x = (pb.x - pa.x) / (pb.y - pa.y) * (y - pa.y) + pa.x;
-					scanhits.push_back(intersect);
-				}
-			} // if we did get an intersection
-			sort(scanhits.begin(), scanhits.end(), [](ImVec2 const &a, ImVec2 const &b) { return a.x < b.x; });
-
-			// now finally generate the lines.
-			for (auto &p : scanhits) {
-				linepile.push_back(ImVec2(p.x, y));
-			}
-		}
 	} // for each scan line
 }
 
@@ -1819,23 +1695,13 @@ void BoardView::DrawHex(ImDrawList *draw, ImVec2 c, double r, uint32_t color) {
 	draw->AddPolyline(hex, 6, color, true, 1.0f, true);
 }
 
-void BoardView::DrawFill(ImDrawList *draw) {
-	int i;
-	int l = linepile.size();
-
-	draw->ChannelsSetCurrent(kChannelFill);
-	for (i = 0; i < l; i += 2) {
-		draw->AddLine(CoordToScreen(linepile[i].x, linepile[i].y),
-		              CoordToScreen(linepile[i + 1].x, linepile[i + 1].y),
-		              m_colors.boardFillColor);
-	}
-}
-
 inline void BoardView::DrawOutline(ImDrawList *draw) {
 	int jump = 1;
 	Point fp;
 
 	auto &outline = m_board->OutlinePoints();
+
+	draw->ChannelsSetCurrent(kChannelPolylines);
 
 	// set our initial draw point, so we can detect when we encounter it again
 	fp = *outline[0];

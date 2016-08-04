@@ -91,7 +91,8 @@ bool BRDFile::verifyFormat(const char *buf, size_t buffer_size) {
 }
 
 BRDFile::BRDFile(const char *buf, size_t buffer_size) {
-	memset(this, 0, sizeof(*this));
+//	memset(this, 0, sizeof(*this)); //  old habits must die?
+//
 //#define ENSURE(X)                                                                                  \
 //	assert(X);                                                                                     \
 //	if (!(X))                                                                                      \
@@ -104,6 +105,8 @@ BRDFile::BRDFile(const char *buf, size_t buffer_size) {
 	ENSURE(buffer_size > 4);
 	size_t file_buf_size = 3 * (1 + buffer_size);
 	file_buf             = (char *)malloc(file_buf_size);
+	if (!file_buf) return;
+
 	memcpy(file_buf, buf, buffer_size);
 	file_buf[buffer_size] = 0;
 	// This is for fixing degenerate utf8
