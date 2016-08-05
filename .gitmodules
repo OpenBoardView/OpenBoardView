@@ -1,6 +1,3 @@
-[submodule "src/imgui"]
-	path = src/imgui
-	url = https://github.com/ocornut/imgui.git
 [submodule "src/zlib"]
 	path = src/zlib
 	url = https://github.com/madler/zlib.git
@@ -11,3 +8,6 @@
 [submodule "src/glad"]
 	path = src/glad
 	url = https://github.com/Dav1dde/glad.git
+[submodule "src/imgui"]
+	path = src/imgui
+	url = https://github.com/inflex/imgui.git
