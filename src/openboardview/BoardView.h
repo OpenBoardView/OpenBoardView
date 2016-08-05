@@ -49,13 +49,15 @@ struct ColorScheme {
 	 * Take note, because these are directly set
 	 * the packing format is ABGR,  not RGBA
 	 */
-	uint32_t backgroundColor         = 0xffffffff;
-	uint32_t boardFillColor          = 0xffdddddd;
-	uint32_t partTextColor           = 0xff808000;
-	uint32_t partTextBackgroundColor = 0xff00eeee;
-	uint32_t partOutlineColor        = 0xff444444;
-	uint32_t partFillColor           = 0xffffffff;
-	uint32_t boardOutline            = 0xff00ffff;
+	uint32_t backgroundColor          = 0xffffffff;
+	uint32_t boardFillColor           = 0xffdddddd;
+	uint32_t partTextColor            = 0xff808000;
+	uint32_t partTextBackgroundColor  = 0xff00eeee;
+	uint32_t partOutlineColor         = 0xff444444;
+	uint32_t partFillColor            = 0xffffffff;
+	uint32_t partHighlightedColor     = 0xff0000ee;
+	uint32_t partHighlightedFillColor = 0xffeeeeff;
+	uint32_t boardOutline             = 0xff00ffff;
 
 	//	uint32_t boxColor = 0xffcccccc;
 
@@ -141,8 +143,11 @@ struct BoardView {
 	void SetFZKey(char *keytext);
 	void HelpAbout(void);
 	void HelpControls(void);
-	void SearchNet(void);
 	void SearchComponent(void);
+	void SetNetFilterNoClear(const char *net);
+	void SearchCompound(const char *item);
+	void SearchCompoundNoClear(const char *item);
+	void SearchColumnGenerate(char *search, int buttons_max);
 
 	void OutlineGenFillDraw(ImDrawList *draw, int ydelta, double thickness);
 
@@ -157,6 +162,9 @@ struct BoardView {
 	bool m_tooltips_enabled       = true;
 	int m_annotation_last_hovered = 0;
 	int m_annotation_clicked_id   = 0;
+
+	bool HighlightedPinIsHovered(void);
+	Pin *m_pinHighlightedHovered = nullptr;
 
 	ImVec2 m_showContextMenuPos;
 
@@ -201,8 +209,10 @@ struct BoardView {
 	bool m_needsRedraw = true;
 	bool m_draggingLastFrame;
 	bool m_showContextMenu;
-	bool m_showNetfilterSearch;
-	bool m_showComponentSearch;
+	//	bool m_showNetfilterSearch;
+	bool m_showSearch;
+	bool m_searchComponents = true;
+	bool m_searchNets       = true;
 	bool m_showNetList;
 	bool m_showPartList;
 	bool m_showHelpAbout;
@@ -230,6 +240,7 @@ struct BoardView {
 	ImVec2 ScreenToCoord(float x, float y, float w = 1.0f);
 	// void Move(float x, float y);
 	void Rotate(int count);
+	void ClearAllHighlights(void);
 
 	// Sets the center of the screen to (x,y) in board space
 	void SetTarget(float x, float y);

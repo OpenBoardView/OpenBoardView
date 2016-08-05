@@ -173,7 +173,11 @@ struct Component : BoardElement {
 	outline_pt *hull  = NULL;
 	int hull_count    = 0;
 	outline_pt centerpoint;
-	double expanse = 0.0f;
+	double expanse = 0.0f; // quick measure of distance between pins.
+
+	enum ComponentVisualModes { CVMNormal = 0, CVMSelected, CVMShowPins, CVMModeCount };
+
+	uint8_t visualmode = 0;
 
 	// Mount type as readable string.
 	string mount_type_str() {

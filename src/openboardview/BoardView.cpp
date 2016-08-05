@@ -164,26 +164,28 @@ int BoardView::ConfigParse(void) {
 	/*
 	 * XRayBlue theme
 	 */
-	m_colors.annotationBoxColor      = byte4swap(obvconfig.ParseHex("annotationBoxColor", 0xff0000aa));
-	m_colors.annotationStalkColor    = byte4swap(obvconfig.ParseHex("annotationStalkColor", 0x000000ff));
-	m_colors.backgroundColor         = byte4swap(obvconfig.ParseHex("backgroundColor", 0xffffffff));
-	m_colors.boardFillColor          = byte4swap(obvconfig.ParseHex("boardFillColor", 0xddddddff));
-	m_colors.partOutlineColor        = byte4swap(obvconfig.ParseHex("partOutlineColor", 0x444444ff));
-	m_colors.partFillColor           = byte4swap(obvconfig.ParseHex("partFillColor", 0xffffffbb));
-	m_colors.partTextColor           = byte4swap(obvconfig.ParseHex("partTextColor", 0xff3030ff));
-	m_colors.partTextBackgroundColor = byte4swap(obvconfig.ParseHex("partTextBackgroundColor", 0xffff00ff));
-	m_colors.boardOutline            = byte4swap(obvconfig.ParseHex("boardOutline", 0x444444ff));
-	m_colors.pinDefault              = byte4swap(obvconfig.ParseHex("pinDefault", 0x8888ffff));
-	m_colors.pinGround               = byte4swap(obvconfig.ParseHex("pinGround", 0x2222aaff));
-	m_colors.pinNotConnected         = byte4swap(obvconfig.ParseHex("pinNotConnected", 0xaaaaaaff));
-	m_colors.pinTestPad              = byte4swap(obvconfig.ParseHex("pinTestPad", 0x888888ff));
-	m_colors.pinSelectedText         = byte4swap(obvconfig.ParseHex("pinSelectedText", 0xff0000ff));
-	m_colors.pinSelected             = byte4swap(obvconfig.ParseHex("pinSelected", 0x0000ffff));
-	m_colors.pinHalo                 = byte4swap(obvconfig.ParseHex("pinHaloColor", 0x00aa00ff));
-	m_colors.pinHighlighted          = byte4swap(obvconfig.ParseHex("pinHighlighted", 0x0000ffff));
-	m_colors.pinHighlightSameNet     = byte4swap(obvconfig.ParseHex("pinHighlightSameNet", 0x000000ff));
-	m_colors.annotationPartAlias     = byte4swap(obvconfig.ParseHex("annotationPartAlias", 0xffff00ff));
-	m_colors.partHullColor           = byte4swap(obvconfig.ParseHex("partHullColor", 0x80808080));
+	m_colors.annotationBoxColor       = byte4swap(obvconfig.ParseHex("annotationBoxColor", 0xff0000aa));
+	m_colors.annotationStalkColor     = byte4swap(obvconfig.ParseHex("annotationStalkColor", 0x000000ff));
+	m_colors.backgroundColor          = byte4swap(obvconfig.ParseHex("backgroundColor", 0xffffffff));
+	m_colors.boardFillColor           = byte4swap(obvconfig.ParseHex("boardFillColor", 0xddddddff));
+	m_colors.partOutlineColor         = byte4swap(obvconfig.ParseHex("partOutlineColor", 0x444444ff));
+	m_colors.partFillColor            = byte4swap(obvconfig.ParseHex("partFillColor", 0xffffffbb));
+	m_colors.partHighlightedColor     = byte4swap(obvconfig.ParseHex("partHighlightedColor", 0xff0000ff));
+	m_colors.partHighlightedFillColor = byte4swap(obvconfig.ParseHex("partHighlightedFillColor", 0xffeeeeff));
+	m_colors.partTextColor            = byte4swap(obvconfig.ParseHex("partTextColor", 0xff3030ff));
+	m_colors.partTextBackgroundColor  = byte4swap(obvconfig.ParseHex("partTextBackgroundColor", 0xffff00ff));
+	m_colors.boardOutline             = byte4swap(obvconfig.ParseHex("boardOutline", 0x444444ff));
+	m_colors.pinDefault               = byte4swap(obvconfig.ParseHex("pinDefault", 0x8888ffff));
+	m_colors.pinGround                = byte4swap(obvconfig.ParseHex("pinGround", 0x2222aaff));
+	m_colors.pinNotConnected          = byte4swap(obvconfig.ParseHex("pinNotConnected", 0xaaaaaaff));
+	m_colors.pinTestPad               = byte4swap(obvconfig.ParseHex("pinTestPad", 0x888888ff));
+	m_colors.pinSelectedText          = byte4swap(obvconfig.ParseHex("pinSelectedText", 0xff0000ff));
+	m_colors.pinSelected              = byte4swap(obvconfig.ParseHex("pinSelected", 0x0000ffff));
+	m_colors.pinHalo                  = byte4swap(obvconfig.ParseHex("pinHaloColor", 0x00aa00ff));
+	m_colors.pinHighlighted           = byte4swap(obvconfig.ParseHex("pinHighlighted", 0x0000ffff));
+	m_colors.pinHighlightSameNet      = byte4swap(obvconfig.ParseHex("pinHighlightSameNet", 0x000000ff));
+	m_colors.annotationPartAlias      = byte4swap(obvconfig.ParseHex("annotationPartAlias", 0xffff00ff));
+	m_colors.partHullColor            = byte4swap(obvconfig.ParseHex("partHullColor", 0x80808080));
 
 	m_colors.selectedMaskPins    = byte4swap(obvconfig.ParseHex("selectedMaskPins", 0xffffffff));
 	m_colors.selectedMaskParts   = byte4swap(obvconfig.ParseHex("selectedMaskParts", 0xffffffff));
@@ -447,7 +449,7 @@ void BoardView::HelpControls(void) {
 		ImGui::Text("Move board");
 		ImGui::Text("Zoom (CTRL for finer steps)");
 		ImGui::Text("Flip board");
-		ImGui::Text("Context menu");
+		ImGui::Text("Annotations menu");
 
 		ImGui::NextColumn();
 		ImGui::Text("Click (on pin)");
@@ -489,9 +491,7 @@ void BoardView::ContextMenu(void) {
 	 */
 	ImGui::SetNextWindowPos(ImVec2(DPIF(50), DPIF(50)));
 
-	if (ImGui::BeginPopupModal("ContextOptions", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_ShowBorders)) {
-
-		ImGui::Text("Annotation Add/Edit/Remove");
+	if (ImGui::BeginPopupModal("Annotations", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_ShowBorders)) {
 
 		if (m_showContextMenu) {
 			contextbuf[0]     = 0;
@@ -545,8 +545,6 @@ void BoardView::ContextMenu(void) {
 				 * but haven't decided what to do in such a situation
 				 */
 
-				//			m_partHighlighted.clear(); // I don't think this was intentionally meant to be here *whoops*
-				//
 				for (auto &part : m_board->Components()) {
 					int hit     = 0;
 					auto p_part = part.get();
@@ -680,13 +678,16 @@ void BoardView::ContextMenu(void) {
 						}
 						ImGui::CloseCurrentPopup();
 					}
+					/*
 					ImGui::SameLine();
 					if (ImGui::Button("Cancel")) {
-						ImGui::CloseCurrentPopup();
-						m_tooltips_enabled     = true;
-						m_annotationnew_retain = false;
+					    ImGui::CloseCurrentPopup();
+					    m_tooltips_enabled     = true;
+					    m_annotationnew_retain = false;
 					}
-					ImGui::Separator();
+					*/
+				} else {
+					ImGui::SameLine();
 				}
 
 				if ((m_annotation_clicked_id >= 0) && (ImGui::Button("Remove"))) {
@@ -700,7 +701,8 @@ void BoardView::ContextMenu(void) {
 			// the position.
 		}
 
-		if (ImGui::Button("Exit") || ImGui::IsKeyPressed(SDLK_ESCAPE)) {
+		ImGui::SameLine();
+		if (ImGui::Button("Cancel") || ImGui::IsKeyPressed(SDLK_ESCAPE)) {
 			m_annotationnew_retain  = false;
 			m_annotationedit_retain = false;
 			m_tooltips_enabled      = true;
@@ -711,103 +713,69 @@ void BoardView::ContextMenu(void) {
 	}
 }
 
+void BoardView::SearchColumnGenerate(char *search, int buttons_max) {
+
+	int buttons_left = buttons_max;
+
+	if (search[0]) {
+		if (m_searchComponents) {
+			for (auto &part : m_file->parts) {
+				if (buttons_left > 0) {
+					if (utf8casestr(part.name, search)) {
+						if (ImGui::SmallButton(part.name)) {
+							FindComponent(part.name);
+							snprintf(search, 128, "%s", part.name);
+							buttons_left = 0;
+							//					first_button = part.name;
+						}
+						buttons_left--;
+					} // testing for match of our component partial to the part name
+				}     // for each part ( search column 1 )
+			}
+		}
+
+		if (m_searchNets) {
+			for (auto &net : m_nets) {
+				if (buttons_left > 0) {
+					if (utf8casestr(net->name.c_str(), search)) {
+						if (ImGui::SmallButton(net->name.c_str())) {
+							SetNetFilter(net->name.c_str());
+							snprintf(search, 128, "%s", net->name.c_str());
+							buttons_left = 0;
+						}
+						buttons_left--;
+					}
+				}
+			}
+		}
+	}
+}
+
 void BoardView::SearchComponent(void) {
-	if (ImGui::BeginPopupModal("Search for Component",
+	//	ImGui::SetNextWindowPos(ImVec2(DPIF(20), DPIF(20)));
+	ImGui::SetNextWindowPosCenter();
+	//	ImGui::SetNextWindowSize(ImVec2(DPIF(700), DPIF(200)));
+	if (ImGui::BeginPopupModal("Search for Component / Network",
 	                           nullptr,
 	                           ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings |
 	                               ImGuiWindowFlags_ShowBorders)) {
-		char cs[128];
+		//		char cs[128];
 		const char *first_button  = m_search;
 		const char *first_button2 = m_search2;
 		const char *first_button3 = m_search3;
 
-		if (m_showComponentSearch) {
-			m_showComponentSearch = false;
+		if (m_showSearch) {
+			m_showSearch = false;
 		}
 
 		// Column 1, implied.
 		//
-		ImGui::Columns(3);
-		ImGui::Text("Component #1");
-
-		if (ImGui::InputText("##search", m_search, 128, ImGuiInputTextFlags_CharsNoBlank)) {
-			FindComponent(m_search);
-		}
-
-		if (ImGui::IsRootWindowOrAnyChildFocused() && !ImGui::IsAnyItemActive() && !ImGui::IsMouseClicked(0)) {
-			ImGui::SetKeyboardFocusHere(-1);
-		} // set keyboard focus
-
-		int buttons_left = 10;
-		for (int i = 0; buttons_left && i < m_file->num_parts; i++) {
-			const BRDPart &part = m_file->parts[i];
-			if (utf8casestr(part.name, m_search)) {
-				if (ImGui::SmallButton(part.name)) {
-					FindComponent(part.name);
-					snprintf(m_search, sizeof(m_search), "%s", part.name);
-					first_button = part.name;
-				} // button name generation
-				  //				if (buttons_left == 10) {
-				  //					first_button = part.name;
-				  //				}
-				buttons_left--;
-			} // testing for match of our component partial to the part name
-		}     // for each part ( search column 1 )
-
-		ImGui::NextColumn();
-		ImGui::Text("Component #2");
-		if (ImGui::InputText("##search2", m_search2, 128, ImGuiInputTextFlags_CharsNoBlank)) {
-			FindComponent(m_search2);
-		}
-
-		int buttons_left2 = 10;
-		for (int i = 0; buttons_left2 && i < m_file->num_parts; i++) {
-			const BRDPart &part2 = m_file->parts[i];
-			if (utf8casestr(part2.name, m_search2)) {
-				snprintf(cs, sizeof(cs), "%s##2", part2.name);
-				if (ImGui::SmallButton(cs)) {
-					FindComponent(part2.name);
-					snprintf(m_search2, sizeof(m_search2), "%s", part2.name);
-					first_button2 = part2.name;
-				}
-				buttons_left2--;
-			}
-		}
-
-		ImGui::NextColumn();
-		ImGui::Text("Component #3");
-		if (ImGui::InputText("##search3", m_search3, 128, ImGuiInputTextFlags_CharsNoBlank)) {
-			FindComponent(m_search3);
-		}
-		int buttons_left3 = 10;
-		for (int i = 0; buttons_left3 && i < m_file->num_parts; i++) {
-			const BRDPart &part3 = m_file->parts[i];
-			if (utf8casestr(part3.name, m_search3)) {
-				snprintf(cs, sizeof(cs), "%s##3", part3.name);
-				if (ImGui::SmallButton(cs)) {
-					FindComponent(part3.name);
-					snprintf(m_search3, sizeof(m_search3), "%s", part3.name);
-					first_button3 = part3.name;
-				}
-				buttons_left3--;
-			}
-		}
-
-		// Enter and Esc close the search:
-		if (ImGui::IsKeyPressed(SDLK_RETURN)) {
-			FindComponent(first_button);
-			FindComponentNoClear(first_button2);
-			FindComponentNoClear(first_button3);
-			ImGui::CloseCurrentPopup();
-		} // response to keyboard ENTER
-
-		ImGui::Columns(1); // reset back to single column mode
-		ImGui::Separator();
-
+		//
 		if (ImGui::Button("Search")) {
-			FindComponent(first_button);
-			FindComponentNoClear(first_button2);
-			FindComponentNoClear(first_button3);
+			// FindComponent(first_button);
+			SearchCompound(first_button);
+			SearchCompoundNoClear(first_button2);
+			SearchCompoundNoClear(first_button3);
 			ImGui::CloseCurrentPopup();
 		} // search button
 
@@ -828,59 +796,79 @@ void BoardView::SearchComponent(void) {
 			ImGui::CloseCurrentPopup();
 		} // exit button
 
+		ImGui::Separator();
+		ImGui::Checkbox("Components", &m_searchComponents);
+
+		ImGui::SameLine();
+		ImGui::Checkbox("Nets", &m_searchNets);
+
 		ImGui::SameLine();
 		ImGui::Text("ENTER: Search, ESC: Exit, TAB: next field");
+
+		ImGui::Separator();
+
+		ImGui::Columns(3);
+		ImGui::Text("Item #1");
+
+		ImGui::PushItemWidth(DPI(200));
+		if (ImGui::InputText("##search", m_search, 128, ImGuiInputTextFlags_CharsNoBlank)) {
+			SearchCompound(m_search);
+		}
+		ImGui::PopItemWidth();
+
+		if (ImGui::IsRootWindowOrAnyChildFocused() && !ImGui::IsAnyItemActive() && !ImGui::IsMouseClicked(0)) {
+			ImGui::SetKeyboardFocusHere(-1);
+		} // set keyboard focus
+
+		SearchColumnGenerate(m_search, 10);
+
+		ImGui::NextColumn();
+		ImGui::Text("Item #2");
+		ImGui::PushItemWidth(DPI(200));
+		if (ImGui::InputText("##search2", m_search2, 128, ImGuiInputTextFlags_CharsNoBlank)) {
+			SearchCompound(m_search2);
+		}
+		ImGui::PopItemWidth();
+		SearchColumnGenerate(m_search2, 10);
+
+		ImGui::NextColumn();
+		ImGui::Text("Item #3");
+		ImGui::PushItemWidth(DPI(200));
+		if (ImGui::InputText("##search3", m_search3, 128, ImGuiInputTextFlags_CharsNoBlank)) {
+			SearchCompound(m_search3);
+		}
+		ImGui::PopItemWidth();
+		SearchColumnGenerate(m_search3, 10);
+
+		ImGui::Columns(1); // reset back to single column mode
+		ImGui::Separator();
+
+		// Enter and Esc close the search:
+		if (ImGui::IsKeyPressed(SDLK_RETURN)) {
+			// SearchCompound(first_button);
+			// SearchCompoundNoClear(first_button2);
+			// SearchCompoundNoClear(first_button3);
+			SearchCompound(m_search);
+			SearchCompoundNoClear(m_search2);
+			SearchCompoundNoClear(m_search3);
+			ImGui::CloseCurrentPopup();
+		} // response to keyboard ENTER
 
 		ImGui::EndPopup();
 	}
 }
 
-void BoardView::SearchNet(void) {
-	/*
- * Network popup window (search)
- */
-	if (ImGui::BeginPopupModal("Search for Net", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_ShowBorders)) {
-		if (m_showNetfilterSearch) {
-			m_showNetfilterSearch = false;
-		}
-		if (ImGui::InputText("##search", m_search, 128)) {
-			SetNetFilter(m_search);
-		}
-		const char *first_button = m_search;
-		if (ImGui::IsItemHovered() ||
-		    (ImGui::IsRootWindowOrAnyChildFocused() && !ImGui::IsAnyItemActive() && !ImGui::IsMouseClicked(0)))
-			ImGui::SetKeyboardFocusHere(-1);
-
-		int buttons_left = 10;
-		for (auto &net : m_nets) {
-			if (buttons_left > 0) {
-				if (utf8casestr(net->name.c_str(), m_search)) {
-					if (ImGui::Button(net->name.c_str())) {
-						SetNetFilter(net->name.c_str());
-						ImGui::CloseCurrentPopup();
-					}
-					if (buttons_left == 10) {
-						first_button = net->name.c_str();
-					}
-					buttons_left--;
-				}
-			}
-		}
-
-		// Enter and Esc close the search:
-		if (ImGui::IsKeyPressed(SDLK_RETURN)) {
-			SetNetFilter(first_button);
-			ImGui::CloseCurrentPopup();
-		}
-		ImGui::Separator();
-		if (ImGui::Button("Clear") || ImGui::IsKeyPressed(SDLK_ESCAPE)) {
-			SetNetFilter("");
-			ImGui::CloseCurrentPopup();
-		}
-		ImGui::SameLine();
-		ImGui::Text("ENTER to submit, ESC to close");
-		ImGui::EndPopup();
-	}
+void BoardView::ClearAllHighlights(void) {
+	m_pinSelected = nullptr;
+	SetNetFilter("");
+	FindComponent("");
+	m_search[0]                                              = '\0';
+	m_search2[0]                                             = '\0';
+	m_search3[0]                                             = '\0';
+	m_needsRedraw                                            = true;
+	for (auto part : m_board->Components()) part->visualmode = part->CVMNormal;
+	m_partHighlighted.clear();
+	m_pinHighlighted.clear();
 }
 
 /** UPDATE Logic region
@@ -920,7 +908,6 @@ void BoardView::Update() {
 		 * visible until they're called up by the respective
 		 * flags.
 		 */
-		SearchNet();
 		SearchComponent();
 		HelpControls();
 		HelpAbout();
@@ -993,11 +980,8 @@ void BoardView::Update() {
 		}
 
 		if (ImGui::BeginMenu("Search")) {
-			if (ImGui::MenuItem("Components", "c")) {
-				m_showComponentSearch = true;
-			}
-			if (ImGui::MenuItem("Nets", "n")) {
-				m_showNetfilterSearch = true;
+			if (ImGui::MenuItem("Components / Nets", "c")) {
+				m_showSearch = true;
 			}
 			ImGui::EndMenu();
 		}
@@ -1066,6 +1050,11 @@ void BoardView::Update() {
 			CenterView();
 		}
 
+		ImGui::SameLine();
+		if (ImGui::Button("CLEAR")) {
+			ClearAllHighlights();
+		}
+
 		/*
 		ImGui::SameLine();
 		ImVec2 tz = ImGui::CalcTextSize("Search             ");
@@ -1079,7 +1068,7 @@ void BoardView::Update() {
 		*/
 
 		if (m_showContextMenu && m_file && m_annotations_active) {
-			ImGui::OpenPopup("ContextOptions");
+			ImGui::OpenPopup("Annotations");
 		}
 
 		if (m_showHelpAbout) {
@@ -1088,11 +1077,9 @@ void BoardView::Update() {
 		if (m_showHelpControls) {
 			ImGui::OpenPopup("Controls");
 		}
-		if (m_showNetfilterSearch) {
-			ImGui::OpenPopup("Search for Net");
-		}
-		if (m_showComponentSearch && m_file) {
-			ImGui::OpenPopup("Search for Component");
+
+		if (m_showSearch && m_file) {
+			ImGui::OpenPopup("Search for Component / Network");
 		}
 		if (m_lastFileOpenWasInvalid) {
 			ImGui::OpenPopup("Error opening file");
@@ -1361,8 +1348,7 @@ void BoardView::HandleInput() {
 				// check also for a part hit.
 				m_needsRedraw = true;
 
-				m_partHighlighted.clear();
-				for (auto &part : m_board->Components()) {
+				for (auto part : m_board->Components()) {
 					int hit     = 0;
 					auto p_part = part.get();
 
@@ -1379,12 +1365,23 @@ void BoardView::HandleInput() {
 						for (i = 0, j = n - 1; i < n; j = i++) {
 							if (((poly[i].y > pos.y) != (poly[j].y > pos.y)) &&
 							    (pos.x < (poly[j].x - poly[i].x) * (pos.y - poly[i].y) / (poly[j].y - poly[i].y) + poly[i].x))
-								hit = !hit;
+								hit ^= 1;
 						}
 					}
 
 					if (hit) {
-						m_partHighlighted.push_back(p_part);
+						// highlight all the pins
+						if (part->visualmode == part->CVMNormal) {
+							if (contains(*part, m_partHighlighted)) {
+								part->visualmode = part->CVMSelected;
+							} else {
+								m_partHighlighted.clear(); // Should we clear when clicked, or wait for person to esc?
+								m_partHighlighted.push_back(p_part);
+							}
+						}
+
+						part->visualmode++;
+						part->visualmode %= part->CVMModeCount;
 					}
 				}
 			} else {
@@ -1415,7 +1412,7 @@ void BoardView::HandleInput() {
 
 		if (ImGui::IsKeyPressed(SDLK_n)) {
 			// Search for net
-			m_showNetfilterSearch = true;
+			m_showSearch = true;
 
 		} else if (ImGui::IsKeyPressed(KM(SDL_SCANCODE_KP_PERIOD)) || ImGui::IsKeyPressed(SDLK_r) ||
 		           ImGui::IsKeyPressed(SDLK_PERIOD)) {
@@ -1449,8 +1446,13 @@ void BoardView::HandleInput() {
 			CenterView();
 
 		} else if (ImGui::IsKeyPressed(SDLK_c)) {
-			// Search for component
-			m_showComponentSearch = true;
+			if (io.KeyCtrl) {
+				// quit OFBV
+				m_wantsQuit = true;
+			} else {
+				// Search for component
+				m_showSearch = true;
+			}
 
 		} else if (ImGui::IsKeyPressed(SDLK_l)) {
 			// Show Net List
@@ -1470,14 +1472,15 @@ void BoardView::HandleInput() {
 
 		} else if (ImGui::IsKeyPressed(SDLK_f)) {
 			if (io.KeyCtrl)
-				m_showComponentSearch = true;
+				m_showSearch = true;
 			else
 				showFPS ^= 1;
 			m_needsRedraw = true;
 
 		} else if (ImGui::IsKeyPressed(SDLK_SLASH)) {
-			m_showComponentSearch = true;
-			m_needsRedraw         = true;
+			// m_showComponentSearch = true;
+			m_showSearch  = true;
+			m_needsRedraw = true;
 
 		} else if (ImGui::IsKeyPressed(SDLK_p)) {
 			showPosition ^= 1;
@@ -1488,13 +1491,7 @@ void BoardView::HandleInput() {
 			m_needsRedraw = true;
 
 		} else if (ImGui::IsKeyPressed(SDLK_ESCAPE)) {
-			m_pinSelected = nullptr;
-			SetNetFilter("");
-			FindComponent("");
-			m_search[0]   = '\0';
-			m_search2[0]  = '\0';
-			m_search3[0]  = '\0';
-			m_needsRedraw = true;
+			ClearAllHighlights();
 		} else {
 			// fprintf(stderr,"F");
 		}
@@ -1803,14 +1800,16 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 				if (pin->net->is_ground) color = (m_colors.pinGround & cmask) | omask;
 			}
 
+			/*
 			if (PartIsHighlighted(*pin->component)) {
-				if (!show_text) {
-					color      = m_colors.pinHighlightSameNet;
-					text_color = m_colors.partTextColor;
-				}
-				show_text = true;
-				threshold = 0;
+			    if (!show_text) {
+			        color      = m_colors.pinHighlightSameNet;
+			        text_color = m_colors.partTextColor;
+			    }
+			    show_text = true;
+			        threshold			= 0;
 			}
+			*/
 
 			if (pin->type == Pin::kPinTypeTestPad) {
 				color     = (m_colors.pinTestPad & cmask) | omask;
@@ -1829,6 +1828,11 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 				text_color = m_colors.pinSelectedText;
 				show_text  = true;
 				threshold  = 0;
+			}
+
+			// If the part itself is highlighted ( CVMShowPins )
+			if (p_pin->component->visualmode == p_pin->component->CVMShowPins) {
+				show_text = true;
 			}
 
 			// don't show text if it doesn't make sense
@@ -1881,10 +1885,12 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 				ImVec2 text_size = ImGui::CalcTextSize(pin_number);
 				ImVec2 pos_adj   = ImVec2(pos.x - text_size.x * 0.5f, pos.y - text_size.y * 0.5f);
 				draw->ChannelsSetCurrent(kChannelPolylines);
+				/*
 				draw->AddRectFilled(ImVec2(pos_adj.x - 2.0f, pos_adj.y - 1.0f),
-				                    ImVec2(pos_adj.x + text_size.x + 2.0f, pos_adj.y + text_size.y + 1.0f),
-				                    m_colors.backgroundColor,
-				                    3.0f);
+				    ImVec2(pos_adj.x + text_size.x + 2.0f, pos_adj.y + text_size.y + 1.0f),
+				    m_colors.backgroundColor,
+				    3.0f);
+				                    */
 				draw->ChannelsSetCurrent(kChannelText);
 				draw->AddText(pos_adj, text_color, pin_number);
 				draw->ChannelsSetCurrent(kChannelPins);
@@ -2260,6 +2266,10 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 			// if (fillParts) draw->AddQuadFilled(a, b, c, d, color & 0xffeeeeee);
 			if (fillParts) draw->AddQuadFilled(a, b, c, d, m_colors.partFillColor);
 			draw->AddQuad(a, b, c, d, color);
+			if (PartIsHighlighted(*part)) {
+				if (fillParts) draw->AddQuadFilled(a, b, c, d, m_colors.partHighlightedFillColor);
+				draw->AddQuad(a, b, c, d, m_colors.partHighlightedColor);
+			}
 
 			/*
 			 * Draw the convex hull of the part if it has one
@@ -2317,6 +2327,19 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 
 inline void BoardView::DrawAnnotations(ImDrawList *draw) {
 	draw->ChannelsSetCurrent(kChannelAnnotations);
+
+	if (HighlightedPinIsHovered()) {
+		ImGui::PushStyleColor(ImGuiCol_Text, ImColor(0xff333333));
+		ImGui::PushStyleColor(ImGuiCol_PopupBg, ImColor(0xffdddddd));
+		ImGui::BeginTooltip();
+		ImGui::Text("%s[%s]\n%s",
+		            m_pinHighlightedHovered->component->name.c_str(),
+		            m_pinHighlightedHovered->number.c_str(),
+		            m_pinHighlightedHovered->net->name.c_str());
+		ImGui::EndTooltip();
+		ImGui::PopStyleColor(2);
+	}
+
 	for (auto &ann : m_annotations.annotations) {
 		if (ann.side == m_current_side) {
 			ImVec2 a, b, s;
@@ -2357,6 +2380,34 @@ inline void BoardView::DrawAnnotations(ImDrawList *draw) {
 			draw->AddLine(s, a, m_colors.annotationStalkColor);
 		}
 	}
+}
+
+bool BoardView::HighlightedPinIsHovered(void) {
+	ImVec2 mp = ImGui::GetMousePos();
+	// int r = 2.0f /m_scale;
+
+	m_pinHighlightedHovered = nullptr;
+	for (auto p : m_pinHighlighted) {
+		int r    = m_scale * 10.0f;
+		ImVec2 a = CoordToScreen(p->position.x, p->position.y);
+		if ((mp.x > a.x - r) && (mp.x < a.x + r) && (mp.y > a.y - r) && (mp.y < a.y + r)) {
+			m_pinHighlightedHovered = p;
+			return true;
+		}
+	}
+
+	for (auto part : m_partHighlighted) {
+		for (auto p : part->pins) {
+			int r    = m_scale * 10.0f;
+			ImVec2 a = CoordToScreen(p->position.x, p->position.y);
+			if ((mp.x > a.x - r) && (mp.x < a.x + r) && (mp.y > a.y - r) && (mp.y < a.y + r)) {
+				m_pinHighlightedHovered = p;
+				return true;
+			}
+		}
+	}
+
+	return false;
 }
 
 int BoardView::AnnotationIsHovered(void) {
@@ -2591,27 +2642,27 @@ bool BoardView::PartIsHighlighted(const Component &component) {
 	return highlighted;
 }
 
-void BoardView::SetNetFilter(const char *net) {
-	strcpy(m_netFilter, net);
-	if (!m_file || !m_board) return;
+void BoardView::SetNetFilterNoClear(const char *name) {
 
-	m_pinHighlighted.clear();
-	m_partHighlighted.clear();
+	if (!m_file || !m_board || !(*name)) return;
 
-	string net_name = string(net);
+	//	string net_name = string(net);
 
-	if (!net_name.empty()) {
+	// if (!net_name.empty()) {
+	if (*name) {
 		bool any_visible = false;
 
 		for (auto &net : m_board->Nets()) {
-			if (is_prefix(net_name, net->name)) {
+			// if (is_prefix(net_name, net->name)) {
+			// if (utf8casestr(net->name.c_str(), net_name.c_str())) {
+			if (strcasestr(net->name.c_str(), name)) {
 				for (auto pin : net->pins) {
 					any_visible |= ComponentIsVisible(pin->component);
 					m_pinHighlighted.push_back(pin);
 					// highlighting all components that belong to this net
-					if (!contains(*pin->component, m_partHighlighted)) {
-						m_partHighlighted.push_back(pin->component);
-					}
+					//					if (!contains(*pin->component, m_partHighlighted)) {
+					//						m_partHighlighted.push_back(pin->component);
+					//					}
 				}
 			}
 		}
@@ -2620,22 +2671,35 @@ void BoardView::SetNetFilter(const char *net) {
 			if (!any_visible) FlipBoard();
 			m_pinSelected = nullptr;
 		}
+		m_needsRedraw = true;
 	}
+}
 
-	m_needsRedraw = true;
+void BoardView::SetNetFilter(const char *name) {
+	m_pinHighlighted.clear();
+	m_partHighlighted.clear();
+
+	SetNetFilterNoClear(name);
 }
 
 void BoardView::FindComponentNoClear(const char *name) {
 	if (!m_file || !m_board) return;
 
-	string comp_name = string(name);
+	//	string comp_name = string(name);
 
-	if (!comp_name.empty()) {
+	/*
+	 * First find the component
+	 */
+	if (*name) {
 		Component *part_found = nullptr;
 		bool any_visible      = false;
 
 		for (auto &component : m_board->Components()) {
-			if (is_prefix(comp_name, component->name)) {
+			//			if (is_prefix(comp_name, component->name)) {
+			if (strcasestr(component->name.c_str(), name)) {
+				//			if (utf8casestr(component->name.c_str(), comp_name.c_str())) { // doesn't seem to work for some reason
+				// when
+				// you get a full string length match.
 				auto p = component.get();
 				m_partHighlighted.push_back(p);
 				any_visible |= ComponentIsVisible(p);
@@ -2651,8 +2715,12 @@ void BoardView::FindComponentNoClear(const char *name) {
 				m_pinHighlighted.push_back(pin);
 			}
 		}
+		m_needsRedraw = true;
 	}
-	m_needsRedraw = true;
+
+	/*
+	 * Now search for the network
+	 */
 }
 
 void BoardView::FindComponent(const char *name) {
@@ -2662,6 +2730,20 @@ void BoardView::FindComponent(const char *name) {
 	m_partHighlighted.clear();
 
 	FindComponentNoClear(name);
+}
+
+void BoardView::SearchCompoundNoClear(const char *item) {
+	if (*item == '\0') return;
+	if (debug) fprintf(stderr, "Searching for '%s'\n", item);
+	if (m_searchComponents) FindComponentNoClear(item);
+	if (m_searchNets) SetNetFilterNoClear(item);
+}
+
+void BoardView::SearchCompound(const char *item) {
+	m_pinHighlighted.clear();
+	m_partHighlighted.clear();
+
+	SearchCompoundNoClear(item);
 }
 
 void BoardView::SetLastFileOpenName(char *name) {
