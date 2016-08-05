@@ -10,4 +10,5 @@
 	url = https://github.com/Dav1dde/glad.git
 [submodule "src/imgui"]
 	path = src/imgui
-	url = https://github.com/inflex/imgui.git
+	url = http://github.com/inflex/imgui
+	branch = master
