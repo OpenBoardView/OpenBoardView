@@ -240,6 +240,7 @@ struct BoardView {
 	ImVec2 ScreenToCoord(float x, float y, float w = 1.0f);
 	// void Move(float x, float y);
 	void Rotate(int count);
+	void DrawSelectedPins(ImDrawList *draw);
 	void ClearAllHighlights(void);
 
 	// Sets the center of the screen to (x,y) in board space

@@ -59,6 +59,18 @@ inline static bool contains(T &element, vector<T *> &v) {
 	return find(begin(v), end(v), &element) != end(v);
 }
 
+template <class T>
+inline void remove(T &element, vector<T *> &v) {
+
+	auto it = std::find(v.begin(), v.end(), &element);
+
+	if (it != v.end()) {
+		using std::swap;
+		swap(*it, v.back());
+		v.pop_back();
+	}
+}
+
 // Any element being on the board.
 struct BoardElement {
 	// Side of the board the element is located. (top, bottom, both?)

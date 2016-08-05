@@ -752,9 +752,9 @@ void BoardView::SearchColumnGenerate(char *search, int buttons_max) {
 }
 
 void BoardView::SearchComponent(void) {
-	//	ImGui::SetNextWindowPos(ImVec2(DPIF(20), DPIF(20)));
-	ImGui::SetNextWindowPosCenter();
-	//	ImGui::SetNextWindowSize(ImVec2(DPIF(700), DPIF(200)));
+	ImGui::SetNextWindowPos(ImVec2(-FLT_MAX, DPI(100))); // FIXME This will need changing in the future when ImGui gets proper
+	                                                     // per-axis centering ( see https://github.com/ocornut/imgui/issues/770 )
+	// ImGui::SetNextWindowPosCenter();
 	if (ImGui::BeginPopupModal("Search for Component / Network",
 	                           nullptr,
 	                           ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings |
@@ -796,21 +796,24 @@ void BoardView::SearchComponent(void) {
 			ImGui::CloseCurrentPopup();
 		} // exit button
 
+		ImGui::SameLine();
+		ImGui::Dummy(ImVec2(DPI(200), 1));
+		ImGui::SameLine();
+		ImGui::Text("ENTER: Search, ESC: Exit, TAB: next field");
+
 		ImGui::Separator();
 		ImGui::Checkbox("Components", &m_searchComponents);
 
 		ImGui::SameLine();
 		ImGui::Checkbox("Nets", &m_searchNets);
 
-		ImGui::SameLine();
-		ImGui::Text("ENTER: Search, ESC: Exit, TAB: next field");
-
 		ImGui::Separator();
 
 		ImGui::Columns(3);
 		ImGui::Text("Item #1");
 
-		ImGui::PushItemWidth(DPI(200));
+		//		ImGui::PushItemWidth(DPI(200));
+		ImGui::PushItemWidth(-1);
 		if (ImGui::InputText("##search", m_search, 128, ImGuiInputTextFlags_CharsNoBlank)) {
 			SearchCompound(m_search);
 		}
@@ -822,9 +825,10 @@ void BoardView::SearchComponent(void) {
 
 		SearchColumnGenerate(m_search, 10);
 
+		ImGui::PushItemWidth(DPI(500));
 		ImGui::NextColumn();
 		ImGui::Text("Item #2");
-		ImGui::PushItemWidth(DPI(200));
+		ImGui::PushItemWidth(-1);
 		if (ImGui::InputText("##search2", m_search2, 128, ImGuiInputTextFlags_CharsNoBlank)) {
 			SearchCompound(m_search2);
 		}
@@ -833,7 +837,8 @@ void BoardView::SearchComponent(void) {
 
 		ImGui::NextColumn();
 		ImGui::Text("Item #3");
-		ImGui::PushItemWidth(DPI(200));
+		ImGui::PushItemWidth(-1);
+		// ImGui::PushItemWidth(DPI(200));
 		if (ImGui::InputText("##search3", m_search3, 128, ImGuiInputTextFlags_CharsNoBlank)) {
 			SearchCompound(m_search3);
 		}
@@ -1372,16 +1377,17 @@ void BoardView::HandleInput() {
 					if (hit) {
 						// highlight all the pins
 						if (part->visualmode == part->CVMNormal) {
-							if (contains(*part, m_partHighlighted)) {
-								part->visualmode = part->CVMSelected;
-							} else {
-								m_partHighlighted.clear(); // Should we clear when clicked, or wait for person to esc?
+							if (!contains(*part, m_partHighlighted)) {
 								m_partHighlighted.push_back(p_part);
 							}
 						}
 
 						part->visualmode++;
 						part->visualmode %= part->CVMModeCount;
+
+						if (part->visualmode == part->CVMNormal) {
+							remove(*part, m_partHighlighted);
+						}
 					}
 				}
 			} else {
@@ -1731,7 +1737,7 @@ inline void BoardView::DrawOutline(ImDrawList *draw) {
 		 * If we have a pin selected, we mask off the colour to shade out
 		 * things and make it easier to see associated pins/points
 		 */
-		if (m_pinSelected) {
+		if (m_pinSelected || m_pinHighlighted.size()) {
 			draw->AddLine(spa, spb, (m_colors.boardOutline & m_colors.selectedMaskOutline) | m_colors.orMaskOutline);
 		} else {
 			draw->AddLine(spa, spb, m_colors.boardOutline);
@@ -1754,7 +1760,7 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 	 * by masking out (alpha or channel) the other
 	 * pins so they're fainter.
 	 */
-	if (m_pinSelected) {
+	if (m_pinSelected || m_pinHighlighted.size()) {
 		cmask = m_colors.selectedMaskPins;
 		omask = m_colors.orMaskPins;
 	}
@@ -1884,15 +1890,10 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 
 				ImVec2 text_size = ImGui::CalcTextSize(pin_number);
 				ImVec2 pos_adj   = ImVec2(pos.x - text_size.x * 0.5f, pos.y - text_size.y * 0.5f);
-				draw->ChannelsSetCurrent(kChannelPolylines);
-				/*
-				draw->AddRectFilled(ImVec2(pos_adj.x - 2.0f, pos_adj.y - 1.0f),
-				    ImVec2(pos_adj.x + text_size.x + 2.0f, pos_adj.y + text_size.y + 1.0f),
-				    m_colors.backgroundColor,
-				    3.0f);
-				                    */
+
 				draw->ChannelsSetCurrent(kChannelText);
 				draw->AddText(pos_adj, text_color, pin_number);
+
 				draw->ChannelsSetCurrent(kChannelPins);
 			}
 		}
@@ -1914,7 +1915,8 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 	 * If a pin has been selected, we mask out the colour to
 	 * enhance (relatively) the appearance of the pin(s)
 	 */
-	if (m_pinSelected) color = (m_colors.partOutlineColor & m_colors.selectedMaskParts) | m_colors.orMaskParts;
+	if ((m_pinSelected) || m_pinHighlighted.size())
+		color = (m_colors.partOutlineColor & m_colors.selectedMaskParts) | m_colors.orMaskParts;
 
 	for (auto &part : m_board->Components()) {
 		int pincount = 0;
@@ -2435,6 +2437,25 @@ int BoardView::AnnotationIsHovered(void) {
 	return is_hovered;
 }
 
+/*
+ * TODO
+ * EXPERIMENTAL, draw an area around selected pins
+ */
+void BoardView::DrawSelectedPins(ImDrawList *draw) {
+	ImVec2 pl[1024];
+	ImVec2 hull[1024];
+	int i = 0, hpc = 0;
+	if ((m_pinHighlighted.size()) < 3) return;
+	for (auto p : m_pinHighlighted) {
+		pl[i] = CoordToScreen(p->position.x, p->position.y);
+		i++;
+	}
+	hpc = VHConvexHull(hull, pl, i);
+	if (hpc > 3) {
+		draw->AddConvexPolyFilled(hull, hpc, ImColor(0x660000ff), false);
+	}
+}
+
 void BoardView::DrawBoard() {
 	if (!m_file || !m_board) return;
 
@@ -2455,6 +2476,7 @@ void BoardView::DrawBoard() {
 	OutlineGenFillDraw(draw, boardFillSpacing, 1);
 	DrawOutline(draw);
 	DrawParts(draw);
+	//	DrawSelectedPins(draw);
 	DrawPins(draw);
 	if (m_annotations_active) DrawAnnotations(draw);
 
