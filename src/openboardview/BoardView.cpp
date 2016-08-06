@@ -639,7 +639,7 @@ void BoardView::ContextMenu(void) {
 					            pin,
 					            partn == empty || pin == empty ? ' ' : ']');
 				}
-				if (ImGui::Button("Add New##1") || m_annotationnew_retain) {
+				if (ImGui::Button("Add New##1") || m_annotationnew_retain || (m_annotation_clicked_id < 0)) {
 					if (m_annotationnew_retain == false) {
 						contextbufnew[0]        = 0;
 						m_annotationnew_retain  = true;
@@ -2689,9 +2689,12 @@ bool BoardView::AnyItemVisible(void) {
 
 	return any_visible;
 }
+
 #ifdef _WIN32
 char *strcasestr(const char *str, const char *pattern) {
 	size_t i;
+
+	if ((!str) || (!pattern)) return NULL;
 
 	if (!*pattern) return (char *)str;
 
@@ -2706,6 +2709,7 @@ char *strcasestr(const char *str, const char *pattern) {
 	return NULL;
 }
 #endif
+
 void BoardView::SetNetFilterNoClear(const char *name) {
 
 	if (!m_file || !m_board || !(*name)) return;
