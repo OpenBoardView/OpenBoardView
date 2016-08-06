@@ -239,8 +239,8 @@ int main(int argc, char **argv) {
 	// Apply the slowCPU flag if required.
 	app.slowCPU = g.slowCPU;
 
-	if (g.width == 0) g.width   = app.obvconfig.ParseInt("windowX", 800);
-	if (g.height == 0) g.height = app.obvconfig.ParseInt("windowY", 600);
+	if (g.width == 0) g.width   = app.obvconfig.ParseInt("windowX", 1100);
+	if (g.height == 0) g.height = app.obvconfig.ParseInt("windowY", 700);
 
 // Setup window
 #ifdef ENABLE_GL3

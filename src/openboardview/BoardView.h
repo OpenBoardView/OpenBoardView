@@ -148,6 +148,7 @@ struct BoardView {
 	void SearchCompound(const char *item);
 	void SearchCompoundNoClear(const char *item);
 	void SearchColumnGenerate(char *search, int buttons_max);
+	bool AnyItemVisible(void);
 
 	void OutlineGenFillDraw(ImDrawList *draw, int ydelta, double thickness);
 

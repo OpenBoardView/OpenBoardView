@@ -291,7 +291,9 @@ void BoardView::SetFZKey(char *keytext) {
 }
 
 void BoardView::HelpAbout(void) {
-	if (ImGui::BeginPopupModal("About", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+	bool dummy = true;
+	ImGui::SetNextWindowPosCenter();
+	if (ImGui::BeginPopupModal("About", &dummy, ImGuiWindowFlags_AlwaysAutoResize)) {
 		if (m_showHelpAbout) m_showHelpAbout = false;
 		ImGui::Text("OpenFlex Board View");
 		ImGui::Text("https://github.com/inflex/OpenBoardView");
@@ -345,7 +347,9 @@ void BoardView::HelpAbout(void) {
 }
 
 void BoardView::HelpControls(void) {
-	if (ImGui::BeginPopupModal("Controls", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+	bool dummy = true;
+	ImGui::SetNextWindowPosCenter();
+	if (ImGui::BeginPopupModal("Controls", &dummy, ImGuiWindowFlags_AlwaysAutoResize)) {
 		if (m_showHelpControls) m_showHelpControls = false;
 		ImGui::Text("KEYBOARD CONTROLS");
 		ImGui::SameLine();
@@ -369,8 +373,7 @@ void BoardView::HelpControls(void) {
 		ImGui::Spacing();
 		ImGui::Spacing();
 
-		ImGui::Text("Search for compnent");
-		ImGui::Text("Search for net");
+		ImGui::Text("Search for component/Net");
 		ImGui::Text("Display component list");
 		ImGui::Text("Display net list");
 		ImGui::Text("Clear all highlighted items");
@@ -412,8 +415,7 @@ void BoardView::HelpControls(void) {
 		ImGui::Spacing();
 		ImGui::Spacing();
 
-		ImGui::Text("c");
-		ImGui::Text("n");
+		ImGui::Text("c, CTRL-f, /");
 		ImGui::Text("k");
 		ImGui::Text("l");
 		ImGui::Text("ESC");
@@ -604,7 +606,7 @@ void BoardView::ContextMenu(void) {
 						                          NULL,
 						                          contextbuf);
 
-						if (ImGui::Button("Update") || (ImGui::IsKeyPressed(SDLK_RETURN) && io.KeyShift)) {
+						if (ImGui::Button("Update##1") || (ImGui::IsKeyPressed(SDLK_RETURN) && io.KeyShift)) {
 							m_annotationedit_retain = false;
 							m_annotations.Update(m_annotations.annotations[m_annotation_clicked_id].id, contextbuf);
 							m_annotations.GenerateList();
@@ -613,7 +615,7 @@ void BoardView::ContextMenu(void) {
 							ImGui::CloseCurrentPopup();
 						}
 						ImGui::SameLine();
-						if (ImGui::Button("Cancel")) {
+						if (ImGui::Button("Cancel##1")) {
 							ImGui::CloseCurrentPopup();
 							m_annotationnew_retain = false;
 							m_tooltips_enabled     = true;
@@ -636,7 +638,7 @@ void BoardView::ContextMenu(void) {
 					            pin,
 					            partn == empty || pin == empty ? ' ' : ']');
 				}
-				if (ImGui::Button("Add New") || m_annotationnew_retain) {
+				if (ImGui::Button("Add New##1") || m_annotationnew_retain) {
 					if (m_annotationnew_retain == false) {
 						contextbufnew[0]        = 0;
 						m_annotationnew_retain  = true;
@@ -662,7 +664,7 @@ void BoardView::ContextMenu(void) {
 					                          NULL,
 					                          contextbufnew);
 
-					if (ImGui::Button("Apply") || (ImGui::IsKeyPressed(SDLK_RETURN) && io.KeyShift)) {
+					if (ImGui::Button("Apply##1") || (ImGui::IsKeyPressed(SDLK_RETURN) && io.KeyShift)) {
 						m_tooltips_enabled     = true;
 						m_annotationnew_retain = false;
 						if (debug) fprintf(stderr, "DATA:'%s'\n\n", contextbufnew);
@@ -702,7 +704,7 @@ void BoardView::ContextMenu(void) {
 		}
 
 		ImGui::SameLine();
-		if (ImGui::Button("Cancel") || ImGui::IsKeyPressed(SDLK_ESCAPE)) {
+		if (ImGui::Button("Cancel##2") || ImGui::IsKeyPressed(SDLK_ESCAPE)) {
 			m_annotationnew_retain  = false;
 			m_annotationedit_retain = false;
 			m_tooltips_enabled      = true;
@@ -945,13 +947,13 @@ void BoardView::Update() {
 			if (ImGui::MenuItem("Flip board", "<Space>")) {
 				FlipBoard();
 			}
-			if (ImGui::MenuItem("Rotate CW")) {
+			if (ImGui::MenuItem("Rotate CW", ".")) {
 				Rotate(1);
 			}
-			if (ImGui::MenuItem("Rotate CCW")) {
+			if (ImGui::MenuItem("Rotate CCW", ",")) {
 				Rotate(-1);
 			}
-			if (ImGui::MenuItem("Reset View", "5")) { // actually want this to be numpad 5
+			if (ImGui::MenuItem("Reset View", "x NP-5")) { // actually want this to be numpad 5
 				CenterView();
 			}
 			ImGui::Separator();
@@ -2389,6 +2391,7 @@ bool BoardView::HighlightedPinIsHovered(void) {
 	// int r = 2.0f /m_scale;
 
 	m_pinHighlightedHovered = nullptr;
+
 	for (auto p : m_pinHighlighted) {
 		int r    = m_scale * 10.0f;
 		ImVec2 a = CoordToScreen(p->position.x, p->position.y);
@@ -2643,9 +2646,9 @@ void BoardView::SetTarget(float x, float y) {
 inline bool BoardView::ComponentIsVisible(const Component *part) {
 	if (!part) return true; // no component? => no board side info
 
-	if (part->board_side == kBoardSideBoth) return true;
-
 	if (part->board_side == m_current_side) return true;
+
+	if (part->board_side == kBoardSideBoth) return true;
 
 	return false;
 }
@@ -2664,6 +2667,26 @@ bool BoardView::PartIsHighlighted(const Component &component) {
 	return highlighted;
 }
 
+bool BoardView::AnyItemVisible(void) {
+	bool any_visible = false;
+
+	if (m_searchComponents) {
+		for (auto p : m_partHighlighted) {
+			any_visible |= ComponentIsVisible(p);
+		}
+	}
+
+	if (!any_visible) {
+		if (m_searchNets) {
+			for (auto p : m_pinHighlighted) {
+				any_visible |= ComponentIsVisible(p->component);
+			}
+		}
+	}
+
+	return any_visible;
+}
+
 void BoardView::SetNetFilterNoClear(const char *name) {
 
 	if (!m_file || !m_board || !(*name)) return;
@@ -2672,14 +2695,14 @@ void BoardView::SetNetFilterNoClear(const char *name) {
 
 	// if (!net_name.empty()) {
 	if (*name) {
-		bool any_visible = false;
+		//		bool any_visible = false;
 
 		for (auto &net : m_board->Nets()) {
 			// if (is_prefix(net_name, net->name)) {
 			// if (utf8casestr(net->name.c_str(), net_name.c_str())) {
 			if (strcasestr(net->name.c_str(), name)) {
 				for (auto pin : net->pins) {
-					any_visible |= ComponentIsVisible(pin->component);
+					//					any_visible |= ComponentIsVisible(pin->component);
 					m_pinHighlighted.push_back(pin);
 					// highlighting all components that belong to this net
 					//					if (!contains(*pin->component, m_partHighlighted)) {
@@ -2690,8 +2713,8 @@ void BoardView::SetNetFilterNoClear(const char *name) {
 		}
 
 		if (m_pinHighlighted.size() > 0) {
-			if (!any_visible) FlipBoard();
-			m_pinSelected = nullptr;
+			//			if (!any_visible) FlipBoard();
+			//			m_pinSelected = nullptr; //FIXME 20160805 - is this required?
 		}
 		m_needsRedraw = true;
 	}
@@ -2714,7 +2737,7 @@ void BoardView::FindComponentNoClear(const char *name) {
 	 */
 	if (*name) {
 		Component *part_found = nullptr;
-		bool any_visible      = false;
+		//		bool any_visible      = false;
 
 		for (auto &component : m_board->Components()) {
 			//			if (is_prefix(comp_name, component->name)) {
@@ -2724,15 +2747,15 @@ void BoardView::FindComponentNoClear(const char *name) {
 				// you get a full string length match.
 				auto p = component.get();
 				m_partHighlighted.push_back(p);
-				any_visible |= ComponentIsVisible(p);
+				//				any_visible |= ComponentIsVisible(p);
 				part_found = p;
 			}
 		}
 
-		if (part_found) {
-			if (!any_visible) FlipBoard();
-			m_pinSelected = nullptr;
-
+		// if (part_found) {
+		if (m_partHighlighted.size()) {
+			//			if (!any_visible) FlipBoard();
+			//			m_pinSelected = nullptr;
 			for (auto &pin : part_found->pins) {
 				m_pinHighlighted.push_back(pin);
 			}
@@ -2759,6 +2782,7 @@ void BoardView::SearchCompoundNoClear(const char *item) {
 	if (debug) fprintf(stderr, "Searching for '%s'\n", item);
 	if (m_searchComponents) FindComponentNoClear(item);
 	if (m_searchNets) SetNetFilterNoClear(item);
+	if (!AnyItemVisible()) FlipBoard();
 }
 
 void BoardView::SearchCompound(const char *item) {
