@@ -466,6 +466,7 @@ void BoardView::HelpControls(void) {
 }
 
 void BoardView::ContextMenu(void) {
+	bool dummy                       = true;
 	static char contextbuf[10240]    = "";
 	static char contextbufnew[10240] = "";
 	static char *pin, *partn, *net;
@@ -493,7 +494,7 @@ void BoardView::ContextMenu(void) {
 	 */
 	ImGui::SetNextWindowPos(ImVec2(DPIF(50), DPIF(50)));
 
-	if (ImGui::BeginPopupModal("Annotations", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_ShowBorders)) {
+	if (ImGui::BeginPopupModal("Annotations", &dummy, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_ShowBorders)) {
 
 		if (m_showContextMenu) {
 			contextbuf[0]     = 0;
@@ -754,11 +755,13 @@ void BoardView::SearchColumnGenerate(char *search, int buttons_max) {
 }
 
 void BoardView::SearchComponent(void) {
+	bool dummy = true;
+
 	ImGui::SetNextWindowPos(ImVec2(-FLT_MAX, DPI(100))); // FIXME This will need changing in the future when ImGui gets proper
 	                                                     // per-axis centering ( see https://github.com/ocornut/imgui/issues/770 )
 	// ImGui::SetNextWindowPosCenter();
 	if (ImGui::BeginPopupModal("Search for Component / Network",
-	                           nullptr,
+	                           &dummy,
 	                           ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings |
 	                               ImGuiWindowFlags_ShowBorders)) {
 		//		char cs[128];
