@@ -1338,8 +1338,11 @@ void BoardView::HandleInput() {
 				ImVec2 spos = ImGui::GetMousePos();
 				ImVec2 pos  = ScreenToCoord(spos.x, spos.y);
 
+				m_needsRedraw = true;
+
 				// threshold to within a pin's diameter of the pin center
-				float min_dist = m_pinDiameter * 1.0f;
+				// float min_dist = m_pinDiameter * 1.0f;
+				float min_dist = m_pinDiameter * 0.5f;
 				min_dist *= min_dist; // all distance squared
 				Pin *selection = nullptr;
 				for (auto &pin : m_board->Pins()) {
@@ -1353,10 +1356,10 @@ void BoardView::HandleInput() {
 						}
 					}
 				}
+
 				m_pinSelected = selection;
 
 				// check also for a part hit.
-				m_needsRedraw = true;
 
 				for (auto part : m_board->Components()) {
 					int hit     = 0;
