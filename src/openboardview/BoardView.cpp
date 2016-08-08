@@ -639,7 +639,7 @@ void BoardView::ContextMenu(void) {
 					            pin,
 					            partn == empty || pin == empty ? ' ' : ']');
 				}
-				if (ImGui::Button("Add New##1") || m_annotationnew_retain || (m_annotation_clicked_id < 0)) {
+				if ((m_annotation_clicked_id < 0) || ImGui::Button("Add New##1") || m_annotationnew_retain) {
 					if (m_annotationnew_retain == false) {
 						contextbufnew[0]        = 0;
 						m_annotationnew_retain  = true;
@@ -647,7 +647,7 @@ void BoardView::ContextMenu(void) {
 						m_annotationedit_retain = false;
 					}
 
-					ImGui::Text("%c(%0.0f,%0.0f) %s %s%c%s%c",
+					ImGui::Text("Create new annotation for: %c(%0.0f,%0.0f) %s %s%c%s%c",
 					            m_current_side ? 'B' : 'T',
 					            tx,
 					            ty,
