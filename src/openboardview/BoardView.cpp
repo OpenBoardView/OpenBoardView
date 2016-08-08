@@ -979,10 +979,12 @@ void BoardView::Update() {
 			}
 
 			if (ImGui::Checkbox("Board fill", &boardFill)) {
+				obvconfig.WriteBool("boardFill", boardFill);
 				m_needsRedraw = true;
 			}
 
 			if (ImGui::Checkbox("Part fill", &fillParts)) {
+				obvconfig.WriteBool("fillParts", fillParts);
 				m_needsRedraw = true;
 			}
 
