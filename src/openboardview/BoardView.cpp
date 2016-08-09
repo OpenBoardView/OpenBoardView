@@ -415,17 +415,23 @@ void BoardView::Preferences(void) {
 			ImGui::Text("FZ Key");
 			ImGui::SameLine();
 			for (i = 0; i < 44; i++) {
-				sprintf(keybuf + (i * 12), "0x%08lx%s", FZKey[i], (i != 43) ? ((i + 1) % 4 ? "  " : "\r\n") : "");
+				sprintf(keybuf + (i * 12),
+				        "0x%08lx%s",
+				        FZKey[i],
+				        (i != 43) ? ((i + 1) % 4 ? "  " : "\r\n")
+				                  : ""); // yes, a nested inline-if-else. add \r\n after every 4 values, except if the last
 			}
 			if (ImGui::InputTextMultiline(
 			        "##fzkey", keybuf, sizeof(keybuf), ImVec2(DPI(450), ImGui::GetTextLineHeight() * 12.5), 0, NULL, keybuf)) {
 
+				// Strip the line breaks out.
 				char *c = keybuf;
 				while (*c) {
 					if ((*c == '\r') || (*c == '\n')) *c = ' ';
 					c++;
 				}
 				obvconfig.WriteStr("FZKey", keybuf);
+				SetFZKey(keybuf);
 			}
 		}
 
@@ -444,7 +450,7 @@ void BoardView::HelpAbout(void) {
 	ImGui::SetNextWindowPosCenter();
 	if (ImGui::BeginPopupModal("About", &dummy, ImGuiWindowFlags_AlwaysAutoResize)) {
 		if (m_showHelpAbout) m_showHelpAbout = false;
-		ImGui::Text("OpenFlex Board View");
+		ImGui::Text("Openflex Boardview");
 		ImGui::Text("https://github.com/inflex/OpenBoardView");
 		if (ImGui::Button("Close") || ImGui::IsKeyPressed(SDLK_ESCAPE)) {
 			ImGui::CloseCurrentPopup();

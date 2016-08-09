@@ -266,7 +266,7 @@ int main(int argc, char **argv) {
 
 	SDL_DisplayMode current;
 	SDL_GetCurrentDisplayMode(0, &current);
-	window = SDL_CreateWindow("OpenFlex Board Viewer",
+	window = SDL_CreateWindow("Openflex Boardviewer",
 	                          SDL_WINDOWPOS_CENTERED,
 	                          SDL_WINDOWPOS_CENTERED,
 	                          g.width,

@@ -116,7 +116,7 @@ void ACL::DrawWindow(ImVec2 &popupPos, ImVec2 &popupSize, bool &isFocused) {
 		const size_t INPUT_BUF_SIZE          = 256;
 		static char inputBuf[INPUT_BUF_SIZE] = {0};
 
-		if (ImGui::InputText("Input", inputBuf, INPUT_BUF_SIZE, flags, ACL::InputCallback, &state)) {
+		if (ImGui::InputText("Input", inputBuf, INPUT_BUF_SIZE, flags, &ACL::InputCallback, &state)) {
 			ImGui::SetKeyboardFocusHere(-1);
 
 			if (state.isPopupOpen && state.activeIdx != -1) {

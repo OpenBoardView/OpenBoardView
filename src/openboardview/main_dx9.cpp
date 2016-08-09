@@ -77,7 +77,7 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	CHAR history_file[MAX_PATH];
 	CHAR conf_file[MAX_PATH];
 
-	static const wchar_t *class_name = L"Openflex Board View";
+	static const wchar_t *class_name = L"Openflex Boardview";
 
 	/*
 	 * To make OBV very easy to use and transportable among windows
