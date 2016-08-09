@@ -290,6 +290,127 @@ void BoardView::SetFZKey(char *keytext) {
 	}
 }
 
+void BoardView::Preferences(void) {
+	bool dummy = true;
+	ImGui::SetNextWindowPosCenter();
+	if (ImGui::BeginPopupModal("Preferences", &dummy, ImGuiWindowFlags_AlwaysAutoResize)) {
+		int t;
+		if (m_showPreferences) m_showPreferences = false;
+		ImGui::Text("Preferences");
+		ImGui::Separator();
+		ImGui::Text("NOTE: Values will be stored to configuration file by default");
+
+		t = obvconfig.ParseInt("windowX", 1100);
+		ImGui::Text("Window width");
+		ImGui::SameLine();
+		if (ImGui::InputInt("##windowX", &t)) {
+			if (t > 400) obvconfig.WriteInt("windowX", t);
+		}
+
+		t = obvconfig.ParseInt("windowY", 700);
+		ImGui::Text("Window width");
+		ImGui::SameLine();
+		if (ImGui::InputInt("##windowY", &t)) {
+			if (t > 320) obvconfig.WriteInt("windowY", t);
+		}
+
+		t = obvconfig.ParseInt("fontSize", 20);
+		ImGui::Text("Font size");
+		ImGui::SameLine();
+		if (ImGui::InputInt("##fontSize", &t)) {
+			if ((t >= 8) && (t < 60)) obvconfig.WriteInt("fontSize", t);
+		}
+
+		ImGui::Text("Screen DPI");
+		ImGui::SameLine();
+		if (ImGui::InputInt("##dpi", &dpi)) {
+			if ((t > 25) && (t < 600)) obvconfig.WriteInt("dpi", dpi);
+		}
+		ImGui::Text("(Restart required to resize font)");
+
+		if (ImGui::Checkbox("slowCPU", &slowCPU)) {
+			obvconfig.WriteBool("slowCPU", slowCPU);
+		}
+
+		if (ImGui::Checkbox("Show FPS", &showFPS)) {
+			obvconfig.WriteBool("showFPS", showFPS);
+		}
+
+		if (ImGui::Checkbox("Pin Halo", &pinHalo)) {
+			obvconfig.WriteBool("pinHalo", pinHalo);
+		}
+
+		if (ImGui::Checkbox("Fill Parts", &fillParts)) {
+			obvconfig.WriteBool("fillParts", fillParts);
+		}
+
+		if (ImGui::Checkbox("Fill Board", &boardFill)) {
+			obvconfig.WriteBool("boardFill", boardFill);
+		}
+
+		ImGui::Text("Board fill spacing");
+		ImGui::SameLine();
+		if (ImGui::InputInt("##boardFillSpacing", &boardFillSpacing)) {
+			obvconfig.WriteInt("boardFillSpacing", boardFillSpacing);
+		}
+
+		t = zoomFactor * 10;
+		ImGui::Text("Zoom step");
+		ImGui::SameLine();
+		if (ImGui::InputInt("##zoomStep", &t)) {
+			obvconfig.WriteFloat("zoomFactor", t / 10);
+		}
+
+		ImGui::Text("Zoom modifier");
+		ImGui::SameLine();
+		if (ImGui::InputInt("##zoomModifier", &zoomModifier)) {
+			obvconfig.WriteInt("zoomModifier", zoomModifier);
+		}
+
+		ImGui::Text("Panning step");
+		ImGui::SameLine();
+		if (ImGui::InputInt("##panningStep", &panFactor)) {
+			obvconfig.WriteInt("panFactor", panFactor);
+		}
+
+		ImGui::Text("Pan modifier");
+		ImGui::SameLine();
+		if (ImGui::InputInt("##panModifier", &panModifier)) {
+			obvconfig.WriteInt("panModifier", panModifier);
+		}
+
+		ImGui::Text("Annotation flag size");
+		ImGui::SameLine();
+		if (ImGui::InputInt("##annotationBoxSize", &annotationBoxSize)) {
+			obvconfig.WriteInt("annotationBoxSize", annotationBoxSize);
+		}
+
+		ImGui::Text("Annotation flag offset");
+		ImGui::SameLine();
+		if (ImGui::InputInt("##annotationBoxOffset", &annotationBoxOffset)) {
+			obvconfig.WriteInt("annotationBoxOffset", annotationBoxOffset);
+		}
+
+		/*
+		{
+		    char keybuf[1024];
+		    int i;
+		    for (i = 0; i < 44; i++) {
+		        fprintf(
+		ImGui::Text("FZ Key"); ImGui::SameLine();
+		if (ImGui::InputText("##fzkey", FZKey)) {
+		    obvconfig.WriteStr("FZKey", FZKey);
+		}
+		}
+		*/
+
+		if (ImGui::Button("Close") || ImGui::IsKeyPressed(SDLK_ESCAPE)) {
+			ImGui::CloseCurrentPopup();
+		}
+		ImGui::EndPopup();
+	}
+}
+
 void BoardView::HelpAbout(void) {
 	bool dummy = true;
 	ImGui::SetNextWindowPosCenter();
@@ -921,6 +1042,7 @@ void BoardView::Update() {
 		SearchComponent();
 		HelpControls();
 		HelpAbout();
+		Preferences();
 		ContextMenu();
 
 		if (ImGui::BeginMenu("File")) {
@@ -940,6 +1062,10 @@ void BoardView::Update() {
 				}
 			}
 			ImGui::Separator();
+
+			if (ImGui::MenuItem("Preferences")) {
+				m_showPreferences = true;
+			}
 
 			if (ImGui::MenuItem("Quit")) {
 				m_wantsQuit = true;
@@ -973,8 +1099,8 @@ void BoardView::Update() {
 				m_needsRedraw = true;
 			}
 			ImGui::Separator();
-			ImGui::Text("Edit config to set permanently");
 			if (ImGui::Checkbox("Annotations", &m_annotations_active)) {
+				obvconfig.WriteBool("annotations", m_annotations_active);
 				m_needsRedraw = true;
 			}
 
@@ -1088,6 +1214,10 @@ void BoardView::Update() {
 		}
 		if (m_showHelpControls) {
 			ImGui::OpenPopup("Controls");
+		}
+
+		if (m_showPreferences) {
+			ImGui::OpenPopup("Preferences");
 		}
 
 		if (m_showSearch && m_file) {
