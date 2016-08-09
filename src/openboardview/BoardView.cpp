@@ -290,48 +290,107 @@ void BoardView::SetFZKey(char *keytext) {
 	}
 }
 
+void RA(const char *t, int w) {
+	ImVec2 s = ImGui::CalcTextSize(t);
+	s.x      = w - s.x;
+	ImGui::Dummy(s);
+	ImGui::SameLine();
+	ImGui::Text("%s", t);
+}
+
 void BoardView::Preferences(void) {
 	bool dummy = true;
+	ImGui::PushStyleColor(ImGuiCol_PopupBg, ImColor(0xffe0e0e0));
 	ImGui::SetNextWindowPosCenter();
 	if (ImGui::BeginPopupModal("Preferences", &dummy, ImGuiWindowFlags_AlwaysAutoResize)) {
 		int t;
 		if (m_showPreferences) m_showPreferences = false;
-		ImGui::Text("Preferences");
-		ImGui::Separator();
-		ImGui::Text("NOTE: Values will be stored to configuration file by default");
 
 		t = obvconfig.ParseInt("windowX", 1100);
-		ImGui::Text("Window width");
+		RA("Window Width", DPI(200));
+		//		ImGui::Text("Window width");
 		ImGui::SameLine();
 		if (ImGui::InputInt("##windowX", &t)) {
 			if (t > 400) obvconfig.WriteInt("windowX", t);
 		}
 
 		t = obvconfig.ParseInt("windowY", 700);
-		ImGui::Text("Window width");
+		RA("Window Height", DPI(200));
+		//		ImGui::Text("Window width");
 		ImGui::SameLine();
 		if (ImGui::InputInt("##windowY", &t)) {
 			if (t > 320) obvconfig.WriteInt("windowY", t);
 		}
 
 		t = obvconfig.ParseInt("fontSize", 20);
-		ImGui::Text("Font size");
+		RA("Font size", DPI(200));
+		//		ImGui::Text("Font size");
 		ImGui::SameLine();
 		if (ImGui::InputInt("##fontSize", &t)) {
 			if ((t >= 8) && (t < 60)) obvconfig.WriteInt("fontSize", t);
 		}
 
-		ImGui::Text("Screen DPI");
+		RA("Screen DPI", DPI(200));
+		//		ImGui::Text("Screen DPI");
 		ImGui::SameLine();
 		if (ImGui::InputInt("##dpi", &dpi)) {
 			if ((t > 25) && (t < 600)) obvconfig.WriteInt("dpi", dpi);
 		}
-		ImGui::Text("(Restart required to resize font)");
+		ImGui::PushStyleColor(ImGuiCol_Text, ImColor(0xff4040ff));
+		ImGui::Text("(Program restart is required to properly apply font size and DPI changes)");
+		ImGui::PopStyleColor();
+
+		ImGui::Separator();
+
+		RA("Board fill spacing", DPI(200));
+		ImGui::SameLine();
+		if (ImGui::InputInt("##boardFillSpacing", &boardFillSpacing)) {
+			obvconfig.WriteInt("boardFillSpacing", boardFillSpacing);
+		}
+
+		t = zoomFactor * 10;
+		RA("Zoom step", DPI(200));
+		ImGui::SameLine();
+		if (ImGui::InputInt("##zoomStep", &t)) {
+			obvconfig.WriteFloat("zoomFactor", t / 10);
+		}
+
+		RA("Zoom modifier", DPI(200));
+		ImGui::SameLine();
+		if (ImGui::InputInt("##zoomModifier", &zoomModifier)) {
+			obvconfig.WriteInt("zoomModifier", zoomModifier);
+		}
+
+		RA("Panning step", DPI(200));
+		ImGui::SameLine();
+		if (ImGui::InputInt("##panningStep", &panFactor)) {
+			obvconfig.WriteInt("panFactor", panFactor);
+		}
+
+		RA("Pan modifier", DPI(200));
+		ImGui::SameLine();
+		if (ImGui::InputInt("##panModifier", &panModifier)) {
+			obvconfig.WriteInt("panModifier", panModifier);
+		}
+
+		RA("Annotation flag size", DPI(200));
+		ImGui::SameLine();
+		if (ImGui::InputInt("##annotationBoxSize", &annotationBoxSize)) {
+			obvconfig.WriteInt("annotationBoxSize", annotationBoxSize);
+		}
+
+		RA("Annotation flag offset", DPI(200));
+		ImGui::SameLine();
+		if (ImGui::InputInt("##annotationBoxOffset", &annotationBoxOffset)) {
+			obvconfig.WriteInt("annotationBoxOffset", annotationBoxOffset);
+		}
+		ImGui::Separator();
 
 		if (ImGui::Checkbox("slowCPU", &slowCPU)) {
 			obvconfig.WriteBool("slowCPU", slowCPU);
 		}
 
+		ImGui::SameLine();
 		if (ImGui::Checkbox("Show FPS", &showFPS)) {
 			obvconfig.WriteBool("showFPS", showFPS);
 		}
@@ -340,75 +399,44 @@ void BoardView::Preferences(void) {
 			obvconfig.WriteBool("pinHalo", pinHalo);
 		}
 
+		ImGui::SameLine();
 		if (ImGui::Checkbox("Fill Parts", &fillParts)) {
 			obvconfig.WriteBool("fillParts", fillParts);
 		}
 
+		ImGui::SameLine();
 		if (ImGui::Checkbox("Fill Board", &boardFill)) {
 			obvconfig.WriteBool("boardFill", boardFill);
 		}
 
-		ImGui::Text("Board fill spacing");
-		ImGui::SameLine();
-		if (ImGui::InputInt("##boardFillSpacing", &boardFillSpacing)) {
-			obvconfig.WriteInt("boardFillSpacing", boardFillSpacing);
-		}
-
-		t = zoomFactor * 10;
-		ImGui::Text("Zoom step");
-		ImGui::SameLine();
-		if (ImGui::InputInt("##zoomStep", &t)) {
-			obvconfig.WriteFloat("zoomFactor", t / 10);
-		}
-
-		ImGui::Text("Zoom modifier");
-		ImGui::SameLine();
-		if (ImGui::InputInt("##zoomModifier", &zoomModifier)) {
-			obvconfig.WriteInt("zoomModifier", zoomModifier);
-		}
-
-		ImGui::Text("Panning step");
-		ImGui::SameLine();
-		if (ImGui::InputInt("##panningStep", &panFactor)) {
-			obvconfig.WriteInt("panFactor", panFactor);
-		}
-
-		ImGui::Text("Pan modifier");
-		ImGui::SameLine();
-		if (ImGui::InputInt("##panModifier", &panModifier)) {
-			obvconfig.WriteInt("panModifier", panModifier);
-		}
-
-		ImGui::Text("Annotation flag size");
-		ImGui::SameLine();
-		if (ImGui::InputInt("##annotationBoxSize", &annotationBoxSize)) {
-			obvconfig.WriteInt("annotationBoxSize", annotationBoxSize);
-		}
-
-		ImGui::Text("Annotation flag offset");
-		ImGui::SameLine();
-		if (ImGui::InputInt("##annotationBoxOffset", &annotationBoxOffset)) {
-			obvconfig.WriteInt("annotationBoxOffset", annotationBoxOffset);
-		}
-
-		/*
 		{
-		    char keybuf[1024];
-		    int i;
-		    for (i = 0; i < 44; i++) {
-		        fprintf(
-		ImGui::Text("FZ Key"); ImGui::SameLine();
-		if (ImGui::InputText("##fzkey", FZKey)) {
-		    obvconfig.WriteStr("FZKey", FZKey);
-		}
-		}
-		*/
+			char keybuf[1024];
+			int i;
+			ImGui::Text("FZ Key");
+			ImGui::SameLine();
+			for (i = 0; i < 44; i++) {
+				sprintf(keybuf + (i * 12), "0x%08lx%s", FZKey[i], (i != 43) ? ((i + 1) % 4 ? "  " : "\r\n") : "");
+			}
+			if (ImGui::InputTextMultiline(
+			        "##fzkey", keybuf, sizeof(keybuf), ImVec2(DPI(450), ImGui::GetTextLineHeight() * 12.5), 0, NULL, keybuf)) {
 
-		if (ImGui::Button("Close") || ImGui::IsKeyPressed(SDLK_ESCAPE)) {
+				char *c = keybuf;
+				while (*c) {
+					if ((*c == '\r') || (*c == '\n')) *c = ' ';
+					c++;
+				}
+				obvconfig.WriteStr("FZKey", keybuf);
+			}
+		}
+
+		ImGui::Separator();
+
+		if (ImGui::Button("Done") || ImGui::IsKeyPressed(SDLK_ESCAPE)) {
 			ImGui::CloseCurrentPopup();
 		}
 		ImGui::EndPopup();
 	}
+	ImGui::PopStyleColor();
 }
 
 void BoardView::HelpAbout(void) {
@@ -1066,6 +1094,8 @@ void BoardView::Update() {
 			if (ImGui::MenuItem("Preferences")) {
 				m_showPreferences = true;
 			}
+
+			ImGui::Separator();
 
 			if (ImGui::MenuItem("Quit")) {
 				m_wantsQuit = true;

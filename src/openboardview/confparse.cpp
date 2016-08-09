@@ -30,6 +30,7 @@ pinShapeSquare = false\r\n\
 slowCPU =       false\r\n\
 showFPS =       false\r\n\
 pinHalo =       true\r\n\
+annotations = true\r\n\
 fillParts =		true\r\n\
 boardFill =		true\r\n\
 boardFillSpacing = 5\r\n\
