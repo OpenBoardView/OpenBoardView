@@ -246,9 +246,14 @@ int BoardView::LoadFile(char *filename) {
 				fhistory.Prepend_save(filename);
 				history_file_has_changed = 1; // used by main to know when to update the window title
 				boardMinMaxDone          = false;
+				m_rotation               = 0;
+				m_current_side           = 0;
+				EPCCheck(); // check to see we don't have a flipped board outline
 
 				m_annotations.SetFilename(filename);
 				m_annotations.Load();
+
+				CenterView();
 
 			} else {
 				m_lastFileOpenWasInvalid = true;
@@ -1826,6 +1831,94 @@ void BoardView::RenderOverlay() {
  */
 
 /*
+ * EPC = External Pin Count; finds pins which are not contained within
+ * the outline and flips the board outline if required, as it seems some
+ * brd2 files are coming with a y-flipped outline
+ */
+int BoardView::EPCCheck(void) {
+	int epc[2] = {0, 0};
+	int side;
+	auto &outline = m_board->OutlinePoints();
+	ImVec2 min, max;
+
+	// find the orthagonal bounding box
+	// probably can put this as a predefined
+	min.x = min.y = FLT_MAX;
+	max.x = max.y = FLT_MIN;
+	for (auto &p : outline) {
+		if (p->x < min.x) min.x = p->x;
+		if (p->y < min.y) min.y = p->y;
+		if (p->x > max.x) max.x = p->x;
+		if (p->y > max.y) max.y = p->y;
+	}
+
+	for (side = 0; side < 2; side++) {
+		for (auto pin : m_board->Pins()) {
+			auto p = pin.get();
+			int l, r;
+			int jump = 1;
+			Point fp;
+
+			l = 0;
+			r = 0;
+
+			for (size_t i = 0; i < outline.size() - 1; i++) {
+				Point &pa = *outline[i];
+				Point &pb = *outline[i + 1];
+
+				// jump double/dud points
+				if (pa.x == pb.x && pa.y == pb.y) continue;
+
+				// if we encounter our hull/poly start point, then we've now created the
+				// closed
+				// hull, jump the next segment and reset the first-point
+				if ((!jump) && (fp.x == pb.x) && (fp.y == pb.y)) {
+					if (i < outline.size() - 2) {
+						fp   = *outline[i + 2];
+						jump = 1;
+						i++;
+					}
+				} else {
+					jump = 0;
+				}
+
+				// test to see if this segment makes the scan-cut.
+				if ((pa.y > pb.y && p->position.y < pa.y && p->position.y > pb.y) ||
+				    (pa.y < pb.y && p->position.y > pa.y && p->position.y < pb.y)) {
+					ImVec2 intersect;
+
+					intersect.y = p->position.y;
+					if (pa.x == pb.x)
+						intersect.x = pa.x;
+					else
+						intersect.x = (pb.x - pa.x) / (pb.y - pa.y) * (p->position.y - pa.y) + pa.x;
+
+					if (intersect.x > p->position.x)
+						r++;
+					else if (intersect.x < p->position.x)
+						l++;
+				}
+			} // if we did get an intersection
+
+			// If either side has no intersections, then it's out of bounds (likely)
+			if ((l % 2 == 0) && (r % 2 == 0)) epc[side]++;
+		} // pins
+
+		if (debug) fprintf(stderr, "EPC[%d]: %d\n", side, epc[side]);
+
+		// flip the outline
+		for (auto &p : outline) p->y = max.y - p->y;
+
+	} // side
+
+	if (epc[0] > epc[1]) {
+		for (auto &p : outline) p->y = max.y - p->y;
+	}
+
+	return 0;
+}
+
+/*
  * Experimenting to see how much CPU hit rescanning and
  * drawing the flood fill is (as pin-stripe) each time
  * as opposed to precalculated line list
@@ -1840,7 +1933,7 @@ void BoardView::OutlineGenFillDraw(ImDrawList *draw, int ydelta, double thicknes
 	vector<ImVec2> scanhits;
 	auto &outline = m_board->OutlinePoints();
 	static ImVec2 min, max; // board min/max points
-	double steps = 500;
+	                        //	double steps = 500;
 	double vdelta;
 	double y, ystart, yend;
 
@@ -1880,7 +1973,7 @@ void BoardView::OutlineGenFillDraw(ImDrawList *draw, int ydelta, double thicknes
 	if (ystart < min.y) ystart = min.y;
 	if (yend > max.y) yend     = max.y;
 
-	vdelta = (ystart - yend) / steps;
+	//	vdelta = (ystart - yend) / steps;
 
 	vdelta = ydelta / m_scale;
 

@@ -155,6 +155,7 @@ struct BoardView {
 	void ColorPreferences(void);
 	bool AnyItemVisible(void);
 
+	int EPCCheck(void);
 	void OutlineGenFillDraw(ImDrawList *draw, int ydelta, double thickness);
 
 	/* Context menu, sql stuff */
