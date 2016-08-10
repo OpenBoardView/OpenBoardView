@@ -43,8 +43,6 @@ panModifier = 5\r\n\
 \r\n\
 annotationBoxSize = 15\r\n\
 annotationBoxOffset = 8\r\n\
-annotationBoxColor = 0xff0000aa\r\n\
-annotationStalkColor = 0x000000ff\r\n\
 #\r\n\
 # \"XRayBlue\" Theme by Inflex (20160724)\r\n\
 # Colors, format is 0xRRGGBBAA\r\n\
@@ -53,21 +51,26 @@ lightTheme = true\r\n\
 backgroundColor		= 0xffffffff\r\n\
 boardFillColor	= 0xddddddff\r\n\
 partOutlineColor = 0x444444ff\r\n\
+partHullColor			= 0x80808080\r\n\
 partFillColor = 0xffffffbb\r\n\
+partFillSelectedColor = 0xffe0e0ff\r\n\
 partTextColor			= 0xff3030ff\r\n\
 partTextBackgroundColor			= 0xffff00ff\r\n\
-boardOutline			= 0x444444ff\r\n\
-pinDefault				= 0x8888ffff\r\n\
-pinGround				= 0x2222aaff\r\n\
-pinNotConnected		= 0xaaaaaaff\r\n\
-pinTestPad				= 0x888888ff\r\n\
-pinSelected				= 0x0000ffff\r\n\
-pinSelectedText			= 0xff0000ff\r\n\
-pinHighlighted			= 0x0000ffff\r\n\
+boardOutlineColor			= 0x444444ff\r\n\
+pinDefaultColor				= 0x8888ffff\r\n\
+pinGroundColor				= 0x2222aaff\r\n\
+pinNotConnectedColor		= 0xaaaaaaff\r\n\
+pinTestPadColor				= 0x888888ff\r\n\
+pinSelectedColor				= 0x0000ffff\r\n\
+pinSelectedTextColor			= 0xff0000ff\r\n\
+pinHighlightedColor			= 0x0000ffff\r\n\
 pinHaloColor			= 0x00aa00ff\r\n\
-pinHighlightSameNet	= 0x000000ff\r\n\
-annotationPartAlias	= 0xffff00ff\r\n\
-partHullColor			= 0x80808080\r\n\
+pinHighlightSameNetColor	= 0x000000ff\r\n\
+\r\n\
+annotationPopupTextColor = 0x000000ff\r\n\
+annotationPopupBackgroundColor = 0xeeeeeeff\r\n\
+annotationBoxColor = 0xff0000aa\r\n\
+annotationStalkColor = 0x000000ff\r\n\
 \r\n\
 selectedMaskPins		= 0xffffffff\r\n\
 selectedMaskParts		= 0xffffffff\r\n\

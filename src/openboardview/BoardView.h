@@ -54,29 +54,31 @@ struct ColorScheme {
 	uint32_t partTextColor            = 0xff808000;
 	uint32_t partTextBackgroundColor  = 0xff00eeee;
 	uint32_t partOutlineColor         = 0xff444444;
+	uint32_t partHullColor            = 0x80808080;
 	uint32_t partFillColor            = 0xffffffff;
 	uint32_t partHighlightedColor     = 0xff0000ee;
 	uint32_t partHighlightedFillColor = 0xffeeeeff;
-	uint32_t boardOutline             = 0xff00ffff;
+	uint32_t boardOutlineColor        = 0xff00ffff;
 
 	//	uint32_t boxColor = 0xffcccccc;
 
-	uint32_t pinDefault      = 0xffff0000;
-	uint32_t pinGround       = 0xffdd0000;
-	uint32_t pinNotConnected = 0xffdd0000;
-	uint32_t pinTestPad      = 0xff888888;
+	uint32_t pinDefaultColor      = 0xff0000ff;
+	uint32_t pinGroundColor       = 0xff0000bb;
+	uint32_t pinNotConnectedColor = 0xffff0000;
+	uint32_t pinTestPadColor      = 0xff888888;
 
-	uint32_t pinSelected         = 0xff00eeee;
-	uint32_t pinSelectedText     = 0xff00eeee;
-	uint32_t pinHalo             = 0x8f00ff00;
-	uint32_t pinHighlighted      = 0xffffffff;
-	uint32_t pinHighlightSameNet = 0xff99f8ff;
+	uint32_t pinSelectedColor         = 0xff00eeee;
+	uint32_t pinSelectedTextColor     = 0xff00eeee;
+	uint32_t pinHaloColor             = 0x8f00ff00;
+	uint32_t pinHighlightedColor      = 0xffffffff;
+	uint32_t pinHighlightSameNetColor = 0xff99f8ff;
 
-	uint32_t annotationPartAlias  = 0xcc00ffff;
-	uint32_t annotationBoxColor   = 0xaa0000ff;
-	uint32_t annotationStalkColor = 0xff000000;
+	uint32_t annotationPartAliasColor       = 0xcc00ffff;
+	uint32_t annotationBoxColor             = 0xaa0000ff;
+	uint32_t annotationStalkColor           = 0xff000000;
+	uint32_t annotationPopupBackgroundColor = 0xffeeeeee;
+	uint32_t annotationPopupTextColor       = 0xff000000;
 
-	uint32_t partHullColor       = 0x80808080;
 	uint32_t selectedMaskPins    = 0x4FFFFFFF;
 	uint32_t selectedMaskParts   = 0x8FFFFFFF;
 	uint32_t selectedMaskOutline = 0x8FFFFFFF;
@@ -149,6 +151,8 @@ struct BoardView {
 	void SearchCompoundNoClear(const char *item);
 	void SearchColumnGenerate(char *search, int buttons_max);
 	void Preferences(void);
+	void ColorPreferencesItem(const char *label, const char *butlabel, const char *conflabel, int width, uint32_t *c);
+	void ColorPreferences(void);
 	bool AnyItemVisible(void);
 
 	void OutlineGenFillDraw(ImDrawList *draw, int ydelta, double thickness);
@@ -220,6 +224,7 @@ struct BoardView {
 	bool m_showHelpAbout;
 	bool m_showHelpControls;
 	bool m_showPreferences;
+	bool m_showColorPreferences;
 	bool m_firstFrame = true;
 	bool m_lastFileOpenWasInvalid;
 	bool m_wantsQuit;
