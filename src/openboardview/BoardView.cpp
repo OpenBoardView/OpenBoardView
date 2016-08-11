@@ -1002,7 +1002,7 @@ void BoardView::SearchColumnGenerate(char *search, int buttons_max) {
 				if (buttons_left > 0) {
 					if (utf8casestr(net->name.c_str(), search)) {
 						if (ImGui::SmallButton(net->name.c_str())) {
-							SetNetFilter(net->name.c_str());
+							FindNet(net->name.c_str());
 							snprintf(search, 128, "%s", net->name.c_str());
 							buttons_left = 0;
 						}
@@ -1041,6 +1041,7 @@ void BoardView::SearchComponent(void) {
 			SearchCompound(first_button);
 			SearchCompoundNoClear(first_button2);
 			SearchCompoundNoClear(first_button3);
+			CenterZoomSearchResults();
 			ImGui::CloseCurrentPopup();
 		} // search button
 
@@ -1121,6 +1122,7 @@ void BoardView::SearchComponent(void) {
 			SearchCompound(m_search);
 			SearchCompoundNoClear(m_search2);
 			SearchCompoundNoClear(m_search3);
+			CenterZoomSearchResults();
 			ImGui::CloseCurrentPopup();
 		} // response to keyboard ENTER
 
@@ -1130,7 +1132,7 @@ void BoardView::SearchComponent(void) {
 
 void BoardView::ClearAllHighlights(void) {
 	m_pinSelected = nullptr;
-	SetNetFilter("");
+	FindNet("");
 	FindComponent("");
 	m_search[0]                                              = '\0';
 	m_search2[0]                                             = '\0';
@@ -1801,7 +1803,7 @@ void BoardView::HandleInput() {
  *
  */
 void BoardView::ShowNetList(bool *p_open) {
-	static NetList netList(bind(&BoardView::SetNetFilter, this, _1));
+	static NetList netList(bind(&BoardView::FindNet, this, _1));
 	netList.Draw("Net List", p_open, m_board);
 }
 
@@ -1829,6 +1831,49 @@ void BoardView::RenderOverlay() {
  *
  *
  */
+
+void BoardView::CenterZoomSearchResults(void) {
+	ImVec2 view = ImGui::GetIO().DisplaySize;
+	ImVec2 min, max;
+	int i = 0;
+
+	min.x = min.y = FLT_MAX;
+	max.x = max.y = FLT_MIN;
+
+	for (auto &pp : m_pinHighlighted) {
+		auto &p                = pp->position;
+		if (p.x < min.x) min.x = p.x;
+		if (p.y < min.y) min.y = p.y;
+		if (p.x > max.x) max.x = p.x;
+		if (p.y > max.y) max.y = p.y;
+		i++;
+	}
+
+	for (auto &pp : m_partHighlighted) {
+		for (auto &pn : pp->pins) {
+			auto &p                = pn->position;
+			if (p.x < min.x) min.x = p.x;
+			if (p.y < min.y) min.y = p.y;
+			if (p.x > max.x) max.x = p.x;
+			if (p.y > max.y) max.y = p.y;
+			i++;
+		}
+	}
+
+	if (debug) fprintf(stderr, "CenterzoomSearchResults: bbox[%d]: %0.1f %0.1f - %0.1f %0.1f\n", i, min.x, min.y, max.x, max.y);
+
+	float dx = 1.3f * (max.x - min.x);
+	float dy = 1.3f * (max.y - min.y);
+	float sx = dx > 0 ? view.x / dx : 1.0f;
+	float sy = dy > 0 ? view.y / dy : 1.0f;
+
+	//  m_rotation = 0;
+	m_scale = sx < sy ? sx : sy;
+	m_dx    = (max.x - min.x) / 2 + min.x;
+	m_dy    = (max.y - min.y) / 2 + min.y;
+	SetTarget(m_dx, m_dy);
+	m_needsRedraw = true;
+}
 
 /*
  * EPC = External Pin Count; finds pins which are not contained within
@@ -3083,85 +3128,49 @@ char *strcasestr(const char *str, const char *pattern) {
 }
 #endif
 
-void BoardView::SetNetFilterNoClear(const char *name) {
+void BoardView::FindNetNoClear(const char *name) {
 
 	if (!m_file || !m_board || !(*name)) return;
 
-	//	string net_name = string(net);
-
-	// if (!net_name.empty()) {
 	if (*name) {
-		//		bool any_visible = false;
 
-		for (auto &net : m_board->Nets()) {
-			// if (is_prefix(net_name, net->name)) {
-			// if (utf8casestr(net->name.c_str(), net_name.c_str())) {
+		for (auto net : m_board->Nets()) {
 			if (strcasestr(net->name.c_str(), name)) {
 				for (auto pin : net->pins) {
-					//					any_visible |= ComponentIsVisible(pin->component);
 					m_pinHighlighted.push_back(pin);
-					// highlighting all components that belong to this net
-					//					if (!contains(*pin->component, m_partHighlighted)) {
-					//						m_partHighlighted.push_back(pin->component);
-					//					}
 				}
 			}
 		}
-
-		if (m_pinHighlighted.size() > 0) {
-			//			if (!any_visible) FlipBoard();
-			//			m_pinSelected = nullptr; //FIXME 20160805 - is this required?
-		}
-		m_needsRedraw = true;
 	}
 }
 
-void BoardView::SetNetFilter(const char *name) {
+void BoardView::FindNet(const char *name) {
 	m_pinHighlighted.clear();
-	m_partHighlighted.clear();
-
-	SetNetFilterNoClear(name);
+	FindNetNoClear(name);
 }
 
 void BoardView::FindComponentNoClear(const char *name) {
-	if (!m_file || !m_board) return;
+	if (!m_file || !m_board || !name) return;
 
-	//	string comp_name = string(name);
-
-	/*
-	 * First find the component
-	 */
 	if (*name) {
 		Component *part_found = nullptr;
-		//		bool any_visible      = false;
 
 		for (auto &component : m_board->Components()) {
-			//			if (is_prefix(comp_name, component->name)) {
 			if (strcasestr(component->name.c_str(), name)) {
-				//			if (utf8casestr(component->name.c_str(), comp_name.c_str())) { // doesn't seem to work for some reason
-				// when
-				// you get a full string length match.
 				auto p = component.get();
 				m_partHighlighted.push_back(p);
-				//				any_visible |= ComponentIsVisible(p);
 				part_found = p;
 			}
 		}
 
-		// if (part_found) {
-		if (m_partHighlighted.size()) {
-			//			if (!any_visible) FlipBoard();
-			//			m_pinSelected = nullptr;
-			for (auto &pin : part_found->pins) {
+		if (part_found != nullptr) {
+			//		if (m_partHighlighted.size()) {
+			for (auto pin : part_found->pins) {
 				m_pinHighlighted.push_back(pin);
 			}
 		}
 		m_needsRedraw = true;
 	}
-
-	/*
-	 * Now search for the network
-	 */
 }
 
 void BoardView::FindComponent(const char *name) {
@@ -3177,11 +3186,12 @@ void BoardView::SearchCompoundNoClear(const char *item) {
 	if (*item == '\0') return;
 	if (debug) fprintf(stderr, "Searching for '%s'\n", item);
 	if (m_searchComponents) FindComponentNoClear(item);
-	if (m_searchNets) SetNetFilterNoClear(item);
+	if (m_searchNets) FindNetNoClear(item);
 	if (!AnyItemVisible()) FlipBoard();
 }
 
 void BoardView::SearchCompound(const char *item) {
+	if (*item == '\0') return;
 	m_pinHighlighted.clear();
 	m_partHighlighted.clear();
 

@@ -145,16 +145,13 @@ struct BoardView {
 	void SetFZKey(char *keytext);
 	void HelpAbout(void);
 	void HelpControls(void);
-	void SearchComponent(void);
-	void SetNetFilterNoClear(const char *net);
-	void SearchCompound(const char *item);
-	void SearchCompoundNoClear(const char *item);
 	void SearchColumnGenerate(char *search, int buttons_max);
 	void Preferences(void);
 	void ColorPreferencesItem(const char *label, const char *butlabel, const char *conflabel, int width, uint32_t *c);
 	void ColorPreferences(void);
 	bool AnyItemVisible(void);
 
+	void CenterZoomSearchResults(void);
 	int EPCCheck(void);
 	void OutlineGenFillDraw(ImDrawList *draw, int ydelta, double thickness);
 
@@ -265,9 +262,15 @@ struct BoardView {
 	// bool IsVisibleScreen(float x, float y, float radius = 0.0f);
 
 	bool PartIsHighlighted(const Component &component);
-	void SetNetFilter(const char *net);
+	void FindNet(const char *net);
+	void FindNetNoClear(const char *name);
 	void FindComponent(const char *name);
 	void FindComponentNoClear(const char *name);
+	void SearchComponent(void);
+	void SearchNetNoClear(const char *net);
+	void SearchCompound(const char *item);
+	void SearchCompoundNoClear(const char *item);
+
 	void SetLastFileOpenName(char *name);
 	void FlipBoard();
 };

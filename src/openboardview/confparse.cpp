@@ -184,7 +184,10 @@ int Confparse::Load(const char *utf8_filename) {
 
 	std::streampos sz = file.tellg();
 	buffer_size       = sz;
-	conf              = (char *)malloc(sz);
+	buffer_size++;
+	conf = (char *)malloc(buffer_size);
+	memset(conf, 0, buffer_size);
+	buffer_size--;
 	file.seekg(0, std::ios::beg);
 	file.read(conf, sz);
 	limit = conf + sz;
@@ -213,11 +216,16 @@ char *Confparse::Parse(const char *key) {
 	if (!conf) return NULL;
 	if (!key) return NULL;
 
+	if (!conf[0]) return NULL;
+	if (!key[0]) return NULL;
+
 	keylen = strlen(key);
 	if (keylen == 0) return NULL;
 
-	op = p = strstr(conf, key);
+	p = strstr(conf, key);
 	if (p == NULL) return NULL;
+
+	op = p;
 
 	llimit = limit - keylen - 2; // allows for up to 'key=x'
 
@@ -260,8 +268,11 @@ char *Confparse::Parse(const char *key) {
 				}
 			}
 		}
-		p  = strstr(op + 1, key);
-		op = p;
+		if (op < limit) {
+			p  = strstr(op + 1, key);
+			op = p;
+		} else
+			break;
 	}
 	return NULL;
 }

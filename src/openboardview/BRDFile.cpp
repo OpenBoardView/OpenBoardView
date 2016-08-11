@@ -107,6 +107,7 @@ BRDFile::BRDFile(const char *buf, size_t buffer_size) {
 	file_buf             = (char *)malloc(file_buf_size);
 	if (!file_buf) return;
 
+	memset(file_buf, 0, (3 * (1 + buffer_size)));
 	memcpy(file_buf, buf, buffer_size);
 	file_buf[buffer_size] = 0;
 	// This is for fixing degenerate utf8

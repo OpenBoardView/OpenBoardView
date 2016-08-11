@@ -32,6 +32,7 @@ BRD2File::BRD2File(const char *buf, size_t buffer_size) {
 	ENSURE(buffer_size > 4);
 	size_t file_buf_size = 3 * (1 + buffer_size);
 	file_buf             = (char *)malloc(file_buf_size);
+	memset(file_buf, 0, 3 * (1 + buffer_size));
 	memcpy(file_buf, buf, buffer_size);
 	file_buf[buffer_size] = 0;
 	// This is for fixing degenerate utf8
