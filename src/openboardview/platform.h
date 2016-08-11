@@ -70,12 +70,7 @@ char *file_as_buffer(size_t *buffer_size, const char *utf8_filename);
 char *show_file_picker();
 
 // these mirror the Windows .rc definitions:
-#define ASSET_FILLED_CIRCLE 105
 #define ASSET_FIRA_SANS 109
-#define ASSET_EMPTY_CIRCLE 110
 
 unsigned char *LoadAsset(int *asset_size, int asset_id);
 std::string get_asset_path(const char *asset);
-
-#define NUM_GLOBAL_TEXTURES 10
-extern ImTextureID TextureIDs[NUM_GLOBAL_TEXTURES];

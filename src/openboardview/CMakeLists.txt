@@ -58,7 +58,6 @@ set(SOURCES
 	main_opengl.cpp
 	NetList.cpp
 	PartList.cpp
-	TextureDDS.cpp
 )
 
 if(ENABLE_GL3)

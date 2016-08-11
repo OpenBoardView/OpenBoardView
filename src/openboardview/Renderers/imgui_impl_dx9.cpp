@@ -20,10 +20,6 @@
 #define DIRECTINPUT_VERSION 0x0800
 #include <dinput.h>
 
-#include "platform.h"
-#include "TextureDDS.h"
-#include "resource.h"
-
 // Data
 static HWND g_hWnd                      = 0;
 static INT64 g_Time                     = 0;
@@ -294,27 +290,9 @@ static bool ImGui_ImplDX9_CreateFontsTexture() {
 	return true;
 }
 
-static bool ImGui_ImplDX9_CreateAssetTexture(int global_id, int asset_id) {
-	int size;
-	unsigned char *data = LoadAsset(&size, asset_id);
-	TextureDDS *texture = new TextureDDS(data);
-
-	if (!texture->dx9Load(g_pd3dDevice)) return false;
-	TextureIDs[global_id] = texture->get();
-	return true;
-}
-
-static bool ImGui_ImplDX9_CreateCircleTexture() {
-	bool result = true;
-	// result &= ImGui_ImplDX9_CreateAssetTexture(0, ASSET_FILLED_CIRCLE);
-	result &= ImGui_ImplDX9_CreateAssetTexture(1, ASSET_EMPTY_CIRCLE);
-	return result;
-}
-
 bool ImGui_ImplDX9_CreateDeviceObjects() {
 	if (!g_pd3dDevice) return false;
 	if (!ImGui_ImplDX9_CreateFontsTexture()) return false;
-	if (!ImGui_ImplDX9_CreateCircleTexture()) return false;
 	return true;
 }
 
@@ -331,13 +309,6 @@ void ImGui_ImplDX9_InvalidateDeviceObjects() {
 	if (LPDIRECT3DTEXTURE9 tex = (LPDIRECT3DTEXTURE9)ImGui::GetIO().Fonts->TexID) {
 		tex->Release();
 		ImGui::GetIO().Fonts->TexID = 0;
-	}
-	for (int i = 0; i < NUM_GLOBAL_TEXTURES; i++) {
-		LPDIRECT3DTEXTURE9 tex = (LPDIRECT3DTEXTURE9)TextureIDs[i];
-		if (tex) {
-			tex->Release();
-			TextureIDs[i] = 0;
-		}
 	}
 	g_FontTexture = NULL;
 }

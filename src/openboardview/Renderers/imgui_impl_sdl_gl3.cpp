@@ -19,9 +19,6 @@
 #include <SDL2/SDL_syswm.h>
 #include <glad/glad.h>
 
-#include "platform.h"
-#include "TextureDDS.h"
-
 // Data
 static double g_Time          = 0.0f;
 static bool g_MousePressed[3] = {false, false, false};
@@ -232,29 +229,6 @@ void ImGui_ImplSdlGL3_CreateFontsTexture() {
 	glBindTexture(GL_TEXTURE_2D, last_texture);
 }
 
-static bool ImGui_ImplSdlGL3_CreateAssetTexture(int global_id, const char *filename) {
-	size_t size;
-	unsigned char *buf  = (unsigned char *)file_as_buffer(&size, filename);
-	TextureDDS *texture = new TextureDDS(buf);
-
-#ifndef _WIN32
-	if (!texture->glLoad()) return false;
-#endif
-	TextureIDs[global_id] = texture->get();
-
-	free(buf);
-	return true;
-}
-
-/*
-static bool ImGui_ImplSdlGL3_CreateCircleTexture() {
-    bool result      = true;
-    std::string path = get_asset_path("empty_circle.dds");
-    result &= ImGui_ImplSdlGL3_CreateAssetTexture(1, path.c_str());
-    return result;
-}
-*/
-
 bool ImGui_ImplSdlGL3_CreateDeviceObjects() {
 	// Backup GL state
 	GLint last_texture, last_array_buffer, last_vertex_array;
@@ -323,7 +297,6 @@ bool ImGui_ImplSdlGL3_CreateDeviceObjects() {
 #undef OFFSETOF
 
 	ImGui_ImplSdlGL3_CreateFontsTexture();
-	// ImGui_ImplSdlGL3_CreateCircleTexture();
 
 	// Restore modified GL state
 	glBindTexture(GL_TEXTURE_2D, last_texture);

@@ -180,6 +180,4 @@ std::string get_asset_path(const char *asset) {
 }
 #endif
 
-ImTextureID TextureIDs[NUM_GLOBAL_TEXTURES];
-
 #endif

@@ -3,7 +3,6 @@
 // Used by OpenBoardView.rc
 //
 #define IDR_ASSET4 109
-#define IDR_ASSET2 110
 #define IDI_ICON1 111
 
 // Next default values for new objects
