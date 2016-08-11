@@ -225,6 +225,7 @@ struct BoardView {
 	bool m_showColorPreferences;
 	bool m_firstFrame = true;
 	bool m_lastFileOpenWasInvalid;
+	bool m_validBoard = false;
 	bool m_wantsQuit;
 
 	~BoardView();

@@ -223,6 +223,8 @@ int BoardView::ConfigParse(void) {
 }
 
 int BoardView::LoadFile(char *filename) {
+	m_lastFileOpenWasInvalid = true;
+	m_validBoard             = false;
 	if (filename) {
 		char *ext = strrchr(filename, '.');
 		if (ext) {
@@ -253,6 +255,8 @@ int BoardView::LoadFile(char *filename) {
 		if (buffer) {
 			BRDFile *file = nullptr;
 
+			//			file->valid = false;
+
 			if (strcmp(ext, ".fz") == 0) { // Since it is encrypted we cannot use the below logic. Trust the ext.
 				file = new FZFile(buffer, buffer_size, FZKey);
 			} else if (BRDFile::verifyFormat(buffer, buffer_size))
@@ -277,9 +281,11 @@ int BoardView::LoadFile(char *filename) {
 				m_annotations.Load();
 
 				CenterView();
+				m_lastFileOpenWasInvalid = false;
+				m_validBoard             = true;
 
 			} else {
-				m_lastFileOpenWasInvalid = true;
+				m_validBoard = false;
 				delete file;
 			}
 			free(buffer);
@@ -1517,8 +1523,10 @@ void BoardView::Update() {
 	ImGui::PushStyleColor(ImGuiCol_WindowBg, ImColor(m_colors.backgroundColor));
 
 	ImGui::Begin("surface", nullptr, draw_surface_flags);
-	HandleInput();
-	if (m_file) DrawBoard();
+	if (m_validBoard) {
+		HandleInput();
+		DrawBoard();
+	}
 	ImGui::End();
 	ImGui::PopStyleColor();
 
@@ -1602,6 +1610,8 @@ void BoardView::HandleInput() {
 #define KM(x) (((x)&0xFF) | 0x100)
 #endif
 
+	if (!m_board || (!m_file)) return;
+
 	const ImGuiIO &io = ImGui::GetIO();
 
 	if (ImGui::IsWindowHovered()) {
@@ -1621,111 +1631,113 @@ void BoardView::HandleInput() {
 			m_needsRedraw       = true;
 		} else {
 
-			// Conext menu
-			if (m_file && m_board && ImGui::IsMouseClicked(1)) {
-				if (m_annotations_active) {
-					// Build context menu here, for annotations and inspection
-					//
-					ImVec2 spos                                        = ImGui::GetMousePos();
-					if (AnnotationIsHovered()) m_annotation_clicked_id = m_annotation_last_hovered;
+			if (m_lastFileOpenWasInvalid == false) {
+				// Conext menu
+				if (!m_lastFileOpenWasInvalid && m_file && m_board && ImGui::IsMouseClicked(1)) {
+					if (m_annotations_active) {
+						// Build context menu here, for annotations and inspection
+						//
+						ImVec2 spos                                        = ImGui::GetMousePos();
+						if (AnnotationIsHovered()) m_annotation_clicked_id = m_annotation_last_hovered;
 
-					m_showContextMenu    = true;
-					m_showContextMenuPos = spos;
-					m_tooltips_enabled   = false;
-					m_needsRedraw        = true;
-					if (debug) fprintf(stderr, "context click request at (%f %f)\n", spos.x, spos.y);
-				}
-
-				// Flip the board with the middle click
-			} else if (m_file && m_board && ImGui::IsMouseReleased(2)) {
-				FlipBoard();
-
-				// Else, click to select pin
-			} else if (m_file && m_board && ImGui::IsMouseReleased(0) && !m_draggingLastFrame) {
-				ImVec2 spos = ImGui::GetMousePos();
-				ImVec2 pos  = ScreenToCoord(spos.x, spos.y);
-
-				m_needsRedraw = true;
-
-				// threshold to within a pin's diameter of the pin center
-				// float min_dist = m_pinDiameter * 1.0f;
-				float min_dist = m_pinDiameter * 0.5f;
-				min_dist *= min_dist; // all distance squared
-				Pin *selection = nullptr;
-				for (auto &pin : m_board->Pins()) {
-					if (ComponentIsVisible(pin->component)) {
-						float dx   = pin->position.x - pos.x;
-						float dy   = pin->position.y - pos.y;
-						float dist = dx * dx + dy * dy;
-						if (dist < min_dist) {
-							selection = pin.get();
-							min_dist  = dist;
-						}
+						m_showContextMenu    = true;
+						m_showContextMenuPos = spos;
+						m_tooltips_enabled   = false;
+						m_needsRedraw        = true;
+						if (debug) fprintf(stderr, "context click request at (%f %f)\n", spos.x, spos.y);
 					}
-				}
 
-				m_pinSelected = selection;
+					// Flip the board with the middle click
+				} else if (!m_lastFileOpenWasInvalid && m_file && m_board && ImGui::IsMouseReleased(2)) {
+					FlipBoard();
 
-				// check also for a part hit.
+					// Else, click to select pin
+				} else if (!m_lastFileOpenWasInvalid && m_file && m_board && ImGui::IsMouseReleased(0) && !m_draggingLastFrame) {
+					ImVec2 spos = ImGui::GetMousePos();
+					ImVec2 pos  = ScreenToCoord(spos.x, spos.y);
 
-				for (auto part : m_board->Components()) {
-					int hit     = 0;
-					auto p_part = part.get();
+					m_needsRedraw = true;
 
-					if (!ComponentIsVisible(p_part)) continue;
-
-					// Work out if the point is inside the hull
-					{
-						int i, j, n;
-						outline_pt *poly;
-
-						n    = 4;
-						poly = p_part->outline;
-
-						for (i = 0, j = n - 1; i < n; j = i++) {
-							if (((poly[i].y > pos.y) != (poly[j].y > pos.y)) &&
-							    (pos.x < (poly[j].x - poly[i].x) * (pos.y - poly[i].y) / (poly[j].y - poly[i].y) + poly[i].x))
-								hit ^= 1;
+					// threshold to within a pin's diameter of the pin center
+					// float min_dist = m_pinDiameter * 1.0f;
+					float min_dist = m_pinDiameter * 0.5f;
+					min_dist *= min_dist; // all distance squared
+					Pin *selection = nullptr;
+					for (auto &pin : m_board->Pins()) {
+						if (ComponentIsVisible(pin->component)) {
+							float dx   = pin->position.x - pos.x;
+							float dy   = pin->position.y - pos.y;
+							float dist = dx * dx + dy * dy;
+							if (dist < min_dist) {
+								selection = pin.get();
+								min_dist  = dist;
+							}
 						}
 					}
 
-					if (hit) {
-						// highlight all the pins
-						if (part->visualmode == part->CVMNormal) {
-							if (!contains(*part, m_partHighlighted)) {
-								m_partHighlighted.push_back(p_part);
+					m_pinSelected = selection;
+
+					// check also for a part hit.
+
+					for (auto part : m_board->Components()) {
+						int hit     = 0;
+						auto p_part = part.get();
+
+						if (!ComponentIsVisible(p_part)) continue;
+
+						// Work out if the point is inside the hull
+						{
+							int i, j, n;
+							outline_pt *poly;
+
+							n    = 4;
+							poly = p_part->outline;
+
+							for (i = 0, j = n - 1; i < n; j = i++) {
+								if (((poly[i].y > pos.y) != (poly[j].y > pos.y)) &&
+								    (pos.x < (poly[j].x - poly[i].x) * (pos.y - poly[i].y) / (poly[j].y - poly[i].y) + poly[i].x))
+									hit ^= 1;
 							}
 						}
 
-						part->visualmode++;
-						part->visualmode %= part->CVMModeCount;
+						if (hit) {
+							// highlight all the pins
+							if (part->visualmode == part->CVMNormal) {
+								if (!contains(*part, m_partHighlighted)) {
+									m_partHighlighted.push_back(p_part);
+								}
+							}
 
-						if (part->visualmode == part->CVMNormal) {
-							remove(*part, m_partHighlighted);
+							part->visualmode++;
+							part->visualmode %= part->CVMModeCount;
+
+							if (part->visualmode == part->CVMNormal) {
+								remove(*part, m_partHighlighted);
+							}
+						}
+					}
+				} else {
+					if (!m_showContextMenu) {
+						if (AnnotationIsHovered()) {
+							m_needsRedraw        = true;
+							AnnotationWasHovered = true;
+						} else {
+							AnnotationWasHovered = false;
+							m_needsRedraw        = true;
 						}
 					}
 				}
-			} else {
-				if (!m_showContextMenu) {
-					if (AnnotationIsHovered()) {
-						m_needsRedraw        = true;
-						AnnotationWasHovered = true;
-					} else {
-						AnnotationWasHovered = false;
-						m_needsRedraw        = true;
-					}
-				}
+
+				m_draggingLastFrame = false;
 			}
 
-			m_draggingLastFrame = false;
-		}
+			// Zoom:
+			float mwheel = io.MouseWheel;
+			if (mwheel != 0.0f) {
+				mwheel *= zoomFactor;
 
-		// Zoom:
-		float mwheel = io.MouseWheel;
-		if (mwheel != 0.0f) {
-			mwheel *= zoomFactor;
-
-			Zoom(io.MousePos.x, io.MousePos.y, mwheel);
+				Zoom(io.MousePos.x, io.MousePos.y, mwheel);
+			}
 		}
 	}
 

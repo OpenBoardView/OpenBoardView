@@ -81,7 +81,10 @@ int Annotations::Load(void) {
 }
 
 int Annotations::Close(void) {
-	sqlite3_close(sqldb);
+	if (sqldb) {
+		sqlite3_close(sqldb);
+		sqldb = NULL;
+	}
 
 	return 0;
 }
