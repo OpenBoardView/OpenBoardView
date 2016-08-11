@@ -8,7 +8,7 @@
 #include <limits.h>
 #include <memory>
 #include <stdio.h>
-#ifndef _WIN32
+#ifdef ENABLE_SDL2
 #include <SDL2/SDL.h>
 #endif
 

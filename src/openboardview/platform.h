@@ -6,6 +6,8 @@
 
 #ifdef _WIN32
 #include <windows.h>
+#endif
+#ifndef ENABLE_SDL2
 #define SDLK_ESCAPE VK_ESCAPE
 #define SDLK_RETURN VK_RETURN
 #define SDL_SCANCODE_LCTRL VK_CONTROL

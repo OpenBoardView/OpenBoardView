@@ -21,6 +21,8 @@ if [ "$1" == "--help" ]; then
   echo "          --$(tput bold ; tput setaf 1)debug$(tput sgr0)       — Make a $(tput bold ; tput setaf 1)debug$(tput sgr0) build"
   echo ""
   echo "All extra parameters are passed to cmake."
+  echo "Environment variables:"
+  echo "          CROSS         — Set to \"mingw64\" to cross-compile for Windows"
   exit
 fi
 STRCOMPILE="$(tput bold ; tput setaf 2)Compiling$(tput sgr0)"
@@ -38,6 +40,9 @@ if [ "$ARG_LENGTH" -gt 0 -a "$1" == "--recompile" -o "$2" == "--recompile" ]; th
   STRCOMPILE="$(tput bold ; tput setaf 5)Recompiling$(tput sgr0)"
   rm -rf $COMPILEDIR
   SCRIPT_ARGC=$((SCRIPT_ARGC+1))
+fi
+if [ "$CROSS" == "mingw64" ]; then
+  COMPILEFLAGS="$COMPILEFLAGS -DCMAKE_TOOLCHAIN_FILE=../Toolchain-mingw64.cmake"
 fi
 COMPILEFLAGS="$COMPILEFLAGS ${@:${SCRIPT_ARGC}}" # pass other arguments to CMAKE
 if [ $THREADS -lt 1 ]; then

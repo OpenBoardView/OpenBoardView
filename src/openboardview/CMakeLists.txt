@@ -1,12 +1,22 @@
-find_package(SDL2 REQUIRED) # is this really required by windows?
-
 option(ENABLE_GL1 "Build OpenGL 1 renderer." ON)
 option(ENABLE_GL3 "Build OpenGL 3 renderer." ON)
 option(ENABLE_GLES2 "Build OpenGL ES 2 renderer." ON)
 
-# Link with Cocoa on OS X and GTK3 on other Unix (or MinGW)
-# Used for open file dialog
-if(UNIX)
+if(ENABLE_GL1)
+	add_definitions(-DENABLE_GL1)
+endif()
+if(ENABLE_GL3)
+	add_definitions(-DENABLE_GL3)
+endif()
+if(ENABLE_GLES2)
+	add_definitions(-DENABLE_GLES2)
+endif()
+
+# Platform-specific configuration
+if(WIN32)
+	add_definitions(-DUNICODE)
+	add_definitions(-D_UNICODE)
+else()
 if(APPLE)
         find_library(COCOA_LIBRARY Cocoa)
 	find_package(OpenGL REQUIRED)
@@ -24,24 +34,23 @@ find_package(PkgConfig REQUIRED)
 			message(WARNING "GTK not found, file picker will be unavailable.")
 		endif()
 	endif(APPLE)
-endif(UNIX)
+endif()
 
 include_directories(
 	${CMAKE_CURRENT_SOURCE_DIR}
 	${CMAKE_CURRENT_SOURCE_DIR}/..
 	${CMAKE_CURRENT_SOURCE_DIR}/../imgui
+	${SDL2_INCLUDE_DIRS}
 	${GLAD_INCLUDE_DIRS}
-	${SDL2_INCLUDE_DIR}
 	${GTK_INCLUDE_DIRS}
 	${OPENGL_INCLUDE_DIR}
 	${ZLIB_INCLUDE_DIRS}
 	${SQLITE3_INCLUDE_DIRS}
 )
 
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-if(MINGW)
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DUNICODE -D_UNICODE")
-endif()
+link_directories(
+	${SDL2_LIBRARY_DIRS}
+)
 
 
 set(SOURCES
@@ -56,9 +65,9 @@ set(SOURCES
 	BRDBoard.cpp
 	BRDFile.cpp
 	FZFile.cpp
-	main_opengl.cpp
 	NetList.cpp
 	PartList.cpp
+	main_opengl.cpp
 )
 
 if(ENABLE_GL1)
@@ -77,7 +86,11 @@ if(ENABLE_GLES2)
 	)
 endif()
 
-if(UNIX)
+if(WIN32)
+	set(SOURCES ${SOURCES}
+		win32.cpp
+	)
+else()
 if(APPLE)
 	set(SOURCES ${SOURCES}
 		osx.mm
@@ -86,10 +99,6 @@ endif()
 	set(SOURCES ${SOURCES}
 		unix.cpp
 	)
-elseif (MINGW) # Should this just be WIN32?
-	set(SOURCES ${SOURCES}
-		win32.cpp
-	)
 endif()
 
 # Must be defined in the same directory as the add_executable including the file
@@ -97,43 +106,38 @@ set_source_files_properties(${ASSETS} PROPERTIES MACOSX_PACKAGE_LOCATION Resourc
 
 add_executable(openboardview
 	MACOSX_BUNDLE
+	WIN32
 	${SOURCES}
 	${ASSETS}
 )
 
+if(WIN32) # Dirty fix to force linking all libs (esp. libstdc++) statically for Windows
+	set(CMAKE_EXE_LINKER_FLAGS "-static -static-libgcc -static-libstdc++")
+	set_target_properties(openboardview PROPERTIES LINK_SEARCH_END_STATIC 1)
+elseif(APPLE)
 set_target_properties(openboardview PROPERTIES MACOSX_BUNDLE_ICON_FILE "brd")
+endif()
 
 target_link_libraries(openboardview
-	dl
 	imgui
 	${GLAD_LIBRARIES}
 	${COCOA_LIBRARY}
-	${SDL2_LIBRARY}
 	${ZLIB_LIBRARIES}
 	${SQLITE3_LIBRARIES}
 )
 
-
-if(ENABLE_GL1)
-	add_definitions(-DENABLE_GL1)
-endif()
-if(ENABLE_GL3)
-	add_definitions(-DENABLE_GL3)
-endif()
-if(ENABLE_GLES2)
-	add_definitions(-DENABLE_GLES2)
+if(WIN32) # Link statically with SDL2 for Windows
+	target_link_libraries(openboardview
+		${SDL2_STATIC_LIBRARIES}
+	)
+else()
+	target_link_libraries(openboardview
+		dl
+		${SDL2_LIBRARIES}
+	)
 endif()
 
 install(TARGETS
 	openboardview
 	RUNTIME DESTINATION ${INSTALL_RUNTIME_DIR}
 	BUNDLE DESTINATION ${INSTALL_BUNDLE_DIR})
-
-if (MINGW)
-	install(DIRECTORY ${PROJECT_SOURCE_DIR}/${INSTALL_ASSET_DIR} DESTINATION ${INSTALL_RUNTIME_DIR})
-endif ()
-
-add_custom_target(install_obv
-	${CMAKE_MAKE_PROGRAM} install
-	DEPENDS openboardview
-	COMMENT "Installing ${PROJECT_NAME}")

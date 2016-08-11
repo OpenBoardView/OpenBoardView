@@ -1,6 +1,5 @@
 #include "BDVFile.h"
 
-#include "utf8/utf8.h"
 #include <assert.h>
 #include <ctype.h>
 #include <locale.h>

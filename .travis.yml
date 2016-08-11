@@ -9,6 +9,10 @@ matrix:
   include:
     - os: osx
       compiler: clang
+      env: DEPLOY=yes
+    - os: linux
+      compiler: gcc
+      env: CROSS=mingw64 DEPLOY=yes
 
 dist: trusty
 sudo: required
@@ -25,7 +29,19 @@ addons:
 install: |-
   if [ "$TRAVIS_OS_NAME" == "linux" ]
   then
-    sudo apt-get -qy install libsdl2-dev libgtk-3-dev
+    if [ "$CROSS" == "mingw64" ] # Cross compiling for Windows
+    then
+      sudo add-apt-repository "deb http://fr.archive.ubuntu.com/ubuntu/ xenial main restricted universe multiverse" # We need an up-to-date MinGW
+      sudo apt-get update
+      sudo apt-get install -t xenial gcc-mingw-w64-i686 g++-mingw-w64-i686 mingw32-runtime
+      wget https://www.libsdl.org/release/SDL2-devel-2.0.4-mingw.tar.gz # Manually install the SDL2 mingw dev files
+      tar -xf SDL2-devel-2.0.4-mingw.tar.gz
+      pushd SDL2-2.0.4
+      sudo make cross CROSS_PATH=/usr
+      popd
+    else
+      sudo apt-get -qy install libsdl2-dev libgtk-3-dev
+    fi
   elif [ "$TRAVIS_OS_NAME" == "osx" ]
   then
     brew update
@@ -36,13 +52,23 @@ script: |-
   if [ "$CXX" = "g++" ]; then export CXX="g++-6" CC="gcc-6"; fi
   ./build.sh
 
+
+before_deploy: |-
+  if [ "$TRAVIS_OS_NAME" == "osx" ]
+  then
+    export DEPLOY_FILES=$(ls OpenBoardView-*.dmg)
+  elif [ "$CROSS" == "mingw64" ]
+  then
+    export DEPLOY_FILES=bin/openboardview.exe
+  fi
+
 deploy:
   provider: releases
   api_key:
     secure: ENCRYPTED_API_KEY
   file_glob: true
-  file: OpenBoardView-*.dmg
+  file: "${DEPLOY_FILES}"
   skip_cleanup: true
   on:
     tags: true
-    condition: "$TRAVIS_OS_NAME == osx"
+    condition: "$DEPLOY == yes"

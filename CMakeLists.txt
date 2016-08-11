@@ -1,5 +1,11 @@
 project(OpenBoardView)
-cmake_minimum_required(VERSION 2.6.2)
+cmake_minimum_required(VERSION 2.8.9)
+
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+	if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "4.9")
+		message(FATAL_ERROR "GCC version needs to be >= 4.9")
+	endif()
+endif()
 
 set(CMAKE_INSTALL_PREFIX ${PROJECT_SOURCE_DIR}) 
 set(CMAKE_MODULE_PATH
@@ -9,10 +15,7 @@ set(CMAKE_MODULE_PATH
 set(INSTALL_RUNTIME_DIR bin)
 set(INSTALL_ARCHIVE_DIR lib)
 
-if(MINGW)
-	# just put libs in the same directory as the .exe
-	set(INSTALL_LIBRARY_DIR ${INSTALL_RUNTIME_DIR})
-elseif(APPLE)
+if(APPLE)
 	set(BUNDLE_OUTPUT_PATH "${CMAKE_BINARY_DIR}/src/openboardview/openboardview.app")
 #	set(LIBRARY_OUTPUT_PATH "${BUNDLE_OUTPUT_PATH}/Contents/MacOS") # We don't want to put static lib inside the bundle
 	set(INSTALL_LIBRARY_DIR "openboardview.app/Contents/MacOS")
@@ -24,7 +27,9 @@ endif()
 # Warning with CMake 3.0 on OS X
 set(CMAKE_MACOSX_RPATH ON)
 
-add_definitions(-Wall)
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 add_subdirectory(asset)
 add_subdirectory(src)
