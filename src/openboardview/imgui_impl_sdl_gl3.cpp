@@ -246,12 +246,14 @@ static bool ImGui_ImplSdlGL3_CreateAssetTexture(int global_id, const char *filen
 	return true;
 }
 
+/*
 static bool ImGui_ImplSdlGL3_CreateCircleTexture() {
-	bool result      = true;
-	std::string path = get_asset_path("empty_circle.dds");
-	result &= ImGui_ImplSdlGL3_CreateAssetTexture(1, path.c_str());
-	return result;
+    bool result      = true;
+    std::string path = get_asset_path("empty_circle.dds");
+    result &= ImGui_ImplSdlGL3_CreateAssetTexture(1, path.c_str());
+    return result;
 }
+*/
 
 bool ImGui_ImplSdlGL3_CreateDeviceObjects() {
 	// Backup GL state
@@ -321,7 +323,7 @@ bool ImGui_ImplSdlGL3_CreateDeviceObjects() {
 #undef OFFSETOF
 
 	ImGui_ImplSdlGL3_CreateFontsTexture();
-	ImGui_ImplSdlGL3_CreateCircleTexture();
+	// ImGui_ImplSdlGL3_CreateCircleTexture();
 
 	// Restore modified GL state
 	glBindTexture(GL_TEXTURE_2D, last_texture);
