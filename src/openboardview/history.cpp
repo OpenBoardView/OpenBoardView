@@ -10,7 +10,8 @@
 #include "history.h"
 
 FHistory::~FHistory() {
-	// Destructor
+
+	if (fname) free(fname);
 }
 
 int FHistory::Set_filename(const char *f) {
@@ -31,6 +32,7 @@ int FHistory::Load(void) {
 #else
 		f = fopen(fname, "r");
 #endif
+
 		count = 0;
 		if (!f) return 0;
 

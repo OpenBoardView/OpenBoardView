@@ -153,6 +153,10 @@ orMaskOutline	= 0x00000000\r\n\
 ";
 */
 
+Confparse::~Confparse(void) {
+	if (conf) free(conf);
+}
+
 int Confparse::SaveDefault(const char *utf8_filename) {
 	std::ofstream file;
 	file.open(utf8_filename, std::ios::out | std::ios::binary | std::ios::ate);

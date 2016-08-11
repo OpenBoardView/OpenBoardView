@@ -41,6 +41,9 @@ using namespace std::placeholders;
 #endif
 
 BoardView::~BoardView() {
+	for (auto &p : m_board->Components()) {
+		if (p->hull) free(p->hull);
+	}
 	delete m_file;
 	delete m_board;
 	m_annotations.Close();
@@ -222,6 +225,18 @@ int BoardView::LoadFile(char *filename) {
 			for (int i = 0; ext[i]; i++) ext[i] = tolower(ext[i]); // Convert extension to lowercase
 		} else {
 			ext = strrchr(filename, '\0'); // No extension, point to end of filename
+		}
+
+		// clean up the previous file.
+		if (m_file && m_board) {
+			for (auto &p : m_board->Components()) {
+				if (p->hull) free(p->hull);
+			}
+			m_pinHighlighted.clear();
+			m_partHighlighted.clear();
+			m_annotations.Close();
+			//	delete m_file;
+			//	delete m_board;
 		}
 
 		SetLastFileOpenName(filename);

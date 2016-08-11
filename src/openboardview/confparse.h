@@ -10,6 +10,7 @@ struct Confparse {
 	size_t buffer_size;
 	bool nested = false;
 
+	~Confparse(void);
 	int Load(const char *utf8_filename);
 	int SaveDefault(const char *utf8_filename);
 	char *Parse(const char *key);
