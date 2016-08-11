@@ -1895,6 +1895,9 @@ void BoardView::CenterZoomSearchResults(void) {
 		}
 	}
 
+	// Bounds check!
+	if ((min.x == FLT_MAX) || (min.y == FLT_MAX) || (max.x == FLT_MIN) || (max.y == FLT_MIN)) return;
+
 	if (debug) fprintf(stderr, "CenterzoomSearchResults: bbox[%d]: %0.1f %0.1f - %0.1f %0.1f\n", i, min.x, min.y, max.x, max.y);
 
 	float dx = 1.3f * (max.x - min.x);
