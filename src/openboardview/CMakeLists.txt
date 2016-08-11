@@ -63,12 +63,12 @@ set(SOURCES
 
 if(ENABLE_GL3)
 	LIST(APPEND SOURCES
-		imgui_impl_sdl_gl3.cpp
+		Renderers/imgui_impl_sdl_gl3.cpp
 	)
 endif()
 if(ENABLE_GLES2)
 	LIST(APPEND SOURCES
-		imgui_impl_sdl_gles2.cpp
+		Renderers/imgui_impl_sdl_gles2.cpp
 	)
 endif()
 

@@ -25,10 +25,10 @@
 
 // Rendering stuff
 #ifdef ENABLE_GLES2
-#include "imgui_impl_sdl_gles2.h"
+#include "Renderers/imgui_impl_sdl_gles2.h"
 #endif
 #ifdef ENABLE_GL3
-#include "imgui_impl_sdl_gl3.h"
+#include "Renderers/imgui_impl_sdl_gl3.h"
 #endif
 #include <glad/glad.h>
 
