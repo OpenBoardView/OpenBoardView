@@ -24,11 +24,14 @@
 #include <unistd.h>
 
 // Rendering stuff
-#ifdef ENABLE_GLES2
-#include "Renderers/imgui_impl_sdl_gles2.h"
+#ifdef ENABLE_GL1
+#include "Renderers/imgui_impl_sdl.h"
 #endif
 #ifdef ENABLE_GL3
 #include "Renderers/imgui_impl_sdl_gl3.h"
+#endif
+#ifdef ENABLE_GLES2
+#include "Renderers/imgui_impl_sdl_gles2.h"
 #endif
 #include <glad/glad.h>
 
@@ -54,8 +57,8 @@ struct globals {
 	}
 };
 
-enum class Renderer { OPENGL3, OPENGLES2 };
-static Renderer renderer = Renderer::OPENGL3;
+enum class Renderer { OPENGL1, OPENGL3, OPENGLES2 };
+static Renderer renderer = Renderer::OPENGL1;
 
 static SDL_GLContext glcontext = NULL;
 static SDL_Window *window      = nullptr;
@@ -243,6 +246,12 @@ int main(int argc, char **argv) {
 	if (g.height == 0) g.height = app.obvconfig.ParseInt("windowY", 700);
 
 // Setup window
+#ifdef ENABLE_GL1
+	if (renderer == Renderer::OPENGL1) {
+		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 1);
+		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
+	}
+#endif
 #ifdef ENABLE_GL3
 	if (renderer == Renderer::OPENGL3) {
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG);
@@ -292,6 +301,11 @@ int main(int argc, char **argv) {
 
 	bool initialized = false;
 // Setup ImGui binding
+#ifdef ENABLE_GL1
+	if (renderer == Renderer::OPENGL1) {
+		initialized = ImGui_ImplSdl_Init(window);
+	}
+#endif
 #ifdef ENABLE_GL3
 	if (renderer == Renderer::OPENGL3) {
 		initialized = ImGui_ImplSdlGL3_Init(window);
@@ -303,7 +317,7 @@ int main(int argc, char **argv) {
 	}
 #endif
 
-#if defined(ENABLE_GLES2) || defined(ENABLE_GL3)
+#if defined(ENABLE_GL1) || defined(ENABLE_GL3) || defined(ENABLE_GLES2)
 	if (!initialized) {
 		SDL_LogError(SDL_LOG_CATEGORY_RENDER, "%s", "Selected renderer is not available. Exiting.");
 		cleanupAndExit(1);
@@ -382,6 +396,9 @@ int main(int argc, char **argv) {
 		SDL_Event event;
 		while (SDL_PollEvent(&event)) {
 			sleepout = 3;
+#ifdef ENABLE_GL1
+			if (renderer == Renderer::OPENGL1) ImGui_ImplSdl_ProcessEvent(&event);
+#endif
 #ifdef ENABLE_GL3
 			if (renderer == Renderer::OPENGL3) ImGui_ImplSdlGL3_ProcessEvent(&event);
 #endif
@@ -415,6 +432,9 @@ int main(int argc, char **argv) {
 			continue;
 		} // puts OBV to sleep if nothing is happening.
 
+#ifdef ENABLE_GL1
+		if (renderer == Renderer::OPENGL1) ImGui_ImplSdl_NewFrame(window);
+#endif
 #ifdef ENABLE_GL3
 		if (renderer == Renderer::OPENGL3) ImGui_ImplSdlGL3_NewFrame(window);
 #endif
@@ -446,7 +466,7 @@ int main(int argc, char **argv) {
 		}
 
 // Rendering
-#if defined(ENABLE_GLES2) || defined(ENABLE_GL3)
+#if defined(ENABLE_GL1) || defined(ENABLE_GL3) || defined(ENABLE_GLES2)
 		glViewport(0, 0, static_cast<int>(ImGui::GetIO().DisplaySize.x), static_cast<int>(ImGui::GetIO().DisplaySize.y));
 		glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
 		glClear(GL_COLOR_BUFFER_BIT);
@@ -456,15 +476,16 @@ int main(int argc, char **argv) {
 	}
 
 // Cleanup
+#ifdef ENABLE_GL1
+	if (renderer == Renderer::OPENGL1) ImGui_ImplSdl_Shutdown();
+#endif
 #ifdef ENABLE_GL3
 	if (renderer == Renderer::OPENGL3) ImGui_ImplSdlGL3_Shutdown();
 #endif
 #ifdef ENABLE_GLES2
 	if (renderer == Renderer::OPENGLES2) ImGui_ImplSdlGLES2_Shutdown();
 #endif
-	SDL_GL_DeleteContext(glcontext);
-	SDL_DestroyWindow(window);
-	SDL_Quit();
 
+	cleanupAndExit(0);
 	return 0;
 }
