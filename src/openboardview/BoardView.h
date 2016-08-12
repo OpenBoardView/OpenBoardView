@@ -5,7 +5,6 @@
 #include "confparse.h"
 #include "history.h"
 #include "imgui/imgui.h"
-#include "sqlite3/sqlite3.h"
 #include <stdint.h>
 #include <vector>
 

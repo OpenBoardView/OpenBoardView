@@ -1,6 +1,4 @@
-
-
-#include "sqlite3/sqlite3.h"
+#include "sqlite3.h"
 
 #ifndef __ANNOTATIONS
 #define __ANNOTATIONS

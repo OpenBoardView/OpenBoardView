@@ -21,7 +21,6 @@
 #include "FZFile.h"
 #include "annotations.h"
 #include "imgui/imgui.h"
-#include "sqlite3/sqlite3.h"
 
 #include "NetList.h"
 #include "PartList.h"
