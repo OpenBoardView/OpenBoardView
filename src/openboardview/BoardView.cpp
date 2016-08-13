@@ -1495,7 +1495,7 @@ void BoardView::Update() {
 		}
 
 		{
-			if (m_file) {
+			if (m_validBoard) {
 				ImVec2 s = ImGui::CalcTextSize(fhistory.history[0]);
 				ImGui::SameLine(ImGui::GetWindowWidth() - s.x - 20);
 				ImGui::Text("%s", fhistory.history[0]);

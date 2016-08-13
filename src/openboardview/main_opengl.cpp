@@ -35,6 +35,8 @@
 #endif
 #include <glad/glad.h>
 
+enum Renderer { DEFAULT, OPENGL1, OPENGL3, OPENGLES2 };
+
 struct globals {
 	char *input_file;
 	char *config_file;
@@ -44,6 +46,7 @@ struct globals {
 	int dpi;
 	double font_size;
 	bool debug;
+	int renderer;
 
 	globals() {
 		this->input_file  = NULL;
@@ -54,17 +57,15 @@ struct globals {
 		this->dpi         = 0;
 		this->font_size   = 0.0f;
 		this->debug       = false;
+		this->renderer    = OPENGL1;
 	}
 };
-
-enum class Renderer { OPENGL1, OPENGL3, OPENGLES2 };
-static Renderer renderer = Renderer::OPENGL1;
 
 static SDL_GLContext glcontext = NULL;
 static SDL_Window *window      = nullptr;
 
 char help[] =
-    " [-h] [-l] [-c <config file>] [-i <intput file>]\n\
+    " [-h] [-l] [-c <config file>] [-i <intput file>] [-x <width>] [-y <height>] [-z <fontsize>] [-p <dpi>] [-r <renderer>] [-d]\n\
 	-h : This help\n\
 	-l : slow CPU mode, disables AA and other items to try provide more FPS\n\
 	-c <config file> : alternative configuration file (default is ~/.config/openboardview/obv.conf)\n\
@@ -73,6 +74,7 @@ char help[] =
 	-y <height> : Set window height\n\
 	-z <pixels> : Set font size\n\
 	-p <dpi> : Set the dpi\n\
+	-r <renderer> : Set the renderer [ OPENGL1 = 0; OPENGL3 = 1; OPENGLES2 = 2 ]\n\
 	-d : Debug mode\n\
 ";
 
@@ -137,6 +139,19 @@ int parse_parameters(int argc, char **argv, struct globals *g) {
 			param++;
 			if (param < argc) {
 				g->dpi = strtof(argv[param], NULL);
+			} else {
+				fprintf(stderr, "Not enough parameters\n");
+			}
+
+		} else if (strcmp(p, "-r") == 0) {
+			param++;
+			if (param < argc) {
+				switch (atoi(argv[param])) {
+					case 1: g->renderer = OPENGL1; break;
+					case 2: g->renderer = OPENGL3; break;
+					case 3: g->renderer = OPENGLES2; break;
+					default: fprintf(stderr, "Unknown renderer. Using default\n");
+				}
 			} else {
 				fprintf(stderr, "Not enough parameters\n");
 			}
@@ -249,15 +264,23 @@ int main(int argc, char **argv) {
 	if (g.width == 0) g.width   = app.obvconfig.ParseInt("windowX", 1100);
 	if (g.height == 0) g.height = app.obvconfig.ParseInt("windowY", 700);
 
+	if (g.renderer == DEFAULT) {
+		switch (app.obvconfig.ParseInt("renderer", 0)) {
+			case 1: g.renderer = OPENGL1; break;
+			case 2: g.renderer = OPENGL3; break;
+			case 3: g.renderer = OPENGLES2; break;
+		}
+	}
 // Setup window
+
 #ifdef ENABLE_GL1
-	if (renderer == Renderer::OPENGL1) {
+	if ((g.renderer == OPENGL1) || (g.renderer == DEFAULT)) {
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 1);
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
 	}
 #endif
 #ifdef ENABLE_GL3
-	if (renderer == Renderer::OPENGL3) {
+	if ((g.renderer == OPENGL3) || (g.renderer == DEFAULT)) {
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG);
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
@@ -265,7 +288,7 @@ int main(int argc, char **argv) {
 	}
 #endif
 #ifdef ENABLE_GLES2
-	if (renderer == Renderer::OPENGLES2) {
+	if ((g.renderer == OPENGLES2) || (g.renderer == DEFAULT)) {
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
@@ -306,17 +329,17 @@ int main(int argc, char **argv) {
 	bool initialized = false;
 // Setup ImGui binding
 #ifdef ENABLE_GL1
-	if (renderer == Renderer::OPENGL1) {
+	if (g.renderer == OPENGL1) {
 		initialized = ImGui_ImplSdl_Init(window);
 	}
 #endif
 #ifdef ENABLE_GL3
-	if (renderer == Renderer::OPENGL3) {
+	if (g.renderer == OPENGL3) {
 		initialized = ImGui_ImplSdlGL3_Init(window);
 	}
 #endif
 #ifdef ENABLE_GLES2
-	if (renderer == Renderer::OPENGLES2) {
+	if (g.renderer == OPENGLES2) {
 		initialized = ImGui_ImplSdlGLES2_Init(window);
 	}
 #endif
@@ -368,8 +391,9 @@ int main(int argc, char **argv) {
 	ImFontConfig font_cfg{};
 	font_cfg.FontDataOwnedByAtlas = false;
 	unsigned char *ttf_data       = LoadAsset(&ttf_size, ASSET_FIRA_SANS);
-	io.Fonts->AddFontFromMemoryTTF(
-	    ttf_data, ttf_size, (app.obvconfig.ParseDouble("fontSize", 20.0f) * (app.dpi / 100.0)), &font_cfg);
+	//	io.Fonts->AddFontFromMemoryTTF( ttf_data, ttf_size, (app.obvconfig.ParseDouble("fontSize", 20.0f) * (app.dpi / 100.0)),
+	//&font_cfg);
+	io.Fonts->AddFontFromMemoryTTF(ttf_data, ttf_size, g.font_size, &font_cfg);
 #else
 	std::string fontpath = get_asset_path(app.obvconfig.ParseStr("fontPath", "DroidSans.ttf"));
 	io.Fonts->AddFontFromFileTTF(fontpath.c_str(), g.font_size);
@@ -410,13 +434,13 @@ int main(int argc, char **argv) {
 		while (SDL_PollEvent(&event)) {
 			sleepout = 3;
 #ifdef ENABLE_GL1
-			if (renderer == Renderer::OPENGL1) ImGui_ImplSdl_ProcessEvent(&event);
+			if (g.renderer == OPENGL1) ImGui_ImplSdl_ProcessEvent(&event);
 #endif
 #ifdef ENABLE_GL3
-			if (renderer == Renderer::OPENGL3) ImGui_ImplSdlGL3_ProcessEvent(&event);
+			if (g.renderer == OPENGL3) ImGui_ImplSdlGL3_ProcessEvent(&event);
 #endif
 #ifdef ENABLE_GLES2
-			if (renderer == Renderer::OPENGLES2) ImGui_ImplSdlGLES2_ProcessEvent(&event);
+			if (g.renderer == OPENGLES2) ImGui_ImplSdlGLES2_ProcessEvent(&event);
 #endif
 
 			if (event.type == SDL_DROPFILE) {
@@ -446,13 +470,13 @@ int main(int argc, char **argv) {
 		} // puts OBV to sleep if nothing is happening.
 
 #ifdef ENABLE_GL1
-		if (renderer == Renderer::OPENGL1) ImGui_ImplSdl_NewFrame(window);
+		if (g.renderer == OPENGL1) ImGui_ImplSdl_NewFrame(window);
 #endif
 #ifdef ENABLE_GL3
-		if (renderer == Renderer::OPENGL3) ImGui_ImplSdlGL3_NewFrame(window);
+		if (g.renderer == OPENGL3) ImGui_ImplSdlGL3_NewFrame(window);
 #endif
 #ifdef ENABLE_GLES2
-		if (renderer == Renderer::OPENGLES2) ImGui_ImplSdlGLES2_NewFrame();
+		if (g.renderer == OPENGLES2) ImGui_ImplSdlGLES2_NewFrame();
 #endif
 
 		// If we have a board to view being passed from command line, then "inject"
@@ -490,13 +514,13 @@ int main(int argc, char **argv) {
 
 // Cleanup
 #ifdef ENABLE_GL1
-	if (renderer == Renderer::OPENGL1) ImGui_ImplSdl_Shutdown();
+	if (g.renderer == OPENGL1) ImGui_ImplSdl_Shutdown();
 #endif
 #ifdef ENABLE_GL3
-	if (renderer == Renderer::OPENGL3) ImGui_ImplSdlGL3_Shutdown();
+	if (g.renderer == OPENGL3) ImGui_ImplSdlGL3_Shutdown();
 #endif
 #ifdef ENABLE_GLES2
-	if (renderer == Renderer::OPENGLES2) ImGui_ImplSdlGLES2_Shutdown();
+	if (g.renderer == OPENGLES2) ImGui_ImplSdlGLES2_Shutdown();
 #endif
 
 	cleanupAndExit(0);

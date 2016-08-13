@@ -15,6 +15,13 @@ char default_conf[] =
     "#\r\n\
 # OpenFlex Board View configuration file (inflex-ui)\r\n\
 #\r\n\
+# Renderer options\r\n\
+#  0 = OpenGL1\r\n\
+#  1 = OpenGL3\r\n\
+#  2 = OpenGLES2\r\n\
+#  3 = ???\r\n\
+renderer=1\r\n\
+\r\n\
 windowX=1100\r\n\
 windowY=700\r\n\
 \r\n\
