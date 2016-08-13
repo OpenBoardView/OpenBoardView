@@ -2846,12 +2846,12 @@ inline void BoardView::DrawAnnotations(ImDrawList *draw) {
 
 bool BoardView::HighlightedPinIsHovered(void) {
 	ImVec2 mp = ImGui::GetMousePos();
+	int r     = m_scale * 10.0f;
 	// int r = 2.0f /m_scale;
 
 	m_pinHighlightedHovered = nullptr;
 
 	for (auto p : m_pinHighlighted) {
-		int r    = m_scale * 10.0f;
 		ImVec2 a = CoordToScreen(p->position.x, p->position.y);
 		if ((mp.x > a.x - r) && (mp.x < a.x + r) && (mp.y > a.y - r) && (mp.y < a.y + r)) {
 			m_pinHighlightedHovered = p;
@@ -2859,9 +2859,19 @@ bool BoardView::HighlightedPinIsHovered(void) {
 		}
 	}
 
+	for (auto pin : m_board->Pins()) {
+		auto p = pin.get();
+		if (m_pinSelected && p->net == m_pinSelected->net) {
+			ImVec2 a = CoordToScreen(p->position.x, p->position.y);
+			if ((mp.x > a.x - r) && (mp.x < a.x + r) && (mp.y > a.y - r) && (mp.y < a.y + r)) {
+				m_pinHighlightedHovered = p;
+				return true;
+			}
+		}
+	}
+
 	for (auto part : m_partHighlighted) {
 		for (auto p : part->pins) {
-			int r    = m_scale * 10.0f;
 			ImVec2 a = CoordToScreen(p->position.x, p->position.y);
 			if ((mp.x > a.x - r) && (mp.x < a.x + r) && (mp.y > a.y - r) && (mp.y < a.y + r)) {
 				m_pinHighlightedHovered = p;
