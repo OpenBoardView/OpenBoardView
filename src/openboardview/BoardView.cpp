@@ -2364,7 +2364,7 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 	// float psz = (float)m_pinDiameter * 0.5f * m_scale;
 	double angle;
 	double distance = 0;
-	struct ImVec2 pva[1000], *ppp;
+	struct ImVec2 pva[2000], *ppp;
 	uint32_t color = m_colors.partOutlineColor;
 	//	int rendered   = 0;
 	char p0, p1; // first two characters of the part name, code-writing
@@ -2422,7 +2422,7 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 					max_y = min_y;
 				}
 
-				if (pincount < 1000) {
+				if (pincount < 2000) {
 					ppp->x = pin->position.x;
 					ppp->y = pin->position.y;
 					ppp++;
