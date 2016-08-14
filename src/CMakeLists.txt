@@ -1,5 +1,7 @@
 ## COMMON ##
+if(NOT APPLE)
 find_package(PkgConfig REQUIRED)
+endif()
 
 ## imgui ##
 execute_process(
@@ -58,7 +60,13 @@ set(GLAD_NO_LOADER ON CACHE BOOL "Disable loader" FORCE) # We're using SDL2 load
 add_subdirectory(glad)
 
 ## SDL2 ##
+if(APPLE)
+	find_package(SDL2 REQUIRED)
+	set(SDL2_INCLUDE_DIRS "${SDL2_INCLUDE_DIR}")
+	set(SDL2_LIBRARIES "${SDL2_LIBRARY}")
+else()
 pkg_check_modules(SDL2 REQUIRED sdl2)
+endif()
 add_definitions(-DENABLE_SDL2)
 
 add_subdirectory(openboardview)

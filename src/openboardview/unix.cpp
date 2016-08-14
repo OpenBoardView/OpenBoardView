@@ -13,6 +13,10 @@
 #include <gtk/gtk.h>
 #endif
 
+#ifdef ENABLE_FONTCONFIG
+#include <fontconfig/fontconfig.h>
+#endif
+
 char *file_as_buffer(size_t *buffer_size, const char *utf8_filename) {
 	std::ifstream file;
 	file.open(utf8_filename, std::ios::in | std::ios::binary | std::ios::ate);
@@ -176,6 +180,39 @@ std::string get_asset_path(const char *asset) {
 	std::string path = "asset";
 	path += "/";
 	path += asset;
+	return path;
+}
+#endif
+
+#ifdef ENABLE_FONTCONFIG
+// Thanks to http://stackoverflow.com/a/14634033/1447751
+const std::string get_font_path(const std::string &name) {
+	std::string path;
+	const FcChar8 *fcname = reinterpret_cast<const FcChar8 *>(name.c_str());
+	FcConfig *config      = FcInitLoadConfigAndFonts();
+
+	// configure the search pattern,
+	// assume "name" is a std::string with the desired font name in it
+	FcPattern *pat = FcNameParse(fcname);
+	FcConfigSubstitute(config, pat, FcMatchPattern);
+	FcDefaultSubstitute(pat);
+
+	FcResult result;
+	// find the font
+	FcPattern *font = FcFontMatch(config, pat, &result);
+	if (font) {
+		FcChar8 *fcpath   = NULL;
+		FcChar8 *fcfamily = NULL;
+		if (FcPatternGetString(font, FC_FAMILY, 0, &fcfamily) == FcResultMatch &&
+		    (name.empty() || !FcStrCmpIgnoreCase(fcname, fcfamily)) // Empty name means searching for default font, otherwise make
+		                                                            // sure the returned font is exactly what we searched for
+		    &&
+		    FcPatternGetString(font, FC_FILE, 0, &fcpath) == FcResultMatch)
+			path = std::string(reinterpret_cast<char *>(fcpath));
+		FcPatternDestroy(font);
+	}
+
+	FcPatternDestroy(pat);
 	return path;
 }
 #endif

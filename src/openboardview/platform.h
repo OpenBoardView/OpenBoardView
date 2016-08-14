@@ -1,13 +1,14 @@
 #pragma once
 
-#include "imgui/imgui.h"
-#include "utf8/utf8.h"
-#include <string>
-
 #ifdef _WIN32
+#define _WIN32_WINNT 0x0600 // Not caring about XP. If this is a concern, find a replacement for CompareStringEx() in win32.cpp.
 #include <windows.h>
 #endif
-#ifndef ENABLE_SDL2
+
+#include <string>
+#include <vector>
+
+#if defined(_WIN32) && !defined(ENABLE_SDL2)
 #define SDLK_ESCAPE VK_ESCAPE
 #define SDLK_RETURN VK_RETURN
 #define SDL_SCANCODE_LCTRL VK_CONTROL
@@ -54,10 +55,10 @@
 #define SDL_SCANCODE_KP_PERIOD VK_DECIMAL
 #define SDL_SCANCODE_KP_PLUS VK_ADD
 #define SDL_SCANCODE_KP_MINUS VK_SUBTRACT
-
 #endif
 
 #ifdef _MSC_VER // Visual Studio prefixes non-standard C functions with _
+#define _CRT_SECURE_NO_WARNINGS 1
 #define strdup _strdup
 #endif
 
@@ -76,3 +77,5 @@ char *show_file_picker();
 
 unsigned char *LoadAsset(int *asset_size, int asset_id);
 std::string get_asset_path(const char *asset);
+const std::string get_font_path(const std::string &name);
+const std::vector<char> load_font(const std::string &name);

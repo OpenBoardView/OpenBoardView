@@ -8,10 +8,11 @@
  *
  */
 
+#include "platform.h"
+
 #include "BoardView.h"
 #include "history.h"
 
-#include "platform.h"
 #include "FZFile.h"
 #include "confparse.h"
 #include "resource.h"
@@ -386,18 +387,30 @@ int main(int argc, char **argv) {
 
 	if (g.font_size == 0.0f) g.font_size = app.obvconfig.ParseDouble("fontSize", 20.0f);
 	g.font_size                          = (g.font_size * app.dpi) / 100;
+
+	for (auto name : {"Liberation Sans", "DejaVu Sans", "Arial", ""}) { // Empty string = use system default font
 #ifdef _WIN32
-	int ttf_size;
-	ImFontConfig font_cfg{};
-	font_cfg.FontDataOwnedByAtlas = false;
-	unsigned char *ttf_data       = LoadAsset(&ttf_size, ASSET_FIRA_SANS);
-	//	io.Fonts->AddFontFromMemoryTTF( ttf_data, ttf_size, (app.obvconfig.ParseDouble("fontSize", 20.0f) * (app.dpi / 100.0)),
-	//&font_cfg);
-	io.Fonts->AddFontFromMemoryTTF(ttf_data, ttf_size, g.font_size, &font_cfg);
+		ImFontConfig font_cfg{};
+		font_cfg.FontDataOwnedByAtlas = false;
+		const std::vector<char> ttf   = load_font(name);
+		if (!ttf.empty()) {
+			io.Fonts->AddFontFromMemoryTTF(
+			    const_cast<void *>(reinterpret_cast<const void *>(ttf.data())), ttf.size(), g.font_size, &font_cfg);
+			break;
+		}
 #else
-	std::string fontpath = get_asset_path(app.obvconfig.ParseStr("fontPath", "DroidSans.ttf"));
-	io.Fonts->AddFontFromFileTTF(fontpath.c_str(), g.font_size);
+		const std::string fontpath = get_font_path(name);
+		if (fontpath.empty()) continue; // Font not found
+		auto extpos = fontpath.rfind('.');
+		if (extpos == std::string::npos) continue; // No extension in filename
+		std::string ext = fontpath.substr(extpos);
+		std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower); // make ext lowercase
+		if (ext == ".ttf") { // ImGui handles only TrueType fonts so exclude anything which has a different ext
+			io.Fonts->AddFontFromFileTTF(fontpath.c_str(), g.font_size);
+			break;
+		}
 #endif
+	}
 
 	// ImVec4 clear_color = ImColor(20, 20, 30);
 	ImVec4 clear_color = ImColor(app.m_colors.backgroundColor);

@@ -23,8 +23,16 @@ if(APPLE)
 	set(OPENGL_INCLUDE_DIR ${OPENGL_INCLUDE_DIR}/Headers)
 	else(APPLE)
 find_package(PkgConfig REQUIRED)
-		pkg_search_module(GTK REQUIRED gtk+-3.0 gtk+-2.0) # gtk2 fallback if gtk3 not found
 
+		pkg_check_modules(FONTCONFIG REQUIRED fontconfig)
+		if(FONTCONFIG_FOUND)
+			message(STATUS "Found FontConfig version ${FONTCONFIG_VERSION}")
+			link_directories(${FONTCONFIG_LIBRARY_DIRS})
+			add_definitions(${FONTCONFIG_CFLAGS_OTHER})
+			add_definitions(-DENABLE_FONTCONFIG)
+		endif()
+
+		pkg_search_module(GTK REQUIRED gtk+-3.0 gtk+-2.0) # gtk2 fallback if gtk3 not found
 		if(GTK_FOUND)
 			message(STATUS "Found GTK version ${GTK_VERSION}")
 			link_directories(${GTK_LIBRARY_DIRS}) # not linked since we load it at runtime
@@ -46,6 +54,7 @@ include_directories(
 	${OPENGL_INCLUDE_DIR}
 	${ZLIB_INCLUDE_DIRS}
 	${SQLITE3_INCLUDE_DIRS}
+	${FONTCONFIG_INCLUDE_DIRS}
 )
 
 link_directories(
@@ -131,6 +140,11 @@ if(WIN32) # Link statically with SDL2 for Windows
 		${SDL2_STATIC_LIBRARIES}
 	)
 else()
+	if(NOT APPLE)
+		target_link_libraries(openboardview
+			${FONTCONFIG_LIBRARIES}
+		)
+	endif()
 	target_link_libraries(openboardview
 		dl
 		${SDL2_LIBRARIES}
