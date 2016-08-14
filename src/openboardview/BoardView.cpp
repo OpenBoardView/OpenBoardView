@@ -2646,7 +2646,7 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 				 * to give it a more sane outline
 				 */
 				if ((pincount >= 4) &&
-				    ((p0 == 'J') || (strncmp(part->name.c_str(), "CN", 2) == 0) || ((p0 == 'L') || (p1 == 'L')))) {
+				    ((p0 == 'U') || (p0 == 'J') || (strncmp(part->name.c_str(), "CN", 2) == 0) || ((p0 == 'L') || (p1 == 'L')))) {
 					ImVec2 *hull;
 					int hpc;
 
