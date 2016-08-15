@@ -2645,8 +2645,7 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 				 * then we can try use the minimal bounding box algorithm
 				 * to give it a more sane outline
 				 */
-				if ((pincount >= 4) &&
-				    ((p0 == 'U') || (p0 == 'J') || (strncmp(part->name.c_str(), "CN", 2) == 0) || ((p0 == 'L') || (p1 == 'L')))) {
+				if ((pincount >= 4) && ((strchr("UJL", p0) || strchr("UJL", p1) || (strncmp(part->name.c_str(), "CN", 2) == 0)))) {
 					ImVec2 *hull;
 					int hpc;
 
