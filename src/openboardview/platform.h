@@ -72,10 +72,5 @@ char *file_as_buffer(size_t *buffer_size, const char *utf8_filename);
 // caller.
 char *show_file_picker();
 
-// these mirror the Windows .rc definitions:
-#define ASSET_FIRA_SANS 109
-
-unsigned char *LoadAsset(int *asset_size, int asset_id);
-std::string get_asset_path(const char *asset);
 const std::string get_font_path(const std::string &name);
 const std::vector<char> load_font(const std::string &name);

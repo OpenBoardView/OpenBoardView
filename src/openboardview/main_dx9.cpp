@@ -198,16 +198,20 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	/*
 	 * Set the font based on the dpi
 	 */
-	int ttf_size;
-	unsigned char *ttf_data = LoadAsset(&ttf_size, ASSET_FIRA_SANS);
-	ImFontConfig font_cfg{};
-	font_cfg.FontDataOwnedByAtlas = false;
-	io.Fonts->AddFontFromMemoryTTF(
-	    ttf_data, ttf_size, (app.obvconfig.ParseDouble("fontSize", 20.0f) * (app.dpi / 100.0)), &font_cfg);
+	for (auto name : {"Liberation Sans", "DejaVu Sans", "Arial", ""}) { // Empty string = use system default font
+		ImFontConfig font_cfg{};
+		font_cfg.FontDataOwnedByAtlas = false;
+		const std::vector<char> ttf   = load_font(name);
+		if (!ttf.empty()) {
+			io.Fonts->AddFontFromMemoryTTF(const_cast<void *>(reinterpret_cast<const void *>(ttf.data())),
+			                               ttf.size(),
+			                               (app.obvconfig.ParseDouble("fontSize", 20.0f) * (app.dpi / 100.0)),
+			                               &font_cfg);
+			break;
+		}
+	}
 
-	bool show_test_window    = true;
-	bool show_another_window = false;
-	ImVec4 clear_col         = ImColor(app.m_colors.backgroundColor);
+	ImVec4 clear_col = ImColor(app.m_colors.backgroundColor);
 
 	// Main loop
 	MSG msg;

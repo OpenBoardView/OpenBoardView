@@ -1,6 +1,4 @@
 set(ASSETS
-	${CMAKE_CURRENT_SOURCE_DIR}/FiraSans-Medium.ttf
-	${CMAKE_CURRENT_SOURCE_DIR}/DroidSans.ttf
 )
 
 if(APPLE)

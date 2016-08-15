@@ -21,13 +21,6 @@ char *show_file_picker() {
 }
 #endif
 
-std::string get_asset_path(const char* asset) {
-	std::string path = std::string([[[NSBundle mainBundle] resourcePath] UTF8String]);
-	path += "/";
-	path += asset;
-	return path;
-}
-
 #ifndef ENABLE_FONTCONFIG
 const std::string get_font_path(const std::string &name) {
 	std::string filename;

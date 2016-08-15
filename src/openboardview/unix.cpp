@@ -175,15 +175,6 @@ char *show_file_picker() { // dummy function when not building for OS X and GTK 
 }
 #endif
 
-#ifndef __APPLE__
-std::string get_asset_path(const char *asset) {
-	std::string path = "asset";
-	path += "/";
-	path += asset;
-	return path;
-}
-#endif
-
 #ifdef ENABLE_FONTCONFIG
 // Thanks to http://stackoverflow.com/a/14634033/1447751
 const std::string get_font_path(const std::string &name) {

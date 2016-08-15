@@ -83,15 +83,6 @@ char *show_file_picker() {
 	return nullptr;
 }
 
-unsigned char *LoadAsset(int *asset_size, int asset_id) {
-	HRSRC resinfo       = FindResource(NULL, MAKEINTRESOURCE(asset_id), L"Asset");
-	HGLOBAL res         = LoadResource(NULL, resinfo);
-	*asset_size         = (int)SizeofResource(NULL, resinfo);
-	unsigned char *data = (unsigned char *)LockResource(res);
-	UnlockResource(res);
-	return data;
-}
-
 const std::vector<char> load_font(const std::string &name) {
 	std::vector<char> data;
 	HFONT fontHandle;

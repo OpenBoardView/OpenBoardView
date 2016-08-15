@@ -2,7 +2,6 @@
 // Microsoft Visual C++ generated include file.
 // Used by OpenBoardView.rc
 //
-#define IDR_ASSET4 109
 #define IDI_ICON1 111
 
 // Next default values for new objects

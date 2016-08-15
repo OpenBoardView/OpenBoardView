@@ -58,8 +58,6 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_UK
 // ASSET
 //
 
-IDR_ASSET4              ASSET                   "FiraSans-Medium.ttf"
-
 /////////////////////////////////////////////////////////////////////////////
 //
 // Icon
