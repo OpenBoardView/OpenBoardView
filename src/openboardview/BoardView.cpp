@@ -2786,7 +2786,7 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 	} // for each part
 }
 
-inline void BoardView::DrawAnnotations(ImDrawList *draw) {
+inline void BoardView::DrawPinTooltips(ImDrawList *draw) {
 	draw->ChannelsSetCurrent(kChannelAnnotations);
 
 	if (HighlightedPinIsHovered()) {
@@ -2800,6 +2800,13 @@ inline void BoardView::DrawAnnotations(ImDrawList *draw) {
 		ImGui::EndTooltip();
 		ImGui::PopStyleColor(2);
 	}
+}
+
+inline void BoardView::DrawAnnotations(ImDrawList *draw) {
+
+	if (!m_annotations_active) return;
+
+	draw->ChannelsSetCurrent(kChannelAnnotations);
 
 	for (auto &ann : m_annotations.annotations) {
 		if (ann.side == m_current_side) {
@@ -2948,7 +2955,8 @@ void BoardView::DrawBoard() {
 	DrawParts(draw);
 	//	DrawSelectedPins(draw);
 	DrawPins(draw);
-	if (m_annotations_active) DrawAnnotations(draw);
+	DrawPinTooltips(draw);
+	DrawAnnotations(draw);
 
 	draw->ChannelsMerge();
 

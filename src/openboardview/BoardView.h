@@ -235,6 +235,7 @@ struct BoardView {
 	void Update();
 	void HandleInput();
 	void RenderOverlay();
+	void DrawPinTooltips(ImDrawList *draw);
 	void DrawAnnotations(ImDrawList *draw);
 	void DrawOutline(ImDrawList *draw);
 	void DrawPins(ImDrawList *draw);
