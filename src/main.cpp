@@ -102,20 +102,19 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	io.IniFilename = NULL; // Disable imgui.ini
 
 	// Load Fonts
-	// (there is a default font, this is only if you want to change it. see extra_fonts/README.txt
-	// for more details)
-	int ttf_size;
-	unsigned char *ttf_data = LoadAsset(&ttf_size, ASSET_FIRA_SANS);
-	ImFontConfig font_cfg{};
-	font_cfg.FontDataOwnedByAtlas = false;
-	io.Fonts->AddFontFromMemoryTTF(ttf_data, ttf_size, 20.0f, &font_cfg);
-// io.Fonts->AddFontDefault();
-// io.Fonts->AddFontFromFileTTF("../../extra_fonts/Cousine-Regular.ttf", 15.0f);
-// io.Fonts->AddFontFromFileTTF("../../extra_fonts/DroidSans.ttf", 16.0f);
-// io.Fonts->AddFontFromFileTTF("../../extra_fonts/ProggyClean.ttf", 13.0f);
-// io.Fonts->AddFontFromFileTTF("../../extra_fonts/ProggyTiny.ttf", 10.0f);
-// io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\ArialUni.ttf", 18.0f, NULL,
-// io.Fonts->GetGlyphRangesJapanese());
+	for (auto name : {"Liberation Sans", "DejaVu Sans", "Arial",
+	                  ""}) { // Empty string = use system default font
+		ImFontConfig font_cfg{};
+		font_cfg.FontDataOwnedByAtlas = false;
+		const std::vector<char> ttf = load_font(name);
+		if (!ttf.empty()) {
+			io.Fonts->AddFontFromMemoryTTF(
+			    const_cast<void *>(reinterpret_cast<const void *>(ttf.data())), ttf.size(), 20.0f,
+			    &font_cfg);
+			break;
+		}
+	}
+	io.Fonts->AddFontDefault(); // ImGui fallback font
 #if 0
 	// Get current flag
 	int tmpFlag = _CrtSetDbgFlag(_CRTDBG_REPORT_FLAG);

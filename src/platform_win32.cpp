@@ -2,9 +2,11 @@
 
 #include "platform.h"
 #include "imgui.h"
-#include <stdint.h>
 #include <Windows.h>
 #include <assert.h>
+#include <iostream>
+#include <stdint.h>
+#include <winnls.h>
 
 wchar_t *utf8_to_wide(const char *s) {
 	size_t len = utf8len(s);
@@ -79,12 +81,47 @@ char *show_file_picker() {
 	return nullptr;
 }
 
-unsigned char *LoadAsset(int *asset_size, int asset_id) {
-	HRSRC resinfo = FindResource(NULL, MAKEINTRESOURCE(asset_id), L"Asset");
-	HGLOBAL res = LoadResource(NULL, resinfo);
-	*asset_size = (int)SizeofResource(NULL, resinfo);
-	unsigned char *data = (unsigned char *)LockResource(res);
-	UnlockResource(res);
+// Not caring about XP. If this is a concern, find a replacement for CompareStringEx()
+const std::vector<char> load_font(const std::string &name) {
+	std::vector<char> data;
+	HFONT fontHandle;
+
+	wchar_t *wname = utf8_to_wide(name.c_str());
+
+	fontHandle = CreateFont(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, name.empty() ? NULL : wname);
+	if (!fontHandle) {
+		std::cerr << "CreateFont failed" << std::endl;
+		free(wname);
+		return data;
+	}
+	HDC hdc = ::CreateCompatibleDC(NULL);
+	if (hdc != NULL) {
+		::SelectObject(hdc, fontHandle);
+
+		int ncount = ::GetTextFaceW(hdc, 0, nullptr);
+		LPWSTR fname = new wchar_t[ncount];
+		::GetTextFaceW(hdc, ncount, fname);
+
+		if (!name.empty() &&
+		    ::CompareStringEx(NULL, NORM_IGNORECASE, wname, name.size(), fname, ncount - 1, NULL,
+		                      NULL, 0) != CSTR_EQUAL) { // We didn't get the font we requested
+			free(wname);
+			return data;
+		}
+
+		free(wname);
+
+		const size_t size = ::GetFontData(hdc, 0, 0, NULL, 0);
+		if (size > 0) {
+			char *buffer = new char[size];
+			if (::GetFontData(hdc, 0, 0, buffer, size) == size) {
+				data = std::vector<char>(buffer, buffer + size);
+			}
+			delete[] buffer;
+		}
+		::DeleteDC(hdc);
+	}
+	DeleteObject(fontHandle);
 	return data;
 }
 

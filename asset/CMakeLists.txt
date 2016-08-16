@@ -2,12 +2,8 @@
 #
 #
 
-# These files will be added to the main target later
-set(ASSETS
-	"${CMAKE_CURRENT_SOURCE_DIR}/OpenBoardView.rc" # Needed for MSVS resource compiler
-	"${CMAKE_CURRENT_SOURCE_DIR}/FiraSans-Medium.ttf"
-	PARENT_SCOPE # Send this to everyone
-)
+# Needed by MSVS resource compiler
+set(ICON "${CMAKE_CURRENT_SOURCE_DIR}/OpenBoardView.rc" PARENT_SCOPE)
 
 # WiX Installer images
 set(CPACK_WIX_PRODUCT_ICON "${CMAKE_CURRENT_SOURCE_DIR}\\\\brd.ico" PARENT_SCOPE) # icon for Add/Remove with WiX installer

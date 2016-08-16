@@ -19,7 +19,7 @@ set(SOURCES
 add_executable(${PROJECT_NAME}
 	WIN32
 	${SOURCES}
-	${ASSETS})
+	${ICON})
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
 	${LIBS}

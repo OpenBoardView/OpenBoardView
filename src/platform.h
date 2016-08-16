@@ -2,6 +2,8 @@
 
 #include "imgui.h"
 #include "utf8.h"
+#include <string>
+#include <vector>
 
 // Windows .rc definitions
 #include "resource.h"
@@ -17,4 +19,5 @@ char *file_as_buffer(size_t *buffer_size, const char *utf8_filename);
 // lots of formats)
 char *show_file_picker();
 
-unsigned char *LoadAsset(int *asset_size, int asset_id);
+const std::string get_font_path(const std::string &name);
+const std::vector<char> load_font(const std::string &name);
