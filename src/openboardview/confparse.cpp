@@ -36,7 +36,9 @@ pinShapeSquare = false\r\n\
 \r\n\
 slowCPU =       false\r\n\
 showFPS =       false\r\n\
-pinHalo =       true\r\n\
+pinHalo =        true\r\n\
+pinHaloDiameter = 1.25\r\n\
+pinHaloThickness = 1.5\r\n\
 annotations = true\r\n\
 fillParts =		true\r\n\
 boardFill =		true\r\n\
@@ -54,7 +56,10 @@ annotationBoxOffset = 8\r\n\
 # \"XRayBlue\" Theme by Inflex (20160724)\r\n\
 # Colors, format is 0xRRGGBBAA\r\n\
 #\r\n\
-lightTheme = true\r\n\
+# There's two built in themes, light (default) and dark \r\n\
+#colorTheme = default\r\n\
+#colorTheme = dark\r\n\
+colorTheme = light\r\n\
 backgroundColor		= 0xffffffff\r\n\
 boardFillColor	= 0xddddddff\r\n\
 partOutlineColor = 0x444444ff\r\n\
@@ -65,6 +70,7 @@ partTextColor			= 0xff3030ff\r\n\
 partTextBackgroundColor			= 0xffff00ff\r\n\
 boardOutlineColor			= 0x444444ff\r\n\
 pinDefaultColor				= 0x8888ffff\r\n\
+pinDefaultTextColor			= 0x0000ccff\r\n\
 pinGroundColor				= 0x2222aaff\r\n\
 pinNotConnectedColor		= 0xaaaaaaff\r\n\
 pinTestPadColor				= 0x888888ff\r\n\

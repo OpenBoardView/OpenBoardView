@@ -62,6 +62,7 @@ struct ColorScheme {
 	//	uint32_t boxColor = 0xffcccccc;
 
 	uint32_t pinDefaultColor      = 0xff0000ff;
+	uint32_t pinDefaultTextColor  = 0xffcc0000;
 	uint32_t pinGroundColor       = 0xff0000bb;
 	uint32_t pinNotConnectedColor = 0xffff0000;
 	uint32_t pinTestPadColor      = 0xff888888;
@@ -123,6 +124,8 @@ struct BoardView {
 	bool slowCPU              = false;
 	bool showFPS              = false;
 	bool pinHalo              = true;
+	float pinHaloDiameter     = 1.25;
+	float pinHaloThickness    = 1.5;
 	bool fillParts            = true;
 	bool boardFill            = true;
 	int boardFillSpacing      = 5;
@@ -149,6 +152,7 @@ struct BoardView {
 	void ColorPreferencesItem(const char *label, const char *butlabel, const char *conflabel, int width, uint32_t *c);
 	void ColorPreferences(void);
 	bool AnyItemVisible(void);
+	void ThemeSetStyle(const char *name);
 
 	void CenterZoomSearchResults(void);
 	int EPCCheck(void);
@@ -165,6 +169,8 @@ struct BoardView {
 	bool m_tooltips_enabled       = true;
 	int m_annotation_last_hovered = 0;
 	int m_annotation_clicked_id   = 0;
+	int m_hoverframes             = 0;
+	ImVec2 m_previous_mouse_pos;
 
 	bool HighlightedPinIsHovered(void);
 	Pin *m_pinHighlightedHovered = nullptr;

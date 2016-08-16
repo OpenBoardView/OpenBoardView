@@ -8,7 +8,7 @@
 #include <string>
 #include <vector>
 
-#if defined(_WIN32) && !defined(ENABLE_SDL2)
+#if (defined(_WIN32) && !defined(ENABLE_SDL2))
 #define SDLK_ESCAPE VK_ESCAPE
 #define SDLK_RETURN VK_RETURN
 #define SDL_SCANCODE_LCTRL VK_CONTROL
