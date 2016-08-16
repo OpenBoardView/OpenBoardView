@@ -121,6 +121,7 @@ void BoardView::ThemeSetStyle(const char *name) {
 		m_colors.pinGroundColor                 = byte4swap(0x0300C3ff);
 		m_colors.pinNotConnectedColor           = byte4swap(0xaaaaaaff);
 		m_colors.pinTestPadColor                = byte4swap(0x888888ff);
+		m_colors.pinTestPadFillColor            = byte4swap(0xbd9e2d88);
 		m_colors.pinSelectedTextColor           = byte4swap(0xffff00ff);
 		m_colors.pinSelectedColor               = byte4swap(0x00ff00ff);
 		m_colors.pinHaloColor                   = byte4swap(0x00aa00ff);
@@ -199,6 +200,7 @@ void BoardView::ThemeSetStyle(const char *name) {
 		m_colors.pinGroundColor                 = byte4swap(0x2222aaff);
 		m_colors.pinNotConnectedColor           = byte4swap(0xaaaaaaff);
 		m_colors.pinTestPadColor                = byte4swap(0x888888ff);
+		m_colors.pinTestPadFillColor            = byte4swap(0xbd9e2d88);
 		m_colors.pinSelectedTextColor           = byte4swap(0xff0000ff);
 		m_colors.pinSelectedColor               = byte4swap(0x0000ffff);
 		m_colors.pinHaloColor                   = byte4swap(0x00aa00ff);
@@ -303,27 +305,28 @@ int BoardView::ConfigParse(void) {
 	m_colors.partTextColor = byte4swap(obvconfig.ParseHex("partTextColor", byte4swap(m_colors.partTextColor)));
 	m_colors.partTextBackgroundColor =
 	    byte4swap(obvconfig.ParseHex("partTextBackgroundColor", byte4swap(m_colors.partTextBackgroundColor)));
-	m_colors.boardOutlineColor    = byte4swap(obvconfig.ParseHex("boardOutline", byte4swap(m_colors.boardOutlineColor)));
-	m_colors.pinDefaultColor      = byte4swap(obvconfig.ParseHex("pinDefault", byte4swap(m_colors.pinDefaultColor)));
-	m_colors.pinDefaultTextColor  = byte4swap(obvconfig.ParseHex("pinDefaultText", byte4swap(m_colors.pinDefaultTextColor)));
-	m_colors.pinGroundColor       = byte4swap(obvconfig.ParseHex("pinGround", byte4swap(m_colors.pinGroundColor)));
-	m_colors.pinNotConnectedColor = byte4swap(obvconfig.ParseHex("pinNotConnected", byte4swap(m_colors.pinNotConnectedColor)));
-	m_colors.pinTestPadColor      = byte4swap(obvconfig.ParseHex("pinTestPad", byte4swap(m_colors.pinTestPadColor)));
-	m_colors.pinSelectedTextColor = byte4swap(obvconfig.ParseHex("pinSelectedText", byte4swap(m_colors.pinSelectedTextColor)));
-	m_colors.pinSelectedColor     = byte4swap(obvconfig.ParseHex("pinSelected", byte4swap(m_colors.pinSelectedColor)));
+	m_colors.boardOutlineColor    = byte4swap(obvconfig.ParseHex("boardOutlineColor", byte4swap(m_colors.boardOutlineColor)));
+	m_colors.pinDefaultColor      = byte4swap(obvconfig.ParseHex("pinDefaultColor", byte4swap(m_colors.pinDefaultColor)));
+	m_colors.pinDefaultTextColor  = byte4swap(obvconfig.ParseHex("pinDefaultTextColor", byte4swap(m_colors.pinDefaultTextColor)));
+	m_colors.pinGroundColor       = byte4swap(obvconfig.ParseHex("pinGroundColor", byte4swap(m_colors.pinGroundColor)));
+	m_colors.pinNotConnectedColor = byte4swap(obvconfig.ParseHex("pinNotConnectedColor", byte4swap(m_colors.pinNotConnectedColor)));
+	m_colors.pinTestPadColor      = byte4swap(obvconfig.ParseHex("pinTestPadColor", byte4swap(m_colors.pinTestPadColor)));
+	m_colors.pinTestPadFillColor  = byte4swap(obvconfig.ParseHex("pinTestPadFillColor", byte4swap(m_colors.pinTestPadFillColor)));
+	m_colors.pinSelectedTextColor = byte4swap(obvconfig.ParseHex("pinSelectedTextColor", byte4swap(m_colors.pinSelectedTextColor)));
+	m_colors.pinSelectedColor     = byte4swap(obvconfig.ParseHex("pinSelectedColor", byte4swap(m_colors.pinSelectedColor)));
 	m_colors.pinHaloColor         = byte4swap(obvconfig.ParseHex("pinHaloColor", byte4swap(m_colors.pinHaloColor)));
-	m_colors.pinHighlightedColor  = byte4swap(obvconfig.ParseHex("pinHighlighted", byte4swap(m_colors.pinHighlightedColor)));
+	m_colors.pinHighlightedColor  = byte4swap(obvconfig.ParseHex("pinHighlightedColor", byte4swap(m_colors.pinHighlightedColor)));
 	m_colors.pinHighlightSameNetColor =
-	    byte4swap(obvconfig.ParseHex("pinHighlightSameNet", byte4swap(m_colors.pinHighlightSameNetColor)));
+	    byte4swap(obvconfig.ParseHex("pinHighlightSameNetColor", byte4swap(m_colors.pinHighlightSameNetColor)));
 
 	m_colors.annotationPartAliasColor =
-	    byte4swap(obvconfig.ParseHex("annotationPartAlias", byte4swap(m_colors.annotationPartAliasColor)));
+	    byte4swap(obvconfig.ParseHex("annotationPartAliasColor", byte4swap(m_colors.annotationPartAliasColor)));
 	m_colors.annotationBoxColor   = byte4swap(obvconfig.ParseHex("annotationBoxColor", byte4swap(m_colors.annotationBoxColor)));
 	m_colors.annotationStalkColor = byte4swap(obvconfig.ParseHex("annotationStalkColor", byte4swap(m_colors.annotationStalkColor)));
 	m_colors.annotationPopupBackgroundColor =
-	    byte4swap(obvconfig.ParseHex("annotationPopupBackground", byte4swap(m_colors.annotationPopupBackgroundColor)));
+	    byte4swap(obvconfig.ParseHex("annotationPopupBackgroundColor", byte4swap(m_colors.annotationPopupBackgroundColor)));
 	m_colors.annotationPopupTextColor =
-	    byte4swap(obvconfig.ParseHex("annotationPopupText", byte4swap(m_colors.annotationPopupTextColor)));
+	    byte4swap(obvconfig.ParseHex("annotationPopupTextColor", byte4swap(m_colors.annotationPopupTextColor)));
 
 	m_colors.selectedMaskPins    = byte4swap(obvconfig.ParseHex("selectedMaskPins", byte4swap(m_colors.selectedMaskPins)));
 	m_colors.selectedMaskParts   = byte4swap(obvconfig.ParseHex("selectedMaskParts", byte4swap(m_colors.selectedMaskParts)));
@@ -533,9 +536,32 @@ void BoardView::ColorPreferences(void) {
 	if (ImGui::BeginPopupModal("Colour Preferences", &dummy, ImGuiWindowFlags_AlwaysAutoResize)) {
 		if (m_showColorPreferences) m_showColorPreferences = false;
 
+		ImGui::Dummy(ImVec2(1, DPI(5)));
+		RA("Base theme", DPI(200));
+		ImGui::SameLine();
+		{
+			int tc  = 0;
+			char *v = obvconfig.ParseStr("colorTheme", "default");
+			if (strcmp(v, "dark") == 0) {
+				tc = 1;
+			}
+			if (ImGui::RadioButton("Light", &tc, 0)) {
+				obvconfig.WriteStr("colorTheme", "light");
+				ThemeSetStyle("light");
+				m_needsRedraw = true;
+			}
+			ImGui::SameLine();
+			if (ImGui::RadioButton("Dark", &tc, 1)) {
+				obvconfig.WriteStr("colorTheme", "dark");
+				ThemeSetStyle("dark");
+				m_needsRedraw = true;
+			}
+		}
+		ImGui::Dummy(ImVec2(1, DPI(5)));
+
 		ColorPreferencesItem("Background", "##Background", "backgroundColor", DPI(300), &m_colors.backgroundColor);
 		ColorPreferencesItem("Board fill", "##Boardfill", "boardFillColor", DPI(300), &m_colors.boardFillColor);
-		ColorPreferencesItem("Board outline", "##BoardOutline", "boardOutline", DPI(300), &m_colors.boardOutlineColor);
+		ColorPreferencesItem("Board outline", "##BoardOutline", "boardOutlineColor", DPI(300), &m_colors.boardOutlineColor);
 
 		ImGui::Dummy(ImVec2(1, DPI(10)));
 		ImGui::Text("Parts");
@@ -553,25 +579,29 @@ void BoardView::ColorPreferences(void) {
 		ImGui::Dummy(ImVec2(1, DPI(10)));
 		ImGui::Text("Pins");
 		ImGui::Separator();
-		ColorPreferencesItem("Default", "##PinDefault", "pinDefault", DPI(300), &m_colors.pinDefaultColor);
-		ColorPreferencesItem("Ground", "##PinGround", "pinGround", DPI(300), &m_colors.pinGroundColor);
-		ColorPreferencesItem("NC", "##PinNC", "pinNotConnected", DPI(300), &m_colors.pinNotConnectedColor);
-		ColorPreferencesItem("Test pad", "##PinTP", "pinTestPad", DPI(300), &m_colors.pinTestPadColor);
-		ColorPreferencesItem("Selected", "##PinSelected", "pinSelected", DPI(300), &m_colors.pinSelectedColor);
-		ColorPreferencesItem("Selected text", "##PinSelectedText", "pinSelectedText", DPI(300), &m_colors.pinSelectedTextColor);
-		ColorPreferencesItem("Highlighted", "##PinHighlighted", "pinHighlighted", DPI(300), &m_colors.pinHighlightedColor);
+		ColorPreferencesItem("Default", "##PinDefault", "pinDefaultColor", DPI(300), &m_colors.pinDefaultColor);
+		ColorPreferencesItem("Default text", "##PinDefaultText", "pinDefaultTextColor", DPI(300), &m_colors.pinDefaultTextColor);
+		ColorPreferencesItem("Ground", "##PinGround", "pinGroundColor", DPI(300), &m_colors.pinGroundColor);
+		ColorPreferencesItem("NC", "##PinNC", "pinNotConnectedColor", DPI(300), &m_colors.pinNotConnectedColor);
+		ColorPreferencesItem("Test pad", "##PinTP", "pinTestPadColor", DPI(300), &m_colors.pinTestPadColor);
+		ColorPreferencesItem("Test pad fill", "##PinTPF", "pinTestPadFillColor", DPI(300), &m_colors.pinTestPadFillColor);
+		ColorPreferencesItem("Selected", "##PinSelected", "pinSelectedColor", DPI(300), &m_colors.pinSelectedColor);
+		ColorPreferencesItem(
+		    "Selected text", "##PinSelectedText", "pinSelectedTextColor", DPI(300), &m_colors.pinSelectedTextColor);
+		ColorPreferencesItem("Highlighted", "##PinHighlighted", "pinHighlightedColor", DPI(300), &m_colors.pinHighlightedColor);
 		ColorPreferencesItem("Halo", "##PinHalo", "pinHaloColor", DPI(300), &m_colors.pinHaloColor);
-		ColorPreferencesItem("Same net", "##PinSameNet", "pinHighlightSameNet", DPI(300), &m_colors.pinHighlightSameNetColor);
+		ColorPreferencesItem("Same net", "##PinSameNet", "pinHighlightSameNetColor", DPI(300), &m_colors.pinHighlightSameNetColor);
 
 		ImGui::Dummy(ImVec2(1, DPI(10)));
 		ImGui::Text("Annotations");
 		ImGui::Separator();
 		ColorPreferencesItem("Box", "##AnnBox", "annotationBoxColor", DPI(300), &m_colors.annotationBoxColor);
 		ColorPreferencesItem("Stalk", "##AnnStalk", "annotationStalkColor", DPI(300), &m_colors.annotationStalkColor);
-		ColorPreferencesItem("Popup text", "##AnnPopupText", "annotationPopupText", DPI(300), &m_colors.annotationPopupTextColor);
+		ColorPreferencesItem(
+		    "Popup text", "##AnnPopupText", "annotationPopupTextColor", DPI(300), &m_colors.annotationPopupTextColor);
 		ColorPreferencesItem("Popup background",
 		                     "##AnnPopupBackground",
-		                     "annotationPopupBackground",
+		                     "annotationPopupBackgroundColor",
 		                     DPI(300),
 		                     &m_colors.annotationPopupBackgroundColor);
 
@@ -2412,6 +2442,7 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 	for (auto &pin : m_board->Pins()) {
 		auto p_pin = pin.get();
 		float psz  = pin->diameter * m_scale * 20.0f;
+		uint32_t fill_color;
 
 		// continue if pin is not visible anyway
 		ImVec2 pos = CoordToScreen(pin->position.x, pin->position.y);
@@ -2454,8 +2485,9 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 			*/
 
 			if (pin->type == Pin::kPinTypeTestPad) {
-				color     = (m_colors.pinTestPadColor & cmask) | omask;
-				show_text = false;
+				color      = (m_colors.pinTestPadColor & cmask) | omask;
+				fill_color = (m_colors.pinTestPadFillColor & cmask) | omask;
+				show_text  = false;
 			}
 
 			// pin is on the same net as selected pin: highlight > rest
@@ -2496,9 +2528,10 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 			switch (pin->type) {
 				case Pin::kPinTypeTestPad:
 					if (psz > 3) {
-						draw->AddCircleFilled(ImVec2(pos.x, pos.y), psz, color, segments);
+						draw->AddCircleFilled(ImVec2(pos.x, pos.y), psz, fill_color, segments);
+						draw->AddCircle(ImVec2(pos.x, pos.y), psz, color, segments);
 					} else if (psz > threshold) {
-						draw->AddRectFilled(ImVec2(pos.x - h, pos.y - h), ImVec2(pos.x + h, pos.y + h), color);
+						draw->AddRectFilled(ImVec2(pos.x - h, pos.y - h), ImVec2(pos.x + h, pos.y + h), fill_color);
 					}
 					break;
 				default:

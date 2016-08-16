@@ -66,6 +66,7 @@ struct ColorScheme {
 	uint32_t pinGroundColor       = 0xff0000bb;
 	uint32_t pinNotConnectedColor = 0xffff0000;
 	uint32_t pinTestPadColor      = 0xff888888;
+	uint32_t pinTestPadFillColor  = 0x882d9ebd; // FF8C00
 
 	uint32_t pinSelectedColor         = 0xff00eeee;
 	uint32_t pinSelectedTextColor     = 0xff00eeee;

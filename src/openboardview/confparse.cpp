@@ -74,6 +74,7 @@ pinDefaultTextColor			= 0x0000ccff\r\n\
 pinGroundColor				= 0x2222aaff\r\n\
 pinNotConnectedColor		= 0xaaaaaaff\r\n\
 pinTestPadColor				= 0x888888ff\r\n\
+pinTestPadFillColor				= 0xbd9e2dff\r\n\
 pinSelectedColor				= 0x0000ffff\r\n\
 pinSelectedTextColor			= 0xff0000ff\r\n\
 pinHighlightedColor			= 0x0000ffff\r\n\
