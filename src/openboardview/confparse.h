@@ -1,18 +1,19 @@
 #ifndef __CONFPARSE__
 #define __CONFPARSE__
+#include <string>
+
 #define CONFPARSE_MAX_VALUE_SIZE 10240
-#define CONFPARSE_FILENAME_MAX 1024
 struct Confparse {
 
-	char filename[CONFPARSE_FILENAME_MAX];
+	std::string filename;
 	char value[CONFPARSE_MAX_VALUE_SIZE];
 	char *conf, *limit;
 	size_t buffer_size;
 	bool nested = false;
 
 	~Confparse(void);
-	int Load(const char *utf8_filename);
-	int SaveDefault(const char *utf8_filename);
+	int Load(const std::string &utf8_filename);
+	int SaveDefault(const std::string &utf8_filename);
 	char *Parse(const char *key);
 	char *ParseStr(const char *key, char *defaultv);
 	double ParseDouble(const char *key, double defaultv);

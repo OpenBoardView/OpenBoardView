@@ -1,4 +1,4 @@
-#include "platform.h"
+#include "platform.h" // Should be kept first
 #include "BoardView.h"
 #include "history.h"
 #include "utf8/utf8.h"

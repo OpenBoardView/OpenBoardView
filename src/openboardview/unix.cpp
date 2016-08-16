@@ -1,6 +1,5 @@
 #ifndef _WIN32
 
-#define _CRT_SECURE_NO_WARNINGS 1
 #include "platform.h"
 #include "imgui/imgui.h"
 #include <SDL2/SDL.h>
@@ -8,6 +7,8 @@
 #include <fstream>
 #include <iostream>
 #include <stdint.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 
 #ifdef ENABLE_GTK
 #include <gtk/gtk.h>
@@ -205,6 +206,63 @@ const std::string get_font_path(const std::string &name) {
 
 	FcPatternDestroy(pat);
 	return path;
+}
+#endif
+
+// Return an environment variable value in an std::string
+const std::string get_env_var(const std::string varname) {
+	std::string envVar;
+	const char *cEnvVar = std::getenv(varname.c_str());
+	if (cEnvVar) envVar = std::string(cEnvVar); // cEnvVar may be null
+	return envVar;
+}
+
+// Return true upon successful directory creation or if path was an existing directory
+bool create_dir(const std::string &path) {
+	struct stat st;
+	int sr;
+	sr = stat(path.c_str(), &st);
+	if (sr == -1) {
+		mkdir(path.c_str(), S_IRWXU);
+		sr = stat(path.c_str(), &st);
+	}
+	if ((sr == 0) && (S_ISDIR(st.st_mode))) return true;
+	return false;
+}
+
+// Recursively create directories
+bool create_dirs(const std::string &path) {
+	for (size_t pos = 0; (pos = path.find("/", pos + 1)) != std::string::npos;) {
+		if (!create_dir(path.substr(0, pos + 1))) return false;
+	}
+	return true;
+}
+
+#ifndef __APPLE__
+const std::string get_user_dir(const UserDir userdir) {
+	std::string path;
+	std::string envVar;
+
+	if (userdir == UserDir::Config)
+		envVar = get_env_var("XDG_CONFIG_HOME");
+	else if (userdir == UserDir::Data)
+		envVar = get_env_var("XDG_DATA_HOME");
+
+	if (envVar.empty()) {
+		envVar = get_env_var("HOME");
+		if (!envVar.empty()) {
+			path += std::string(envVar);
+			if (userdir == UserDir::Config)
+				path += "/.config";
+			else if (userdir == UserDir::Data)
+				path += "/.local/share";
+		}
+	}
+	if (!path.empty()) {
+		path += "/openboardview/";
+		if (create_dirs(path)) return path; // Check if dir already exists and create it otherwise
+	}
+	return "./"; // Something went wrong, use current dir
 }
 #endif
 

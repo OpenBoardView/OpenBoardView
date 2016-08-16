@@ -9,28 +9,21 @@
 
 #include "history.h"
 
-FHistory::~FHistory() {
+FHistory::~FHistory() {}
 
-	if (fname) free(fname);
-}
-
-int FHistory::Set_filename(const char *f) {
-#ifdef _WIN32
-	fname = _strdup(f);
-#else
-	fname = strdup(f);
-#endif
+int FHistory::Set_filename(const std::string &name) {
+	fname = name;
 	return 0;
 }
 
 int FHistory::Load(void) {
-	if (fname) {
+	if (!fname.empty()) {
 		FILE *f;
 #ifdef _WIN32
 		errno_t e;
-		e = fopen_s(&f, fname, "r");
+		e = fopen_s(&f, fname.c_str(), "r");
 #else
-		f = fopen(fname, "r");
+		f = fopen(fname.c_str(), "r");
 #endif
 
 		count = 0;
@@ -65,14 +58,14 @@ int FHistory::Load(void) {
 }
 
 int FHistory::Prepend_save(char *newfile) {
-	if (fname) {
+	if (!fname.empty()) {
 		FILE *f;
 #ifdef _WIN32
 		errno_t e;
 
-		e = fopen_s(&f, fname, "w");
+		e = fopen_s(&f, fname.c_str(), "w");
 #else
-		f = fopen(fname, "w");
+		f = fopen(fname.c_str(), "w");
 #endif
 
 		if (f) {

@@ -8,7 +8,7 @@
  *
  */
 
-#include "platform.h"
+#include "platform.h" // Should be kept first
 
 #include "BoardView.h"
 #include "history.h"
@@ -191,8 +191,7 @@ void cleanupAndExit(int c) {
 
 int main(int argc, char **argv) {
 	uint8_t sleepout;
-	char s[1025];
-	char *homepath;
+	std::string configDir;
 	globals g; // because some things we have to store *before* we load the config file in BoardView app.obvconf
 	BoardView app{};
 
@@ -275,45 +274,13 @@ int main(int argc, char **argv) {
 	 * stuff we need (currently file-history and configuration file)
 	 *
 	 */
-	homepath = getenv("HOME");
-	if (homepath) {
-		struct stat st;
-		int sr;
-#ifdef __APPLE__
-		snprintf(s, sizeof(s), "%s/Library/Application Support/OpenBoardView", homepath);
-#else
-		snprintf(s, sizeof(s), "%s/.config/openboardview", homepath);
-#endif
-		sr = stat(s, &st);
-		if (sr == -1) {
-#ifdef _WIN32
-			mkdir(s);
-#else
-			mkdir(s, S_IRWXU);
-#endif
-			sr = stat(s, &st);
-		}
+	configDir = get_user_dir(UserDir::Config);
+	if (!configDir.empty()) app.obvconfig.Load(configDir + "obv.conf");
 
-		/*
-		 * Check to see if the path exists, if it does, create the full
-		 * filenames and load up
-		 */
-		if ((sr == 0) && (S_ISDIR(st.st_mode))) {
-#ifdef __APPLE__
-			snprintf(s, sizeof(s), "%s/Library/Application Support/OpenBoardView/obv.conf", homepath);
-#else
-			snprintf(s, sizeof(s), "%s/.config/openboardview/obv.conf", homepath);
-#endif
-			app.obvconfig.Load(s);
-
-#ifdef __APPLE__
-			snprintf(s, sizeof(s), "%s/Library/Application Support/OpenBoardView/obv.history", homepath);
-#else
-			snprintf(s, sizeof(s), "%s/.config/openboardview/obv.history", homepath);
-#endif
-			app.fhistory.Set_filename(s);
-			app.fhistory.Load();
-		}
+	std::string dataDir = get_user_dir(UserDir::Data);
+	if (!dataDir.empty()) {
+		app.fhistory.Set_filename(dataDir + "obv.history");
+		app.fhistory.Load();
 	}
 #endif // if not _WIN32
 
@@ -531,8 +498,7 @@ int main(int argc, char **argv) {
 
 		if (app.reloadConfig) {
 			app.reloadConfig = false;
-			snprintf(s, sizeof(s), "%s/.config/openboardview/obv.conf", homepath);
-			app.obvconfig.Load(s);
+			app.obvconfig.Load(configDir + "obv.conf");
 			app.ConfigParse();
 			clear_color = ImColor(app.m_colors.backgroundColor);
 		}

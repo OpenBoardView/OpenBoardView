@@ -1,5 +1,6 @@
 #ifdef __APPLE__
 
+#include "platform.h"
 #include <string>
 #import <Cocoa/Cocoa.h>
 
@@ -42,5 +43,33 @@ const std::string get_font_path(const std::string &name) {
 	return filename;
 }
 #endif
+
+// Inspired by https://developer.apple.com/library/mac/documentation/FileManagement/Conceptual/FileSystemProgrammingGuide/ManagingFIlesandDirectories/ManagingFIlesandDirectories.html
+// userdir is ignored for now since common usage puts both config file and history file in ApplicationSupport directory
+const std::string get_user_dir(const UserDir userdir) {
+	std::string configPath;
+	NSFileManager *fm = [NSFileManager defaultManager];
+	NSURL *configURL = nil;
+
+	// Find the application support directory in the home directory.
+	NSArray *appSupportDir = [fm URLsForDirectory:NSApplicationSupportDirectory inDomains:NSUserDomainMask];
+
+	if ([appSupportDir count] > 0) {
+		// Append OpenBoardView to the Application Support directory path
+		configURL = [[appSupportDir objectAtIndex:0] URLByAppendingPathComponent:@"OpenBoardView/"];
+
+		// If the directory does not exist, this method creates it.
+		// This method is only available in OS X v10.7 and iOS 5.0 or later.
+		NSError *theError = nil;
+		if (![fm createDirectoryAtURL:configURL withIntermediateDirectories:YES attributes:nil error:&theError]) {
+			NSLog(@"%@", theError);
+		} else if (configURL)
+			configPath = std::string([[configURL path] UTF8String]); // Extract path from URL
+	}
+	if (!configPath.empty())
+		return configPath + "/";
+	else
+		return "./"; // Something went wrong, use current dir.
+}
 
 #endif
