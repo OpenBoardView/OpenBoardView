@@ -106,7 +106,7 @@ void BoardView::ThemeSetStyle(const char *name) {
 		style.Colors[ImGuiCol_TextSelectedBg]       = ImVec4(0.00f, 0.00f, 1.00f, 0.35f);
 		style.Colors[ImGuiCol_ModalWindowDarkening] = ImVec4(0.20f, 0.20f, 0.20f, 0.35f);
 
-		m_colors.backgroundColor                = byte4swap(0x602060ff);
+		m_colors.backgroundColor                = byte4swap(0x14121cff);
 		m_colors.boardFillColor                 = byte4swap(0x202020ff);
 		m_colors.partHullColor                  = byte4swap(0x80808080);
 		m_colors.partOutlineColor               = byte4swap(0x999999ff);
@@ -116,9 +116,9 @@ void BoardView::ThemeSetStyle(const char *name) {
 		m_colors.partTextColor                  = byte4swap(0x111111ff);
 		m_colors.partTextBackgroundColor        = byte4swap(0xffff00ff);
 		m_colors.boardOutlineColor              = byte4swap(0xff4444ff);
-		m_colors.pinDefaultColor                = byte4swap(0x0000ffff);
+		m_colors.pinDefaultColor                = byte4swap(0x4040ffff);
 		m_colors.pinDefaultTextColor            = byte4swap(0x00cc00ff);
-		m_colors.pinGroundColor                 = byte4swap(0x7777ffff);
+		m_colors.pinGroundColor                 = byte4swap(0x0300C3ff);
 		m_colors.pinNotConnectedColor           = byte4swap(0xaaaaaaff);
 		m_colors.pinTestPadColor                = byte4swap(0x888888ff);
 		m_colors.pinSelectedTextColor           = byte4swap(0xffff00ff);
@@ -127,8 +127,8 @@ void BoardView::ThemeSetStyle(const char *name) {
 		m_colors.pinHighlightedColor            = byte4swap(0x0000ffff);
 		m_colors.pinHighlightSameNetColor       = byte4swap(0x000000ff);
 		m_colors.annotationPartAliasColor       = byte4swap(0xffff00ff);
-		m_colors.annotationBoxColor             = byte4swap(0xaaaa40ff);
-		m_colors.annotationStalkColor           = byte4swap(0xffffffcc);
+		m_colors.annotationBoxColor             = byte4swap(0xaaaa88aa);
+		m_colors.annotationStalkColor           = byte4swap(0xaaaaaaff);
 		m_colors.annotationPopupBackgroundColor = byte4swap(0x888888ff);
 		m_colors.annotationPopupTextColor       = byte4swap(0xffffffff);
 		m_colors.selectedMaskPins               = byte4swap(0xffffff8f);
