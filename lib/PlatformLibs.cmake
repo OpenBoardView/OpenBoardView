@@ -26,8 +26,18 @@ else()
 	find_package(PkgConfig REQUIRED)
 	pkg_check_modules(GTK3 REQUIRED gtk+-3.0)
 
-	set(INCLUDE_DIRS ${INCLUDE_DIRS} ${GTK3_INCLUDE_DIRS})
-	set(PLATFORM_LIBS ${PLATFORM_LIBS} ${GTK3_LIBRARIES})
+	# On linux we need fontconfig for system fonts
+	pkg_check_modules(FONTCONFIG REQUIRED fontconfig)
+
+	set(INCLUDE_DIRS ${INCLUDE_DIRS}
+		${GTK3_INCLUDE_DIRS}
+		${FONTCONFIG_INCLUDE_DIRS})
+	set(PLATFORM_LIBS ${PLATFORM_LIBS}
+		${GTK3_LIBRARIES}
+		${FONTCONFIG_LIBRARIES})
+	set(CFLAGS ${CFLAGS}
+		${GTK3_CFLAGS_OTHER}
+		${FONTCONFIG_CFLAGS_OTHER})
 endif()
 
 ## OpenGL

@@ -47,7 +47,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 	${INCLUDE_DIRS}
 )
 
-target_compile_options(${PROJECT_NAME} PRIVATE ${GTK3_CFLAGS_OTHER})
+target_compile_options(${PROJECT_NAME} PRIVATE ${CFLAGS})
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
 		CXX_STANDARD 11       # Use C++11

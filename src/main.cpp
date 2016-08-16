@@ -4,6 +4,7 @@
 #include "BoardView.h"
 
 #include "imgui_impl_glfw.h"
+#include "platform.h"
 #include <GLFW/glfw3.h>
 #include <imgui.h>
 #include <iostream>
@@ -33,6 +34,7 @@ int main(int argc, char **argv) {
 	// Load Fonts
 	for (auto name : {"Liberation Sans", "DejaVu Sans", "Arial",
 	                  ""}) { // Empty string = use system default font
+#ifdef _WIN32
 		ImFontConfig font_cfg{};
 		font_cfg.FontDataOwnedByAtlas = false;
 		const std::vector<char> ttf = load_font(name);
@@ -42,6 +44,21 @@ int main(int argc, char **argv) {
 			    &font_cfg);
 			break;
 		}
+#else
+		const std::string fontpath = get_font_path(name);
+		if (fontpath.empty())
+			continue; // Font not found
+		auto extpos = fontpath.rfind('.');
+		if (extpos == std::string::npos)
+			continue; // No extension in filename
+		std::string ext = fontpath.substr(extpos);
+		std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower); // make ext lowercase
+		if (ext == ".ttf") { // ImGui handles only TrueType fonts so exclude anything which has a
+		                     // different ext
+			io.Fonts->AddFontFromFileTTF(fontpath.c_str(), 20.0f);
+			break;
+		}
+#endif
 	}
 	io.Fonts->AddFontDefault(); // ImGui fallback font
 
