@@ -394,7 +394,7 @@ int BoardView::LoadFile(char *filename) {
 	if (filename) {
 		char *ext = strrchr(filename, '.');
 		if (ext) {
-			for (int i = 0; ext[i]; i++) ext[i] = tolower(ext[i]); // Convert extension to lowercase
+			//			for (int i = 0; ext[i]; i++) ext[i] = tolower(ext[i]); // Convert extension to lowercase
 		} else {
 			ext = strrchr(filename, '\0'); // No extension, point to end of filename
 		}
@@ -423,7 +423,7 @@ int BoardView::LoadFile(char *filename) {
 
 			//			file->valid = false;
 
-			if (strcmp(ext, ".fz") == 0) { // Since it is encrypted we cannot use the below logic. Trust the ext.
+			if (strcasecmp(ext, ".fz") == 0) { // Since it is encrypted we cannot use the below logic. Trust the ext.
 				file = new FZFile(buffer, buffer_size, FZKey);
 			} else if (BRDFile::verifyFormat(buffer, buffer_size))
 				file = new BRDFile(buffer, buffer_size);

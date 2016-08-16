@@ -121,10 +121,10 @@ char *show_file_picker() {
 	GtkFileFilter *filter            = gtk_file_filter_new();
 	GtkFileFilter *filter_everything = gtk_file_filter_new();
 	gtk_file_filter_set_name(filter, "Boards");
-	gtk_file_filter_add_pattern(filter, "*.brd");
-	gtk_file_filter_add_pattern(filter, "*.bdv");
-	gtk_file_filter_add_pattern(filter, "*.bvr");
-	gtk_file_filter_add_pattern(filter, "*.fz");
+	gtk_file_filter_add_pattern(filter, "*.[bB][rR][dD]");
+	gtk_file_filter_add_pattern(filter, "*.[bB][dD][vV]");
+	gtk_file_filter_add_pattern(filter, "*.[bB][vV][rR]");
+	gtk_file_filter_add_pattern(filter, "*.[fF][zZ]");
 
 	gtk_file_filter_set_name(filter_everything, "All");
 	gtk_file_filter_add_pattern(filter_everything, "*");
