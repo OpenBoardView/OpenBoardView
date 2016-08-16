@@ -21,7 +21,8 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{7470E8BE-B362-438C-A297-10C2C8E99B01}</ProjectGuid>
     <RootNamespace>OpenBoardView</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.10240.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+    <ProjectName>OpenBoardViewW7x86</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -33,7 +34,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v140_xp</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
@@ -68,7 +69,12 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
-  <PropertyGroup />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <TargetName>OFBVw7x86</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <TargetName>OFBV-AMD64</TargetName>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
@@ -79,7 +85,7 @@
       <PreprocessorDefinitions>ImDrawIdx=unsigned int;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>d3d9.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>d3d9.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;zlib.lib;libcmt.lib;libvcruntime.lib;libucrt.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>Debug</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <AdditionalLibraryDirectories>$(ProjectDir)..\zlib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
@@ -98,7 +104,7 @@
       <PreprocessorDefinitions>ImDrawIdx=unsigned int;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>d3d9.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>d3d9.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;zlib.lib;libcmt.lib;libvcruntime.lib;libucrt.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem>Windows</SubSystem>
       <AdditionalLibraryDirectories>$(ProjectDir)..\zlib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
@@ -114,13 +120,18 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\zlib;$(ProjectDir)..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>ImDrawIdx=unsigned int;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\zlib;$(ProjectDir)..;$(ProjectDir)..\sqlite3;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;ImDrawIdx=unsigned int;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <WholeProgramOptimization>false</WholeProgramOptimization>
+      <FloatingPointModel>Fast</FloatingPointModel>
+      <DisableSpecificWarnings>%(DisableSpecificWarnings)</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>d3d9.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>d3d9.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;zlib.lib;libcmt.lib;libvcruntime.lib;libucrt.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem>Windows</SubSystem>
       <AdditionalLibraryDirectories>$(ProjectDir)..\zlib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
@@ -136,7 +147,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\zlib;$(ProjectDir)..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\sqlite3;$(ProjectDir)..\zlib;$(ProjectDir)..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>ImDrawIdx=unsigned int;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
@@ -161,42 +172,44 @@
     <ClInclude Include="..\openboardview\BDVFile.h" />
     <ClInclude Include="..\openboardview\Board.h" />
     <ClInclude Include="..\openboardview\BoardView.h" />
+    <ClInclude Include="..\openboardview\BRD2File.h" />
     <ClInclude Include="..\openboardview\BRDBoard.h" />
     <ClInclude Include="..\openboardview\BRDFile.h" />
     <ClInclude Include="..\openboardview\BVRFile.h" />
     <ClInclude Include="..\openboardview\confparse.h" />
     <ClInclude Include="..\openboardview\FZFile.h" />
     <ClInclude Include="..\openboardview\history.h" />
-    <ClInclude Include="..\openboardview\imgui_impl_dx9.h" />
     <ClInclude Include="..\openboardview\NetList.h" />
     <ClInclude Include="..\openboardview\PartList.h" />
     <ClInclude Include="..\openboardview\platform.h" />
+    <ClInclude Include="..\openboardview\Renderers\imgui_impl_dx9.h" />
     <ClInclude Include="..\openboardview\resource.h" />
-    <ClInclude Include="..\openboardview\TextureDDS.h" />
     <ClInclude Include="..\openboardview\vectorhulls.h" />
+    <ClInclude Include="..\sqlite3\sqlite3.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\imgui\imgui.cpp" />
     <ClCompile Include="..\imgui\imgui_draw.cpp" />
+    <ClCompile Include="..\openboardview\annotations.cpp" />
     <ClCompile Include="..\openboardview\BDVFile.cpp" />
     <ClCompile Include="..\openboardview\BoardView.cpp" />
+    <ClCompile Include="..\openboardview\BRD2File.cpp" />
     <ClCompile Include="..\openboardview\BRDBoard.cpp" />
     <ClCompile Include="..\openboardview\BRDFile.cpp" />
     <ClCompile Include="..\openboardview\BVRFile.cpp" />
     <ClCompile Include="..\openboardview\confparse.cpp" />
     <ClCompile Include="..\openboardview\FZFile.cpp" />
     <ClCompile Include="..\openboardview\history.cpp" />
-    <ClCompile Include="..\openboardview\imgui_impl_dx9.cpp" />
     <ClCompile Include="..\openboardview\main_dx9.cpp" />
     <ClCompile Include="..\openboardview\NetList.cpp" />
     <ClCompile Include="..\openboardview\PartList.cpp" />
-    <ClCompile Include="..\openboardview\TextureDDS.cpp" />
+    <ClCompile Include="..\openboardview\Renderers\imgui_impl_dx9.cpp" />
     <ClCompile Include="..\openboardview\vectorhulls.cpp" />
     <ClCompile Include="..\openboardview\win32.cpp" />
+    <ClCompile Include="..\sqlite3\sqlite3.c" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\..\asset\brd.ico" />
-    <Image Include="..\..\asset\empty_circle.dds" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="OpenBoardView.rc">
@@ -205,9 +218,6 @@
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)..\..;$(ProjectDir)..\openboardview</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)..\..;$(ProjectDir)..\openboardview</AdditionalIncludeDirectories>
     </ResourceCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <Font Include="..\..\asset\FiraSans-Medium.ttf" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

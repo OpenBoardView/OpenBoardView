@@ -1,9 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClInclude Include="..\openboardview\imgui_impl_dx9.h">
-      <Filter>win32</Filter>
-    </ClInclude>
     <ClInclude Include="..\openboardview\Board.h" />
     <ClInclude Include="..\openboardview\BoardView.h" />
     <ClInclude Include="..\openboardview\BRDBoard.h" />
@@ -30,7 +27,6 @@
     <ClInclude Include="..\imgui\stb_truetype.h">
       <Filter>imgui</Filter>
     </ClInclude>
-    <ClInclude Include="..\openboardview\TextureDDS.h" />
     <ClInclude Include="..\openboardview\BDVFile.h" />
     <ClInclude Include="..\openboardview\FZFile.h" />
     <ClInclude Include="..\openboardview\vectorhulls.h" />
@@ -38,11 +34,13 @@
     <ClInclude Include="..\openboardview\annotations.h" />
     <ClInclude Include="..\openboardview\confparse.h" />
     <ClInclude Include="..\openboardview\BVRFile.h" />
+    <ClInclude Include="..\openboardview\BRD2File.h" />
+    <ClInclude Include="..\sqlite3\sqlite3.h" />
+    <ClInclude Include="..\openboardview\Renderers\imgui_impl_dx9.h">
+      <Filter>win32</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\openboardview\imgui_impl_dx9.cpp">
-      <Filter>win32</Filter>
-    </ClCompile>
     <ClCompile Include="..\openboardview\win32.cpp">
       <Filter>win32</Filter>
     </ClCompile>
@@ -57,7 +55,6 @@
     <ClCompile Include="..\imgui\imgui_draw.cpp">
       <Filter>imgui</Filter>
     </ClCompile>
-    <ClCompile Include="..\openboardview\TextureDDS.cpp" />
     <ClCompile Include="..\openboardview\BDVFile.cpp" />
     <ClCompile Include="..\openboardview\FZFile.cpp" />
     <ClCompile Include="..\openboardview\vectorhulls.cpp" />
@@ -65,6 +62,12 @@
     <ClCompile Include="..\openboardview\main_dx9.cpp" />
     <ClCompile Include="..\openboardview\confparse.cpp" />
     <ClCompile Include="..\openboardview\BVRFile.cpp" />
+    <ClCompile Include="..\openboardview\BRD2File.cpp" />
+    <ClCompile Include="..\openboardview\annotations.cpp" />
+    <ClCompile Include="..\sqlite3\sqlite3.c" />
+    <ClCompile Include="..\openboardview\Renderers\imgui_impl_dx9.cpp">
+      <Filter>win32</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="imgui">
@@ -87,16 +90,8 @@
     <Image Include="..\..\asset\brd.ico">
       <Filter>assets</Filter>
     </Image>
-    <Image Include="..\..\asset\empty_circle.dds">
-      <Filter>assets</Filter>
-    </Image>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="OpenBoardView.rc" />
-  </ItemGroup>
-  <ItemGroup>
-    <Font Include="..\..\asset\FiraSans-Medium.ttf">
-      <Filter>assets</Filter>
-    </Font>
   </ItemGroup>
 </Project>
