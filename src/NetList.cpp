@@ -6,8 +6,7 @@ NetList::NetList(TcharStringCallback cbNetSelected) {
 	cbNetSelected_ = cbNetSelected;
 }
 
-NetList::~NetList() {
-}
+NetList::~NetList() {}
 
 void NetList::Draw(const char *title, bool *p_open, Board *board) {
 	// TODO: export / fix dimensions & behaviour
@@ -32,7 +31,8 @@ void NetList::Draw(const char *title, bool *p_open, Board *board) {
 		string net_name = "";
 		for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
 			net_name = nets[i]->name;
-			if (ImGui::Selectable(net_name.c_str(), selected == i,
+			if (ImGui::Selectable(net_name.c_str(),
+			                      selected == i,
 			                      ImGuiSelectableFlags_SpanAllColumns |
 			                          ImGuiSelectableFlags_AllowDoubleClick)) {
 				selected = i;

@@ -43,8 +43,13 @@ char *wide_to_utf8(const wchar_t *s) {
 
 char *file_as_buffer(size_t *buffer_size, const char *utf8_filename) {
 	wchar_t *wide_filename = utf8_to_wide(utf8_filename);
-	HANDLE file = CreateFile(wide_filename, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL,
-	                         OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+	HANDLE file = CreateFile(wide_filename,
+	                         GENERIC_READ,
+	                         FILE_SHARE_READ | FILE_SHARE_WRITE,
+	                         NULL,
+	                         OPEN_EXISTING,
+	                         FILE_ATTRIBUTE_NORMAL,
+	                         NULL);
 	free(wide_filename);
 	if (file == INVALID_HANDLE_VALUE) {
 		*buffer_size = 0;
@@ -103,8 +108,9 @@ const std::vector<char> load_font(const std::string &name) {
 		::GetTextFaceW(hdc, ncount, fname);
 
 		if (!name.empty() &&
-		    ::CompareStringEx(NULL, NORM_IGNORECASE, wname, name.size(), fname, ncount - 1, NULL,
-		                      NULL, 0) != CSTR_EQUAL) { // We didn't get the font we requested
+		    ::CompareStringEx(
+		        NULL, NORM_IGNORECASE, wname, name.size(), fname, ncount - 1, NULL, NULL, 0) !=
+		        CSTR_EQUAL) { // We didn't get the font we requested
 			free(wname);
 			return data;
 		}

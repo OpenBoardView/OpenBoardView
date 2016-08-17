@@ -6,8 +6,7 @@ PartList::PartList(TcharStringCallback cbNetSelected) {
 	cbNetSelected_ = cbNetSelected;
 }
 
-PartList::~PartList() {
-}
+PartList::~PartList() {}
 
 void PartList::Draw(const char *title, bool *p_open, Board *board) {
 	// TODO: export / fix dimensions & behaviour
@@ -33,8 +32,8 @@ void PartList::Draw(const char *title, bool *p_open, Board *board) {
 		for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
 			part_name = parts[i]->name;
 
-			if (ImGui::Selectable(part_name.c_str(), selected == i,
-			                      ImGuiSelectableFlags_AllowDoubleClick)) {
+			if (ImGui::Selectable(
+			        part_name.c_str(), selected == i, ImGuiSelectableFlags_AllowDoubleClick)) {
 				selected = i;
 				if (ImGui::IsMouseDoubleClicked(0)) {
 					cbNetSelected_(part_name.c_str());
