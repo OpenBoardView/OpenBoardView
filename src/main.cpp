@@ -66,7 +66,7 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	                 NULL};
 	RegisterClassEx(&wc);
 	HWND hwnd =
-	    CreateWindow(class_name, _T("Open Board Viewer"), WS_OVERLAPPEDWINDOW, CW_USEDEFAULT,
+	    CreateWindow(class_name, _T(PRETTY_NAME), WS_OVERLAPPEDWINDOW, CW_USEDEFAULT,
 	                 CW_USEDEFAULT, 1280, 800, NULL, NULL, wc.hInstance, NULL);
 
 	DragAcceptFiles(hwnd, true);
@@ -213,7 +213,7 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 			// Convert character encoding if required, and format the window title
 			mbstowcs_s(NULL, filename, _countof(filename), app.m_lastFileOpenName,
 			           strlen(app.m_lastFileOpenName));
-			_stprintf_s(title, _countof(title), L"%s - Open Board Viewer", filename);
+			_stprintf_s(title, _countof(title), L"%s - " PRETTY_NAME, filename);
 
 			SetWindowText(hwnd, title);
 		}
