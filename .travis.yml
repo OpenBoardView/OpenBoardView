@@ -2,11 +2,13 @@ os:
   - linux
 
 compiler:
-  - gcc
   - clang
 
 matrix:
   include:
+    - os: linux
+      compiler: gcc
+      env: DEPLOY=yes DEPLOY_DEB=yes
     - os: osx
       compiler: clang
       env: DEPLOY=yes
@@ -51,7 +53,12 @@ install: |-
 script: |-
   if [ "$CXX" = "g++" ]; then export CXX="g++-6" CC="gcc-6"; fi
   ./build.sh
-
+  if [ "$DEPLOY_DEB" == "yes" ]
+  then
+    pushd release_build
+    make package
+    popd
+  fi
 
 before_deploy: |-
   if [ "$TRAVIS_OS_NAME" == "osx" ]
@@ -60,6 +67,9 @@ before_deploy: |-
   elif [ "$CROSS" == "mingw64" ]
   then
     export DEPLOY_FILES=bin/openboardview.exe
+  elif [ "$DEPLOY_DEB" == "yes" ]
+  then
+    export DEPLOY_FILES=$(ls OpenBoardView-*.deb)
   fi
 
 deploy:
