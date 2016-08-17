@@ -6,10 +6,10 @@
 #include "imgui_impl_dx9.h"
 #include <d3d9.h>
 #define DIRECTINPUT_VERSION 0x0800
-#include <dinput.h>
-#include <tchar.h>
 #include "crtdbg.h"
 #include "platform.h"
+#include <dinput.h>
+#include <tchar.h>
 
 // Data
 static LPDIRECT3DDEVICE9 g_pd3dDevice = NULL;
@@ -17,28 +17,24 @@ static D3DPRESENT_PARAMETERS g_d3dpp;
 
 extern LRESULT ImGui_ImplDX9_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
-	if (ImGui_ImplDX9_WndProcHandler(hWnd, msg, wParam, lParam))
-		return true;
+	if (ImGui_ImplDX9_WndProcHandler(hWnd, msg, wParam, lParam)) return true;
 
 	switch (msg) {
-	case WM_SIZE:
-		if (g_pd3dDevice != NULL && wParam != SIZE_MINIMIZED) {
-			ImGui_ImplDX9_InvalidateDeviceObjects();
-			g_d3dpp.BackBufferWidth = LOWORD(lParam);
-			g_d3dpp.BackBufferHeight = HIWORD(lParam);
-			HRESULT hr = g_pd3dDevice->Reset(&g_d3dpp);
-			if (hr == D3DERR_INVALIDCALL)
-				IM_ASSERT(0);
-			ImGui_ImplDX9_CreateDeviceObjects();
-		}
-		return 0;
-	case WM_SYSCOMMAND:
-		if ((wParam & 0xfff0) == SC_KEYMENU) // Disable ALT application menu
+		case WM_SIZE:
+			if (g_pd3dDevice != NULL && wParam != SIZE_MINIMIZED) {
+				ImGui_ImplDX9_InvalidateDeviceObjects();
+				g_d3dpp.BackBufferWidth = LOWORD(lParam);
+				g_d3dpp.BackBufferHeight = HIWORD(lParam);
+				HRESULT hr = g_pd3dDevice->Reset(&g_d3dpp);
+				if (hr == D3DERR_INVALIDCALL) IM_ASSERT(0);
+				ImGui_ImplDX9_CreateDeviceObjects();
+			}
 			return 0;
-		break;
-	case WM_DESTROY:
-		PostQuitMessage(0);
-		return 0;
+		case WM_SYSCOMMAND:
+			if ((wParam & 0xfff0) == SC_KEYMENU) // Disable ALT application menu
+				return 0;
+			break;
+		case WM_DESTROY: PostQuitMessage(0); return 0;
 	}
 	return DefWindowProc(hWnd, msg, wParam, lParam);
 }
@@ -65,9 +61,17 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	                 class_name,
 	                 NULL};
 	RegisterClassEx(&wc);
-	HWND hwnd =
-	    CreateWindow(class_name, _T("Open Board Viewer"), WS_OVERLAPPEDWINDOW, CW_USEDEFAULT,
-	                 CW_USEDEFAULT, 1280, 800, NULL, NULL, wc.hInstance, NULL);
+	HWND hwnd = CreateWindow(class_name,
+	                         _T("Open Board Viewer"),
+	                         WS_OVERLAPPEDWINDOW,
+	                         CW_USEDEFAULT,
+	                         CW_USEDEFAULT,
+	                         1280,
+	                         800,
+	                         NULL,
+	                         NULL,
+	                         wc.hInstance,
+	                         NULL);
 
 	DragAcceptFiles(hwnd, true);
 
@@ -87,8 +91,12 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	g_d3dpp.PresentationInterval = D3DPRESENT_INTERVAL_ONE;
 
 	// Create the D3DDevice
-	if (pD3D->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, hwnd,
-	                       D3DCREATE_HARDWARE_VERTEXPROCESSING, &g_d3dpp, &g_pd3dDevice) < 0) {
+	if (pD3D->CreateDevice(D3DADAPTER_DEFAULT,
+	                       D3DDEVTYPE_HAL,
+	                       hwnd,
+	                       D3DCREATE_HARDWARE_VERTEXPROCESSING,
+	                       &g_d3dpp,
+	                       &g_pd3dDevice) < 0) {
 		pD3D->Release();
 		UnregisterClass(class_name, wc.hInstance);
 		MessageBox(hwnd, L"Failed to create Direct3D device", NULL, 0);
@@ -102,14 +110,18 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	io.IniFilename = NULL; // Disable imgui.ini
 
 	// Load Fonts
-	for (auto name : {"Liberation Sans", "DejaVu Sans", "Arial",
+	for (auto name : {"Liberation Sans",
+	                  "DejaVu Sans",
+	                  "Arial",
 	                  ""}) { // Empty string = use system default font
 		ImFontConfig font_cfg{};
 		font_cfg.FontDataOwnedByAtlas = false;
 		const std::vector<char> ttf = load_font(name);
 		if (!ttf.empty()) {
 			io.Fonts->AddFontFromMemoryTTF(
-			    const_cast<void *>(reinterpret_cast<const void *>(ttf.data())), ttf.size(), 20.0f,
+			    const_cast<void *>(reinterpret_cast<const void *>(ttf.data())),
+			    ttf.size(),
+			    20.0f,
 			    &font_cfg);
 			break;
 		}
@@ -211,7 +223,10 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 			TCHAR filename[MAX_PATH + 10];
 
 			// Convert character encoding if required, and format the window title
-			mbstowcs_s(NULL, filename, _countof(filename), app.m_lastFileOpenName,
+			mbstowcs_s(NULL,
+			           filename,
+			           _countof(filename),
+			           app.m_lastFileOpenName,
 			           strlen(app.m_lastFileOpenName));
 			_stprintf_s(title, _countof(title), L"%s - Open Board Viewer", filename);
 
@@ -222,9 +237,10 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 		g_pd3dDevice->SetRenderState(D3DRS_ZENABLE, false);
 		g_pd3dDevice->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
 		g_pd3dDevice->SetRenderState(D3DRS_SCISSORTESTENABLE, false);
-		D3DCOLOR clear_col_dx =
-		    D3DCOLOR_RGBA((int)(clear_col.x * 255.0f), (int)(clear_col.y * 255.0f),
-		                  (int)(clear_col.z * 255.0f), (int)(clear_col.w * 255.0f));
+		D3DCOLOR clear_col_dx = D3DCOLOR_RGBA((int)(clear_col.x * 255.0f),
+		                                      (int)(clear_col.y * 255.0f),
+		                                      (int)(clear_col.z * 255.0f),
+		                                      (int)(clear_col.w * 255.0f));
 		g_pd3dDevice->Clear(0, NULL, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, clear_col_dx, 1.0f, 0);
 		if (g_pd3dDevice->BeginScene() >= 0) {
 			ImGui::Render();
@@ -234,10 +250,8 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	}
 
 	ImGui_ImplDX9_Shutdown();
-	if (g_pd3dDevice)
-		g_pd3dDevice->Release();
-	if (pD3D)
-		pD3D->Release();
+	if (g_pd3dDevice) g_pd3dDevice->Release();
+	if (pD3D) pD3D->Release();
 	UnregisterClass(class_name, wc.hInstance);
 
 	DragAcceptFiles(hwnd, false);

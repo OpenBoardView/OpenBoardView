@@ -57,8 +57,7 @@ BRDBoard::BRDBoard(const BRDFile *const boardFile)
 			net->name = string(brd_nail.net);
 
 			// avoid having multiple UNCONNECTED<XXX> references
-			if (is_prefix(kNetUnconnectedPrefix, net->name))
-				continue;
+			if (is_prefix(kNetUnconnectedPrefix, net->name)) continue;
 
 			// check whether the pin represents ground
 			net->is_ground = (net->name == "GND");
@@ -188,7 +187,8 @@ BRDBoard::BRDBoard(const BRDFile *const boardFile)
 
 		// remove all dummy components from vector, add our official dummy
 		// TODO: formatting looks a bit off
-		components_.erase(remove_if(begin(components_), end(components_),
+		components_.erase(remove_if(begin(components_),
+		                            end(components_),
 		                            [](shared_ptr<Component> &comp) { return comp->is_dummy(); }),
 		                  end(components_));
 
@@ -201,14 +201,14 @@ BRDBoard::BRDBoard(const BRDFile *const boardFile)
 	}
 
 	// Sort components by name
-	sort(begin(components_), end(components_),
+	sort(begin(components_),
+	     end(components_),
 	     [](shared_ptr<Component> &lhs, shared_ptr<Component> &rhs) {
 		     return lhs->name < rhs->name;
 		 });
 }
 
-BRDBoard::~BRDBoard() {
-}
+BRDBoard::~BRDBoard() {}
 
 SharedVector<Component> &BRDBoard::Components() {
 	return components_;

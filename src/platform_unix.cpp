@@ -3,19 +3,19 @@
 #define _CRT_SECURE_NO_WARNINGS 1
 #include "platform.h"
 #include "imgui.h"
-#include <iostream>
-#include <fstream>
-#include <stdint.h>
 #include <assert.h>
+#include <fstream>
+#include <iostream>
+#include <stdint.h>
 
 #ifndef __APPLE__
 #include <fontconfig/fontconfig.h>
 #include <gtk/gtk.h>
-#endif  // ! __APPLE__
+#endif // ! __APPLE__
 
 char *file_as_buffer(size_t *buffer_size, const char *utf8_filename) {
 	std::ifstream file;
-	file.open(utf8_filename,  std::ios::in | std::ios::binary | std::ios::ate);
+	file.open(utf8_filename, std::ios::in | std::ios::binary | std::ios::ate);
 	if (!file.is_open()) {
 		std::cerr << "Error opening " << utf8_filename << ": " << strerror(errno) << std::endl;
 		*buffer_size = 0;
@@ -40,17 +40,18 @@ char *show_file_picker() {
 	char *path = nullptr;
 	GtkWidget *parent, *dialog;
 
-	if (!gtk_init_check(NULL, NULL))
-		return nullptr;
+	if (!gtk_init_check(NULL, NULL)) return nullptr;
 
 	parent = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 
- 	dialog = gtk_file_chooser_dialog_new( "Open File",
-					GTK_WINDOW(parent),
-					GTK_FILE_CHOOSER_ACTION_OPEN,
-					"_Cancel", GTK_RESPONSE_CANCEL,
-					"_Open", GTK_RESPONSE_ACCEPT,
-					NULL );
+	dialog = gtk_file_chooser_dialog_new("Open File",
+	                                     GTK_WINDOW(parent),
+	                                     GTK_FILE_CHOOSER_ACTION_OPEN,
+	                                     "_Cancel",
+	                                     GTK_RESPONSE_CANCEL,
+	                                     "_Open",
+	                                     GTK_RESPONSE_ACCEPT,
+	                                     NULL);
 
 	/* Filter file types */
 	GtkFileFilter *filter1 = gtk_file_filter_new();
@@ -67,11 +68,11 @@ char *show_file_picker() {
 	if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_ACCEPT) {
 		char *filename = nullptr;
 
- 		filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
+		filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
 		size_t len = strlen(filename);
-		path = (char *)malloc(len+1);
-		memcpy(path, filename, len+1);
-		if (!path ) {
+		path = (char *)malloc(len + 1);
+		memcpy(path, filename, len + 1);
+		if (!path) {
 			g_free(filename);
 			gtk_widget_destroy(dialog);
 			return nullptr;
@@ -79,13 +80,11 @@ char *show_file_picker() {
 		g_free(filename);
 	}
 
-	while (gtk_events_pending())
-		gtk_main_iteration();
+	while (gtk_events_pending()) gtk_main_iteration();
 
 	gtk_widget_destroy(dialog);
 
- 	while (gtk_events_pending())
- 		gtk_main_iteration();
+	while (gtk_events_pending()) gtk_main_iteration();
 
 	return path;
 }
@@ -113,7 +112,8 @@ const std::string get_font_path(const std::string &name) {
 		     !FcStrCmpIgnoreCase(fcname, fcfamily)) // Empty name means searching for default font,
 		                                            // otherwise make sure the returned font is
 		                                            // exactly what we searched for
-		    && FcPatternGetString(font, FC_FILE, 0, &fcpath) == FcResultMatch)
+		    &&
+		    FcPatternGetString(font, FC_FILE, 0, &fcpath) == FcResultMatch)
 			path = std::string(reinterpret_cast<char *>(fcpath));
 		FcPatternDestroy(font);
 	}
