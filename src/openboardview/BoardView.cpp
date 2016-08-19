@@ -259,11 +259,13 @@ int BoardView::ConfigParse(void) {
 	dpiscale           = dpi / 100.0f;
 
 	pinHalo          = obvconfig.ParseBool("pinHalo", true);
-	pinHaloDiameter  = obvconfig.ParseDouble("pinHaloDiameter", 1.25f);
-	pinHaloThickness = obvconfig.ParseDouble("pinHaloThickness", 1.5f);
+	pinHaloDiameter  = obvconfig.ParseDouble("pinHaloDiameter", 1.25);
+	pinHaloThickness = obvconfig.ParseDouble("pinHaloThickness", 1.5);
 
-	showFPS   = obvconfig.ParseBool("showFPS", false);
-	fillParts = obvconfig.ParseBool("fillParts", true);
+	showFPS         = obvconfig.ParseBool("showFPS", false);
+	showPins        = obvconfig.ParseBool("showPins", true);
+	showAnnotations = obvconfig.ParseBool("showAnnotations", true);
+	fillParts       = obvconfig.ParseBool("fillParts", true);
 
 	boardFill        = obvconfig.ParseBool("boardFill", true);
 	boardFillSpacing = obvconfig.ParseInt("boardFillSpacing", 5);
@@ -1475,13 +1477,13 @@ void BoardView::Update() {
 				showPosition ^= 1;
 				m_needsRedraw = true;
 			}
-			if (ImGui::MenuItem("Toggle Pin blank", "b")) {
-				pinBlank ^= 1;
+			if (ImGui::MenuItem("Toggle Pins", "b")) {
+				showPins ^= 1;
 				m_needsRedraw = true;
 			}
 			ImGui::Separator();
-			if (ImGui::Checkbox("Annotations", &m_annotations_active)) {
-				obvconfig.WriteBool("annotations", m_annotations_active);
+			if (ImGui::Checkbox("Annotations", &showAnnotations)) {
+				obvconfig.WriteBool("annotations", showAnnotations);
 				m_needsRedraw = true;
 			}
 
@@ -1526,8 +1528,10 @@ void BoardView::Update() {
 		}
 
 		ImGui::SameLine();
-		if (ImGui::Checkbox("Annotations", &m_annotations_active)) {
-			obvconfig.WriteBool("annotations", m_annotations_active);
+		ImGui::Dummy(ImVec2(DPI(10), 1));
+		ImGui::SameLine();
+		if (ImGui::Checkbox("Annotations", &showAnnotations)) {
+			obvconfig.WriteBool("showAnnotations", showAnnotations);
 			m_needsRedraw = true;
 		}
 
@@ -1539,9 +1543,8 @@ void BoardView::Update() {
 
 		ImGui::SameLine();
 		{
-			bool pb = !pinBlank;
-			if (ImGui::Checkbox("Pins", &pb)) {
-				pinBlank      = !pb;
+			if (ImGui::Checkbox("Pins", &showPins)) {
+				obvconfig.WriteBool("showPins", showPins);
 				m_needsRedraw = true;
 			}
 		}
@@ -1607,7 +1610,7 @@ void BoardView::Update() {
 		ImGui::PopItemWidth();
 		*/
 
-		if (m_showContextMenu && m_file && m_annotations_active) {
+		if (m_showContextMenu && m_file && showAnnotations) {
 			ImGui::OpenPopup("Annotations");
 		}
 
@@ -1701,10 +1704,6 @@ void BoardView::Update() {
 	} else {
 		ImVec2 spos = ImGui::GetMousePos();
 		ImVec2 pos  = ScreenToCoord(spos.x, spos.y);
-		if (pinBlank) {
-			ImGui::Text("PIN BLANK ON: Press 'b' to turn off. ");
-			ImGui::SameLine();
-		}
 		if (showFPS == true) {
 			ImGui::Text("FPS: %0.0f ", ImGui::GetIO().Framerate);
 			ImGui::SameLine();
@@ -1859,7 +1858,7 @@ void BoardView::HandleInput() {
 			if (m_lastFileOpenWasInvalid == false) {
 				// Conext menu
 				if (!m_lastFileOpenWasInvalid && m_file && m_board && ImGui::IsMouseClicked(1)) {
-					if (m_annotations_active) {
+					if (showAnnotations) {
 						// Build context menu here, for annotations and inspection
 						//
 						ImVec2 spos                                        = ImGui::GetMousePos();
@@ -2025,7 +2024,7 @@ void BoardView::HandleInput() {
 			FlipBoard();
 
 		} else if (ImGui::IsKeyPressed(SDLK_b)) {
-			pinBlank ^= 1;
+			showPins ^= 1;
 			m_needsRedraw = true;
 
 		} else if (ImGui::IsKeyPressed(SDLK_f)) {
@@ -2438,7 +2437,7 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 	float threshold = 0;
 	auto io         = ImGui::GetIO();
 
-	if (pinBlank) return;
+	if (!showPins) return;
 
 	/*
 	 * If we have a pin selected, then it makes it
@@ -3035,7 +3034,7 @@ inline void BoardView::DrawPinTooltips(ImDrawList *draw) {
 
 inline void BoardView::DrawAnnotations(ImDrawList *draw) {
 
-	if (!m_annotations_active) return;
+	if (!showAnnotations) return;
 
 	draw->ChannelsSetCurrent(kChannelAnnotations);
 

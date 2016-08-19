@@ -30,6 +30,7 @@ dpi=100\r\n\
 \r\n\
 #fontPath=FiraSans-Medium.ttf\r\n\
 fontSize=20\r\n\
+showPins = true\r\n\
 pinSizeThresholdLow = 0\r\n\
 pinShapeCircle = true\r\n\
 pinShapeSquare = false\r\n\
@@ -38,8 +39,8 @@ slowCPU =       false\r\n\
 showFPS =       false\r\n\
 pinHalo =        true\r\n\
 pinHaloDiameter = 1.25\r\n\
-pinHaloThickness = 1.5\r\n\
-annotations = true\r\n\
+pinHaloThickness = 2\r\n\
+\r\n\
 fillParts =		true\r\n\
 boardFill =		true\r\n\
 boardFillSpacing = 5\r\n\
@@ -50,6 +51,7 @@ zoomModifier = 5\r\n\
 panFactor = 30\r\n\
 panModifier = 5\r\n\
 \r\n\
+showAnnotations = true\r\n\
 annotationBoxSize = 15\r\n\
 annotationBoxOffset = 8\r\n\
 #\r\n\
@@ -172,6 +174,9 @@ Confparse::~Confparse(void) {
 }
 
 int Confparse::SaveDefault(const char *utf8_filename) {
+	while (locked)
+		;
+	locked = true;
 	std::ofstream file;
 	file.open(utf8_filename, std::ios::out | std::ios::binary | std::ios::ate);
 
@@ -181,12 +186,17 @@ int Confparse::SaveDefault(const char *utf8_filename) {
 		file.close();
 		Load(utf8_filename);
 
+		locked = false;
 		return 0;
-	} else
+	} else {
+		locked = false;
 		return 1;
+	}
 }
 
 int Confparse::Load(const char *utf8_filename) {
+	while (locked)
+		;
 	std::ifstream file;
 	file.open(utf8_filename, std::ios::in | std::ios::binary | std::ios::ate);
 	if (!file.is_open()) {
@@ -199,6 +209,8 @@ int Confparse::Load(const char *utf8_filename) {
 	}
 
 	snprintf(filename, CONFPARSE_FILENAME_MAX, "%s", utf8_filename);
+
+	if (conf) free(conf);
 
 	std::streampos sz = file.tellg();
 	buffer_size       = sz;
@@ -241,11 +253,13 @@ char *Confparse::Parse(const char *key) {
 	if (keylen == 0) return NULL;
 
 	p = strstr(conf, key);
-	if (p == NULL) return NULL;
+	if (p == NULL) {
+		return NULL;
+	}
 
 	op = p;
 
-	llimit = limit - keylen - 2; // allows for up to 'key=x'
+	llimit = limit; // - keylen - 2; // allows for up to 'key=x'
 
 	while (p && p < llimit) {
 
@@ -286,11 +300,15 @@ char *Confparse::Parse(const char *key) {
 				}
 			}
 		}
+
+		// if the previous strstr() was a non-success, then try search again from the next bit
 		if (op < limit) {
-			p  = strstr(op + 1, key);
+			p = strstr(op + 1, key);
+			if (!p) break;
 			op = p;
-		} else
+		} else {
 			break;
+		}
 	}
 	return NULL;
 }
@@ -334,7 +352,7 @@ unsigned long Confparse::ParseHex(const char *key, unsigned long defaultv) {
 double Confparse::ParseDouble(const char *key, double defaultv) {
 	char *p = Parse(key);
 	if (p) {
-		double v = strtof((char *)Parse(key), NULL);
+		double v = strtod(p, NULL);
 		if (errno == ERANGE)
 			return defaultv;
 		else
@@ -364,6 +382,9 @@ bool Confparse::WriteStr(const char *key, char *value) {
 	char *llimit;
 	int keylen;
 
+	while (locked)
+		;
+	locked = true;
 	if (!conf) return false;
 	if (!filename) return false;
 	if (!value) return false;
@@ -373,10 +394,34 @@ bool Confparse::WriteStr(const char *key, char *value) {
 	if (keylen == 0) return false;
 
 	op = p = strstr(conf, key);
-	if (p == NULL) return false;
+	if (p == NULL) {
+		fprintf(stderr, "debug: No %s key found\n", key);
+		char nfn[CONFPARSE_FILENAME_MAX];
+		char buf[1024];
+		size_t bs;
+		std::ofstream file;
 
-	llimit = limit - keylen - 2; // allows for up to 'key=x'
+		snprintf(nfn, sizeof(nfn), "%s~", filename);
+		rename(filename, nfn);
+		file.open(filename, std::ios::out | std::ios::binary | std::ios::trunc);
+		if (!file.is_open()) {
+			locked = false;
+			return false;
+		}
+		file.write(conf, buffer_size); // write the leadup
+		bs = snprintf(buf, sizeof(buf), "\r\n%s = %s", key, value);
+		file.write(buf, bs);
+		file.flush();
+		file.close();
+		locked = false;
 
+		snprintf(nfn, sizeof(nfn), "%s", filename); // we have to do this to prevent overwriting our own filename buffer
+		Load(nfn);
+		return true;
+	}
+
+	//	llimit = limit - keylen - 2; // allows for up to 'key=x'
+	llimit = limit;
 	while (p && p < llimit) {
 
 		/*
@@ -386,10 +431,11 @@ bool Confparse::WriteStr(const char *key, char *value) {
 		 * assist in making it easier for people to read it.
 		 */
 		p = p + keylen;
-
 		if ((p < llimit) && (!isalnum(*p))) {
 
-			while ((p < llimit) && ((*p == '=') || (*p == ' ') || (*p == '\t'))) p++; // get up to the start of the value;
+			while ((p < llimit) && ((*p == '=') || (*p == ' ') || (*p == '\t'))) {
+				p++; // get up to the start of the value;
+			}
 
 			if ((p < llimit) && (p >= conf)) {
 
@@ -428,12 +474,14 @@ bool Confparse::WriteStr(const char *key, char *value) {
 						rename(filename, nfn);
 						file.open(filename, std::ios::out | std::ios::binary | std::ios::trunc);
 						if (!file.is_open()) {
+							locked = false;
 							return false;
 						}
 						file.write(conf, (p - conf));     // write the leadup
 						file.write(value, strlen(value)); // write the new data
 						file.write(ep, limit - ep);       // write the rest of the file
 						file.close();
+						locked = false;
 
 						snprintf(
 						    nfn, sizeof(nfn), "%s", filename); // we have to do this to prevent overwriting our own filename buffer
@@ -455,11 +503,14 @@ bool Confparse::WriteStr(const char *key, char *value) {
 		std::ofstream file;
 		file.open(filename, std::ios::out | std::ios::binary | std::ios::app);
 		if (!file.is_open()) {
+			locked = false;
 			return false;
 		}
 		snprintf(sep, sizeof(sep), "%s = %s\r\n", key, value);
 		file.write(sep, strlen(sep));
+		file.flush();
 		file.close();
+		locked = false;
 
 		snprintf(sep, sizeof(sep), "%s", filename); // we have to do this to prevent overwriting our own filename buffer
 		Load(sep);

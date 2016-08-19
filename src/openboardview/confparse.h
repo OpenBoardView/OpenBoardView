@@ -25,6 +25,9 @@ struct Confparse {
 	bool WriteInt(const char *key, int value);
 	bool WriteHex(const char *key, unsigned long value);
 	bool WriteFloat(const char *key, double value);
+
+  private:
+	bool locked = false;
 };
 
 #endif

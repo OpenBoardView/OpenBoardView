@@ -124,6 +124,8 @@ struct BoardView {
 	bool pinShapeCircle       = true;
 	bool slowCPU              = false;
 	bool showFPS              = false;
+	bool showPins             = true;
+	bool showAnnotations      = true;
 	bool pinHalo              = true;
 	float pinHaloDiameter     = 1.25;
 	float pinHaloThickness    = 1.5;
@@ -163,7 +165,6 @@ struct BoardView {
 	Annotations m_annotations;
 	void ContextMenu(void);
 	int AnnotationIsHovered(void);
-	bool m_annotations_active     = true;
 	bool AnnotationWasHovered     = false;
 	bool m_annotationnew_retain   = false;
 	bool m_annotationedit_retain  = false;
