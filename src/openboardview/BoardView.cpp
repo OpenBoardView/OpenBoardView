@@ -1526,7 +1526,28 @@ void BoardView::Update() {
 		}
 
 		ImGui::SameLine();
-		ImGui::Dummy(ImVec2(DPI(60), 1));
+		if (ImGui::Checkbox("Annotations", &m_annotations_active)) {
+			obvconfig.WriteBool("annotations", m_annotations_active);
+			m_needsRedraw = true;
+		}
+
+		ImGui::SameLine();
+		if (ImGui::Checkbox("Board fill", &boardFill)) {
+			obvconfig.WriteBool("boardFill", boardFill);
+			m_needsRedraw = true;
+		}
+
+		ImGui::SameLine();
+		{
+			bool pb = !pinBlank;
+			if (ImGui::Checkbox("Pins", &pb)) {
+				pinBlank      = !pb;
+				m_needsRedraw = true;
+			}
+		}
+
+		ImGui::SameLine();
+		ImGui::Dummy(ImVec2(DPI(40), 1));
 
 		ImGui::SameLine();
 		if (ImGui::Button(" - ")) {
@@ -3468,10 +3489,20 @@ void BoardView::SetLastFileOpenName(char *name) {
 }
 
 void BoardView::FlipBoard() {
+	ImVec2 mpos = ImGui::GetMousePos();
+	ImVec2 view = ImGui::GetIO().DisplaySize;
+	ImVec2 bpos = ScreenToCoord(mpos.x, mpos.y);
+	auto io     = ImGui::GetIO();
+
 	m_current_side ^= 1;
 	m_dx = -m_dx;
 	if (m_flipVertically) {
 		Rotate(2);
+		if (io.KeyShift) {
+			SetTarget(bpos.x, bpos.y);
+			Pan(DIR_RIGHT, view.x / 2 - mpos.x);
+			Pan(DIR_DOWN, view.y / 2 - mpos.y);
+		}
 	}
 	m_needsRedraw = true;
 }
