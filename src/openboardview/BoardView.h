@@ -122,6 +122,7 @@ struct BoardView {
 	float pinSizeThresholdLow = 0.0f;
 	bool pinShapeSquare       = false;
 	bool pinShapeCircle       = true;
+	bool pinSelectMasks       = true;
 	bool slowCPU              = false;
 	bool showFPS              = false;
 	bool showPins             = true;

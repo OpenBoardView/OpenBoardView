@@ -260,7 +260,8 @@ int BoardView::ConfigParse(void) {
 
 	pinHalo          = obvconfig.ParseBool("pinHalo", true);
 	pinHaloDiameter  = obvconfig.ParseDouble("pinHaloDiameter", 1.25);
-	pinHaloThickness = obvconfig.ParseDouble("pinHaloThickness", 1.5);
+	pinHaloThickness = obvconfig.ParseDouble("pinHaloThickness", 2.0);
+	pinSelectMasks   = obvconfig.ParseBool("pinSelectMasks", true);
 
 	showFPS         = obvconfig.ParseBool("showFPS", false);
 	showPins        = obvconfig.ParseBool("showPins", true);
@@ -714,6 +715,10 @@ void BoardView::Preferences(void) {
 			obvconfig.WriteInt("annotationBoxOffset", annotationBoxOffset);
 		}
 		ImGui::Separator();
+
+		if (ImGui::Checkbox("Pin select masks", &pinSelectMasks)) {
+			obvconfig.WriteBool("pinSelectMasks", pinSelectMasks);
+		}
 
 		if (ImGui::Checkbox("Pin Halo", &pinHalo)) {
 			obvconfig.WriteBool("pinHalo", pinHalo);
@@ -2422,7 +2427,7 @@ inline void BoardView::DrawOutline(ImDrawList *draw) {
 		 * If we have a pin selected, we mask off the colour to shade out
 		 * things and make it easier to see associated pins/points
 		 */
-		if (m_pinSelected || m_pinHighlighted.size()) {
+		if ((pinSelectMasks) && (m_pinSelected || m_pinHighlighted.size())) {
 			draw->AddLine(spa, spb, (m_colors.boardOutlineColor & m_colors.selectedMaskOutline) | m_colors.orMaskOutline);
 		} else {
 			draw->AddLine(spa, spb, m_colors.boardOutlineColor);
@@ -2445,9 +2450,11 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 	 * by masking out (alpha or channel) the other
 	 * pins so they're fainter.
 	 */
-	if (m_pinSelected || m_pinHighlighted.size()) {
-		cmask = m_colors.selectedMaskPins;
-		omask = m_colors.orMaskPins;
+	if (pinSelectMasks) {
+		if (m_pinSelected || m_pinHighlighted.size()) {
+			cmask = m_colors.selectedMaskPins;
+			omask = m_colors.orMaskPins;
+		}
 	}
 
 	if (slowCPU) {
@@ -2604,8 +2611,9 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 	 * If a pin has been selected, we mask out the colour to
 	 * enhance (relatively) the appearance of the pin(s)
 	 */
-	if ((m_pinSelected) || m_pinHighlighted.size())
+	if (pinSelectMasks && ((m_pinSelected) || m_pinHighlighted.size())) {
 		color = (m_colors.partOutlineColor & m_colors.selectedMaskParts) | m_colors.orMaskParts;
+	}
 
 	for (auto &part : m_board->Components()) {
 		int pincount = 0;

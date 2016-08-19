@@ -31,6 +31,7 @@ dpi=100\r\n\
 #fontPath=FiraSans-Medium.ttf\r\n\
 fontSize=20\r\n\
 showPins = true\r\n\
+pinSelectMasks = true\r\n\
 pinSizeThresholdLow = 0\r\n\
 pinShapeCircle = true\r\n\
 pinShapeSquare = false\r\n\
@@ -385,7 +386,6 @@ bool Confparse::WriteStr(const char *key, char *value) {
 
 	op = p = strstr(conf, key);
 	if (p == NULL) {
-		fprintf(stderr, "debug: No %s key found\n", key);
 		char nfn[CONFPARSE_FILENAME_MAX];
 		char buf[1024];
 		size_t bs;
