@@ -874,7 +874,7 @@ void BoardView::HelpControls(void) {
 		ImGui::Spacing();
 
 		ImGui::Text("Flip board");
-		ImGui::Spacing();
+		ImGui::Text("");
 		ImGui::Spacing();
 
 		ImGui::Text("Zoom in");
@@ -916,7 +916,7 @@ void BoardView::HelpControls(void) {
 		ImGui::Spacing();
 
 		ImGui::Text("Space bar");
-		ImGui::Spacing();
+		ImGui::Text("(+shift to hold position)");
 		ImGui::Spacing();
 
 		ImGui::Text("+, numpad+");
