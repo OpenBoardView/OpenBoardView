@@ -174,9 +174,6 @@ Confparse::~Confparse(void) {
 }
 
 int Confparse::SaveDefault(const char *utf8_filename) {
-	while (locked)
-		;
-	locked = true;
 	std::ofstream file;
 	file.open(utf8_filename, std::ios::out | std::ios::binary | std::ios::ate);
 
@@ -186,17 +183,13 @@ int Confparse::SaveDefault(const char *utf8_filename) {
 		file.close();
 		Load(utf8_filename);
 
-		locked = false;
 		return 0;
 	} else {
-		locked = false;
 		return 1;
 	}
 }
 
 int Confparse::Load(const char *utf8_filename) {
-	while (locked)
-		;
 	std::ifstream file;
 	file.open(utf8_filename, std::ios::in | std::ios::binary | std::ios::ate);
 	if (!file.is_open()) {
@@ -382,9 +375,6 @@ bool Confparse::WriteStr(const char *key, char *value) {
 	char *llimit;
 	int keylen;
 
-	while (locked)
-		;
-	locked = true;
 	if (!conf) return false;
 	if (!filename) return false;
 	if (!value) return false;
@@ -405,7 +395,6 @@ bool Confparse::WriteStr(const char *key, char *value) {
 		rename(filename, nfn);
 		file.open(filename, std::ios::out | std::ios::binary | std::ios::trunc);
 		if (!file.is_open()) {
-			locked = false;
 			return false;
 		}
 		file.write(conf, buffer_size); // write the leadup
@@ -413,7 +402,6 @@ bool Confparse::WriteStr(const char *key, char *value) {
 		file.write(buf, bs);
 		file.flush();
 		file.close();
-		locked = false;
 
 		snprintf(nfn, sizeof(nfn), "%s", filename); // we have to do this to prevent overwriting our own filename buffer
 		Load(nfn);
@@ -474,14 +462,12 @@ bool Confparse::WriteStr(const char *key, char *value) {
 						rename(filename, nfn);
 						file.open(filename, std::ios::out | std::ios::binary | std::ios::trunc);
 						if (!file.is_open()) {
-							locked = false;
 							return false;
 						}
 						file.write(conf, (p - conf));     // write the leadup
 						file.write(value, strlen(value)); // write the new data
 						file.write(ep, limit - ep);       // write the rest of the file
 						file.close();
-						locked = false;
 
 						snprintf(
 						    nfn, sizeof(nfn), "%s", filename); // we have to do this to prevent overwriting our own filename buffer
@@ -503,14 +489,12 @@ bool Confparse::WriteStr(const char *key, char *value) {
 		std::ofstream file;
 		file.open(filename, std::ios::out | std::ios::binary | std::ios::app);
 		if (!file.is_open()) {
-			locked = false;
 			return false;
 		}
 		snprintf(sep, sizeof(sep), "%s = %s\r\n", key, value);
 		file.write(sep, strlen(sep));
 		file.flush();
 		file.close();
-		locked = false;
 
 		snprintf(sep, sizeof(sep), "%s", filename); // we have to do this to prevent overwriting our own filename buffer
 		Load(sep);
