@@ -18,12 +18,12 @@ struct Confparse {
 	double ParseDouble(const char *key, double defaultv);
 	int ParseInt(const char *key, int defaultv);
 	bool ParseBool(const char *key, bool defaultv);
-	unsigned long ParseHex(const char *key, unsigned long defaultv);
+	uint32_t ParseHex(const char *key, uint32_t defaultv);
 
 	bool WriteStr(const char *key, char *value);
 	bool WriteBool(const char *key, bool value);
 	bool WriteInt(const char *key, int value);
-	bool WriteHex(const char *key, unsigned long value);
+	bool WriteHex(const char *key, uint32_t value);
 	bool WriteFloat(const char *key, double value);
 };
 

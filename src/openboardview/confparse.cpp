@@ -337,10 +337,10 @@ int Confparse::ParseInt(const char *key, int defaultv) {
 		return defaultv;
 }
 
-unsigned long Confparse::ParseHex(const char *key, unsigned long defaultv) {
+uint32_t Confparse::ParseHex(const char *key, uint32_t defaultv) {
 	char *p = Parse(key);
 	if (p) {
-		unsigned long v;
+		uint32_t v;
 		if ((*p == '0') && (*(p + 1) == 'x')) {
 			p += 2;
 		}
@@ -525,7 +525,7 @@ bool Confparse::WriteInt(const char *key, int value) {
 	snprintf(v, sizeof(v), "%d", value);
 	return WriteStr(key, v);
 };
-bool Confparse::WriteHex(const char *key, unsigned long value) {
+bool Confparse::WriteHex(const char *key, uint32_t value) {
 	char v[20];
 	snprintf(v, sizeof(v), "0x%lx", value);
 	return WriteStr(key, v);
