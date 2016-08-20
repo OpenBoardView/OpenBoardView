@@ -227,22 +227,6 @@ int BoardView::ConfigParse(void) {
 	v = obvconfig.ParseStr("colorTheme", "light");
 	ThemeSetStyle(v);
 
-	/*
-	 * Some machines (Atom etc) don't have enough CPU/GPU
-	 * grunt to cope with the large number of AA'd circles
-	 * generated on a large dense board like a Macbook Pro
-	 * so we have the lowCPU option which will let people
-	 * trade good-looks for better FPS
-	 *
-	 * If we want slowCPU to take impact from a command line
-	 * parameter, we need it to be set to false before we
-	 * call this.
-	 */
-	slowCPU |= obvconfig.ParseBool("slowCPU", false);
-	if (slowCPU == true) {
-		style.AntiAliasedShapes = false;
-	}
-
 	pinSizeThresholdLow = obvconfig.ParseDouble("pinSizeThresholdLow", 0);
 	pinShapeSquare      = obvconfig.ParseBool("pinShapeSquare", false);
 	pinShapeCircle      = obvconfig.ParseBool("pinShapeCircle", true);
@@ -284,6 +268,24 @@ int BoardView::ConfigParse(void) {
 
 	annotationBoxOffset = obvconfig.ParseInt("annotationBoxOffset", 8);
 	annotationBoxOffset = DPI(annotationBoxOffset);
+
+	/*
+	 * Some machines (Atom etc) don't have enough CPU/GPU
+	 * grunt to cope with the large number of AA'd circles
+	 * generated on a large dense board like a Macbook Pro
+	 * so we have the lowCPU option which will let people
+	 * trade good-looks for better FPS
+	 *
+	 * If we want slowCPU to take impact from a command line
+	 * parameter, we need it to be set to false before we
+	 * call this.
+	 */
+	slowCPU |= obvconfig.ParseBool("slowCPU", false);
+	if (slowCPU == true) {
+		style.AntiAliasedShapes = false;
+		boardFill               = false;
+		fillParts               = false;
+	}
 
 	/*
 	 * Colours in ImGui can be represented as a 4-byte packed uint32_t as ABGR
@@ -2554,7 +2556,7 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 
 			switch (pin->type) {
 				case Pin::kPinTypeTestPad:
-					if (psz > 3) {
+					if ((psz > 3) && (!slowCPU)) {
 						draw->AddCircleFilled(ImVec2(pos.x, pos.y), psz, fill_color, segments);
 						draw->AddCircle(ImVec2(pos.x, pos.y), psz, color, segments);
 					} else if (psz > threshold) {
