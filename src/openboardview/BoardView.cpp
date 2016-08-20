@@ -527,7 +527,7 @@ void u32tof4(uint32_t c, float *f) {
 }
 void BoardView::ColorPreferencesItem(const char *label, const char *butlabel, const char *conflabel, int width, uint32_t *c) {
 	char buf[20];
-	snprintf(buf, sizeof(buf), "%08lX", (long unsigned int)byte4swap(*c));
+	snprintf(buf, sizeof(buf), "%08lX", byte4swap(*c));
 	RA(label, DPI(200));
 	ImGui::SameLine();
 	ImGui::ColorButton(ImColor(*c));
@@ -535,8 +535,8 @@ void BoardView::ColorPreferencesItem(const char *label, const char *butlabel, co
 	ImGui::PushItemWidth(DPI(150));
 	if (ImGui::InputText(
 	        butlabel, buf, sizeof(buf), ImGuiInputTextFlags_CharsNoBlank | ImGuiInputTextFlags_CharsHexadecimal, nullptr, buf)) {
-		*c = byte4swap(strtol(buf, NULL, 16));
-		snprintf(buf, sizeof(buf), "0x%08llx", (long unsigned int)byte4swap(*c));
+		*c = byte4swap(strtoll(buf, NULL, 16));
+		snprintf(buf, sizeof(buf), "0x%08lx", byte4swap(*c));
 		obvconfig.WriteStr(conflabel, buf);
 	}
 	ImGui::PopItemWidth();
