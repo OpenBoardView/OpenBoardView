@@ -830,18 +830,22 @@ void BoardView::HelpAbout(void) {
 	if (ImGui::BeginPopupModal("About", &dummy, ImGuiWindowFlags_AlwaysAutoResize)) {
 		if (m_showHelpAbout) m_showHelpAbout = false;
 		ImGui::Text("Openflex Boardview");
+		// ImGui::Text("Build: "); ImGui::SameLine(); ImGui::Text(__DATE__); ImGui::SameLine(); ImGui::Text(__TIME__);
+		ImGui::Text("Build: ");
+		ImGui::SameLine();
+		ImGui::Text(__TIMESTAMP__);
 		ImGui::Text("https://github.com/inflex/OpenBoardView");
 		if (ImGui::Button("Close") || ImGui::IsKeyPressed(SDLK_ESCAPE)) {
 			ImGui::CloseCurrentPopup();
 		}
-		ImGui::Indent();
+		ImGui::Dummy(ImVec2(1, DPI(10)));
 		ImGui::Text("License info");
-		ImGui::Unindent();
 		ImGui::Separator();
 		ImGui::Text("OpenBoardView is MIT Licensed");
 		ImGui::Text("Copyright (c) 2016 Inflex (Paul Daniels)");
 		ImGui::Text("Copyright (c) 2016 Chloridite (original source)");
 		ImGui::Spacing();
+		ImGui::Dummy(ImVec2(1, DPI(10)));
 		ImGui::Text("ImGui is MIT Licensed");
 		ImGui::Text("Copyright (c) 2014-2015 Omar Cornut and ImGui contributors");
 		ImGui::Separator();

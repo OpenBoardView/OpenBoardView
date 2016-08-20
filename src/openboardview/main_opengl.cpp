@@ -66,8 +66,9 @@ static SDL_GLContext glcontext = NULL;
 static SDL_Window *window      = nullptr;
 
 char help[] =
-    " [-h] [-l] [-c <config file>] [-i <intput file>] [-x <width>] [-y <height>] [-z <fontsize>] [-p <dpi>] [-r <renderer>] [-d]\n\
+    " [-h] [-V] [-l] [-c <config file>] [-i <intput file>] [-x <width>] [-y <height>] [-z <fontsize>] [-p <dpi>] [-r <renderer>] [-d]\n\
 	-h : This help\n\
+	-V : Version information\n\
 	-l : slow CPU mode, disables AA and other items to try provide more FPS\n\
 	-c <config file> : alternative configuration file (default is ~/.config/openboardview/obv.conf)\n\
 	-i <input file> : board file to load\n\
@@ -91,6 +92,11 @@ int parse_parameters(int argc, char **argv, struct globals *g) {
 
 		if (strcmp(p, "-h") == 0) {
 			fprintf(stdout, "%s %s", argv[0], help);
+			exit(0);
+		}
+
+		if (strcmp(p, "-V") == 0) {
+			fprintf(stdout, "OFBV-BUILD: %s\n", __TIMESTAMP__);
 			exit(0);
 		}
 
