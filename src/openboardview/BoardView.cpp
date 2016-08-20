@@ -2482,6 +2482,15 @@ inline void BoardView::DrawOutline(ImDrawList *draw) {
 
 void BoardView::DrawNetWeb(ImDrawList *draw) {
 	if (!showNetWeb) return;
+
+	/*
+	 * Some nets we don't bother showing, because they're not relevant or
+	 * produce too many results (such as ground!)
+	 */
+	if (m_pinSelected->type == Pin::kPinTypeNotConnected) return;
+	if (m_pinSelected->type == Pin::kPinTypeUnkown) return;
+	if (m_pinSelected->net->is_ground) return;
+
 	for (auto &p : m_board->Pins()) {
 
 		if (p->net == m_pinSelected->net) {
