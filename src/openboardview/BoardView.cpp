@@ -536,7 +536,7 @@ void BoardView::ColorPreferencesItem(const char *label, const char *butlabel, co
 	if (ImGui::InputText(
 	        butlabel, buf, sizeof(buf), ImGuiInputTextFlags_CharsNoBlank | ImGuiInputTextFlags_CharsHexadecimal, nullptr, buf)) {
 		*c = byte4swap(strtol(buf, NULL, 16));
-		snprintf(buf, sizeof(buf), "0x%08lx", (long unsigned int)byte4swap(*c));
+		snprintf(buf, sizeof(buf), "0x%08llx", (long unsigned int)byte4swap(*c));
 		obvconfig.WriteStr(conflabel, buf);
 	}
 	ImGui::PopItemWidth();
