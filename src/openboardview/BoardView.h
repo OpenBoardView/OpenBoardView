@@ -103,6 +103,8 @@ enum DrawChannel {
 	NUM_DRAW_CHANNELS
 };
 
+enum FlipModes { flipModeVP = 0, flipModeMP = 1, NUM_FLIP_MODES };
+
 struct BoardView {
 	BRDFile *m_file;
 	Board *m_board;
@@ -117,6 +119,7 @@ struct BoardView {
 	int zoomModifier             = 5;
 	int panFactor                = 30;
 	int panModifier              = 5;
+	int flipMode                 = 0;
 
 	int annotationBoxOffset = 10;
 	int annotationBoxSize   = 10;
@@ -287,5 +290,5 @@ struct BoardView {
 	void SearchCompoundNoClear(const char *item);
 
 	void SetLastFileOpenName(char *name);
-	void FlipBoard();
+	void FlipBoard(int mode = 0);
 };

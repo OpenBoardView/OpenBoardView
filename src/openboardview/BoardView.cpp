@@ -257,6 +257,7 @@ int BoardView::ConfigParse(void) {
 	showAnnotations           = obvconfig.ParseBool("showAnnotations", true);
 	fillParts                 = obvconfig.ParseBool("fillParts", true);
 	m_centerZoomSearchResults = obvconfig.ParseBool("centerZoomSearchResults", true);
+	flipMode                  = obvconfig.ParseInt("flipMode", 0);
 
 	boardFill        = obvconfig.ParseBool("boardFill", true);
 	boardFillSpacing = obvconfig.ParseInt("boardFillSpacing", 5);
@@ -713,6 +714,20 @@ void BoardView::Preferences(void) {
 		if (ImGui::InputInt("##panModifier", &panModifier)) {
 			obvconfig.WriteInt("panModifier", panModifier);
 		}
+
+		ImGui::Dummy(ImVec2(1, DPI(5)));
+		RA("Flip Mode", DPI(200));
+		ImGui::SameLine();
+		{
+			if (ImGui::RadioButton("Viewport", &flipMode, 0)) {
+				obvconfig.WriteInt("flipMode", flipMode);
+			}
+			ImGui::SameLine();
+			if (ImGui::RadioButton("Mouse", &flipMode, 1)) {
+				obvconfig.WriteInt("flipMode", flipMode);
+			}
+		}
+		ImGui::Dummy(ImVec2(1, DPI(5)));
 
 		RA("Annotation flag size", DPI(200));
 		ImGui::SameLine();
@@ -3524,7 +3539,7 @@ void BoardView::SearchCompoundNoClear(const char *item) {
 	if (debug) fprintf(stderr, "Searching for '%s'\n", item);
 	if (m_searchComponents) FindComponentNoClear(item);
 	if (m_searchNets) FindNetNoClear(item);
-	if (!AnyItemVisible()) FlipBoard();
+	if (!AnyItemVisible()) FlipBoard(1); // passing 1 to override flipBoard parameter
 }
 
 void BoardView::SearchCompound(const char *item) {
@@ -3540,17 +3555,22 @@ void BoardView::SetLastFileOpenName(char *name) {
 	m_lastFileOpenName = name;
 }
 
-void BoardView::FlipBoard() {
+void BoardView::FlipBoard(int mode) {
 	ImVec2 mpos = ImGui::GetMousePos();
 	ImVec2 view = ImGui::GetIO().DisplaySize;
 	ImVec2 bpos = ScreenToCoord(mpos.x, mpos.y);
 	auto io     = ImGui::GetIO();
 
+	if (mode == 1)
+		mode = 0;
+	else
+		mode = flipMode;
+
 	m_current_side ^= 1;
 	m_dx = -m_dx;
 	if (m_flipVertically) {
 		Rotate(2);
-		if (io.KeyShift) {
+		if (io.KeyShift ^ mode) {
 			SetTarget(bpos.x, bpos.y);
 			Pan(DIR_RIGHT, view.x / 2 - mpos.x);
 			Pan(DIR_DOWN, view.y / 2 - mpos.y);
