@@ -127,6 +127,8 @@ void BoardView::ThemeSetStyle(const char *name) {
 		m_colors.pinHaloColor                   = byte4swap(0x00aa00ff);
 		m_colors.pinHighlightedColor            = byte4swap(0x0000ffff);
 		m_colors.pinHighlightSameNetColor       = byte4swap(0x000000ff);
+		m_colors.pinNetWebColor                 = byte4swap(0xff0000aa);
+		m_colors.pinNetWebOSColor               = byte4swap(0x0000ff33);
 		m_colors.annotationPartAliasColor       = byte4swap(0xffff00ff);
 		m_colors.annotationBoxColor             = byte4swap(0xaaaa88aa);
 		m_colors.annotationStalkColor           = byte4swap(0xaaaaaaff);
@@ -206,6 +208,8 @@ void BoardView::ThemeSetStyle(const char *name) {
 		m_colors.pinHaloColor                   = byte4swap(0x00aa00ff);
 		m_colors.pinHighlightedColor            = byte4swap(0x0000ffff);
 		m_colors.pinHighlightSameNetColor       = byte4swap(0x000000ff);
+		m_colors.pinNetWebColor                 = byte4swap(0xff0000aa);
+		m_colors.pinNetWebOSColor               = byte4swap(0x0000ff33);
 		m_colors.annotationPartAliasColor       = byte4swap(0xffff00ff);
 		m_colors.annotationBoxColor             = byte4swap(0xff0000aa);
 		m_colors.annotationStalkColor           = byte4swap(0x000000ff);
@@ -249,6 +253,7 @@ int BoardView::ConfigParse(void) {
 
 	showFPS                   = obvconfig.ParseBool("showFPS", false);
 	showPins                  = obvconfig.ParseBool("showPins", true);
+	showNetWeb                = obvconfig.ParseBool("showNetWeb", true);
 	showAnnotations           = obvconfig.ParseBool("showAnnotations", true);
 	fillParts                 = obvconfig.ParseBool("fillParts", true);
 	m_centerZoomSearchResults = obvconfig.ParseBool("centerZoomSearchResults", true);
@@ -324,6 +329,7 @@ int BoardView::ConfigParse(void) {
 	m_colors.pinHighlightedColor  = byte4swap(obvconfig.ParseHex("pinHighlightedColor", byte4swap(m_colors.pinHighlightedColor)));
 	m_colors.pinHighlightSameNetColor =
 	    byte4swap(obvconfig.ParseHex("pinHighlightSameNetColor", byte4swap(m_colors.pinHighlightSameNetColor)));
+	m_colors.pinNetWebColor = byte4swap(obvconfig.ParseHex("pinNetWebColor", byte4swap(m_colors.pinNetWebColor)));
 
 	m_colors.annotationPartAliasColor =
 	    byte4swap(obvconfig.ParseHex("annotationPartAliasColor", byte4swap(m_colors.annotationPartAliasColor)));
@@ -597,6 +603,8 @@ void BoardView::ColorPreferences(void) {
 		ColorPreferencesItem("Highlighted", "##PinHighlighted", "pinHighlightedColor", DPI(300), &m_colors.pinHighlightedColor);
 		ColorPreferencesItem("Halo", "##PinHalo", "pinHaloColor", DPI(300), &m_colors.pinHaloColor);
 		ColorPreferencesItem("Same net", "##PinSameNet", "pinHighlightSameNetColor", DPI(300), &m_colors.pinHighlightSameNetColor);
+		ColorPreferencesItem("Net web strands", "##NetWebStrands", "pinNetWebColor", DPI(300), &m_colors.pinNetWebColor);
+		ColorPreferencesItem("Net web (otherside)", "##NetWebOSStrands", "pinNetWebOSColor", DPI(300), &m_colors.pinNetWebOSColor);
 
 		ImGui::Dummy(ImVec2(1, DPI(10)));
 		ImGui::Text("Annotations");
@@ -740,6 +748,10 @@ void BoardView::Preferences(void) {
 
 		if (ImGui::Checkbox("Center/Zoom Search Results", &m_centerZoomSearchResults)) {
 			obvconfig.WriteBool("centerZoomSearchResults", m_centerZoomSearchResults);
+		}
+
+		if (ImGui::Checkbox("Show net web", &showNetWeb)) {
+			obvconfig.WriteBool("showNetWeb", showNetWeb);
 		}
 
 		if (ImGui::Checkbox("slowCPU", &slowCPU)) {
@@ -1494,6 +1506,11 @@ void BoardView::Update() {
 				m_needsRedraw = true;
 			}
 			ImGui::Separator();
+			if (ImGui::Checkbox("Net web", &showNetWeb)) {
+				obvconfig.WriteBool("showNetWeb", showNetWeb);
+				m_needsRedraw = true;
+			}
+
 			if (ImGui::Checkbox("Annotations", &showAnnotations)) {
 				obvconfig.WriteBool("annotations", showAnnotations);
 				m_needsRedraw = true;
@@ -2444,6 +2461,23 @@ inline void BoardView::DrawOutline(ImDrawList *draw) {
 	} // for
 }
 
+void BoardView::DrawNetWeb(ImDrawList *draw) {
+	if (!showNetWeb) return;
+	for (auto &p : m_board->Pins()) {
+
+		if (p->net == m_pinSelected->net) {
+			uint32_t col                               = m_colors.pinNetWebColor;
+			if (!ComponentIsVisible(p->component)) col = m_colors.pinNetWebOSColor;
+
+			draw->AddLine(CoordToScreen(m_pinSelected->position.x, m_pinSelected->position.y),
+			              CoordToScreen(p->position.x, p->position.y),
+			              ImColor(col),
+			              1);
+		}
+	}
+	return;
+}
+
 inline void BoardView::DrawPins(ImDrawList *draw) {
 
 	uint32_t cmask  = 0xFFFFFFFF;
@@ -2603,6 +2637,8 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 			}
 		}
 	}
+
+	if (m_pinSelected) DrawNetWeb(draw);
 }
 
 inline void BoardView::DrawParts(ImDrawList *draw) {

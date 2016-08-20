@@ -73,6 +73,8 @@ struct ColorScheme {
 	uint32_t pinHaloColor             = 0x8f00ff00;
 	uint32_t pinHighlightedColor      = 0xffffffff;
 	uint32_t pinHighlightSameNetColor = 0xff99f8ff;
+	uint32_t pinNetWebColor           = 0xff0000ff;
+	uint32_t pinNetWebOSColor         = 0x0000ff22;
 
 	uint32_t annotationPartAliasColor       = 0xcc00ffff;
 	uint32_t annotationBoxColor             = 0xaa0000ff;
@@ -125,6 +127,7 @@ struct BoardView {
 	bool pinSelectMasks       = true;
 	bool slowCPU              = false;
 	bool showFPS              = false;
+	bool showNetWeb           = true;
 	bool showPins             = true;
 	bool showAnnotations      = true;
 	bool pinHalo              = true;
@@ -251,6 +254,7 @@ struct BoardView {
 	void DrawPins(ImDrawList *draw);
 	void DrawParts(ImDrawList *draw);
 	void DrawBoard();
+	void DrawNetWeb(ImDrawList *draw);
 	void SetFile(BRDFile *file);
 	int LoadFile(char *filename);
 	ImVec2 CoordToScreen(float x, float y, float w = 1.0f);

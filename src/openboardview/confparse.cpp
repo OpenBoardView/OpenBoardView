@@ -31,6 +31,7 @@ dpi=100\r\n\
 #fontPath=FiraSans-Medium.ttf\r\n\
 fontSize=20\r\n\
 showPins = true\r\n\
+showNetWeb = true\r\n\
 pinSelectMasks = true\r\n\
 pinSizeThresholdLow = 0\r\n\
 pinShapeCircle = true\r\n\
@@ -85,6 +86,8 @@ pinSelectedTextColor			= 0xff0000ff\r\n\
 pinHighlightedColor			= 0x0000ffff\r\n\
 pinHaloColor			= 0x00aa00ff\r\n\
 pinHighlightSameNetColor	= 0x000000ff\r\n\
+pinNetWebColor = 0xff0000aa\r\n\
+pinNetWebOSColor = 0x0000ff33\r\n\
 \r\n\
 annotationPopupTextColor = 0x000000ff\r\n\
 annotationPopupBackgroundColor = 0xeeeeeeff\r\n\
