@@ -158,6 +158,7 @@ struct BoardView {
 	bool AnyItemVisible(void);
 	void ThemeSetStyle(const char *name);
 
+	bool m_centerZoomSearchResults = true;
 	void CenterZoomSearchResults(void);
 	int EPCCheck(void);
 	void OutlineGenFillDraw(ImDrawList *draw, int ydelta, double thickness);

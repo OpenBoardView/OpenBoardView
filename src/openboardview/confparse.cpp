@@ -52,6 +52,8 @@ zoomModifier = 5\r\n\
 panFactor = 30\r\n\
 panModifier = 5\r\n\
 \r\n\
+centerZoomSearchResults = true\r\n\
+\r\n\
 showAnnotations = true\r\n\
 annotationBoxSize = 15\r\n\
 annotationBoxOffset = 8\r\n\

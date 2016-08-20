@@ -247,10 +247,11 @@ int BoardView::ConfigParse(void) {
 	pinHaloThickness = obvconfig.ParseDouble("pinHaloThickness", 2.0);
 	pinSelectMasks   = obvconfig.ParseBool("pinSelectMasks", true);
 
-	showFPS         = obvconfig.ParseBool("showFPS", false);
-	showPins        = obvconfig.ParseBool("showPins", true);
-	showAnnotations = obvconfig.ParseBool("showAnnotations", true);
-	fillParts       = obvconfig.ParseBool("fillParts", true);
+	showFPS                   = obvconfig.ParseBool("showFPS", false);
+	showPins                  = obvconfig.ParseBool("showPins", true);
+	showAnnotations           = obvconfig.ParseBool("showAnnotations", true);
+	fillParts                 = obvconfig.ParseBool("fillParts", true);
+	m_centerZoomSearchResults = obvconfig.ParseBool("centerZoomSearchResults", true);
 
 	boardFill        = obvconfig.ParseBool("boardFill", true);
 	boardFillSpacing = obvconfig.ParseInt("boardFillSpacing", 5);
@@ -735,6 +736,10 @@ void BoardView::Preferences(void) {
 		ImGui::SameLine();
 		if (ImGui::InputFloat("##haloThickness", &pinHaloThickness)) {
 			obvconfig.WriteFloat("pinHaloThickness", pinHaloThickness);
+		}
+
+		if (ImGui::Checkbox("Center/Zoom Search Results", &m_centerZoomSearchResults)) {
+			obvconfig.WriteBool("centerZoomSearchResults", m_centerZoomSearchResults);
 		}
 
 		if (ImGui::Checkbox("slowCPU", &slowCPU)) {
@@ -2102,6 +2107,8 @@ void BoardView::CenterZoomSearchResults(void) {
 	ImVec2 view = ImGui::GetIO().DisplaySize;
 	ImVec2 min, max;
 	int i = 0;
+
+	if (!m_centerZoomSearchResults) return;
 
 	min.x = min.y = FLT_MAX;
 	max.x = max.y = FLT_MIN;
