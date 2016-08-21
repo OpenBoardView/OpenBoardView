@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 export REVISION=`git rev-list HEAD --count`
+printf "#define BUILD_REVISION \"$REVISION\""  > src/openboardview/revision.h
 PROJECT="$(tput bold ; tput setaf 3)OpenBoardView $(tput setaf 2)r$REVISION$(tput sgr0)"
 if [ -z $THREADS ]; then 
     THREADS=1
