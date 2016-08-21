@@ -91,7 +91,7 @@ pinSelectedTextColor			= 0xff0000ff\r\n\
 pinHighlightedColor			= 0x0000ffff\r\n\
 pinHaloColor			= 0x00aa00ff\r\n\
 pinHighlightSameNetColor	= 0x000000ff\r\n\
-pinNetWebColor = 0xff0000aa\r\n\
+pinNetWebColor = 0xff000044\r\n\
 pinNetWebOSColor = 0x0000ff33\r\n\
 \r\n\
 annotationPopupTextColor = 0x000000ff\r\n\

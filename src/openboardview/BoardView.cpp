@@ -127,7 +127,7 @@ void BoardView::ThemeSetStyle(const char *name) {
 		m_colors.pinHaloColor                   = byte4swap(0x00aa00ff);
 		m_colors.pinHighlightedColor            = byte4swap(0x0000ffff);
 		m_colors.pinHighlightSameNetColor       = byte4swap(0x000000ff);
-		m_colors.pinNetWebColor                 = byte4swap(0xff0000aa);
+		m_colors.pinNetWebColor                 = byte4swap(0xff000044);
 		m_colors.pinNetWebOSColor               = byte4swap(0x0000ff33);
 		m_colors.annotationPartAliasColor       = byte4swap(0xffff00ff);
 		m_colors.annotationBoxColor             = byte4swap(0xaaaa88aa);
@@ -208,7 +208,7 @@ void BoardView::ThemeSetStyle(const char *name) {
 		m_colors.pinHaloColor                   = byte4swap(0x00aa00ff);
 		m_colors.pinHighlightedColor            = byte4swap(0x0000ffff);
 		m_colors.pinHighlightSameNetColor       = byte4swap(0x000000ff);
-		m_colors.pinNetWebColor                 = byte4swap(0xff0000aa);
+		m_colors.pinNetWebColor                 = byte4swap(0xff000044);
 		m_colors.pinNetWebOSColor               = byte4swap(0x0000ff33);
 		m_colors.annotationPartAliasColor       = byte4swap(0xffff00ff);
 		m_colors.annotationBoxColor             = byte4swap(0xff0000aa);
@@ -2494,8 +2494,11 @@ void BoardView::DrawNetWeb(ImDrawList *draw) {
 	for (auto &p : m_board->Pins()) {
 
 		if (p->net == m_pinSelected->net) {
-			uint32_t col                               = m_colors.pinNetWebColor;
-			if (!ComponentIsVisible(p->component)) col = m_colors.pinNetWebOSColor;
+			uint32_t col = m_colors.pinNetWebColor;
+			if (!ComponentIsVisible(p->component)) {
+				col = m_colors.pinNetWebOSColor;
+				draw->AddCircle(CoordToScreen(p->position.x, p->position.y), p->diameter * m_scale * 20.0f, col, 16);
+			}
 
 			draw->AddLine(CoordToScreen(m_pinSelected->position.x, m_pinSelected->position.y),
 			              CoordToScreen(p->position.x, p->position.y),
