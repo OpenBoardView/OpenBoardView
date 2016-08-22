@@ -96,7 +96,7 @@ int parse_parameters(int argc, char **argv, struct globals *g) {
 		}
 
 		if (strcmp(p, "-V") == 0) {
-			fprintf(stdout, "OFBV-BUILD: R%d %s\n", REVISION, __TIMESTAMP__);
+			fprintf(stdout, "OFBV-BUILD: %s %s\n", OBV_BUILD, __TIMESTAMP__);
 			exit(0);
 		}
 

@@ -830,7 +830,7 @@ void BoardView::HelpAbout(void) {
 	if (ImGui::BeginPopupModal("About", &dummy, ImGuiWindowFlags_AlwaysAutoResize)) {
 		char buf[1024];
 		if (m_showHelpAbout) m_showHelpAbout = false;
-		snprintf(buf, sizeof(buf), "Build R%d %s", REVISION, __TIMESTAMP__);
+		snprintf(buf, sizeof(buf), "Build %s %s", OBV_BUILD, __TIMESTAMP__);
 		ImGui::Text("Openflex Boardview");
 		ImGui::Text(buf);
 		ImGui::Text("https://github.com/inflex/OpenBoardView");
