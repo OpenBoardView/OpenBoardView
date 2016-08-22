@@ -34,6 +34,7 @@
 #ifdef ENABLE_GLES2
 #include "Renderers/imgui_impl_sdl_gles2.h"
 #endif
+#include "revision.h"
 #include <glad/glad.h>
 
 enum Renderer { DEFAULT, OPENGL1, OPENGL3, OPENGLES2 };
@@ -96,7 +97,7 @@ int parse_parameters(int argc, char **argv, struct globals *g) {
 		}
 
 		if (strcmp(p, "-V") == 0) {
-			fprintf(stdout, "OFBV-BUILD: %s\n", __TIMESTAMP__);
+			fprintf(stdout, "OFBV-BUILD: R%d %s\n", REVISION, __TIMESTAMP__);
 			exit(0);
 		}
 

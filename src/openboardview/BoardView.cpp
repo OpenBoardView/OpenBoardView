@@ -828,12 +828,11 @@ void BoardView::HelpAbout(void) {
 	bool dummy = true;
 	ImGui::SetNextWindowPosCenter();
 	if (ImGui::BeginPopupModal("About", &dummy, ImGuiWindowFlags_AlwaysAutoResize)) {
+		char buf[1024];
 		if (m_showHelpAbout) m_showHelpAbout = false;
+		snprintf(buf, sizeof(buf), "Build R%d %s", REVISION, __TIMESTAMP__);
 		ImGui::Text("Openflex Boardview");
-		// ImGui::Text("Build: "); ImGui::SameLine(); ImGui::Text(__DATE__); ImGui::SameLine(); ImGui::Text(__TIME__);
-		ImGui::Text("Build: ");
-		ImGui::SameLine();
-		ImGui::Text(__TIMESTAMP__);
+		ImGui::Text(buf);
 		ImGui::Text("https://github.com/inflex/OpenBoardView");
 		if (ImGui::Button("Close") || ImGui::IsKeyPressed(SDLK_ESCAPE)) {
 			ImGui::CloseCurrentPopup();
