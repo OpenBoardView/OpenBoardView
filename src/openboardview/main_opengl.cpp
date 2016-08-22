@@ -34,7 +34,6 @@
 #ifdef ENABLE_GLES2
 #include "Renderers/imgui_impl_sdl_gles2.h"
 #endif
-#include "revision.h"
 #include <glad/glad.h>
 
 enum Renderer { DEFAULT, OPENGL1, OPENGL3, OPENGLES2 };
