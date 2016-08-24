@@ -109,7 +109,7 @@ const std::vector<char> load_font(const std::string &name) {
 			return data;
 
 		const size_t size = ::GetFontData(hdc, 0, 0, NULL, 0);
-		if (size > 0) {
+		if (size > 0 && size != GDI_ERROR) {
 			char *buffer = new char[size];
 			if (::GetFontData(hdc, 0, 0, buffer, size) == size) {
 				data = std::vector<char>(buffer, buffer + size);
