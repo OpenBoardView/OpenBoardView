@@ -9,6 +9,9 @@
 #include <locale>
 #include <stdint.h>
 #include <winnls.h>
+#ifdef ENABLE_SDL2
+#include <SDL2/SDL.h>
+#endif
 
 wchar_t *utf8_to_wide(const char *s) {
 	size_t len   = utf8len(s);
@@ -83,12 +86,38 @@ char *show_file_picker() {
 	return nullptr;
 }
 
+const std::string utf16_to_utf8(const std::wstring &text) {
+// See https://connect.microsoft.com/VisualStudio/feedback/details/1348277/link-error-when-using-std-codecvt-utf8-utf16-char16-t
+#if defined(_MSC_VER) && _MSC_VER <= 1900 // Should be fixed "in the next major version"
+	return std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t>{}.to_bytes(
+	    reinterpret_cast<const wchar_t *>(text.c_str()));
+#else
+	return std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>{}.to_bytes(
+	    reinterpret_cast<const char16_t *>(text.c_str()));
+#endif
+}
+
+const std::string wchar_to_utf8(const wchar_t *text) {
+	return std::string(utf16_to_utf8(std::wstring(text)));
+}
+
+const std::u16string utf8_to_utf16(const std::string &text) {
+#if defined(_MSC_VER) && _MSC_VER <= 1900 // Should be fixed "in the next major version"
+	return std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t>{}.from_bytes(text.c_str());
+#else
+	return std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>{}.from_bytes(text.c_str());
+#endif
+}
+
+const wchar_t *utf8_to_wchar(const std::string &text) {
+	return reinterpret_cast<const wchar_t *>(utf8_to_utf16(text).c_str());
+}
+
 const std::vector<char> load_font(const std::string &name) {
 	std::vector<char> data;
 	HFONT fontHandle;
 
-	auto u16name = std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t>{}.from_bytes(name.c_str());
-	auto wname   = reinterpret_cast<const wchar_t *>(u16name.c_str());
+	auto wname = utf8_to_wchar(name);
 
 	fontHandle = CreateFont(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, name.empty() ? NULL : wname);
 	if (!fontHandle) {
@@ -99,7 +128,9 @@ const std::vector<char> load_font(const std::string &name) {
 	if (hdc != NULL) {
 		::SelectObject(hdc, fontHandle);
 
-		int ncount   = ::GetTextFaceW(hdc, 0, nullptr);
+		int ncount = ::GetTextFaceW(hdc, 0, nullptr);
+		if (ncount == 0) return data;
+
 		LPWSTR fname = new wchar_t[ncount];
 		::GetTextFaceW(hdc, ncount, fname);
 
@@ -109,7 +140,13 @@ const std::vector<char> load_font(const std::string &name) {
 			return data;
 
 		const size_t size = ::GetFontData(hdc, 0, 0, NULL, 0);
-		if (size > 0 && size != GDI_ERROR) {
+		if (size == GDI_ERROR) {
+#ifdef ENABLE_SDL2
+			SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Couldn't get \"%s\" font data: %lu", name.c_str(), GetLastError());
+#else
+			std::cout << "Couldn't get \"" << name << "\" font data: " << GetLastError() << std::endl;
+#endif
+		} else if (size > 0) {
 			char *buffer = new char[size];
 			if (::GetFontData(hdc, 0, 0, buffer, size) == size) {
 				data = std::vector<char>(buffer, buffer + size);

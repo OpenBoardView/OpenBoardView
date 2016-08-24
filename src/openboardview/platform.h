@@ -1,7 +1,8 @@
 #pragma once
 
 #ifdef _WIN32
-#define _WIN32_WINNT 0x0600 // Not caring about XP. If this is a concern, find a replacement for CompareStringEx() in win32.cpp.
+#define _WIN32_WINNT \
+	_WIN32_WINNT_VISTA // Not caring about XP. If this is a concern, find a replacement for CompareStringEx() in win32.cpp.
 #include <windows.h>
 #endif
 
