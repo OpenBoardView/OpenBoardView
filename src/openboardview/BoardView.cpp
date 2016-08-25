@@ -260,7 +260,7 @@ int BoardView::ConfigParse(void) {
 	flipMode                  = obvconfig.ParseInt("flipMode", 0);
 
 	boardFill        = obvconfig.ParseBool("boardFill", true);
-	boardFillSpacing = obvconfig.ParseInt("boardFillSpacing", 5);
+	boardFillSpacing = obvconfig.ParseInt("boardFillSpacing", 3);
 
 	zoomFactor   = obvconfig.ParseInt("zoomFactor", 10) / 10.0f;
 	zoomModifier = obvconfig.ParseInt("zoomModifier", 5);

@@ -45,7 +45,7 @@ pinHaloThickness = 2\r\n\
 \r\n\
 fillParts =		true\r\n\
 boardFill =		true\r\n\
-boardFillSpacing = 5\r\n\
+boardFillSpacing = 3\r\n\
 \r\n\
 zoomFactor = 5\r\n\
 zoomModifier = 5\r\n\
