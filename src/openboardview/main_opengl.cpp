@@ -214,6 +214,62 @@ int main(int argc, char **argv) {
 	}
 	SDL_LogSetAllPriority(SDL_LOG_PRIORITY_VERBOSE);
 
+#ifdef _WIN32
+	/*
+ * To make OBV very easy to use and transportable among windows
+ * users, one method is to just make it do all its business in the
+ * folder that the EXE is launched from.  It's not "proper" but
+ * it is very simple and it works.
+ */
+	HMODULE hModule = GetModuleHandleA(NULL);
+	CHAR exepath[MAX_PATH];
+	GetModuleFileNameA(hModule, exepath, MAX_PATH);
+	char history_file[MAX_PATH];
+	char conf_file[MAX_PATH];
+	int err;
+	size_t hpsz;
+
+	/*
+	 * Trim off the filename at the end of the path
+	 */
+	int l = strlen(exepath);
+	while (--l) {
+		if (exepath[l] == '\\') {
+			exepath[l] = '\0';
+			break;
+		}
+	}
+	snprintf(history_file, sizeof(history_file), "%s\\obv.history", exepath);
+	snprintf(conf_file, sizeof(conf_file), "%s\\obv.conf", exepath);
+
+	/*
+	 * Next, we check to see if there's an APPDATA folder that's
+	 * already setup with our name on it.  This will be the case
+	 * if OBV has been 'installed', even via the simple install.bat
+	 * script.
+	 */
+	// err = _dupenv_s(&homepath, &hpsz, "APPDATA");
+	homepath = getenv("APPDATA");
+	if (homepath) {
+		struct stat st;
+		int sr;
+		snprintf(s, sizeof(s), "%s/openboardview", homepath);
+		sr = stat(s, &st);
+		if (sr == -1) {
+			//_mkdir(ss);
+			// sr = stat(ss, &st);
+		} else {
+			snprintf(history_file, sizeof(history_file), "%s\\obv.history", homepath);
+			snprintf(conf_file, sizeof(conf_file), "%s\\obv.conf", homepath);
+		}
+	}
+	app.obvconfig.Load(conf_file);
+	app.fhistory.Set_filename(history_file);
+	app.fhistory.Load();
+#endif
+
+#ifndef _WIN32
+
 	/*
 	 * *nix specific, usually we have a $HOME env var set and
 	 * from that we can see if we have a ~/.config in which we
@@ -261,6 +317,7 @@ int main(int argc, char **argv) {
 			app.fhistory.Load();
 		}
 	}
+#endif // if not _WIN32
 
 	// If we've chosen to override the normally found config.
 	if (g.config_file) app.obvconfig.Load(g.config_file);
@@ -394,7 +451,7 @@ int main(int argc, char **argv) {
 	if (g.font_size == 0.0f) g.font_size = app.obvconfig.ParseDouble("fontSize", 20.0f);
 	g.font_size                          = (g.font_size * app.dpi) / 100;
 
-	for (auto name : {"Liberation Sans", "DejaVu Sans", "Arial", ""}) { // Empty string = use system default font
+	for (auto name : {"Liberation Sans", "DejaVu Sans", "Arial Regular", "Helvetica"}) { // Empty string = use system default font
 #ifdef _WIN32
 		ImFontConfig font_cfg{};
 		font_cfg.FontDataOwnedByAtlas = false;
