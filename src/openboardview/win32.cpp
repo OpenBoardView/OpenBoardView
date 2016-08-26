@@ -120,7 +120,7 @@ const std::vector<char> load_font(const std::string &name) {
 	auto u16name = utf8_to_utf16(name);
 	auto wname   = utf16_to_wchar(u16name);
 
-	fontHandle = CreateFont(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, name.empty() ? NULL : wname);
+	fontHandle = CreateFont(0, 0, 0, 0, 0, 0, 0, 0, 0, OUT_TT_ONLY_PRECIS, 0, 0, 0, wname);
 	if (!fontHandle) {
 		std::cerr << "CreateFont failed" << std::endl;
 		return data;

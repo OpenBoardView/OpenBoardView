@@ -451,7 +451,7 @@ int main(int argc, char **argv) {
 	if (g.font_size == 0.0f) g.font_size = app.obvconfig.ParseDouble("fontSize", 20.0f);
 	g.font_size                          = (g.font_size * app.dpi) / 100;
 
-	for (auto name : {"Liberation Sans", "DejaVu Sans", "Arial Regular", "Helvetica"}) { // Empty string = use system default font
+	for (auto name : {"Liberation Sans", "DejaVu Sans", "Arial", "Helvetica", ""}) { // Empty string = use system default font
 #ifdef _WIN32
 		ImFontConfig font_cfg{};
 		font_cfg.FontDataOwnedByAtlas = false;
