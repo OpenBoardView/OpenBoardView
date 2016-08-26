@@ -109,15 +109,16 @@ const std::u16string utf8_to_utf16(const std::string &text) {
 #endif
 }
 
-const wchar_t *utf8_to_wchar(const std::string &text) {
-	return reinterpret_cast<const wchar_t *>(utf8_to_utf16(text).c_str());
+const wchar_t *utf16_to_wchar(const std::u16string &text) {
+	return reinterpret_cast<const wchar_t *>(text.c_str());
 }
 
 const std::vector<char> load_font(const std::string &name) {
 	std::vector<char> data;
 	HFONT fontHandle;
 
-	auto wname = utf8_to_wchar(name);
+	auto u16name = utf8_to_utf16(name);
+	auto wname   = utf16_to_wchar(u16name);
 
 	fontHandle = CreateFont(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, name.empty() ? NULL : wname);
 	if (!fontHandle) {
@@ -132,7 +133,7 @@ const std::vector<char> load_font(const std::string &name) {
 		if (ncount == 0) return data;
 
 		LPWSTR fname = new wchar_t[ncount];
-		::GetTextFaceW(hdc, ncount, fname);
+		ncount       = ::GetTextFaceW(hdc, ncount, fname);
 
 		if (!name.empty() &&
 		    ::CompareStringEx(NULL, NORM_IGNORECASE, wname, name.size(), fname, ncount - 1, NULL, NULL, 0) !=
