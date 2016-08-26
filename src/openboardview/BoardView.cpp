@@ -1583,8 +1583,8 @@ void BoardView::Update() {
 		}
 
 		ImGui::SameLine();
-		if (ImGui::Checkbox("Board fill", &boardFill)) {
-			obvconfig.WriteBool("boardFill", boardFill);
+		if (ImGui::Checkbox("Netweb", &showNetWeb)) {
+			obvconfig.WriteBool("showNetWeb", showNetWeb);
 			m_needsRedraw = true;
 		}
 
