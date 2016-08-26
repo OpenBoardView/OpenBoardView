@@ -234,7 +234,7 @@ int main(int argc, char **argv) {
 	if (g.height == 0) g.height = app.obvconfig.ParseInt("windowY", 700);
 
 	if (g.renderer == Renderer::DEFAULT) {
-		switch (app.obvconfig.ParseInt("renderer", 0)) {
+		switch (app.obvconfig.ParseInt("renderer", 2)) {
 			case 1: g.renderer = Renderer::OPENGL1; break;
 			case 2: g.renderer = Renderer::OPENGL3; break;
 			case 3: g.renderer = Renderer::OPENGLES2; break;
