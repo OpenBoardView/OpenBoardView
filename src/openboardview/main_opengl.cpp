@@ -226,8 +226,6 @@ int main(int argc, char **argv) {
 	GetModuleFileNameA(hModule, exepath, MAX_PATH);
 	char history_file[MAX_PATH];
 	char conf_file[MAX_PATH];
-	int err;
-	size_t hpsz;
 
 	/*
 	 * Trim off the filename at the end of the path

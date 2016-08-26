@@ -527,7 +527,7 @@ bool Confparse::WriteInt(const char *key, int value) {
 };
 bool Confparse::WriteHex(const char *key, uint32_t value) {
 	char v[20];
-	snprintf(v, sizeof(v), "0x%08llx", value);
+	snprintf(v, sizeof(v), "0x%08x", value);
 	return WriteStr(key, v);
 };
 bool Confparse::WriteFloat(const char *key, double value) {
