@@ -213,76 +213,16 @@ int main(int argc, char **argv) {
 	}
 	SDL_LogSetAllPriority(SDL_LOG_PRIORITY_VERBOSE);
 
-#ifdef _WIN32
-	/*
- * To make OBV very easy to use and transportable among windows
- * users, one method is to just make it do all its business in the
- * folder that the EXE is launched from.  It's not "proper" but
- * it is very simple and it works.
- */
-	HMODULE hModule = GetModuleHandleA(NULL);
-	CHAR exepath[MAX_PATH];
-	GetModuleFileNameA(hModule, exepath, MAX_PATH);
-	char history_file[MAX_PATH];
-	char conf_file[MAX_PATH];
-
-	/*
-	 * Trim off the filename at the end of the path
-	 */
-	int l = strlen(exepath);
-	while (--l) {
-		if (exepath[l] == '\\') {
-			exepath[l] = '\0';
-			break;
-		}
-	}
-	snprintf(history_file, sizeof(history_file), "%s\\obv.history", exepath);
-	snprintf(conf_file, sizeof(conf_file), "%s\\obv.conf", exepath);
-
-	/*
-	 * Next, we check to see if there's an APPDATA folder that's
-	 * already setup with our name on it.  This will be the case
-	 * if OBV has been 'installed', even via the simple install.bat
-	 * script.
-	 */
-	// err = _dupenv_s(&homepath, &hpsz, "APPDATA");
-	homepath = getenv("APPDATA");
-	if (homepath) {
-		struct stat st;
-		int sr;
-		snprintf(s, sizeof(s), "%s/openboardview", homepath);
-		sr = stat(s, &st);
-		if (sr == -1) {
-			//_mkdir(ss);
-			// sr = stat(ss, &st);
-		} else {
-			snprintf(history_file, sizeof(history_file), "%s\\obv.history", homepath);
-			snprintf(conf_file, sizeof(conf_file), "%s\\obv.conf", homepath);
-		}
-	}
-	app.obvconfig.Load(conf_file);
-	app.fhistory.Set_filename(history_file);
-	app.fhistory.Load();
-#endif
-
-#ifndef _WIN32
-
-	/*
-	 * *nix specific, usually we have a $HOME env var set and
-	 * from that we can see if we have a ~/.config in which we
-	 * can create our openboardview folder for storing what ever
-	 * stuff we need (currently file-history and configuration file)
-	 *
-	 */
+	// Load the configuration file
 	configDir = get_user_dir(UserDir::Config);
 	if (!configDir.empty()) app.obvconfig.Load(configDir + "obv.conf");
 
+	// Load file history
 	std::string dataDir = get_user_dir(UserDir::Data);
 	if (!dataDir.empty()) {
 		app.fhistory.Set_filename(dataDir + "obv.history");
 		app.fhistory.Load();
 	}
-#endif // if not _WIN32
 
 	// If we've chosen to override the normally found config.
 	if (g.config_file) app.obvconfig.Load(g.config_file);
@@ -303,13 +243,13 @@ int main(int argc, char **argv) {
 // Setup window
 
 #ifdef ENABLE_GL1
-	if ((g.renderer == OPENGL1) || (g.renderer == DEFAULT)) {
+	if (g.renderer == OPENGL1) {
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 1);
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
 	}
 #endif
 #ifdef ENABLE_GL3
-	if ((g.renderer == OPENGL3) || (g.renderer == DEFAULT)) {
+	if (g.renderer == OPENGL3) {
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG);
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
@@ -317,7 +257,7 @@ int main(int argc, char **argv) {
 	}
 #endif
 #ifdef ENABLE_GLES2
-	if ((g.renderer == OPENGLES2) || (g.renderer == DEFAULT)) {
+	if (g.renderer == OPENGLES2) {
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
