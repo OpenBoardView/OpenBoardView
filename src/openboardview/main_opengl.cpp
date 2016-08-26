@@ -36,7 +36,7 @@
 #endif
 #include <glad/glad.h>
 
-enum Renderer { DEFAULT, OPENGL1, OPENGL3, OPENGLES2 };
+enum class Renderer { DEFAULT, OPENGL1, OPENGL3, OPENGLES2 };
 
 struct globals {
 	char *input_file;
@@ -47,7 +47,7 @@ struct globals {
 	int dpi;
 	double font_size;
 	bool debug;
-	int renderer;
+	Renderer renderer;
 
 	globals() {
 		this->input_file  = NULL;
@@ -58,7 +58,7 @@ struct globals {
 		this->dpi         = 0;
 		this->font_size   = 0.0f;
 		this->debug       = false;
-		this->renderer    = OPENGL1;
+		this->renderer    = Renderer::DEFAULT;
 	}
 };
 
@@ -154,9 +154,9 @@ int parse_parameters(int argc, char **argv, struct globals *g) {
 			param++;
 			if (param < argc) {
 				switch (atoi(argv[param])) {
-					case 1: g->renderer = OPENGL1; break;
-					case 2: g->renderer = OPENGL3; break;
-					case 3: g->renderer = OPENGLES2; break;
+					case 1: g->renderer = Renderer::OPENGL1; break;
+					case 2: g->renderer = Renderer::OPENGL3; break;
+					case 3: g->renderer = Renderer::OPENGLES2; break;
 					default: fprintf(stderr, "Unknown renderer. Using default\n");
 				}
 			} else {
@@ -233,23 +233,23 @@ int main(int argc, char **argv) {
 	if (g.width == 0) g.width   = app.obvconfig.ParseInt("windowX", 1100);
 	if (g.height == 0) g.height = app.obvconfig.ParseInt("windowY", 700);
 
-	if (g.renderer == DEFAULT) {
+	if (g.renderer == Renderer::DEFAULT) {
 		switch (app.obvconfig.ParseInt("renderer", 0)) {
-			case 1: g.renderer = OPENGL1; break;
-			case 2: g.renderer = OPENGL3; break;
-			case 3: g.renderer = OPENGLES2; break;
+			case 1: g.renderer = Renderer::OPENGL1; break;
+			case 2: g.renderer = Renderer::OPENGL3; break;
+			case 3: g.renderer = Renderer::OPENGLES2; break;
 		}
 	}
 // Setup window
 
 #ifdef ENABLE_GL1
-	if (g.renderer == OPENGL1) {
+	if (g.renderer == Renderer::OPENGL1) {
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 1);
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
 	}
 #endif
 #ifdef ENABLE_GL3
-	if (g.renderer == OPENGL3) {
+	if (g.renderer == Renderer::OPENGL3) {
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG);
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
@@ -257,7 +257,7 @@ int main(int argc, char **argv) {
 	}
 #endif
 #ifdef ENABLE_GLES2
-	if (g.renderer == OPENGLES2) {
+	if (g.renderer == Renderer::OPENGLES2) {
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
@@ -298,17 +298,17 @@ int main(int argc, char **argv) {
 	bool initialized = false;
 // Setup ImGui binding
 #ifdef ENABLE_GL1
-	if (g.renderer == OPENGL1) {
+	if (g.renderer == Renderer::OPENGL1) {
 		initialized = ImGui_ImplSdl_Init(window);
 	}
 #endif
 #ifdef ENABLE_GL3
-	if (g.renderer == OPENGL3) {
+	if (g.renderer == Renderer::OPENGL3) {
 		initialized = ImGui_ImplSdlGL3_Init(window);
 	}
 #endif
 #ifdef ENABLE_GLES2
-	if (g.renderer == OPENGLES2) {
+	if (g.renderer == Renderer::OPENGLES2) {
 		initialized = ImGui_ImplSdlGLES2_Init(window);
 	}
 #endif
@@ -415,13 +415,13 @@ int main(int argc, char **argv) {
 		while (SDL_PollEvent(&event)) {
 			sleepout = 3;
 #ifdef ENABLE_GL1
-			if (g.renderer == OPENGL1) ImGui_ImplSdl_ProcessEvent(&event);
+			if (g.renderer == Renderer::OPENGL1) ImGui_ImplSdl_ProcessEvent(&event);
 #endif
 #ifdef ENABLE_GL3
-			if (g.renderer == OPENGL3) ImGui_ImplSdlGL3_ProcessEvent(&event);
+			if (g.renderer == Renderer::OPENGL3) ImGui_ImplSdlGL3_ProcessEvent(&event);
 #endif
 #ifdef ENABLE_GLES2
-			if (g.renderer == OPENGLES2) ImGui_ImplSdlGLES2_ProcessEvent(&event);
+			if (g.renderer == Renderer::OPENGLES2) ImGui_ImplSdlGLES2_ProcessEvent(&event);
 #endif
 
 			if (event.type == SDL_DROPFILE) {
@@ -450,13 +450,13 @@ int main(int argc, char **argv) {
 		} // puts OBV to sleep if nothing is happening.
 
 #ifdef ENABLE_GL1
-		if (g.renderer == OPENGL1) ImGui_ImplSdl_NewFrame(window);
+		if (g.renderer == Renderer::OPENGL1) ImGui_ImplSdl_NewFrame(window);
 #endif
 #ifdef ENABLE_GL3
-		if (g.renderer == OPENGL3) ImGui_ImplSdlGL3_NewFrame(window);
+		if (g.renderer == Renderer::OPENGL3) ImGui_ImplSdlGL3_NewFrame(window);
 #endif
 #ifdef ENABLE_GLES2
-		if (g.renderer == OPENGLES2) ImGui_ImplSdlGLES2_NewFrame();
+		if (g.renderer == Renderer::OPENGLES2) ImGui_ImplSdlGLES2_NewFrame();
 #endif
 
 		// If we have a board to view being passed from command line, then "inject"
@@ -494,13 +494,13 @@ int main(int argc, char **argv) {
 
 // Cleanup
 #ifdef ENABLE_GL1
-	if (g.renderer == OPENGL1) ImGui_ImplSdl_Shutdown();
+	if (g.renderer == Renderer::OPENGL1) ImGui_ImplSdl_Shutdown();
 #endif
 #ifdef ENABLE_GL3
-	if (g.renderer == OPENGL3) ImGui_ImplSdlGL3_Shutdown();
+	if (g.renderer == Renderer::OPENGL3) ImGui_ImplSdlGL3_Shutdown();
 #endif
 #ifdef ENABLE_GLES2
-	if (g.renderer == OPENGLES2) ImGui_ImplSdlGLES2_Shutdown();
+	if (g.renderer == Renderer::OPENGLES2) ImGui_ImplSdlGLES2_Shutdown();
 #endif
 
 	cleanupAndExit(0);
