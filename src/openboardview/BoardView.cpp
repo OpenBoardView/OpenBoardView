@@ -650,7 +650,6 @@ void BoardView::Preferences(void) {
 
 		t = obvconfig.ParseInt("windowX", 1100);
 		RA("Window Width", DPI(200));
-		//		ImGui::Text("Window width");
 		ImGui::SameLine();
 		if (ImGui::InputInt("##windowX", &t)) {
 			if (t > 400) obvconfig.WriteInt("windowX", t);
@@ -658,7 +657,6 @@ void BoardView::Preferences(void) {
 
 		t = obvconfig.ParseInt("windowY", 700);
 		RA("Window Height", DPI(200));
-		//		ImGui::Text("Window width");
 		ImGui::SameLine();
 		if (ImGui::InputInt("##windowY", &t)) {
 			if (t > 320) obvconfig.WriteInt("windowY", t);
@@ -666,17 +664,16 @@ void BoardView::Preferences(void) {
 
 		t = obvconfig.ParseInt("fontSize", 20);
 		RA("Font size", DPI(200));
-		//		ImGui::Text("Font size");
 		ImGui::SameLine();
 		if (ImGui::InputInt("##fontSize", &t)) {
 			if ((t >= 8) && (t < 60)) obvconfig.WriteInt("fontSize", t);
 		}
 
+		t = obvconfig.ParseInt("dpi", 100);
 		RA("Screen DPI", DPI(200));
-		//		ImGui::Text("Screen DPI");
 		ImGui::SameLine();
-		if (ImGui::InputInt("##dpi", &dpi)) {
-			if ((t > 25) && (t < 600)) obvconfig.WriteInt("dpi", dpi);
+		if (ImGui::InputInt("##dpi", &t)) {
+			if ((t > 25) && (t < 600)) obvconfig.WriteInt("dpi", t);
 		}
 		ImGui::PushStyleColor(ImGuiCol_Text, ImColor(0xff4040ff));
 		ImGui::Text("(Program restart is required to properly apply font size and DPI changes)");
