@@ -173,24 +173,15 @@ void FZFile::update_counts() {
 }
 
 FZFile::FZFile(const char *buf, size_t buffer_size, uint32_t *fzkey) {
-	char **lines_begin = nullptr;
-#define ENSURE(X)                           \
-	assert(X);                              \
-	if (!(X)) {                             \
-		if (lines_begin) free(lines_begin); \
-		return;                             \
-	}
-
 	char *saved_locale;
 	saved_locale = setlocale(LC_NUMERIC, "C"); // Use '.' as delimiter for strtod
 
 	memcpy(key, fzkey, sizeof(key));
 
-	memset(this, 0, sizeof(*this));
-
 	ENSURE(buffer_size > 4);
 	size_t file_buf_size = 3 * (1 + buffer_size);
-	file_buf             = (char *)malloc(file_buf_size);
+	file_buf             = (char *)calloc(1, file_buf_size);
+	ENSURE(file_buf != nullptr);
 	memcpy(file_buf, buf, buffer_size);
 	file_buf[buffer_size] = 0;
 	// This is for fixing degenerate utf8
@@ -202,26 +193,19 @@ FZFile::FZFile(const char *buf, size_t buffer_size, uint32_t *fzkey) {
 	size_t content_size = 0;
 	char *content       = FZFile::split(file_buf, buffer_size, content_size); // then split it, discarding descr part
 
-	if (content == nullptr) return;
-	if (content_size < 1) return;
+	ENSURE(content != nullptr);
+	ENSURE(content_size > 0);
+	content =
+	    FZFile::decompress(file_buf + 4, content_size, content_size); // and decompress zlib content data, discard first 4 bytes
 
-	//	ENSURE(content != nullptr);
-	//	ENSURE(content_size > 0);
-	content = FZFile::decompress(file_buf + 4,
-	                             content_size,
-	                             content_size); // and decompress zlib content data, discard first 4 bytes
-
-	if (content == nullptr) return;
-	if (content_size < 1) return;
-	//	ENSURE(content != nullptr);
-	//	ENSURE(content_size > 0);
+	ENSURE(content != nullptr);
+	ENSURE(content_size > 0);
 
 	int current_block = 0;
 	std::unordered_map<std::string, int> parts_id; // map between part name and part number
 
 	char **lines = stringfile(content);
-	if (!lines) return;
-	lines_begin = lines;
+	ENSURE(lines);
 
 	while (*lines) {
 		char *line = *lines;
@@ -253,15 +237,11 @@ FZFile::FZFile(const char *buf, size_t buffer_size, uint32_t *fzkey) {
 		switch (current_block) {
 			case 1: { // Parts
 				BRDPart part;
-				LOAD_STR(part.name);
-				char *cic;
-				LOAD_STR(cic);
-				char *sname;
-				LOAD_STR(sname);
-				char *smirror;
-				LOAD_STR(smirror);
-				char *srotate;
-				LOAD_STR(srotate);
+				part.name = READ_STR();
+				/*char *cic =*/READ_STR();
+				/*char *sname =*/READ_STR();
+				char *smirror = READ_STR();
+				/*char *srotate =*/READ_STR();
 				if (!strcmp(smirror, "YES"))
 					part.type = 10; // SMD part on top
 				else
@@ -272,25 +252,17 @@ FZFile::FZFile(const char *buf, size_t buffer_size, uint32_t *fzkey) {
 			} break;
 			case 2: { // Pins
 				BRDPin pin;
-				LOAD_STR(pin.net);
-				char *part;
-				LOAD_STR(part);
-				pin.part = parts_id.at(part);
-				LOAD_STR(pin.snum);
-
-				char *name;
-				LOAD_STR(name);
-
-				double posx;
-				LOAD_DOUBLE(posx);
-				pin.pos.x = posx;
-				double posy;
-				LOAD_DOUBLE(posy);
-				pin.pos.y = posy;
-
-				LOAD_INT(pin.probe);
-				double radius;
-				LOAD_DOUBLE(radius);
+				pin.net    = READ_STR();
+				char *part = READ_STR();
+				pin.part   = parts_id.at(part);
+				pin.snum   = READ_STR();
+				/*char *name =*/READ_STR();
+				double posx   = READ_DOUBLE();
+				pin.pos.x     = posx;
+				double posy   = READ_DOUBLE();
+				pin.pos.y     = posy;
+				pin.probe     = READ_UINT();
+				double radius = READ_DOUBLE();
 				radius /= 100;
 				if (radius < 0.5f) radius = 0.5f;
 				pin.radius                = radius;
@@ -299,28 +271,21 @@ FZFile::FZFile(const char *buf, size_t buffer_size, uint32_t *fzkey) {
 			case 3: {   // Nails
 				p += 2; // Skip "Y!"
 				BRDNail nail;
-				LOAD_STR(nail.net);
-				char *refdes;
-				LOAD_STR(refdes);
-				int pinnumber;
-				LOAD_INT(pinnumber);
-				char *pinname;
-				LOAD_STR(pinname);
+				nail.net = READ_STR();
+				/*char *refdes =*/READ_STR();
+				/*int pinnumber =*/READ_INT(); // uint
+				/*char *pinname =*/READ_STR();
 
-				double posx;
-				LOAD_DOUBLE(posx);
-				nail.pos.x = posx;
-				double posy;
-				LOAD_DOUBLE(posy);
-				nail.pos.y = posy;
-				char *loc;
-				LOAD_STR(loc);
+				double posx = READ_DOUBLE();
+				nail.pos.x  = posx;
+				double posy = READ_DOUBLE();
+				nail.pos.y  = posy;
+				char *loc   = READ_STR();
 				if (!strcmp(loc, "T"))
 					nail.side = 1; // on top
 				else
 					nail.side = 2; // on bottom
-				double radius;
-				LOAD_DOUBLE(radius);
+				/*double radius =*/READ_DOUBLE();
 				nails.push_back(nail);
 			} break;
 		}
@@ -339,5 +304,4 @@ FZFile::FZFile(const char *buf, size_t buffer_size, uint32_t *fzkey) {
 	setlocale(LC_NUMERIC, saved_locale); // Restore locale
 
 	valid = current_block != 0;
-#undef ENSURE
 }

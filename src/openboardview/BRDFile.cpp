@@ -91,23 +91,11 @@ bool BRDFile::verifyFormat(const char *buf, size_t buffer_size) {
 }
 
 BRDFile::BRDFile(const char *buf, size_t buffer_size) {
-//	memset(this, 0, sizeof(*this)); //  old habits must die?
-//
-//#define ENSURE(X)                                                                                  \
-//	assert(X);                                                                                     \
-//	if (!(X))                                                                                      \
-//		goto FAIL_LABEL;
-#define ENSURE(X) \
-	assert(X);    \
-	if (!(X)) return;
-
-#define FAIL_LABEL fail
 	ENSURE(buffer_size > 4);
 	size_t file_buf_size = 3 * (1 + buffer_size);
-	file_buf             = (char *)malloc(file_buf_size);
-	if (!file_buf) return;
+	file_buf             = (char *)calloc(1, file_buf_size);
+	ENSURE(file_buf != nullptr);
 
-	memset(file_buf, 0, (3 * (1 + buffer_size)));
 	memcpy(file_buf, buf, buffer_size);
 	file_buf[buffer_size] = 0;
 	// This is for fixing degenerate utf8
@@ -129,20 +117,9 @@ BRDFile::BRDFile(const char *buf, size_t buffer_size) {
 	}
 
 	int current_block = 0;
-	num_format        = 0;
-	num_parts         = 0;
-	num_pins          = 0;
-	num_nails         = 0;
-	int format_idx    = 0;
-	int parts_idx     = 0;
-	int pins_idx      = 0;
-	int nails_idx     = 0;
 	char **lines      = stringfile(file_buf);
-	if (!lines) return;
-	//		goto fail;
-	char **lines_begin = lines;
-#undef FAIL_LABEL
-#define FAIL_LABEL fail_lines
+	ENSURE(lines);
+
 	while (*lines) {
 		char *line = *lines;
 		++lines;
@@ -176,70 +153,52 @@ BRDFile::BRDFile(const char *buf, size_t buffer_size) {
 
 		char *p = line;
 		char *s;
-#define LOAD_INT(var) var = strtol(p, &p, 10)
-#define LOAD_STR(var)                            \
-	while ((*p) && (isspace((uint8_t)*p))) ++p;  \
-	s = p;                                       \
-	while ((*p) && (!isspace((uint8_t)*p))) ++p; \
-	*p++ = 0;                                    \
-	var  = fix_to_utf8(s, &arena, arena_end);
+
 		switch (current_block) {
 			case 2: { // var_data
-				LOAD_INT(num_format);
-				LOAD_INT(num_parts);
-				LOAD_INT(num_pins);
-				LOAD_INT(num_nails);
-				ENSURE(num_format >= 0);
-				ENSURE(num_parts >= 0);
-				ENSURE(num_pins >= 0);
-				ENSURE(num_nails >= 0);
+				num_format = READ_UINT();
+				num_parts  = READ_UINT();
+				num_pins   = READ_UINT();
+				num_nails  = READ_UINT();
 			} break;
 			case 3: { // Format
-				ENSURE(format_idx < num_format);
+				ENSURE(format.size() < num_format);
 				BRDPoint fmt;
 				fmt.x = strtol(p, &p, 10);
 				fmt.y = strtol(p, &p, 10);
 				format.push_back(fmt);
 			} break;
 			case 4: { // Parts
-				ENSURE(parts_idx < num_parts);
+				ENSURE(parts.size() < num_parts);
 				BRDPart part;
-				LOAD_STR(part.name);
-				LOAD_INT(part.type); // Type, or *layer* ?
-				LOAD_INT(part.end_of_pins);
+				part.name        = READ_STR();
+				part.type        = READ_UINT(); // Type and layer, actually.
+				part.end_of_pins = READ_UINT();
 				ENSURE(part.end_of_pins <= num_pins);
 				parts.push_back(part);
-				parts_idx++;
 			} break;
 			case 5: { // Pins
-				ENSURE(pins_idx < num_pins);
+				ENSURE(pins.size() < num_pins);
 				BRDPin pin;
-				LOAD_INT(pin.pos.x);
-				LOAD_INT(pin.pos.y);
-				LOAD_INT(pin.probe);
-				LOAD_INT(pin.part);
-				LOAD_STR(pin.net);
+				pin.pos.x = READ_INT();
+				pin.pos.y = READ_INT();
+				pin.probe = READ_UINT();
+				pin.part  = READ_UINT();
 				ENSURE(pin.part <= num_parts);
+				pin.net = READ_STR();
 				pins.push_back(pin);
-				pins_idx++;
 			} break;
 			case 6: { // Nails
-				ENSURE(nails_idx < num_nails);
+				ENSURE(nails.size() < num_nails);
 				BRDNail nail;
-				LOAD_INT(nail.probe);
-				LOAD_INT(nail.pos.x);
-				LOAD_INT(nail.pos.y);
-				LOAD_INT(nail.side);
-				LOAD_STR(nail.net);
+				nail.probe = READ_UINT();
+				nail.pos.x = READ_INT();
+				nail.pos.y = READ_INT();
+				nail.side  = READ_UINT();
+				nail.net   = READ_STR();
 				nails.push_back(nail);
-				nails_idx++;
 			} break;
 		}
 	}
 	valid = current_block != 0;
-fail_lines:
-	free(lines_begin);
-fail:;
-#undef FAIL_LABEL
-#undef ENSURE
 }

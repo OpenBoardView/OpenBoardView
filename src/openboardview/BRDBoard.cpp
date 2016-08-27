@@ -109,10 +109,10 @@ BRDBoard::BRDBoard(const BRDFile *const boardFile)
 		comp_dummy->component_type = Component::kComponentTypeDummy;
 
 		// NOTE: originally the pin diameter depended on part.name[0] == 'U' ?
-		int pin_idx  = 0;
-		int part_idx = 1;
-		auto pins    = m_pins;
-		auto parts   = m_parts;
+		unsigned int pin_idx  = 0;
+		unsigned int part_idx = 1;
+		auto pins             = m_pins;
+		auto parts            = m_parts;
 
 		for (size_t i = 0; i < pins.size(); i++) {
 			// (originally from BoardView::DrawPins)
