@@ -39,17 +39,20 @@ using namespace std::placeholders;
 #endif
 
 BoardView::~BoardView() {
-	for (auto &p : m_board->Components()) {
-		if (p->hull) free(p->hull);
+	if (m_validBoard) {
+		for (auto &p : m_board->Components()) {
+			if (p->hull) free(p->hull);
+		}
+		m_board->Nets().clear();
+		m_board->Pins().clear();
+		m_board->Components().clear();
+		m_board->OutlinePoints().clear();
+		delete m_file;
+		delete m_board;
+		m_annotations.Close();
+		free(m_lastFileOpenName);
+		m_validBoard = false;
 	}
-	m_board->Nets().clear();
-	m_board->Pins().clear();
-	m_board->Components().clear();
-	m_board->OutlinePoints().clear();
-	delete m_file;
-	delete m_board;
-	m_annotations.Close();
-	free(m_lastFileOpenName);
 }
 uint32_t BoardView::byte4swap(uint32_t x) {
 	/*
