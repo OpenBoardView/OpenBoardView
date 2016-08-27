@@ -314,7 +314,7 @@ char *Confparse::Parse(const char *key) {
 	return NULL;
 }
 
-char *Confparse::ParseStr(const char *key, char *defaultv) {
+const char *Confparse::ParseStr(const char *key, const char *defaultv) {
 	char *p = Parse(key);
 	if (p)
 		return p;
@@ -378,7 +378,7 @@ bool Confparse::ParseBool(const char *key, bool defaultv) {
  * Write parts
  *
  */
-bool Confparse::WriteStr(const char *key, char *value) {
+bool Confparse::WriteStr(const char *key, const char *value) {
 	char *p, *op;
 	char *llimit;
 	int keylen;

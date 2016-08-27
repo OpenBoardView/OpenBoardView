@@ -229,9 +229,7 @@ void BoardView::ThemeSetStyle(const char *name) {
 
 int BoardView::ConfigParse(void) {
 	ImGuiStyle &style = ImGui::GetStyle();
-	char *v;
-
-	v = obvconfig.ParseStr("colorTheme", "light");
+	const char *v     = obvconfig.ParseStr("colorTheme", "light");
 	ThemeSetStyle(v);
 
 	pinSizeThresholdLow = obvconfig.ParseDouble("pinSizeThresholdLow", 0);
@@ -396,10 +394,7 @@ int BoardView::ConfigParse(void) {
 	 * of comma/space separated 32-bit hex values 0x1234abcd etc.
 	 *
 	 */
-	{
-		char noKey[] = "";
-		SetFZKey(obvconfig.ParseStr("FZKey", noKey));
-	}
+	SetFZKey(obvconfig.ParseStr("FZKey", ""));
 
 	return 0;
 }
@@ -479,11 +474,12 @@ int BoardView::LoadFile(char *filename) {
 	return 0;
 }
 
-void BoardView::SetFZKey(char *keytext) {
+void BoardView::SetFZKey(const char *keytext) {
 
 	if (keytext) {
 		int ki;
-		char *p, *ep, *limit;
+		const char *p, *limit;
+		char *ep;
 		ki    = 0;
 		p     = keytext;
 		limit = keytext + strlen(keytext);
@@ -556,8 +552,8 @@ void BoardView::ColorPreferences(void) {
 		RA("Base theme", DPI(200));
 		ImGui::SameLine();
 		{
-			int tc  = 0;
-			char *v = obvconfig.ParseStr("colorTheme", "default");
+			int tc        = 0;
+			const char *v = obvconfig.ParseStr("colorTheme", "default");
 			if (strcmp(v, "dark") == 0) {
 				tc = 1;
 			}
@@ -917,7 +913,6 @@ void BoardView::HelpControls(void) {
 		ImGui::Spacing();
 
 		ImGui::Text("Flip board");
-		ImGui::Text("");
 		ImGui::Spacing();
 
 		ImGui::Text("Zoom in");
@@ -3320,8 +3315,7 @@ void BoardView::SetFile(BRDFile *file) {
 	m_nets = m_board->Nets();
 
 	int min_x = INT_MAX, max_x = INT_MIN, min_y = INT_MAX, max_y = INT_MIN;
-	for (int i = 0; i < m_file->num_format; i++) {
-		BRDPoint &pa            = m_file->format[i];
+	for (auto &pa : m_file->format) {
 		if (pa.x < min_x) min_x = pa.x;
 		if (pa.y < min_y) min_y = pa.y;
 		if (pa.x > max_x) max_x = pa.x;

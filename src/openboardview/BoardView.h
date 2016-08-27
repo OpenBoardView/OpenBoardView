@@ -154,7 +154,7 @@ struct BoardView {
 	void DrawDiamond(ImDrawList *draw, ImVec2 c, double r, uint32_t color);
 	void DrawHex(ImDrawList *draw, ImVec2 c, double r, uint32_t color);
 	void DrawBox(ImDrawList *draw, ImVec2 c, double r, uint32_t color);
-	void SetFZKey(char *keytext);
+	void SetFZKey(const char *keytext);
 	void HelpAbout(void);
 	void HelpControls(void);
 	void SearchColumnGenerate(char *search, int buttons_max);
