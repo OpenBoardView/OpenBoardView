@@ -27,8 +27,8 @@ endif()
 # Warning with CMake 3.0 on OS X
 set(CMAKE_MACOSX_RPATH ON)
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 add_definitions(-DOBV_BUILD="$ENV{OBV_BUILD}") # Build info from ./build.sh
 
