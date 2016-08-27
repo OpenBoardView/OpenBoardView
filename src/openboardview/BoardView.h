@@ -12,7 +12,7 @@
 #define DPI(x) (((x)*dpi) / 100)
 
 struct BRDPart;
-struct BRDFile;
+class BRDFile;
 
 struct BitVec {
 	uint32_t *m_bits;
