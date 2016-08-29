@@ -4,8 +4,6 @@
 #include "imgui/imgui.h"
 #include <SDL2/SDL.h>
 #include <assert.h>
-#include <fstream>
-#include <iostream>
 #include <stdint.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -17,26 +15,6 @@
 #ifdef ENABLE_FONTCONFIG
 #include <fontconfig/fontconfig.h>
 #endif
-
-char *file_as_buffer(size_t *buffer_size, const char *utf8_filename) {
-	std::ifstream file;
-	file.open(utf8_filename, std::ios::in | std::ios::binary | std::ios::ate);
-	if (!file.is_open()) {
-		std::cerr << "Error opening " << utf8_filename << ": " << strerror(errno) << std::endl;
-		*buffer_size = 0;
-		return nullptr;
-	}
-
-	std::streampos sz = file.tellg();
-	*buffer_size      = sz;
-	char *buf         = (char *)malloc(sz);
-	file.seekg(0, std::ios::beg);
-	file.read(buf, sz);
-	assert(file.gcount() == sz);
-	file.close();
-
-	return buf;
-}
 
 #ifdef ENABLE_GTK
 #define declareFunc(x) decltype(x) *x
@@ -114,8 +92,8 @@ bool load() {
 #define gtk_window_new GTK::gtk_window_new
 #define g_type_check_instance_cast GTK::g_type_check_instance_cast
 
-char *show_file_picker() {
-	char *path = nullptr;
+const std::string show_file_picker() {
+	std::string path;
 	if (!GTK::load()) return path;
 
 	GtkWidget *parent, *dialog;
@@ -147,18 +125,11 @@ char *show_file_picker() {
 	gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(dialog), filter_everything);
 
 	if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_ACCEPT) {
-		char *filename;
-
-		filename   = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
-		size_t len = strlen(filename);
-		path       = (char *)malloc(len + 1);
-		memcpy(path, filename, len + 1);
-		if (!path) {
+		char *filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
+		if (filename) {
+			path = std::string(filename);
 			g_free(filename);
-			gtk_widget_destroy(dialog);
-			return nullptr;
 		}
-		g_free(filename);
 	}
 
 	while (gtk_events_pending()) gtk_main_iteration();
@@ -170,9 +141,9 @@ char *show_file_picker() {
 	return path;
 }
 #elif !defined(__APPLE__)
-char *show_file_picker() { // dummy function when not building for OS X and GTK not available
+const std::string show_file_picker() { // dummy function when not building for OS X and GTK not available
 	SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Cannot show open file dialog: not built in.");
-	return nullptr;
+	return std::string();
 }
 #endif
 
@@ -209,6 +180,7 @@ const std::string get_font_path(const std::string &name) {
 }
 #endif
 
+#ifndef __APPLE__
 // Return an environment variable value in an std::string
 const std::string get_env_var(const std::string varname) {
 	std::string envVar;
@@ -238,7 +210,6 @@ bool create_dirs(const std::string &path) {
 	return true;
 }
 
-#ifndef __APPLE__
 const std::string get_user_dir(const UserDir userdir) {
 	std::string path;
 	std::string envVar;

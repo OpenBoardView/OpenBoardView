@@ -13,15 +13,14 @@ struct Annotation {
 };
 
 struct Annotations {
-
-	char filename[ANNOTATION_FNAME_LEN_MAX + 1];
+	std::string filename;
 	sqlite3 *sqldb;
 	bool debug = false;
 	vector<Annotation> annotations;
 
 	int Init(void);
 
-	int SetFilename(char *f);
+	int SetFilename(const std::string &f);
 	int Load(void);
 	int Close(void);
 	int Add(char *net, char *part, double x, double y, char *annotation);

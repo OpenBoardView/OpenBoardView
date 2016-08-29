@@ -5,7 +5,7 @@
 #import <Cocoa/Cocoa.h>
 
 #ifndef ENABLE_GTK
-char *show_file_picker() {
+const std::string show_file_picker() {
 	std::string filename;
 	NSOpenPanel *op = [NSOpenPanel openPanel];
 
@@ -14,11 +14,7 @@ char *show_file_picker() {
 		filename = std::string([[nsurl path] UTF8String]);
 	}
 
-	size_t len = filename.length();
-	char *path = (char *)malloc(len+1);
-	memcpy(path, filename.c_str(), len+1);
-
-	return path;
+	return filename;
 }
 #endif
 

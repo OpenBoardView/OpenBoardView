@@ -1,4 +1,3 @@
-#include <algorithm>
 #include <cmath>
 #include <iostream>
 #include <limits.h>
@@ -57,7 +56,7 @@ int FHistory::Load(void) {
 	return count;
 }
 
-int FHistory::Prepend_save(char *newfile) {
+int FHistory::Prepend_save(const std::string &newfile) {
 	if (!fname.empty()) {
 		FILE *f;
 #ifdef _WIN32
@@ -71,10 +70,10 @@ int FHistory::Prepend_save(char *newfile) {
 		if (f) {
 			int i;
 
-			fprintf(f, "%s\n", newfile);
+			fprintf(f, "%s\n", newfile.c_str());
 			for (i = 0; i < count; i++) {
 				// Don't create duplicate entries, so check each one against the newfile
-				if (strcmp(newfile, history[i])) {
+				if (strcmp(newfile.c_str(), history[i])) {
 					fprintf(f, "%s\n", history[i]);
 				}
 			}

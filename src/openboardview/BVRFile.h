@@ -3,10 +3,10 @@
 #include "BRDFile.h"
 
 struct BVRFile : public BRDFile {
-	BVRFile(const char *buf, size_t buffer_size);
+	BVRFile(std::vector<char> &buf);
 	~BVRFile() {
 		free(file_buf);
 	}
 
-	static bool verifyFormat(const char *buf, size_t buffer_size);
+	static bool verifyFormat(std::vector<char> &buf);
 };

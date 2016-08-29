@@ -11,6 +11,6 @@ struct FHistory {
 	char *Trim_filename(char *s, int stops);
 	int Set_filename(const std::string &name);
 	int Load(void);
-	int Prepend_save(char *newfile);
+	int Prepend_save(const std::string &newfile);
 };
 #endif

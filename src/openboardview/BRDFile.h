@@ -7,11 +7,12 @@
 
 #define ENSURE(X) assert(X);
 #define READ_INT() strtol(p, &p, 10);
-#define READ_UINT                            \
-	[&]() {                                  \
-		int t = strtol(p, &p, 10);           \
-		ENSURE(t >= 0);                      \
-		return static_cast<unsigned int>(t); \
+// Warning: read as int then cast to uint if positive
+#define READ_UINT                                \
+	[&]() {                                      \
+		int value = strtol(p, &p, 10);           \
+		ENSURE(value >= 0);                      \
+		return static_cast<unsigned int>(value); \
 	}
 #define READ_DOUBLE() strtod(p, &p);
 #define READ_STR                                     \
@@ -41,7 +42,7 @@ struct BRDPart {
 
 struct BRDPin {
 	BRDPoint pos;
-	unsigned int probe;
+	int probe;
 	unsigned int part;
 	unsigned int side = 0;
 	const char *net;
@@ -77,13 +78,13 @@ class BRDFile {
 
 	bool valid = false;
 
-	BRDFile(const char *buf, size_t buffer_size);
+	BRDFile(std::vector<char> &buf);
 	BRDFile(){};
 	~BRDFile() {
 		free(file_buf);
 	}
 
-	static bool verifyFormat(const char *buf, size_t buffer_size);
+	static bool verifyFormat(std::vector<char> &buf);
 
   private:
 	static constexpr std::array<uint8_t, 4> signature = {0x23, 0xe2, 0x63, 0x28};

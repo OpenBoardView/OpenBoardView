@@ -1,5 +1,4 @@
 #include "imgui/imgui.h"
-#include <algorithm>
 #include <cmath>
 #include <iostream>
 #include <limits.h>

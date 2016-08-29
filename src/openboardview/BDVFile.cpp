@@ -1,5 +1,6 @@
 #include "BDVFile.h"
 
+#include "utils.h"
 #include <assert.h>
 #include <ctype.h>
 #include <locale.h>
@@ -17,14 +18,14 @@ void decode_bdv(char *buf, size_t buffer_size) {
 	}
 }
 
-bool BDVFile::verifyFormat(const char *buf, size_t buffer_size) {
-	std::string sbuf(buf, buffer_size);
-	if (sbuf.find("dd:1.3?,r?-=bb") != std::string::npos) return true; // encoded "<<format.asc>>"
-	if ((sbuf.find("<<format.asc>>") != std::string::npos) && (sbuf.find("<<pins.asc>>") != std::string::npos)) return true;
-	return false;
+bool BDVFile::verifyFormat(std::vector<char> &buf) {
+	return find_str_in_buf("dd:1.3?,r?-=bb", buf) ||
+	       (find_str_in_buf("<<format.asc>>", buf) && find_str_in_buf("<<pins.asc>>", buf));
 }
 
-BDVFile::BDVFile(const char *buf, size_t buffer_size) {
+BDVFile::BDVFile(std::vector<char> &buf) {
+	auto buffer_size = buf.size();
+
 	char *saved_locale;
 	saved_locale = setlocale(LC_NUMERIC, "C"); // Use '.' as delimiter for strtod
 
@@ -32,7 +33,8 @@ BDVFile::BDVFile(const char *buf, size_t buffer_size) {
 	size_t file_buf_size = 3 * (1 + buffer_size);
 	file_buf             = (char *)calloc(1, file_buf_size);
 	ENSURE(file_buf != nullptr);
-	memcpy(file_buf, buf, buffer_size);
+
+	std::copy(buf.begin(), buf.end(), file_buf);
 	file_buf[buffer_size] = 0;
 	// This is for fixing degenerate utf8
 	char *arena     = &file_buf[buffer_size + 1];

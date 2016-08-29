@@ -2,7 +2,6 @@
 
 #include "platform.h"
 
-#include <algorithm>
 #include <cerrno>
 #include <fstream>
 #include <functional>

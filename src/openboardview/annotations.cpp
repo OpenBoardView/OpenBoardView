@@ -1,4 +1,3 @@
-#include <algorithm>
 #include <cmath>
 #include <iostream>
 #include <limits.h>
@@ -11,8 +10,8 @@ using namespace std;
 
 #include "annotations.h"
 
-int Annotations::SetFilename(char *f) {
-	snprintf(filename, ANNOTATION_FNAME_LEN_MAX - 1, "%s", f);
+int Annotations::SetFilename(const std::string &f) {
+	filename = f;
 	return 0;
 }
 
@@ -59,16 +58,13 @@ int Annotations::Init(void) {
 }
 
 int Annotations::Load(void) {
-	char *ext = strrchr(filename, '.');
-	int r;
-	char sqlfn[1024];
+	std::string sqlfn                        = filename;
+	auto pos                                 = sqlfn.rfind('.');
+	if (pos != std::string::npos) sqlfn[pos] = '_';
+	sqlfn += ".sqlite3";
 
-	if (*ext) *ext = '_';
-	snprintf(sqlfn, 1024, "%s.sqlite3", filename);
-	if (*ext) *ext = '.';
-	sqldb          = nullptr;
-
-	r = sqlite3_open(sqlfn, &sqldb);
+	sqldb = nullptr;
+	int r = sqlite3_open(sqlfn.c_str(), &sqldb);
 	if (r) {
 		fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(sqldb));
 	} else {

@@ -1,5 +1,6 @@
 #include "BRD2File.h"
 
+#include "utils.h"
 #include <assert.h>
 #include <ctype.h>
 #include <iostream>
@@ -7,13 +8,12 @@
 #include <string.h>
 #include <unordered_map>
 
-bool BRD2File::verifyFormat(const char *buf, size_t buffer_size) {
-	std::string sbuf(buf, buffer_size);
-	if ((sbuf.find("BRDOUT:") != std::string::npos) && (sbuf.find("NETS:") != std::string::npos)) return true;
-	return false;
+bool BRD2File::verifyFormat(std::vector<char> &buf) {
+	return find_str_in_buf("BRDOUT:", buf) && find_str_in_buf("NETS:", buf);
 }
 
-BRD2File::BRD2File(const char *buf, size_t buffer_size) {
+BRD2File::BRD2File(std::vector<char> &buf) {
+	auto buffer_size = buf.size();
 	std::unordered_map<int, char *> nets; // Map between net id and net name
 	unsigned int num_nets = 0;
 	BRDPoint max{0, 0}; // Top-right board boundary
@@ -22,7 +22,8 @@ BRD2File::BRD2File(const char *buf, size_t buffer_size) {
 	size_t file_buf_size = 3 * (1 + buffer_size);
 	file_buf             = (char *)calloc(1, file_buf_size);
 	ENSURE(file_buf != nullptr);
-	memcpy(file_buf, buf, buffer_size);
+
+	std::copy(buf.begin(), buf.end(), file_buf);
 	file_buf[buffer_size] = 0;
 	// This is for fixing degenerate utf8
 	char *arena     = &file_buf[buffer_size + 1];

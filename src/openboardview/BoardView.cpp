@@ -2,8 +2,8 @@
 #include "BoardView.h"
 #include "history.h"
 #include "utf8/utf8.h"
+#include "utils.h"
 
-#include <algorithm>
 #include <cmath>
 #include <iostream>
 #include <limits.h>
@@ -50,7 +50,6 @@ BoardView::~BoardView() {
 		delete m_file;
 		delete m_board;
 		m_annotations.Close();
-		free(m_lastFileOpenName);
 		m_validBoard = false;
 	}
 }
@@ -399,17 +398,10 @@ int BoardView::ConfigParse(void) {
 	return 0;
 }
 
-int BoardView::LoadFile(char *filename) {
+int BoardView::LoadFile(const std::string &filename) {
 	m_lastFileOpenWasInvalid = true;
 	m_validBoard             = false;
-	if (filename) {
-		char *ext = strrchr(filename, '.');
-		if (ext) {
-			//			for (int i = 0; ext[i]; i++) ext[i] = tolower(ext[i]); // Convert extension to lowercase
-		} else {
-			ext = strrchr(filename, '\0'); // No extension, point to end of filename
-		}
-
+	if (!filename.empty()) {
 		// clean up the previous file.
 		if (m_file && m_board) {
 			for (auto &p : m_board->Components()) {
@@ -427,23 +419,20 @@ int BoardView::LoadFile(char *filename) {
 		}
 
 		SetLastFileOpenName(filename);
-		size_t buffer_size;
-		char *buffer = file_as_buffer(&buffer_size, filename);
-		if (buffer) {
+		std::vector<char> buffer = file_as_buffer(filename);
+		if (!buffer.empty()) {
 			BRDFile *file = nullptr;
 
-			//			file->valid = false;
-
-			if (stricmp(ext, ".fz") == 0) { // Since it is encrypted we cannot use the below logic. Trust the ext.
-				file = new FZFile(buffer, buffer_size, FZKey);
-			} else if (BRDFile::verifyFormat(buffer, buffer_size))
-				file = new BRDFile(buffer, buffer_size);
-			else if (BRD2File::verifyFormat(buffer, buffer_size))
-				file = new BRD2File(buffer, buffer_size);
-			else if (BDVFile::verifyFormat(buffer, buffer_size))
-				file = new BDVFile(buffer, buffer_size);
-			else if (BVRFile::verifyFormat(buffer, buffer_size))
-				file = new BVRFile(buffer, buffer_size);
+			if (check_fileext(filename, ".fz")) { // Since it is encrypted we cannot use the below logic. Trust the ext.
+				file = new FZFile(buffer, FZKey);
+			} else if (BRDFile::verifyFormat(buffer))
+				file = new BRDFile(buffer);
+			else if (BRD2File::verifyFormat(buffer))
+				file = new BRD2File(buffer);
+			else if (BDVFile::verifyFormat(buffer))
+				file = new BDVFile(buffer);
+			else if (BVRFile::verifyFormat(buffer))
+				file = new BVRFile(buffer);
 
 			if (file && file->valid) {
 				SetFile(file);
@@ -465,7 +454,6 @@ int BoardView::LoadFile(char *filename) {
 				m_validBoard = false;
 				delete file;
 			}
-			free(buffer);
 		}
 	} else {
 		return 1;
@@ -1679,8 +1667,8 @@ void BoardView::Update() {
 		}
 
 		if (ImGui::BeginPopupModal("Error opening file")) {
-			ImGui::Text("There was an error opening the file: %s", m_lastFileOpenName);
-			if (strstr(m_lastFileOpenName, ".fz")) {
+			ImGui::Text("There was an error opening the file: %s", m_lastFileOpenName.c_str());
+			if (check_fileext(m_lastFileOpenName, ".fz")) {
 				int i;
 				ImGui::Separator();
 				ImGui::Text("FZKey:");
@@ -1701,10 +1689,10 @@ void BoardView::Update() {
 	}
 
 	if (open_file) {
-		char *filename;
+		std::string filename;
 
 		if (preset_filename) {
-			filename        = strdup(preset_filename);
+			filename        = preset_filename;
 			preset_filename = NULL;
 		} else {
 			filename = show_file_picker();
@@ -1715,7 +1703,7 @@ void BoardView::Update() {
 			io.MouseClickedPos[0] = ImVec2(0, 0);
 		}
 
-		if (filename) {
+		if (!filename.empty()) {
 			LoadFile(filename);
 		}
 	}
@@ -3558,8 +3546,7 @@ void BoardView::SearchCompound(const char *item) {
 	SearchCompoundNoClear(item);
 }
 
-void BoardView::SetLastFileOpenName(char *name) {
-	free(m_lastFileOpenName);
+void BoardView::SetLastFileOpenName(const std::string &name) {
 	m_lastFileOpenName = name;
 }
 

@@ -1,5 +1,6 @@
 #include "BVRFile.h"
 
+#include "utils.h"
 #include <assert.h>
 #include <cmath>
 #include <ctype.h>
@@ -17,13 +18,13 @@ char *nextfield(char *p) {
 	return p;
 }
 
-bool BVRFile::verifyFormat(const char *buf, size_t buffer_size) {
-	std::string sbuf(buf, buffer_size);
-	if (sbuf.find("BVRAW_FORMAT_1") != std::string::npos) return true;
-	return false;
+bool BVRFile::verifyFormat(std::vector<char> &buf) {
+	return find_str_in_buf("BVRAW_FORMAT_1", buf);
 }
 
-BVRFile::BVRFile(const char *buf, size_t buffer_size) {
+BVRFile::BVRFile(std::vector<char> &buf) {
+	auto buffer_size = buf.size();
+
 	char *saved_locale;
 	char ppn[100] = {0};                        // previous part name
 	saved_locale  = setlocale(LC_NUMERIC, "C"); // Use '.' as delimiter for strtod
@@ -32,7 +33,8 @@ BVRFile::BVRFile(const char *buf, size_t buffer_size) {
 	size_t file_buf_size = 3 * (1 + buffer_size);
 	file_buf             = (char *)calloc(1, file_buf_size);
 	ENSURE(file_buf != nullptr);
-	memcpy(file_buf, buf, buffer_size);
+
+	std::copy(buf.begin(), buf.end(), file_buf);
 	file_buf[buffer_size] = 0;
 	// This is for fixing degenerate utf8
 	char *arena     = &file_buf[buffer_size + 1];

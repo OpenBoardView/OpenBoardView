@@ -1,6 +1,7 @@
 #include "BRDFile.h"
 
 #include "utf8/utf8.h"
+#include "utils.h"
 #include <assert.h>
 #include <ctype.h>
 #include <stdint.h>
@@ -82,21 +83,23 @@ done:
  * Returns true if the file format seems to be BRD.
  * Uses std::string::find() on a std::string rather than strstr() on the buffer because the latter expects a null-terminated string.
  */
-bool BRDFile::verifyFormat(const char *buf, size_t buffer_size) {
-	if (buffer_size < signature.size()) return false;
-	if (std::equal(signature.begin(), signature.end(), (uint8_t *)buf)) return true;
-	std::string sbuf(buf, buffer_size); // prevents us from reading beyond the buffer size
-	if ((sbuf.find("str_length:") != std::string::npos) && (sbuf.find("var_data:") != std::string::npos)) return true;
-	return false;
+bool BRDFile::verifyFormat(std::vector<char> &buf) {
+	if (buf.size() < signature.size()) return false; // C++14 implements a safer std::equal where this is not needed
+	if (std::equal(signature.begin(), signature.end(), buf.begin(), [](const uint8_t &i, const char &j) {
+		    return i == reinterpret_cast<const uint8_t &>(j);
+		}))
+		return true;
+	return find_str_in_buf("str_length:", buf) && find_str_in_buf("var_data:", buf);
 }
 
-BRDFile::BRDFile(const char *buf, size_t buffer_size) {
+BRDFile::BRDFile(std::vector<char> &buf) {
+	auto buffer_size = buf.size();
 	ENSURE(buffer_size > 4);
 	size_t file_buf_size = 3 * (1 + buffer_size);
 	file_buf             = (char *)calloc(1, file_buf_size);
 	ENSURE(file_buf != nullptr);
 
-	memcpy(file_buf, buf, buffer_size);
+	std::copy(buf.begin(), buf.end(), file_buf);
 	file_buf[buffer_size] = 0;
 	// This is for fixing degenerate utf8
 	char *arena     = &file_buf[buffer_size + 1];
@@ -182,7 +185,7 @@ BRDFile::BRDFile(const char *buf, size_t buffer_size) {
 				BRDPin pin;
 				pin.pos.x = READ_INT();
 				pin.pos.y = READ_INT();
-				pin.probe = READ_UINT();
+				pin.probe = READ_INT(); // Can be negative (-99)
 				pin.part  = READ_UINT();
 				ENSURE(pin.part <= num_parts);
 				pin.net = READ_STR();

@@ -172,7 +172,8 @@ void FZFile::update_counts() {
 	num_nails  = nails.size();
 }
 
-FZFile::FZFile(const char *buf, size_t buffer_size, uint32_t *fzkey) {
+FZFile::FZFile(std::vector<char> &buf, uint32_t *fzkey) {
+	auto buffer_size = buf.size();
 	char *saved_locale;
 	saved_locale = setlocale(LC_NUMERIC, "C"); // Use '.' as delimiter for strtod
 
@@ -182,7 +183,8 @@ FZFile::FZFile(const char *buf, size_t buffer_size, uint32_t *fzkey) {
 	size_t file_buf_size = 3 * (1 + buffer_size);
 	file_buf             = (char *)calloc(1, file_buf_size);
 	ENSURE(file_buf != nullptr);
-	memcpy(file_buf, buf, buffer_size);
+
+	std::copy(buf.begin(), buf.end(), file_buf);
 	file_buf[buffer_size] = 0;
 	// This is for fixing degenerate utf8
 	char *arena     = &file_buf[buffer_size + 1];

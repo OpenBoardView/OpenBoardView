@@ -2,26 +2,44 @@
 
 #include "BRDFile.h"
 
-#undef LOAD_INT
-#undef LOAD_DOUBLE
-#undef LOAD_STR
-#define LOAD_INT(var)        \
-	var = strtol(p, &p, 10); \
-	if (*p == '!') p++;
-#define LOAD_DOUBLE(var) \
-	var = strtod(p, &p); \
-	if (*p == '!') p++;
-#define LOAD_STR(var)                                      \
-	while ((*p) && (isspace((uint8_t)*p))) ++p;            \
-	s = p;                                                 \
-	while ((*p) && (*p != '!')) /* '!' is our delimiter */ \
-		++p;                                               \
-	*p++ = 0;                                              \
-	var  = fix_to_utf8(s, &arena, arena_end);
+#undef READ_INT
+#undef READ_UINT
+#undef READ_DOUBLE
+#undef READ_STR
+/* '!' is our delimiter */
+#define READ_INT                       \
+	[&]() {                            \
+		int value = strtol(p, &p, 10); \
+		if (*p == '!') p++;            \
+		return value;                  \
+	}
+// Warning: read as int then cast to uint if positive
+#define READ_UINT                                \
+	[&]() {                                      \
+		int value = strtol(p, &p, 10);           \
+		if (*p == '!') p++;                      \
+		ENSURE(value >= 0);                      \
+		return static_cast<unsigned int>(value); \
+	}
+#define READ_DOUBLE                 \
+	[&]() {                         \
+		double val = strtod(p, &p); \
+		if (*p == '!') p++;         \
+		return val;                 \
+	}
+#define READ_STR                                    \
+	[&]() {                                         \
+		while ((*p) && (isspace((uint8_t)*p))) ++p; \
+		s = p;                                      \
+		while ((*p) && (*p != '!')) ++p;            \
+		*p = 0;                                     \
+		p++;                                        \
+		return fix_to_utf8(s, &arena, arena_end);   \
+	}
 
 class FZFile : public BRDFile {
   public:
-	FZFile(const char *buf, size_t buffer_size, uint32_t *fzkey);
+	FZFile(std::vector<char> &buf, uint32_t *fzkey);
 	~FZFile() {
 		free(file_buf);
 	}
