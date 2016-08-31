@@ -1109,6 +1109,7 @@ void BoardView::ContextMenu(void) {
 							m_annotationedit_retain = true;
 							m_annotationnew_retain  = false;
 						}
+
 						ImGui::Text("%c(%0.0f,%0.0f) %s, %s%c%s%c",
 						            m_current_side ? 'B' : 'T',
 						            tx,
@@ -1893,10 +1894,11 @@ void BoardView::HandleInput() {
 						ImVec2 spos                                        = ImGui::GetMousePos();
 						if (AnnotationIsHovered()) m_annotation_clicked_id = m_annotation_last_hovered;
 
-						m_showContextMenu    = true;
-						m_showContextMenuPos = spos;
-						m_tooltips_enabled   = false;
-						m_needsRedraw        = true;
+						m_annotationedit_retain = false;
+						m_showContextMenu       = true;
+						m_showContextMenuPos    = spos;
+						m_tooltips_enabled      = false;
+						m_needsRedraw           = true;
 						if (debug) fprintf(stderr, "context click request at (%f %f)\n", spos.x, spos.y);
 					}
 
