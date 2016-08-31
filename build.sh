@@ -1,10 +1,6 @@
 #!/usr/bin/env bash
-export REVISION=`git rev-list HEAD --count` # Count commits
-export BRANCH=`git name-rev --name-only HEAD` # Get current branch
-export REPO=`git config remote.$(git config branch.${BRANCH}.remote).url|cut -d'/' -f 4` # Get the user from a Github remote
-export OBV_BUILD="R${REVISION} ${REPO}/${BRANCH}"
-PROJECT="$(tput bold ; tput setaf 3)OpenBoardView $(tput setaf 2)${OBV_BUILD}$(tput sgr0)"
-if [ -z $THREADS ]; then 
+PROJECT="$(tput bold ; tput setaf 3)OpenBoardView$(tput sgr0)"
+if [ -z $THREADS ]; then
     THREADS=1
     case "$(uname -s)" in
       *Darwin*|*BSD*)

@@ -1,13 +1,48 @@
 project(OpenBoardView)
 cmake_minimum_required(VERSION 2.8.9)
 
+# Colorized output. Checks TERM to exclude Windows command prompt
+if(DEFINED ENV{TERM})
+	string(ASCII 27 Esc)
+	set(CGreenB "${Esc}[1;32m")
+	set(CReset "${Esc}[m")
+endif()
+
+# Build info
+execute_process(
+	COMMAND git rev-list HEAD --count
+	OUTPUT_VARIABLE GIT_REVISION
+	OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+execute_process(
+	COMMAND git name-rev --name-only HEAD
+	OUTPUT_VARIABLE GIT_BRANCH
+	OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+execute_process(
+	COMMAND git config branch.${GIT_BRANCH}.remote
+	OUTPUT_VARIABLE GIT_REMOTE
+	OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+execute_process(
+	COMMAND git config remote.${GIT_REMOTE}.url
+	OUTPUT_VARIABLE GIT_URL
+	OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+string(REGEX REPLACE ".*/(.+)/.+$" "\\1" GIT_REPO "${GIT_URL}") # Extract the user from a Github repo URL
+set(OBV_BUILD "R${GIT_REVISION} ${GIT_REPO}/${GIT_BRANCH}")
+message("${PROJECT_NAME} release:${CGreenB} ${OBV_BUILD}${CReset}")
+
+# GCC version check
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 	if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "4.9")
 		message(FATAL_ERROR "GCC version needs to be >= 4.9")
 	endif()
 endif()
 
-set(CMAKE_INSTALL_PREFIX ${PROJECT_SOURCE_DIR}) 
+# Install in project directory
+set(CMAKE_INSTALL_PREFIX ${PROJECT_SOURCE_DIR})
+# Extra CMake modules (Find*.cmake) are in CMakeModules/
 set(CMAKE_MODULE_PATH
 	${CMAKE_MODULE_PATH}
 	${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules)
@@ -34,7 +69,7 @@ if(NOT MSVC)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wextra")
 endif()
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-add_definitions(-DOBV_BUILD="$ENV{OBV_BUILD}") # Build info from ./build.sh
+add_definitions(-DOBV_BUILD="${OBV_BUILD}") # Build info
 
 add_subdirectory(asset)
 add_subdirectory(src)
