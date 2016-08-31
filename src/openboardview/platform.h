@@ -1,6 +1,13 @@
 #pragma once
 
 #ifdef _WIN32
+#ifdef _MSC_VER // Visual Studio prefixes non-standard C functions with _
+#define _CRT_SECURE_NO_WARNINGS 1
+#define strdup _strdup
+#ifndef OBV_BUILD
+#define OBV_BUILD "unknown"
+#endif
+#endif
 #define NTDDI_VERSION NTDDI_VISTA       // Not caring about XP. If this is a concern, find a replacement for SHGetKnownFolderPath()
 #define _WIN32_WINNT _WIN32_WINNT_VISTA // and CompareStringEx() in win32.cpp.
 #include <windows.h>
@@ -56,11 +63,6 @@
 #define SDL_SCANCODE_KP_PERIOD VK_DECIMAL
 #define SDL_SCANCODE_KP_PLUS VK_ADD
 #define SDL_SCANCODE_KP_MINUS VK_SUBTRACT
-#endif
-
-#ifdef _MSC_VER // Visual Studio prefixes non-standard C functions with _
-#define _CRT_SECURE_NO_WARNINGS 1
-#define strdup _strdup
 #endif
 
 // Shows a file dialog (should hang the current thread) and returns the utf8

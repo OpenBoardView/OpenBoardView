@@ -34,14 +34,15 @@ const std::string wchar_to_utf8(const wchar_t *text) {
 	return std::string(utf16_to_utf8(std::wstring(text)));
 }
 
-const std::wstring utf8_to_utf16(const std::string &text) {
 #if defined(_MSC_VER) && _MSC_VER <= 1900 // Should be fixed "in the next major version"
-	auto str = std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t>{}.from_bytes(text.c_str());
-	return str;
-#else
-	return std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>{}.from_bytes(text.c_str());
-#endif
+const std::wstring utf8_to_utf16(const std::string &text) {
+	return std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t>{}.from_bytes(text.c_str());
 }
+#else
+const std::u16string utf8_to_utf16(const std::string &text) {
+	return std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>{}.from_bytes(text.c_str());
+}
+#endif
 
 #if defined(_MSC_VER) && _MSC_VER <= 1900
 const wchar_t *utf16_to_wchar(const std::wstring &text) {
