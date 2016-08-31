@@ -9,7 +9,11 @@
 #include "imgui_impl_sdl_gles2.h"
 
 // SDL, glad
+#ifdef _MSC_VER
+#include <SDL.h>
+#else
 #include <SDL2/SDL.h>
+#endif
 #include <glad/glad.h>
 
 // Data

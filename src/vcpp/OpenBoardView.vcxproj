@@ -184,6 +184,7 @@
     <ClInclude Include="..\openboardview\platform.h" />
     <ClInclude Include="..\openboardview\Renderers\imgui_impl_dx9.h" />
     <ClInclude Include="..\openboardview\resource.h" />
+    <ClInclude Include="..\openboardview\utils.h" />
     <ClInclude Include="..\openboardview\vectorhulls.h" />
     <ClInclude Include="..\sqlite3\sqlite3.h" />
   </ItemGroup>
@@ -204,6 +205,7 @@
     <ClCompile Include="..\openboardview\NetList.cpp" />
     <ClCompile Include="..\openboardview\PartList.cpp" />
     <ClCompile Include="..\openboardview\Renderers\imgui_impl_dx9.cpp" />
+    <ClCompile Include="..\openboardview\utils.cpp" />
     <ClCompile Include="..\openboardview\vectorhulls.cpp" />
     <ClCompile Include="..\openboardview\win32.cpp" />
     <ClCompile Include="..\sqlite3\sqlite3.c" />
@@ -212,11 +214,11 @@
     <Image Include="..\..\asset\brd.ico" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="OpenBoardView.rc">
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectDir)..\..;$(ProjectDir)..\openboardview</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectDir)..\..;$(ProjectDir)..\openboardview</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)..\..;$(ProjectDir)..\openboardview</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)..\..;$(ProjectDir)..\openboardview</AdditionalIncludeDirectories>
+    <ResourceCompile Include="..\..\asset\OpenBoardView.rc">
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectDir)..\openboardview;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectDir)..\openboardview;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)..\openboardview;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)..\openboardview;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

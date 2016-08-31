@@ -39,6 +39,7 @@
     <ClInclude Include="..\openboardview\Renderers\imgui_impl_dx9.h">
       <Filter>win32</Filter>
     </ClInclude>
+    <ClInclude Include="..\openboardview\utils.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\openboardview\win32.cpp">
@@ -68,6 +69,7 @@
     <ClCompile Include="..\openboardview\Renderers\imgui_impl_dx9.cpp">
       <Filter>win32</Filter>
     </ClCompile>
+    <ClCompile Include="..\openboardview\utils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="imgui">
@@ -92,6 +94,8 @@
     </Image>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="OpenBoardView.rc" />
+    <ResourceCompile Include="..\..\asset\OpenBoardView.rc">
+      <Filter>assets</Filter>
+    </ResourceCompile>
   </ItemGroup>
 </Project>

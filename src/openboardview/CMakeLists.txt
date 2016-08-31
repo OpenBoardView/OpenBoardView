@@ -121,7 +121,7 @@ add_executable(openboardview
 	${ASSETS}
 )
 
-if(WIN32) # Dirty fix to force linking all libs (esp. libstdc++) statically for Windows
+if(MINGW) # Dirty fix to force linking all libs (esp. libstdc++) statically for Windows
 	set(CMAKE_EXE_LINKER_FLAGS "-static -static-libgcc -static-libstdc++")
 	set_target_properties(openboardview PROPERTIES LINK_SEARCH_END_STATIC 1)
 elseif(APPLE)
@@ -136,7 +136,7 @@ target_link_libraries(openboardview
 	${SQLITE3_LIBRARIES}
 )
 
-if(WIN32) # Link statically with SDL2 for Windows
+if(MINGW) # Link statically with SDL2 for Windows
 	target_link_libraries(openboardview
 		${SDL2_STATIC_LIBRARIES}
 	)
@@ -147,8 +147,12 @@ else()
 		)
 	endif()
 	target_link_libraries(openboardview
-		dl
 		${SDL2_LIBRARIES}
+	)
+endif()
+if(NOT WIN32)
+	target_link_libraries(openboardview
+		dl
 	)
 endif()
 

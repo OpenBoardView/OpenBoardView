@@ -1,3 +1,4 @@
+#include "platform.h"
 #include "utils.h"
 #include <algorithm>
 #include <assert.h>

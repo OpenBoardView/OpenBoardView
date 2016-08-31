@@ -16,13 +16,19 @@
 #include "FZFile.h"
 #include "confparse.h"
 #include "resource.h"
+#ifdef _MSC_VER
+#include <SDL.h>
+#else
 #include <SDL2/SDL.h>
+#endif
 #include <sstream>
 #include <stdio.h>
 #include <string>
 #include <sys/stat.h>
 #include <sys/types.h>
+#ifndef _MSC_VER
 #include <unistd.h>
+#endif
 
 // Rendering stuff
 #ifdef ENABLE_GL1
@@ -444,7 +450,11 @@ int main(int argc, char **argv) {
 		}
 
 		if (!(sleepout--)) {
+#ifdef _WIN32
+			Sleep(50);
+#else
 			usleep(50000);
+#endif
 			sleepout = 0;
 			continue;
 		} // puts OBV to sleep if nothing is happening.
