@@ -1234,6 +1234,13 @@ void BoardView::ContextMenu(void) {
 		ImGui::EndPopup();
 		m_tooltips_enabled = true;
 	}
+
+	/** if the dialog was closed by using the (X) icon **/
+	if (!dummy) {
+		m_annotationnew_retain  = false;
+		m_annotationedit_retain = false;
+		m_tooltips_enabled      = true;
+	}
 }
 
 void BoardView::SearchColumnGenerate(char *search, int buttons_max) {
