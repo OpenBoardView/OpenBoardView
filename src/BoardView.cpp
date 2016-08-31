@@ -94,6 +94,10 @@ void BoardView::Update() {
 	if (m_open_file) {
 		m_open_file = false;
 		char *filename = show_file_picker();
+		ImGuiIO &io = ImGui::GetIO();
+		io.MouseDown[0] = false;
+		io.MouseClicked[0] = false;
+		io.MouseClickedPos[0] = ImVec2(0, 0);
 		if (filename) {
 			OpenFile(filename);
 		}
