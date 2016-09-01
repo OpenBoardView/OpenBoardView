@@ -512,18 +512,19 @@ void u32tof4(uint32_t c, float *f) {
 	c >>= 8;
 	f[3] = (c & 0xff) / 0xff;
 }
-void BoardView::ColorPreferencesItem(const char *label, const char *butlabel, const char *conflabel, int width, uint32_t *c) {
+void BoardView::ColorPreferencesItem(
+    const char *label, int label_width, const char *butlabel, const char *conflabel, int var_width, uint32_t *c) {
 	char buf[20];
-	snprintf(buf, sizeof(buf), "%08lX", byte4swap(*c));
-	RA(label, DPI(200));
+	snprintf(buf, sizeof(buf), "%08X", byte4swap(*c));
+	RA(label, label_width);
 	ImGui::SameLine();
 	ImGui::ColorButton(ImColor(*c));
 	ImGui::SameLine();
-	ImGui::PushItemWidth(DPI(150));
+	ImGui::PushItemWidth(var_width);
 	if (ImGui::InputText(
 	        butlabel, buf, sizeof(buf), ImGuiInputTextFlags_CharsNoBlank | ImGuiInputTextFlags_CharsHexadecimal, nullptr, buf)) {
 		*c = byte4swap(strtoll(buf, NULL, 16));
-		snprintf(buf, sizeof(buf), "0x%08lx", byte4swap(*c));
+		snprintf(buf, sizeof(buf), "0x%08x", byte4swap(*c));
 		obvconfig.WriteStr(conflabel, buf);
 	}
 	ImGui::PopItemWidth();
@@ -559,63 +560,78 @@ void BoardView::ColorPreferences(void) {
 		}
 		ImGui::Dummy(ImVec2(1, DPI(5)));
 
-		ColorPreferencesItem("Background", "##Background", "backgroundColor", DPI(300), &m_colors.backgroundColor);
-		ColorPreferencesItem("Board fill", "##Boardfill", "boardFillColor", DPI(300), &m_colors.boardFillColor);
-		ColorPreferencesItem("Board outline", "##BoardOutline", "boardOutlineColor", DPI(300), &m_colors.boardOutlineColor);
+		ColorPreferencesItem("Background", DPI(200), "##Background", "backgroundColor", DPI(150), &m_colors.backgroundColor);
+		ColorPreferencesItem("Board fill", DPI(200), "##Boardfill", "boardFillColor", DPI(150), &m_colors.boardFillColor);
+		ColorPreferencesItem(
+		    "Board outline", DPI(200), "##BoardOutline", "boardOutlineColor", DPI(150), &m_colors.boardOutlineColor);
 
 		ImGui::Dummy(ImVec2(1, DPI(10)));
 		ImGui::Text("Parts");
 		ImGui::Separator();
-		ColorPreferencesItem("Outline", "##PartOutline", "partOutlineColor", DPI(300), &m_colors.partOutlineColor);
-		ColorPreferencesItem("Hull", "##PartHull", "partHullColor", DPI(300), &m_colors.partHullColor);
-		ColorPreferencesItem("Fill", "##PartFill", "partFillColor", DPI(300), &m_colors.partFillColor);
-		ColorPreferencesItem("Selected", "##PartSelected", "partHighlightedColor", DPI(300), &m_colors.partHighlightedColor);
+		ColorPreferencesItem("Outline", DPI(200), "##PartOutline", "partOutlineColor", DPI(150), &m_colors.partOutlineColor);
+		ColorPreferencesItem("Hull", DPI(200), "##PartHull", "partHullColor", DPI(150), &m_colors.partHullColor);
+		ColorPreferencesItem("Fill", DPI(200), "##PartFill", "partFillColor", DPI(150), &m_colors.partFillColor);
 		ColorPreferencesItem(
-		    "Fill (selected)", "##PartFillSelected", "partHighlightedFillColor", DPI(300), &m_colors.partHighlightedFillColor);
-		ColorPreferencesItem("Text", "##PartText", "partTextColor", DPI(300), &m_colors.partTextColor);
-		ColorPreferencesItem(
-		    "Text background", "##PartTextBackground", "partTextBackgroundColor", DPI(300), &m_colors.partTextBackgroundColor);
+		    "Selected", DPI(200), "##PartSelected", "partHighlightedColor", DPI(150), &m_colors.partHighlightedColor);
+		ColorPreferencesItem("Fill (selected)",
+		                     DPI(200),
+		                     "##PartFillSelected",
+		                     "partHighlightedFillColor",
+		                     DPI(150),
+		                     &m_colors.partHighlightedFillColor);
+		ColorPreferencesItem("Text", DPI(200), "##PartText", "partTextColor", DPI(150), &m_colors.partTextColor);
+		ColorPreferencesItem("Text background",
+		                     DPI(200),
+		                     "##PartTextBackground",
+		                     "partTextBackgroundColor",
+		                     DPI(150),
+		                     &m_colors.partTextBackgroundColor);
 
 		ImGui::Dummy(ImVec2(1, DPI(10)));
 		ImGui::Text("Pins");
 		ImGui::Separator();
-		ColorPreferencesItem("Default", "##PinDefault", "pinDefaultColor", DPI(300), &m_colors.pinDefaultColor);
-		ColorPreferencesItem("Default text", "##PinDefaultText", "pinDefaultTextColor", DPI(300), &m_colors.pinDefaultTextColor);
-		ColorPreferencesItem("Ground", "##PinGround", "pinGroundColor", DPI(300), &m_colors.pinGroundColor);
-		ColorPreferencesItem("NC", "##PinNC", "pinNotConnectedColor", DPI(300), &m_colors.pinNotConnectedColor);
-		ColorPreferencesItem("Test pad", "##PinTP", "pinTestPadColor", DPI(300), &m_colors.pinTestPadColor);
-		ColorPreferencesItem("Test pad fill", "##PinTPF", "pinTestPadFillColor", DPI(300), &m_colors.pinTestPadFillColor);
-		ColorPreferencesItem("Selected", "##PinSelected", "pinSelectedColor", DPI(300), &m_colors.pinSelectedColor);
+		ColorPreferencesItem("Default", DPI(200), "##PinDefault", "pinDefaultColor", DPI(150), &m_colors.pinDefaultColor);
 		ColorPreferencesItem(
-		    "Selected text", "##PinSelectedText", "pinSelectedTextColor", DPI(300), &m_colors.pinSelectedTextColor);
-		ColorPreferencesItem("Highlighted", "##PinHighlighted", "pinHighlightedColor", DPI(300), &m_colors.pinHighlightedColor);
-		ColorPreferencesItem("Halo", "##PinHalo", "pinHaloColor", DPI(300), &m_colors.pinHaloColor);
-		ColorPreferencesItem("Same net", "##PinSameNet", "pinHighlightSameNetColor", DPI(300), &m_colors.pinHighlightSameNetColor);
-		ColorPreferencesItem("Net web strands", "##NetWebStrands", "pinNetWebColor", DPI(300), &m_colors.pinNetWebColor);
-		ColorPreferencesItem("Net web (otherside)", "##NetWebOSStrands", "pinNetWebOSColor", DPI(300), &m_colors.pinNetWebOSColor);
+		    "Default text", DPI(200), "##PinDefaultText", "pinDefaultTextColor", DPI(150), &m_colors.pinDefaultTextColor);
+		ColorPreferencesItem("Ground", DPI(200), "##PinGround", "pinGroundColor", DPI(150), &m_colors.pinGroundColor);
+		ColorPreferencesItem("NC", DPI(200), "##PinNC", "pinNotConnectedColor", DPI(150), &m_colors.pinNotConnectedColor);
+		ColorPreferencesItem("Test pad", DPI(200), "##PinTP", "pinTestPadColor", DPI(150), &m_colors.pinTestPadColor);
+		ColorPreferencesItem("Test pad fill", DPI(200), "##PinTPF", "pinTestPadFillColor", DPI(150), &m_colors.pinTestPadFillColor);
+		ColorPreferencesItem("Selected", DPI(200), "##PinSelected", "pinSelectedColor", DPI(150), &m_colors.pinSelectedColor);
+		ColorPreferencesItem(
+		    "Selected text", DPI(200), "##PinSelectedText", "pinSelectedTextColor", DPI(150), &m_colors.pinSelectedTextColor);
+		ColorPreferencesItem(
+		    "Highlighted", DPI(200), "##PinHighlighted", "pinHighlightedColor", DPI(150), &m_colors.pinHighlightedColor);
+		ColorPreferencesItem("Halo", DPI(200), "##PinHalo", "pinHaloColor", DPI(150), &m_colors.pinHaloColor);
+		ColorPreferencesItem(
+		    "Same net", DPI(200), "##PinSameNet", "pinHighlightSameNetColor", DPI(150), &m_colors.pinHighlightSameNetColor);
+		ColorPreferencesItem("Net web strands", DPI(200), "##NetWebStrands", "pinNetWebColor", DPI(150), &m_colors.pinNetWebColor);
+		ColorPreferencesItem(
+		    "Net web (otherside)", DPI(200), "##NetWebOSStrands", "pinNetWebOSColor", DPI(150), &m_colors.pinNetWebOSColor);
 
 		ImGui::Dummy(ImVec2(1, DPI(10)));
 		ImGui::Text("Annotations");
 		ImGui::Separator();
-		ColorPreferencesItem("Box", "##AnnBox", "annotationBoxColor", DPI(300), &m_colors.annotationBoxColor);
-		ColorPreferencesItem("Stalk", "##AnnStalk", "annotationStalkColor", DPI(300), &m_colors.annotationStalkColor);
+		ColorPreferencesItem("Box", DPI(200), "##AnnBox", "annotationBoxColor", DPI(150), &m_colors.annotationBoxColor);
+		ColorPreferencesItem("Stalk", DPI(200), "##AnnStalk", "annotationStalkColor", DPI(150), &m_colors.annotationStalkColor);
 		ColorPreferencesItem(
-		    "Popup text", "##AnnPopupText", "annotationPopupTextColor", DPI(300), &m_colors.annotationPopupTextColor);
+		    "Popup text", DPI(200), "##AnnPopupText", "annotationPopupTextColor", DPI(150), &m_colors.annotationPopupTextColor);
 		ColorPreferencesItem("Popup background",
+		                     DPI(200),
 		                     "##AnnPopupBackground",
 		                     "annotationPopupBackgroundColor",
-		                     DPI(300),
+		                     DPI(150),
 		                     &m_colors.annotationPopupBackgroundColor);
 
 		ImGui::Dummy(ImVec2(1, DPI(10)));
 		ImGui::Text("Masks");
 		ImGui::Separator();
-		ColorPreferencesItem("Pins", "##MaskPins", "selectedMaskPins", DPI(300), &m_colors.selectedMaskPins);
-		ColorPreferencesItem("Parts", "##MaskParts", "selectedMaskParts", DPI(300), &m_colors.selectedMaskParts);
-		ColorPreferencesItem("Outline", "##MaskOutline", "selectedMaskOutline", DPI(300), &m_colors.selectedMaskOutline);
-		ColorPreferencesItem("Boost (Pins)", "##BoostPins", "orMaskPins", DPI(300), &m_colors.orMaskPins);
-		ColorPreferencesItem("Boost (Parts)", "##BoostParts", "orMaskParts", DPI(300), &m_colors.orMaskParts);
-		ColorPreferencesItem("Boost (Outline)", "##BoostOutline", "orMaskOutline", DPI(300), &m_colors.orMaskOutline);
+		ColorPreferencesItem("Pins", DPI(200), "##MaskPins", "selectedMaskPins", DPI(150), &m_colors.selectedMaskPins);
+		ColorPreferencesItem("Parts", DPI(200), "##MaskParts", "selectedMaskParts", DPI(150), &m_colors.selectedMaskParts);
+		ColorPreferencesItem("Outline", DPI(200), "##MaskOutline", "selectedMaskOutline", DPI(150), &m_colors.selectedMaskOutline);
+		ColorPreferencesItem("Boost (Pins)", DPI(200), "##BoostPins", "orMaskPins", DPI(150), &m_colors.orMaskPins);
+		ColorPreferencesItem("Boost (Parts)", DPI(200), "##BoostParts", "orMaskParts", DPI(150), &m_colors.orMaskParts);
+		ColorPreferencesItem("Boost (Outline)", DPI(200), "##BoostOutline", "orMaskOutline", DPI(150), &m_colors.orMaskOutline);
 
 		ImGui::Separator();
 
@@ -1933,6 +1949,10 @@ void BoardView::HandleInput() {
 							if (dist < min_dist) {
 								selection = pin.get();
 								min_dist  = dist;
+								//								ImDrawList *draw = ImGui::GetWindowDrawList();
+								//								draw->AddCircle(CoordToScreen(pin->position.x, pin->position.y),
+								//m_pinDiameter/2
+								//*1.1 *m_scale, ImColor(0xffff00ff), 2.0f);
 							}
 						}
 					}
@@ -2274,7 +2294,7 @@ int BoardView::EPCCheck(void) {
  * y-pixel delta and thickness of line
  *
  */
-void BoardView::OutlineGenFillDraw(ImDrawList *draw, int ydelta, double thickness = 0.0f) {
+void BoardView::OutlineGenFillDraw(ImDrawList *draw, int ydelta, double thickness = 1.0f) {
 
 	auto io = ImGui::GetIO();
 	vector<ImVec2> scanhits;
@@ -2387,7 +2407,8 @@ void BoardView::OutlineGenFillDraw(ImDrawList *draw, int ydelta, double thicknes
 				int i = 0;
 				int l = scanhits.size() - 1;
 				for (i = 0; i < l; i += 2) {
-					draw->AddLine(CoordToScreen(scanhits[i].x, y), CoordToScreen(scanhits[i + 1].x, y), m_colors.boardFillColor);
+					draw->AddLine(
+					    CoordToScreen(scanhits[i].x, y), CoordToScreen(scanhits[i + 1].x, y), m_colors.boardFillColor, thickness);
 				}
 			}
 		}
