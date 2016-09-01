@@ -1949,10 +1949,6 @@ void BoardView::HandleInput() {
 							if (dist < min_dist) {
 								selection = pin.get();
 								min_dist  = dist;
-								//								ImDrawList *draw = ImGui::GetWindowDrawList();
-								//								draw->AddCircle(CoordToScreen(pin->position.x, pin->position.y),
-								//m_pinDiameter/2
-								//*1.1 *m_scale, ImColor(0xffff00ff), 2.0f);
 							}
 						}
 					}
