@@ -1008,12 +1008,10 @@ void BoardView::ContextMenu(void) {
 	bool dummy                       = true;
 	static char contextbuf[10240]    = "";
 	static char contextbufnew[10240] = "";
-	static char *pin, *partn, *net;
-	static char empty[] = "";
+	static std::string pin, partn, net;
 	double tx, ty;
 
-	pin = partn = net = empty;
-	ImGuiIO &io       = ImGui::GetIO();
+	ImGuiIO &io = ImGui::GetIO();
 
 	ImVec2 pos = ScreenToCoord(m_showContextMenuPos.x, m_showContextMenuPos.y);
 
@@ -1074,9 +1072,9 @@ void BoardView::ContextMenu(void) {
 			    */
 
 			if (selection != nullptr) {
-				pin   = strdup(selection->number.c_str());
-				partn = strdup(selection->component->name.c_str());
-				net   = strdup(selection->net->name.c_str());
+				pin   = selection->number;
+				partn = selection->component->name;
+				net   = selection->net->name;
 			} else {
 
 				/*
@@ -1108,7 +1106,7 @@ void BoardView::ContextMenu(void) {
 						}
 					} // hull test
 					if (hit) {
-						partn = strdup(p_part->name.c_str());
+						partn = p_part->name;
 
 						ImGui::SameLine();
 					}
@@ -1173,11 +1171,11 @@ void BoardView::ContextMenu(void) {
 					            m_current_side ? 'B' : 'T',
 					            tx,
 					            ty,
-					            net,
-					            partn,
-					            partn == empty || pin == empty ? ' ' : '[',
-					            pin,
-					            partn == empty || pin == empty ? ' ' : ']');
+					            net.c_str(),
+					            partn.c_str(),
+					            partn.empty() || pin.empty() ? ' ' : '[',
+					            pin.c_str(),
+					            partn.empty() || pin.empty() ? ' ' : ']');
 				}
 				if ((m_annotation_clicked_id < 0) || ImGui::Button("Add New##1") || m_annotationnew_retain) {
 					if (m_annotationnew_retain == false) {
@@ -1191,11 +1189,11 @@ void BoardView::ContextMenu(void) {
 					            m_current_side ? 'B' : 'T',
 					            tx,
 					            ty,
-					            net,
-					            partn,
-					            partn == empty || pin == empty ? ' ' : '[',
-					            pin,
-					            partn == empty || pin == empty ? ' ' : ']');
+					            net.c_str(),
+					            partn.c_str(),
+					            partn.empty() || pin.empty() ? ' ' : '[',
+					            pin.c_str(),
+					            partn.empty() || pin.empty() ? ' ' : ']');
 					ImGui::Spacing();
 					ImGui::InputTextMultiline("New##annotationnew",
 					                          contextbufnew,
@@ -1210,15 +1208,10 @@ void BoardView::ContextMenu(void) {
 						m_annotationnew_retain = false;
 						if (debug) fprintf(stderr, "DATA:'%s'\n\n", contextbufnew);
 
-						m_annotations.Add(m_current_side, tx, ty, net, partn, pin, contextbufnew);
+						m_annotations.Add(m_current_side, tx, ty, net.c_str(), partn.c_str(), pin.c_str(), contextbufnew);
 						m_annotations.GenerateList();
 						m_needsRedraw = true;
 
-						if (selection != nullptr) {
-							free(pin);
-							free(partn);
-							free(net);
-						}
 						ImGui::CloseCurrentPopup();
 					}
 					/*

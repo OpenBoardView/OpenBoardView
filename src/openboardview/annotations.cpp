@@ -141,7 +141,7 @@ void Annotations::GenerateList(void) {
 	sqlite3_finalize(stmt);
 }
 
-void Annotations::Add(int side, double x, double y, char *net, char *part, char *pin, char *note) {
+void Annotations::Add(int side, double x, double y, const char *net, const char *part, const char *pin, const char *note) {
 	char sql[10240];
 	char *zErrMsg = 0;
 	int r;

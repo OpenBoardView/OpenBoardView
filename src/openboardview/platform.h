@@ -3,7 +3,6 @@
 #ifdef _WIN32
 #ifdef _MSC_VER // Visual Studio prefixes non-standard C functions with _
 #define _CRT_SECURE_NO_WARNINGS 1
-#define strdup _strdup
 #ifndef OBV_BUILD
 #define OBV_BUILD "unknown"
 #endif

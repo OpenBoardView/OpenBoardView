@@ -23,9 +23,8 @@ struct Annotations {
 	int SetFilename(const std::string &f);
 	int Load(void);
 	int Close(void);
-	int Add(char *net, char *part, double x, double y, char *annotation);
 	void Remove(int id);
-	void Add(int side, double x, double y, char *net, char *part, char *pin, char *note);
+	void Add(int side, double x, double y, const char *net, const char *part, const char *pin, const char *note);
 	void Update(int id, char *note);
 	void GenerateList(void);
 };
