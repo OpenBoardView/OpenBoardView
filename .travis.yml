@@ -1,3 +1,5 @@
+git:
+  depth: 9999999
 os:
 - linux
 compiler:
