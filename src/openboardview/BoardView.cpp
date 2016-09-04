@@ -19,6 +19,7 @@
 
 #include "BRDBoard.h"
 #include "Board.h"
+#include "FileFormats/ASCFile.h"
 #include "FileFormats/BDVFile.h"
 #include "FileFormats/BRD2File.h"
 #include "FileFormats/BRDFile.h"
@@ -429,7 +430,9 @@ int BoardView::LoadFile(const std::string &filename) {
 
 			if (check_fileext(filename, ".fz")) { // Since it is encrypted we cannot use the below logic. Trust the ext.
 				file = new FZFile(buffer, FZKey);
-			} else if (BRDFile::verifyFormat(buffer))
+			} else if (check_fileext(filename, ".bom") || check_fileext(filename, ".asc"))
+				file = new ASCFile(buffer, filename);
+			else if (BRDFile::verifyFormat(buffer))
 				file = new BRDFile(buffer);
 			else if (BRD2File::verifyFormat(buffer))
 				file = new BRD2File(buffer);
