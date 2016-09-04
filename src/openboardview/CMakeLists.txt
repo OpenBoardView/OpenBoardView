@@ -68,13 +68,13 @@ set(SOURCES
 	vectorhulls.cpp
 	history.cpp
 	utils.cpp
-	BRD2File.cpp
-	BVRFile.cpp
-	BDVFile.cpp
 	BoardView.cpp
 	BRDBoard.cpp
-	BRDFile.cpp
-	FZFile.cpp
+	FileFormats/BDVFile.cpp
+	FileFormats/BRD2File.cpp
+	FileFormats/BRDFile.cpp
+	FileFormats/BVRFile.cpp
+	FileFormats/FZFile.cpp
 	NetList.cpp
 	PartList.cpp
 	main_opengl.cpp

@@ -14,7 +14,7 @@
 #include "BoardView.h"
 #include "history.h"
 
-#include "FZFile.h"
+#include "FileFormats/FZFile.h"
 #include "confparse.h"
 #include "resource.h"
 #ifdef _MSC_VER

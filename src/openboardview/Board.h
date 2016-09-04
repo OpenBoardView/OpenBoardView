@@ -1,6 +1,6 @@
 #pragma once
 
-#include "BRDFile.h"
+#include "FileFormats/BRDFile.h"
 
 #include "imgui/imgui.h"
 #include <algorithm>

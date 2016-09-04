@@ -1,7 +1,7 @@
 #pragma once
 
-#include "BRDFile.h"
 #include "Board.h"
+#include "FileFormats/BRDFile.h"
 
 class PartList {
   public:

@@ -17,13 +17,13 @@
 #endif
 #endif
 
-#include "BDVFile.h"
-#include "BRD2File.h"
 #include "BRDBoard.h"
-#include "BRDFile.h"
-#include "BVRFile.h"
 #include "Board.h"
-#include "FZFile.h"
+#include "FileFormats/BDVFile.h"
+#include "FileFormats/BRD2File.h"
+#include "FileFormats/BRDFile.h"
+#include "FileFormats/BVRFile.h"
+#include "FileFormats/FZFile.h"
 #include "annotations.h"
 #include "imgui/imgui.h"
 
