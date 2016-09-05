@@ -43,6 +43,7 @@
 #define SDLK_l 0x4c
 #define SDLK_k 0x4b
 #define SDLK_c 0x43
+#define SDLK_m 0x4d
 #define SDLK_n 0x4e
 
 #define SDLK_o 0x4F

@@ -932,8 +932,9 @@ void BoardView::HelpControls(void) {
 		ImGui::Spacing();
 		ImGui::Spacing();
 
+		ImGui::Text("Mirror board");
 		ImGui::Text("Flip board");
-		ImGui::Spacing();
+		ImGui::Text(" ");
 
 		ImGui::Text("Zoom in");
 		ImGui::Text("Zoom out");
@@ -973,6 +974,7 @@ void BoardView::HelpControls(void) {
 		ImGui::Spacing();
 		ImGui::Spacing();
 
+		ImGui::Text("m");
 		ImGui::Text("Space bar");
 		ImGui::Text("(+shift to hold position)");
 		ImGui::Spacing();
