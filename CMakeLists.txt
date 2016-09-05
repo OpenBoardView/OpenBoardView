@@ -76,7 +76,7 @@ add_subdirectory(src)
 
 set(CPACK_BUNDLE_NAME OpenBoardView)
 set(CPACK_PACKAGE_NAME OpenBoardView)
-set(CPACK_PACKAGE_VERSION R3)
+set(CPACK_PACKAGE_VERSION R5)
 set(CPACK_PACKAGE_CONTACT "piernov <piernov@piernov.org>")
 set(CPACK_OUTPUT_FILE_PREFIX  "${CMAKE_CURRENT_SOURCE_DIR}")
 
