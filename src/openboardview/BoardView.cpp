@@ -1525,6 +1525,10 @@ void BoardView::Update() {
 			if (ImGui::MenuItem("Reset View", "x NP-5")) { // actually want this to be numpad 5
 				CenterView();
 			}
+			if (ImGui::MenuItem("Mirror Board", "m")) {
+				Mirror();
+			}
+
 			ImGui::Separator();
 			if (ImGui::MenuItem("Toggle FPS", "f")) {
 				showFPS ^= 1;
@@ -2069,6 +2073,11 @@ void BoardView::HandleInput() {
 			// Search for net
 			m_showSearch = true;
 
+		} else if (ImGui::IsKeyPressed(SDLK_m)) {
+			Mirror();
+			CenterView();
+			m_needsRedraw = true;
+
 		} else if (ImGui::IsKeyPressed(KM(SDL_SCANCODE_KP_PERIOD)) || ImGui::IsKeyPressed(SDLK_r) ||
 		           ImGui::IsKeyPressed(SDLK_PERIOD)) {
 			// Rotate board: R and period rotate clockwise; comma rotates
@@ -2318,7 +2327,7 @@ int BoardView::EPCCheck(void) {
 
 	} // side
 
-	if (epc[0] > epc[1]) {
+	if ((epc[0] || epc[1]) && (epc[0] > epc[1])) {
 		for (auto &p : outline) p->y = max.y - p->y;
 	}
 
@@ -3483,6 +3492,46 @@ void BoardView::Rotate(int count) {
 		}
 		++count;
 		m_needsRedraw = true;
+	}
+}
+
+void BoardView::Mirror(void) {
+	auto &outline = m_board->OutlinePoints();
+	ImVec2 min, max;
+
+	// find the orthagonal bounding box
+	// probably can put this as a predefined
+	min.x = min.y = FLT_MAX;
+	max.x = max.y = FLT_MIN;
+	for (auto &p : outline) {
+		if (p->x < min.x) min.x = p->x;
+		if (p->y < min.y) min.y = p->y;
+		if (p->x > max.x) max.x = p->x;
+		if (p->y > max.y) max.y = p->y;
+	}
+
+	for (auto &p : outline) {
+		p->x = max.x - p->x;
+	}
+
+	for (auto pin : m_board->Pins()) {
+		auto p        = pin.get();
+		p->position.x = max.x - p->position.x;
+	}
+
+	for (auto &part : m_board->Components()) {
+
+		part->centerpoint.x = max.x - part->centerpoint.x;
+
+		if (part->outline_done) {
+			for (int i = 0; i < 4; i++) {
+				part->outline[i].x = max.x - part->outline[i].x;
+			}
+		}
+
+		for (int i = 0; i < part->hull_count; i++) {
+			part->hull[i].x = max.x - part->hull[i].x;
+		}
 	}
 }
 

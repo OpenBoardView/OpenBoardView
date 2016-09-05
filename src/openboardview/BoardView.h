@@ -151,6 +151,7 @@ struct BoardView {
 	void CenterView(void);
 	void Pan(int direction, int amount);
 	void Zoom(float osd_x, float osd_y, float zoom);
+	void Mirror(void);
 	void DrawDiamond(ImDrawList *draw, ImVec2 c, double r, uint32_t color);
 	void DrawHex(ImDrawList *draw, ImVec2 c, double r, uint32_t color);
 	void DrawBox(ImDrawList *draw, ImVec2 c, double r, uint32_t color);
