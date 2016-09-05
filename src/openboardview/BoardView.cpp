@@ -453,6 +453,15 @@ int BoardView::LoadFile(const std::string &filename) {
 				m_annotations.SetFilename(filename);
 				m_annotations.Load();
 
+				/*
+				 * Set pins to a known lower size, they get resized
+				 * in DrawParts() when the component is analysed
+				 */
+				for (auto &pin : m_board->Pins()) {
+					auto p      = pin.get();
+					p->diameter = 7;
+				}
+
 				CenterView();
 				m_lastFileOpenWasInvalid = false;
 				m_validBoard             = true;
@@ -1938,7 +1947,7 @@ void BoardView::HandleInput() {
 
 					// threshold to within a pin's diameter of the pin center
 					// float min_dist = m_pinDiameter * 1.0f;
-					float min_dist = m_pinDiameter * 0.5f;
+					float min_dist = m_pinDiameter / 2.0f;
 					min_dist *= min_dist; // all distance squared
 					Pin *selection = nullptr;
 					for (auto &pin : m_board->Pins()) {
@@ -1946,7 +1955,7 @@ void BoardView::HandleInput() {
 							float dx   = pin->position.x - pos.x;
 							float dy   = pin->position.y - pos.y;
 							float dist = dx * dx + dy * dy;
-							if (dist < min_dist) {
+							if ((dist < (pin->diameter * pin->diameter)) && (dist < min_dist)) {
 								selection = pin.get();
 								min_dist  = dist;
 							}
@@ -1954,46 +1963,81 @@ void BoardView::HandleInput() {
 					}
 
 					m_pinSelected = selection;
+					// if (selection == nullptr) {
+					if (1) {
+						for (auto part : m_board->Components()) {
+							int hit     = 0;
+							auto p_part = part.get();
 
-					// check also for a part hit.
+							if (!ComponentIsVisible(p_part)) continue;
 
-					for (auto part : m_board->Components()) {
-						int hit     = 0;
-						auto p_part = part.get();
+							// Work out if the point is inside the hull
+							{
+								int i, j, n;
+								outline_pt *poly;
 
-						if (!ComponentIsVisible(p_part)) continue;
+								n    = 4;
+								poly = p_part->outline;
 
-						// Work out if the point is inside the hull
-						{
-							int i, j, n;
-							outline_pt *poly;
-
-							n    = 4;
-							poly = p_part->outline;
-
-							for (i = 0, j = n - 1; i < n; j = i++) {
-								if (((poly[i].y > pos.y) != (poly[j].y > pos.y)) &&
-								    (pos.x < (poly[j].x - poly[i].x) * (pos.y - poly[i].y) / (poly[j].y - poly[i].y) + poly[i].x))
-									hit ^= 1;
-							}
-						}
-
-						if (hit) {
-							// highlight all the pins
-							if (part->visualmode == part->CVMNormal) {
-								if (!contains(*part, m_partHighlighted)) {
-									m_partHighlighted.push_back(p_part);
+								for (i = 0, j = n - 1; i < n; j = i++) {
+									if (((poly[i].y > pos.y) != (poly[j].y > pos.y)) &&
+									    (pos.x <
+									     (poly[j].x - poly[i].x) * (pos.y - poly[i].y) / (poly[j].y - poly[i].y) + poly[i].x))
+										hit ^= 1;
 								}
 							}
 
-							part->visualmode++;
-							part->visualmode %= part->CVMModeCount;
+							if (hit) {
 
-							if (part->visualmode == part->CVMNormal) {
-								remove(*part, m_partHighlighted);
-							}
-						}
+								bool partInList = contains(*part, m_partHighlighted);
+
+								/*
+								 * If the CTRL key isn't held down, then we have to
+								 * flush any existing highlighted parts
+								 */
+								if (io.KeyCtrl) {
+									if (!partInList) {
+										m_partHighlighted.push_back(p_part);
+										p_part->visualmode = part->CVMSelected;
+									} else {
+										remove(*part, m_partHighlighted);
+										p_part->visualmode = part->CVMNormal;
+									}
+
+								} else {
+
+									for (auto p : m_partHighlighted) {
+										p->visualmode = p->CVMNormal;
+									}
+									m_partHighlighted.clear(); // only append to list if ctrl is pressed to collect multiples
+									if (!partInList) {
+										m_partHighlighted.push_back(p_part);
+										p_part->visualmode = part->CVMSelected;
+									}
+								}
+
+								/*
+								 * If this part has a non-selected visual mode (normal)
+								 * AND it's not in the existing part list, then add it
+								 */
+								/*
+						if (part->visualmode == part->CVMNormal) {
+								    if (!partInList) {
+						m_partHighlighted.push_back(p_part);
 					}
+				}
+
+						part->visualmode++;
+						part->visualmode %= part->CVMModeCount;
+
+						if (part->visualmode == part->CVMNormal) {
+							remove(*part, m_partHighlighted);
+						}
+								*/
+							} // if hit
+						}     // for each part on the board
+					}         // if a pin wasn't selected
+
 				} else {
 					if (!m_showContextMenu) {
 						if (AnnotationIsHovered()) {
@@ -2504,7 +2548,7 @@ void BoardView::DrawNetWeb(ImDrawList *draw) {
 			uint32_t col = m_colors.pinNetWebColor;
 			if (!ComponentIsVisible(p->component)) {
 				col = m_colors.pinNetWebOSColor;
-				draw->AddCircle(CoordToScreen(p->position.x, p->position.y), p->diameter * m_scale * 20.0f, col, 16);
+				draw->AddCircle(CoordToScreen(p->position.x, p->position.y), p->diameter * m_scale, col, 16);
 			}
 
 			draw->AddLine(CoordToScreen(m_pinSelected->position.x, m_pinSelected->position.y),
@@ -2549,7 +2593,7 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 
 	for (auto &pin : m_board->Pins()) {
 		auto p_pin = pin.get();
-		float psz  = pin->diameter * m_scale * 20.0f;
+		float psz  = pin->diameter * m_scale;
 		uint32_t fill_color;
 
 		// continue if pin is not visible anyway
@@ -2613,7 +2657,7 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 			}
 
 			// If the part itself is highlighted ( CVMShowPins )
-			if (p_pin->component->visualmode == p_pin->component->CVMShowPins) {
+			if (p_pin->component->visualmode == p_pin->component->CVMSelected) {
 				show_text = true;
 			}
 
@@ -2781,62 +2825,62 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 					// 0603
 					pin_radius = 15;
 					for (auto pin : part->pins) {
-						pin->diameter = pin_radius * 0.05;
+						pin->diameter = pin_radius; // * 0.05;
 					}
 
 				} else if ((distance > 247) && (distance < 253)) {
 					// SMC diode?
 					pin_radius = 50;
 					for (auto pin : part->pins) {
-						pin->diameter = pin_radius * 0.05;
+						pin->diameter = pin_radius; // * 0.05;
 					}
 
 				} else if ((distance > 195) && (distance < 199)) {
 					// Inductor?
 					pin_radius = 50;
 					for (auto pin : part->pins) {
-						pin->diameter = pin_radius * 0.05;
+						pin->diameter = pin_radius; // * 0.05;
 					}
 
 				} else if ((distance > 165) && (distance < 169)) {
 					// SMB diode?
 					pin_radius = 35;
 					for (auto pin : part->pins) {
-						pin->diameter = pin_radius * 0.05;
+						pin->diameter = pin_radius; // * 0.05;
 					}
 
 				} else if ((distance > 101) && (distance < 109)) {
 					// SMA diode / tant cap
 					pin_radius = 30;
 					for (auto pin : part->pins) {
-						pin->diameter = pin_radius * 0.05;
+						pin->diameter = pin_radius; // * 0.05;
 					}
 
 				} else if ((distance > 108) && (distance < 112)) {
 					// 1206
 					pin_radius = 30;
 					for (auto pin : part->pins) {
-						pin->diameter = pin_radius * 0.05;
+						pin->diameter = pin_radius; // * 0.05;
 					}
 
 				} else if ((distance > 64) && (distance < 68)) {
 					// 0805
 					pin_radius = 25;
 					for (auto pin : part->pins) {
-						pin->diameter = pin_radius * 0.05;
+						pin->diameter = pin_radius; // * 0.05;
 					}
 
 				} else if ((distance > 18) && (distance < 22)) {
 					// 0201 cap/resistor?
 					pin_radius = 5;
 					for (auto pin : part->pins) {
-						pin->diameter = pin_radius * 0.05;
+						pin->diameter = pin_radius; // * 0.05;
 					}
 				} else if ((distance > 28) && (distance < 32)) {
 					// 0402 cap/resistor
 					pin_radius = 10;
 					for (auto pin : part->pins) {
-						pin->diameter = pin_radius * 0.05;
+						pin->diameter = pin_radius; // * 0.05;
 					}
 				}
 			}
@@ -2899,7 +2943,7 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 				if (((p0 == 'L') || (p1 == 'L')) && (distance > 50)) {
 					pin_radius = 15;
 					for (auto pin : part->pins) {
-						pin->diameter = pin_radius * 0.05;
+						pin->diameter = pin_radius; // * 0.05;
 					}
 					army = distance / 2;
 					armx = pin_radius;
@@ -2908,7 +2952,7 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 
 					pin_radius = 15;
 					for (auto pin : part->pins) {
-						pin->diameter = pin_radius * 0.05;
+						pin->diameter = pin_radius; // * 0.05;
 					}
 					army = distance / 2 - distance / 4;
 					armx = pin_radius;
@@ -3172,35 +3216,46 @@ inline void BoardView::DrawAnnotations(ImDrawList *draw) {
 }
 
 bool BoardView::HighlightedPinIsHovered(void) {
-	ImVec2 mp = ImGui::GetMousePos();
-	int r     = m_scale * 10.0f;
-	// int r = 2.0f /m_scale;
+	ImVec2 mp  = ImGui::GetMousePos();
+	ImVec2 mpc = ScreenToCoord(mp.x, mp.y); // it's faster to compute this once than convert all pins
 
 	m_pinHighlightedHovered = nullptr;
 
+	/*
+	 * See if any of the pins listed in the m_pinHighlighted vector are hovered over
+	 */
 	for (auto p : m_pinHighlighted) {
-		ImVec2 a = CoordToScreen(p->position.x, p->position.y);
-		if ((mp.x > a.x - r) && (mp.x < a.x + r) && (mp.y > a.y - r) && (mp.y < a.y + r)) {
+		ImVec2 a = ImVec2(p->position.x, p->position.y);
+		double r = p->diameter / 2.0f;
+		if ((mpc.x > a.x - r) && (mpc.x < a.x + r) && (mpc.y > a.y - r) && (mpc.y < a.y + r)) {
 			m_pinHighlightedHovered = p;
 			return true;
 		}
 	}
 
+	/*
+	 * See if any of the pins in the same network as the SELECTED pin (single) are hovered
+	 */
 	for (auto pin : m_board->Pins()) {
-		auto p = pin.get();
+		auto p   = pin.get();
+		double r = p->diameter / 2.0f * m_scale;
 		if (m_pinSelected && p->net == m_pinSelected->net) {
-			ImVec2 a = CoordToScreen(p->position.x, p->position.y);
-			if ((mp.x > a.x - r) && (mp.x < a.x + r) && (mp.y > a.y - r) && (mp.y < a.y + r)) {
+			ImVec2 a = ImVec2(p->position.x, p->position.y);
+			if ((mpc.x > a.x - r) && (mpc.x < a.x + r) && (mpc.y > a.y - r) && (mpc.y < a.y + r)) {
 				m_pinHighlightedHovered = p;
 				return true;
 			}
 		}
 	}
 
+	/*
+	 * See if any pins of a highlighted part are hovered
+	 */
 	for (auto part : m_partHighlighted) {
 		for (auto p : part->pins) {
-			ImVec2 a = CoordToScreen(p->position.x, p->position.y);
-			if ((mp.x > a.x - r) && (mp.x < a.x + r) && (mp.y > a.y - r) && (mp.y < a.y + r)) {
+			double r = p->diameter / 2.0f * m_scale;
+			ImVec2 a = ImVec2(p->position.x, p->position.y);
+			if ((mpc.x > a.x - r) && (mpc.x < a.x + r) && (mpc.y > a.y - r) && (mpc.y < a.y + r)) {
 				m_pinHighlightedHovered = p;
 				return true;
 			}

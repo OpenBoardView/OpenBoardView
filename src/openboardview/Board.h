@@ -187,7 +187,8 @@ struct Component : BoardElement {
 	outline_pt centerpoint;
 	double expanse = 0.0f; // quick measure of distance between pins.
 
-	enum ComponentVisualModes { CVMNormal = 0, CVMSelected, CVMShowPins, CVMModeCount };
+	// enum ComponentVisualModes { CVMNormal = 0, CVMSelected, CVMShowPins, CVMModeCount };
+	enum ComponentVisualModes { CVMNormal = 0, CVMSelected, CVMModeCount };
 
 	uint8_t visualmode = 0;
 
