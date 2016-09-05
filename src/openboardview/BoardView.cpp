@@ -1969,8 +1969,13 @@ void BoardView::HandleInput() {
 					}
 
 					m_pinSelected = selection;
-					// if (selection == nullptr) {
-					if (1) {
+					if (m_pinSelected) {
+						m_pinSelected->component->visualmode = m_pinSelected->component->CVMSelected;
+					}
+
+					if (m_pinSelected == nullptr) {
+						bool any_hits = false;
+
 						for (auto part : m_board->Components()) {
 							int hit     = 0;
 							auto p_part = part.get();
@@ -1994,6 +1999,7 @@ void BoardView::HandleInput() {
 							}
 
 							if (hit) {
+								any_hits = true;
 
 								bool partInList = contains(*part, m_partHighlighted);
 
@@ -2011,7 +2017,6 @@ void BoardView::HandleInput() {
 									}
 
 								} else {
-
 									for (auto p : m_partHighlighted) {
 										p->visualmode = p->CVMNormal;
 									}
@@ -2042,7 +2047,20 @@ void BoardView::HandleInput() {
 								*/
 							} // if hit
 						}     // for each part on the board
-					}         // if a pin wasn't selected
+
+						/*
+						 * If we aren't holding down CTRL and we click to a
+						 * non pin, non part area, then we clear everything
+						 */
+						if ((!any_hits) && (!io.KeyCtrl)) {
+							for (auto part : m_board->Components()) {
+								auto p        = part.get();
+								p->visualmode = p->CVMNormal;
+							}
+							m_partHighlighted.clear();
+						}
+
+					} // if a pin wasn't selected
 
 				} else {
 					if (!m_showContextMenu) {
