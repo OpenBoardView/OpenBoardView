@@ -1,0 +1,203 @@
+#LyX 2.1 created this file. For more info see http://www.lyx.org/
+\lyxformat 474
+\begin_document
+\begin_header
+\textclass scrbook
+\use_default_options true
+\maintain_unincluded_children false
+\language english
+\language_package default
+\inputencoding auto
+\fontencoding global
+\font_roman default
+\font_sans default
+\font_typewriter default
+\font_math auto
+\font_default_family sfdefault
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
+\paperfontsize default
+\spacing single
+\use_hyperref false
+\papersize default
+\use_geometry false
+\use_package amsmath 1
+\use_package amssymb 1
+\use_package cancel 1
+\use_package esint 1
+\use_package mathdots 1
+\use_package mathtools 1
+\use_package mhchem 1
+\use_package stackrel 1
+\use_package stmaryrd 1
+\use_package undertilde 1
+\cite_engine basic
+\cite_engine_type default
+\biblio_style plain
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date true
+\justification true
+\use_refstyle 1
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\paragraph_indentation default
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Title
+OpenFlex Board View
+\end_layout
+
+\begin_layout Subtitle
+User Manual
+\end_layout
+
+\begin_layout Chapter
+Introduction
+\end_layout
+
+\begin_layout Standard
+Welcome to Openflex Boardview (from hereon referred to simply as OFBV).
+ OFBV is an advance development fork of the excellent OpenBoardView (OBV)
+ by Chloridite in May 2016 as a response to seeing a need for an Open Source
+ board viewing software to assist in the repairs of many electronics systems.
+\end_layout
+
+\begin_layout Standard
+At the time of writing, OFBV supports brd, bdv, asc and fz (with correct
+ key) board formats.
+\end_layout
+
+\begin_layout Chapter
+Installing
+\end_layout
+
+\begin_layout Section
+Windows
+\end_layout
+
+\begin_layout Standard
+No installation required, simply run the executable.
+\end_layout
+
+\begin_layout Section
+Linux
+\end_layout
+
+\begin_layout Subsection
+Installing using debian package
+\end_layout
+
+\begin_layout Quote
+$ sudo dpkg -i openboardview-R5.deb
+\end_layout
+
+\begin_layout Subsection
+Building source from github
+\end_layout
+
+\begin_layout Standard
+If you haven't already installed the required development packages;
+\end_layout
+
+\begin_layout Quote
+$ apt-get install build-essential cmake libsdl2-dev libgtk-3-dev
+\end_layout
+
+\begin_layout Standard
+Clone the project
+\end_layout
+
+\begin_layout Quote
+$ git clone --recursive 'https://github.com/inflex/OpenBoardView'
+\end_layout
+
+\begin_layout Standard
+Build it
+\end_layout
+
+\begin_layout Quote
+$ ./build.sh
+\end_layout
+
+\begin_layout Standard
+Run it!
+\end_layout
+
+\begin_layout Quote
+$ ./bin/openboardview ...or...
+ $ ./openboardview.sh
+\end_layout
+
+\begin_layout Section
+Loading Files
+\end_layout
+
+\begin_layout Section
+Mouse
+\end_layout
+
+\begin_layout Section
+Keyboard
+\end_layout
+
+\begin_layout Chapter
+Files
+\end_layout
+
+\begin_layout Section
+obv.conf
+\end_layout
+
+\begin_layout Standard
+Configuration file.
+ Plain text.
+ Parameters are accessible via the File->Program Preferences dialog
+\end_layout
+
+\begin_layout Section
+obv.history
+\end_layout
+
+\begin_layout Standard
+History file.
+ Plain text.
+ Contains recently loaded board files paths.
+\end_layout
+
+\begin_layout Section
+*.sqlite3
+\end_layout
+
+\begin_layout Standard
+Companion files for board files.
+ Contains annotations.
+\end_layout
+
+\end_body
+\end_document

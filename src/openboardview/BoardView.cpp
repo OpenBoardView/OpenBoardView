@@ -948,8 +948,6 @@ void BoardView::HelpControls(void) {
 		ImGui::Spacing();
 
 		ImGui::Text("Toggle Pin Blanking");
-		ImGui::Text("Toggle FPS display");
-		ImGui::Text("Toggle Position");
 
 		/*
 		 * NEXT COLUMN
@@ -967,7 +965,7 @@ void BoardView::HelpControls(void) {
 		ImGui::Spacing();
 		ImGui::Spacing();
 
-		ImGui::Text("c, CTRL-f, /");
+		ImGui::Text("CTRL-f, /");
 		ImGui::Text("k");
 		ImGui::Text("l");
 		ImGui::Text("ESC");
@@ -990,8 +988,6 @@ void BoardView::HelpControls(void) {
 		ImGui::Spacing();
 		ImGui::Spacing();
 
-		ImGui::Text("b");
-		ImGui::Text("f");
 		ImGui::Text("p");
 
 		ImGui::Columns(1);
@@ -1499,6 +1495,12 @@ void BoardView::Update() {
 			}
 			ImGui::Separator();
 
+			if (ImGui::MenuItem("Part/Net Search", "Ctrl+F, /")) {
+				if (m_validBoard) m_showSearch = true;
+			}
+
+			ImGui::Separator();
+
 			if (ImGui::MenuItem("Program Preferences")) {
 				m_showPreferences = true;
 			}
@@ -1531,20 +1533,22 @@ void BoardView::Update() {
 				Mirror();
 			}
 
-			ImGui::Separator();
-			if (ImGui::MenuItem("Toggle FPS", "f")) {
-				showFPS ^= 1;
-				m_needsRedraw = true;
-			}
-			if (ImGui::MenuItem("Toggle Position", "p")) {
-				showPosition ^= 1;
-				m_needsRedraw = true;
-			}
-			if (ImGui::MenuItem("Toggle Pins", "b")) {
+			if (ImGui::MenuItem("Toggle Pin Display", "p")) {
 				showPins ^= 1;
 				m_needsRedraw = true;
 			}
+
 			ImGui::Separator();
+			if (ImGui::Checkbox("Show FPS", &showFPS)) {
+				obvconfig.WriteBool("showFPS", showFPS);
+				m_needsRedraw = true;
+			}
+
+			if (ImGui::Checkbox("Show Position", &showPosition)) {
+				obvconfig.WriteBool("showNetWeb", showPosition);
+				m_needsRedraw = true;
+			}
+
 			if (ImGui::Checkbox("Net web", &showNetWeb)) {
 				obvconfig.WriteBool("showNetWeb", showNetWeb);
 				m_needsRedraw = true;
@@ -1564,24 +1568,14 @@ void BoardView::Update() {
 				obvconfig.WriteBool("fillParts", fillParts);
 				m_needsRedraw = true;
 			}
-
-			ImGui::EndMenu();
-		}
-
-		if (ImGui::BeginMenu("Search")) {
-			if (ImGui::MenuItem("Components / Nets", "c")) {
-				m_showSearch = true;
-			}
-			ImGui::EndMenu();
-		}
-
-		if (ImGui::BeginMenu("Windows")) {
+			ImGui::Separator();
 			if (ImGui::MenuItem("Net List", "l")) {
 				m_showNetList = m_showNetList ? false : true;
 			}
 			if (ImGui::MenuItem("Part List", "k")) {
 				m_showPartList = m_showPartList ? false : true;
 			}
+
 			ImGui::EndMenu();
 		}
 
@@ -2089,11 +2083,7 @@ void BoardView::HandleInput() {
 
 	if ((!io.WantCaptureKeyboard)) {
 
-		if (ImGui::IsKeyPressed(SDLK_n)) {
-			// Search for net
-			m_showSearch = true;
-
-		} else if (ImGui::IsKeyPressed(SDLK_m)) {
+		if (ImGui::IsKeyPressed(SDLK_m)) {
 			Mirror();
 			CenterView();
 			m_needsRedraw = true;
@@ -2133,9 +2123,6 @@ void BoardView::HandleInput() {
 			if (io.KeyCtrl) {
 				// quit OFBV
 				m_wantsQuit = true;
-			} else {
-				// Search for component
-				m_showSearch = true;
 			}
 
 		} else if (ImGui::IsKeyPressed(SDLK_l)) {
@@ -2150,34 +2137,31 @@ void BoardView::HandleInput() {
 			// Flip board:
 			FlipBoard();
 
-		} else if (ImGui::IsKeyPressed(SDLK_b)) {
+		} else if (ImGui::IsKeyPressed(SDLK_p)) {
 			showPins ^= 1;
 			m_needsRedraw = true;
 
 		} else if (ImGui::IsKeyPressed(SDLK_f)) {
-			if (io.KeyCtrl)
-				m_showSearch = true;
-			else
-				showFPS ^= 1;
-			m_needsRedraw = true;
+			if (io.KeyCtrl) {
+				if (m_validBoard) {
+					m_showSearch  = true;
+					m_needsRedraw = true;
+				}
+			}
 
 		} else if (ImGui::IsKeyPressed(SDLK_SLASH)) {
-			// m_showComponentSearch = true;
-			m_showSearch  = true;
-			m_needsRedraw = true;
-
-		} else if (ImGui::IsKeyPressed(SDLK_p)) {
-			showPosition ^= 1;
-			m_needsRedraw = true;
-
-		} else if (ImGui::IsKeyPressed(SDLK_z)) {
-			reloadConfig  = true;
-			m_needsRedraw = true;
+			if (m_validBoard) {
+				m_showSearch  = true;
+				m_needsRedraw = true;
+			}
 
 		} else if (ImGui::IsKeyPressed(SDLK_ESCAPE)) {
 			ClearAllHighlights();
+
 		} else {
-			// fprintf(stderr,"F");
+			/*
+			 * Do what ever is required for unhandled key presses.
+			 */
 		}
 	}
 }
