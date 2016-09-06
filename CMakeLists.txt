@@ -35,6 +35,17 @@ set_property(
 	DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 	PROPERTY VS_STARTUP_PROJECT ${PROJECT_NAME})
 
+# uninstall target
+configure_file(
+	"${CMAKE_CURRENT_SOURCE_DIR}/CMake/cmake_uninstall.cmake.in"
+	"${CMAKE_CURRENT_BINARY_DIR}/CMake/cmake_uninstall.cmake"
+	IMMEDIATE @ONLY)
+
+add_custom_target(uninstall
+COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake)
+set_target_properties(uninstall PROPERTIES FOLDER "Meta Targets")
+
+
 
 # Enable packaging installers
 include(CPack)

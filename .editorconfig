@@ -14,6 +14,6 @@ trim_trailing_whitespace = true
 
 
 # Code files
-[{*.{h,c,cc,cpp,mm},CMakeLists.txt}]
+[{*.{h,c,cc,cpp,mm,.cmake},CMake*}]
 indent_style = tab
 indent_size = 4
