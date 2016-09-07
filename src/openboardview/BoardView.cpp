@@ -847,7 +847,7 @@ void BoardView::HelpAbout(void) {
 		if (m_showHelpAbout) m_showHelpAbout = false;
 		ImGui::Text("Openflex Boardview");
 		ImGui::Text("Build %s %s", OBV_BUILD, __TIMESTAMP__);
-		ImGui::Text("https://openboardview.org");
+		ImGui::Text("http://openboardview.org");
 		if (ImGui::Button("Close") || ImGui::IsKeyPressed(SDLK_ESCAPE)) {
 			ImGui::CloseCurrentPopup();
 		}
