@@ -3142,7 +3142,10 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 			 * Draw the text associated with the box or pins if required
 			 */
 			if (PartIsHighlighted(*part) && !part->is_dummy() && !part->name.empty()) {
-				ImVec2 text_size = ImGui::CalcTextSize(part->name.c_str());
+				std::string text = part->name;
+				if (!part->mfgcode.empty()) text += " (" + part->mfgcode + ")";
+
+				ImVec2 text_size = ImGui::CalcTextSize(text.c_str());
 				float top_y      = a.y;
 
 				if (c.y < top_y) top_y = c.y;
@@ -3157,7 +3160,7 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 				                    ImVec2(pos.x + text_size.x + 2.0f, pos.y + text_size.y + 2.0f),
 				                    m_colors.partTextBackgroundColor,
 				                    0.0f);
-				draw->AddText(pos, m_colors.partTextColor, part->name.c_str());
+				draw->AddText(pos, m_colors.partTextColor, text.c_str());
 				draw->ChannelsSetCurrent(kChannelPolylines);
 			}
 		}

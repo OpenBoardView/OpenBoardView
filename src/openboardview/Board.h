@@ -173,6 +173,9 @@ struct Component : BoardElement {
 	// Part name as stored in board file.
 	string name;
 
+	// Part manufacturing code (aka. part number).
+	string mfgcode;
+
 	// Pins belonging to this component.
 	vector<Pin *> pins;
 

@@ -34,6 +34,7 @@ struct BRDPoint {
 
 struct BRDPart {
 	const char *name;
+	std::string mfgcode;
 	unsigned int type;
 	unsigned int end_of_pins;
 	BRDPoint p1{0, 0};
