@@ -6,6 +6,8 @@
 #include <cstring>
 #include <fstream>
 #include <iostream>
+#include <iterator>
+#include <sstream>
 #include <stdint.h>
 
 #include <dirent.h>
@@ -71,4 +73,10 @@ std::string lookup_file_insensitive(const std::string &path, const std::string &
 		if (compare_string_insensitive(cfile, filename)) filefound = path + cfile;
 	}
 	return filefound;
+}
+
+// Split a string in a vector, delimiter is a space (stringstream iterator)
+std::vector<std::string> split_string(const std::string str) {
+	std::istringstream iss(str);
+	return {std::istream_iterator<std::string>{iss}, std::istream_iterator<std::string>{}};
 }
