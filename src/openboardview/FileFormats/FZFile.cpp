@@ -1,4 +1,5 @@
 #include "FZFile.h"
+#include "utils.h"
 
 #include <algorithm>
 #include <assert.h>
@@ -83,14 +84,15 @@ void FZFile::decode(char *source, size_t size) {
  * Sets content_size to the length of the compressed content from the decoded fz
  * file
  */
-char *FZFile::split(char *file_buf, size_t buffer_size, size_t &content_size) {
-	int descr_len = (file_buf[buffer_size - 1] << 24) + (file_buf[buffer_size - 2] << 16) + (file_buf[buffer_size - 3] << 8) +
-	                file_buf[buffer_size - 4]; // read last 4 bytes as little endian 32-bit int.
-	if (descr_len < 0 || (unsigned)descr_len > buffer_size) return nullptr;
-	// if(descr != nullptr) *descr = file_buf+buffer_size-descr_len+4; // discard
-	// descr for now
-	content_size = buffer_size - descr_len;
-	return file_buf;
+char *FZFile::split(char *file_buf, size_t buffer_size, size_t &content_size, char *&descr, size_t &descr_size) {
+	unsigned char *ufile_buf = reinterpret_cast<unsigned char *>(file_buf);
+	auto len = (ufile_buf[buffer_size - 1] << 24) + (ufile_buf[buffer_size - 2] << 16) + (ufile_buf[buffer_size - 3] << 8) +
+	           ufile_buf[buffer_size - 4]; // read last 4 bytes as little endian 32-bit int.
+	if (len < 0 || static_cast<unsigned>(len) > buffer_size) return nullptr;
+	descr_size   = static_cast<unsigned>(len);
+	content_size = buffer_size - descr_size + 4;
+	descr        = file_buf + content_size;
+	return file_buf + 4;
 }
 
 /*
@@ -193,25 +195,35 @@ FZFile::FZFile(std::vector<char> &buf, uint32_t *fzkey) {
 
 	FZFile::decode(file_buf, buffer_size); // first decrypt buffer
 	size_t content_size = 0;
-	char *content       = FZFile::split(file_buf, buffer_size, content_size); // then split it, discarding descr part
+	size_t descr_size   = 0;
+	char *descr;
+	char *content = FZFile::split(file_buf, buffer_size, content_size, descr, descr_size); // then split it
 
 	ENSURE(content != nullptr);
 	ENSURE(content_size > 0);
-	content =
-	    FZFile::decompress(file_buf + 4, content_size, content_size); // and decompress zlib content data, discard first 4 bytes
-
+	content = FZFile::decompress(content, content_size, content_size); // decompress zlib content data
 	ENSURE(content != nullptr);
 	ENSURE(content_size > 0);
+
+	ENSURE(content != descr);
+	ENSURE(descr_size > 0);
+	descr = FZFile::decompress(descr, descr_size, descr_size);
+	ENSURE(descr != nullptr);
+	ENSURE(descr_size > 0);
 
 	int current_block = 0;
 	std::unordered_map<std::string, int> parts_id; // map between part name and part number
 
-	char **lines = stringfile(content);
-	ENSURE(lines);
+	char **lines_content = stringfile(content);
+	ENSURE(lines_content);
 
-	while (*lines) {
-		char *line = *lines;
-		++lines;
+	char **lines_descr = stringfile(descr);
+	ENSURE(lines_descr);
+
+	// Parse the content part (parts, pins, nails)
+	while (*lines_content) {
+		char *line = *lines_content;
+		++lines_content;
 
 		while (isspace((uint8_t)*line)) line++;
 		if (!line[0]) continue;
@@ -290,6 +302,35 @@ FZFile::FZFile(std::vector<char> &buf, uint32_t *fzkey) {
 				/*double radius =*/READ_DOUBLE();
 				nails.push_back(nail);
 			} break;
+		}
+	}
+
+	// Parse the descr part (parts info)
+	lines_descr += 2; // Discard first 2 lines (board description, currently unused and table columns name)
+	while (*lines_descr) {
+		char *line = *lines_descr;
+		++lines_descr;
+
+		while (isspace((uint8_t)*line)) line++;
+		if (!line[0]) continue;
+
+		char *p = line;
+		char *s;
+
+		if (line[0] == 's') continue; // PARTNUMBER starting with 's' seems unused
+
+		FZPartDesc pdesc;
+		pdesc.partno      = READ_DESCR_STR();
+		pdesc.description = READ_DESCR_STR();
+		pdesc.quantity    = READ_DESCR_UINT();
+		pdesc.locations   = split_string(READ_DESCR_STR());
+		pdesc.partno2     = READ_DESCR_STR();
+		partsDesc.push_back(pdesc);
+	}
+
+	for (auto &pdesc : partsDesc) {
+		for (auto &partname : pdesc.locations) {
+			parts.at(parts_id.at(partname) - 1).mfgcode = pdesc.description;
 		}
 	}
 
