@@ -3142,25 +3142,40 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 			 * Draw the text associated with the box or pins if required
 			 */
 			if (PartIsHighlighted(*part) && !part->is_dummy() && !part->name.empty()) {
-				std::string text = part->name;
-				if (!part->mfgcode.empty()) text += " (" + part->mfgcode + ")";
+				std::string text  = part->name;
+				std::string mcode = part->mfgcode;
 
-				ImVec2 text_size = ImGui::CalcTextSize(text.c_str());
-				float top_y      = a.y;
+				ImVec2 text_size    = ImGui::CalcTextSize(text.c_str());
+				ImVec2 mfgcode_size = ImGui::CalcTextSize(mcode.c_str());
+
+				if (mfgcode_size.x > text_size.x) text_size.x = mfgcode_size.x;
+
+				float top_y = a.y;
 
 				if (c.y < top_y) top_y = c.y;
 				ImVec2 pos             = ImVec2((a.x + c.x) * 0.5f, top_y);
 
 				pos.y -= text_size.y * 2;
+				if (mcode.size()) pos.y -= text_size.y;
+
 				pos.x -= text_size.x * 0.5f;
 				draw->ChannelsSetCurrent(kChannelText);
 
 				// This is the background of the part text.
-				draw->AddRectFilled(ImVec2(pos.x - 2.0f, pos.y - 2.0f),
-				                    ImVec2(pos.x + text_size.x + 2.0f, pos.y + text_size.y + 2.0f),
+				draw->AddRectFilled(ImVec2(pos.x - DPIF(2.0f), pos.y - DPIF(2.0f)),
+				                    ImVec2(pos.x + text_size.x + DPIF(2.0f), pos.y + text_size.y + DPIF(2.0f)),
 				                    m_colors.partTextBackgroundColor,
 				                    0.0f);
 				draw->AddText(pos, m_colors.partTextColor, text.c_str());
+				if (mcode.size()) {
+					//	pos.y += text_size.y;
+					pos.y += text_size.y + DPIF(2.0f);
+					draw->AddRectFilled(ImVec2(pos.x - DPIF(2.0f), pos.y - DPIF(2.0f)),
+					                    ImVec2(pos.x + text_size.x + DPIF(2.0f), pos.y + text_size.y + DPIF(2.0f)),
+					                    m_colors.annotationPopupBackgroundColor,
+					                    0.0f);
+					draw->AddText(ImVec2(pos.x, pos.y), m_colors.annotationPopupTextColor, mcode.c_str());
+				}
 				draw->ChannelsSetCurrent(kChannelPolylines);
 			}
 		}
