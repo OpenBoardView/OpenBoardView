@@ -111,6 +111,8 @@ orMaskOutline	= 0x888888ff\r\n\
 # FZKey requires 44 32-bit values in order for it to work.\r\n\
 #  If you have the key, put it in here as a single line, each value comma separated\r\n\
 #FZKey = 0x12345678, 0x12345678\r\n\
+FZKey =   \r\n\
+\r\n\
 ";
 
 /*
