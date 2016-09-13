@@ -134,8 +134,8 @@ void BoardView::ThemeSetStyle(const char *name) {
 		m_colors.pinHaloColor                   = byte4swap(0x00aa00ff);
 		m_colors.pinHighlightedColor            = byte4swap(0x0000ffff);
 		m_colors.pinHighlightSameNetColor       = byte4swap(0x000000ff);
-		m_colors.pinNetWebColor                 = byte4swap(0xff000044);
-		m_colors.pinNetWebOSColor               = byte4swap(0x0000ff33);
+		m_colors.pinNetWebColor                 = byte4swap(0xff888888);
+		m_colors.pinNetWebOSColor               = byte4swap(0x8888ff88);
 		m_colors.annotationPartAliasColor       = byte4swap(0xffff00ff);
 		m_colors.annotationBoxColor             = byte4swap(0xaaaa88aa);
 		m_colors.annotationStalkColor           = byte4swap(0xaaaaaaff);
@@ -3182,6 +3182,120 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 	} // for each part
 }
 
+void BoardView::DrawPartTooltips(ImDrawList *draw) {
+	ImVec2 spos = ImGui::GetMousePos();
+	ImVec2 pos  = ScreenToCoord(spos.x, spos.y);
+
+	/*
+ * I am loathing that I have to add this, but basically check every pin on the board so we can
+ * determine if we're hovering over a testpad
+ */
+	for (auto p : m_board->Pins()) {
+		auto pin = p.get();
+		if (pin->type == Pin::kPinTypeTestPad) {
+			float dx   = pin->position.x - pos.x;
+			float dy   = pin->position.y - pos.y;
+			float dist = dx * dx + dy * dy;
+			if ((dist < (pin->diameter * pin->diameter))) {
+
+				draw->AddCircle(CoordToScreen(pin->position.x, pin->position.y),
+				                pin->diameter * m_scale,
+				                m_colors.pinHaloColor,
+				                32,
+				                pinHaloThickness);
+				ImGui::PushStyleColor(ImGuiCol_Text, ImColor(m_colors.annotationPopupTextColor));
+				ImGui::PushStyleColor(ImGuiCol_PopupBg, ImColor(m_colors.annotationPopupBackgroundColor));
+				ImGui::BeginTooltip();
+				ImGui::Text("TP[%s]%s", pin->number.c_str(), pin->net->name.c_str());
+				ImGui::EndTooltip();
+				ImGui::PopStyleColor(2);
+				break;
+			} // if in the required diameter
+		}
+	}
+
+	currentlyHoveredPart = nullptr;
+	for (auto part : m_board->Components()) {
+		int hit     = 0;
+		auto p_part = part.get();
+
+		if (!ComponentIsVisible(p_part)) continue;
+
+		// Work out if the point is inside the hull
+		{
+			int i, j, n;
+			outline_pt *poly;
+
+			n    = 4;
+			poly = p_part->outline;
+
+			for (i = 0, j = n - 1; i < n; j = i++) {
+				if (((poly[i].y > pos.y) != (poly[j].y > pos.y)) &&
+				    (pos.x < (poly[j].x - poly[i].x) * (pos.y - poly[i].y) / (poly[j].y - poly[i].y) + poly[i].x))
+					hit ^= 1;
+			}
+		}
+
+		// If we're inside a part
+		if (hit) {
+			currentlyHoveredPart = p_part;
+			//			fprintf(stderr,"InPart: %s\n", currentlyHoveredPart->name.c_str());
+			if (part->outline_done) {
+
+				/*
+				 * Draw the bounding box for the part
+				 */
+				ImVec2 a, b, c, d;
+
+				a = ImVec2(CoordToScreen(part->outline[0].x, part->outline[0].y));
+				b = ImVec2(CoordToScreen(part->outline[1].x, part->outline[1].y));
+				c = ImVec2(CoordToScreen(part->outline[2].x, part->outline[2].y));
+				d = ImVec2(CoordToScreen(part->outline[3].x, part->outline[3].y));
+				draw->AddQuad(a, b, c, d, m_colors.partHighlightedColor, 2);
+			}
+
+			float min_dist = m_pinDiameter / 2.0f;
+			min_dist *= min_dist; // all distance squared
+			currentlyHoveredPin = nullptr;
+
+			for (auto &pin : currentlyHoveredPart->pins) {
+				// auto p     = pin;
+				float dx   = pin->position.x - pos.x;
+				float dy   = pin->position.y - pos.y;
+				float dist = dx * dx + dy * dy;
+				if ((dist < (pin->diameter * pin->diameter)) && (dist < min_dist)) {
+					currentlyHoveredPin = pin;
+					//					fprintf(stderr,"Pinhit: %s\n",pin->number.c_str());
+					min_dist = dist;
+				} // if in the required diameter
+			}     // for each pin in the part
+
+			draw->ChannelsSetCurrent(kChannelAnnotations);
+
+			if (currentlyHoveredPin)
+				draw->AddCircle(CoordToScreen(currentlyHoveredPin->position.x, currentlyHoveredPin->position.y),
+				                currentlyHoveredPin->diameter * m_scale,
+				                m_colors.pinHaloColor,
+				                32,
+				                pinHaloThickness);
+			ImGui::PushStyleColor(ImGuiCol_Text, ImColor(m_colors.annotationPopupTextColor));
+			ImGui::PushStyleColor(ImGuiCol_PopupBg, ImColor(m_colors.annotationPopupBackgroundColor));
+			ImGui::BeginTooltip();
+			if (currentlyHoveredPin) {
+				ImGui::Text("%s\n[%s]%s",
+				            currentlyHoveredPart->name.c_str(),
+				            (currentlyHoveredPin ? currentlyHoveredPin->number.c_str() : " "),
+				            (currentlyHoveredPin ? currentlyHoveredPin->net->name.c_str() : " "));
+			} else {
+				ImGui::Text("%s", currentlyHoveredPart->name.c_str());
+			}
+			ImGui::EndTooltip();
+			ImGui::PopStyleColor(2);
+		}
+
+	} // for each part on the board
+}
+
 inline void BoardView::DrawPinTooltips(ImDrawList *draw) {
 	draw->ChannelsSetCurrent(kChannelAnnotations);
 
@@ -3362,7 +3476,8 @@ void BoardView::DrawBoard() {
 	DrawParts(draw);
 	//	DrawSelectedPins(draw);
 	DrawPins(draw);
-	DrawPinTooltips(draw);
+	// DrawPinTooltips(draw);
+	DrawPartTooltips(draw);
 	DrawAnnotations(draw);
 
 	draw->ChannelsMerge();
