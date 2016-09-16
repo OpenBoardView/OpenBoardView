@@ -340,23 +340,14 @@ FZFile::FZFile(std::vector<char> &buf, uint32_t *fzkey) {
 		partsDesc.push_back(pdesc);
 	}
 
-	/*
-	 * FIXME: getting an exception thrown in this code, maybe indexing being wrong?
-	 */
-	/*
-	for (auto &pdesc: partsDesc) {
-	    for (auto &partname: pdesc.locations) {
-	        fprintf(stderr,"pname:%s\n", partname);
-	        if (partname[0]) {
-	            auto id = parts_id.at(partname);
-	            fprintf(stderr,"PID:%d [%d]\n",id, parts.size());
-	            if (id < (parts.size())) {
-	                parts.at(id -1).mfgcode = pdesc.description;
-	    }
+	for (auto &pdesc : partsDesc) {
+		for (auto &partname : pdesc.locations) {
+			auto iter = parts_id.find(partname);
+			if (iter != parts_id.end()) { // Sometimes the desc part references stuff not in content part, ignore it
+				parts.at(iter->second - 1).mfgcode = pdesc.description;
+			}
+		}
 	}
-	    }
-	}
-	*/
 
 	std::sort(pins.begin(), pins.end()); // sort vector by part num then pin num
 	for (std::vector<int>::size_type i = 0; i < pins.size(); i++) {
