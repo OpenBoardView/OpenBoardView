@@ -177,7 +177,8 @@ void FZFile::update_counts() {
 FZFile::FZFile(std::vector<char> &buf, uint32_t *fzkey) {
 	auto buffer_size = buf.size();
 	char *saved_locale;
-	saved_locale = setlocale(LC_NUMERIC, "C"); // Use '.' as delimiter for strtod
+	float multiplier = 1.0f;
+	saved_locale     = setlocale(LC_NUMERIC, "C"); // Use '.' as delimiter for strtod
 
 	memcpy(key, fzkey, sizeof(key));
 
@@ -221,15 +222,26 @@ FZFile::FZFile(std::vector<char> &buf, uint32_t *fzkey) {
 	ENSURE(lines_descr);
 
 	// Parse the content part (parts, pins, nails)
+
 	while (*lines_content) {
 		char *line = *lines_content;
 		++lines_content;
+
+		//	fprintf(stdout,"%s\n", line);
 
 		while (isspace((uint8_t)*line)) line++;
 		if (!line[0]) continue;
 
 		char *p = line;
 		char *s;
+
+		/*
+		 * If we have a UNIT: line in the data, see if it's requesting millimeters and scale appropriatley.
+		 * Default is units are thou (0.001")
+		 */
+		if (!strcmp(line, "UNIT:millimeters")) {
+			multiplier = 25.4f;
+		}
 
 		if (line[0] == 'A') { // New block
 			line += 2;        // skip "A!"
@@ -272,14 +284,14 @@ FZFile::FZFile(std::vector<char> &buf, uint32_t *fzkey) {
 				pin.snum   = READ_STR();
 				/*char *name =*/READ_STR();
 				double posx   = READ_DOUBLE();
-				pin.pos.x     = posx;
+				pin.pos.x     = posx * multiplier;
 				double posy   = READ_DOUBLE();
-				pin.pos.y     = posy;
+				pin.pos.y     = posy * multiplier;
 				pin.probe     = READ_UINT();
 				double radius = READ_DOUBLE();
 				radius /= 100;
 				if (radius < 0.5f) radius = 0.5f;
-				pin.radius                = radius;
+				pin.radius                = radius * multiplier;
 				pins.push_back(pin);
 			} break;
 			case 3: {   // Nails
@@ -291,9 +303,9 @@ FZFile::FZFile(std::vector<char> &buf, uint32_t *fzkey) {
 				/*char *pinname =*/READ_STR();
 
 				double posx = READ_DOUBLE();
-				nail.pos.x  = posx;
+				nail.pos.x  = posx * multiplier;
 				double posy = READ_DOUBLE();
-				nail.pos.y  = posy;
+				nail.pos.y  = posy * multiplier;
 				char *loc   = READ_STR();
 				if (!strcmp(loc, "T"))
 					nail.side = 1; // on top
@@ -328,11 +340,23 @@ FZFile::FZFile(std::vector<char> &buf, uint32_t *fzkey) {
 		partsDesc.push_back(pdesc);
 	}
 
-	for (auto &pdesc : partsDesc) {
-		for (auto &partname : pdesc.locations) {
-			parts.at(parts_id.at(partname) - 1).mfgcode = pdesc.description;
-		}
+	/*
+	 * FIXME: getting an exception thrown in this code, maybe indexing being wrong?
+	 */
+	/*
+	for (auto &pdesc: partsDesc) {
+	    for (auto &partname: pdesc.locations) {
+	        fprintf(stderr,"pname:%s\n", partname);
+	        if (partname[0]) {
+	            auto id = parts_id.at(partname);
+	            fprintf(stderr,"PID:%d [%d]\n",id, parts.size());
+	            if (id < (parts.size())) {
+	                parts.at(id -1).mfgcode = pdesc.description;
+	    }
 	}
+	    }
+	}
+	*/
 
 	std::sort(pins.begin(), pins.end()); // sort vector by part num then pin num
 	for (std::vector<int>::size_type i = 0; i < pins.size(); i++) {
