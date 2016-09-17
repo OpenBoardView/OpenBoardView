@@ -34,7 +34,7 @@ replacement for the "Test_Link" software.
 
 For Ubuntu developers, you'll need the following packages at a minium;
 
-	$ apt-get install build-essential cmake libsdl2-dev libgtk-3-dev
+	$ apt-get install git build-essential cmake libsdl2-dev libgtk-3-dev
 
 ### Installation
 
