@@ -184,6 +184,9 @@ struct BoardView {
 	int m_hoverframes             = 0;
 	ImVec2 m_previous_mouse_pos;
 
+	/* Info/Side Pane */
+	void InfoPane(void);
+
 	bool HighlightedPinIsHovered(void);
 	Pin *m_pinHighlightedHovered    = nullptr;
 	Pin *currentlyHoveredPin        = nullptr;
@@ -246,6 +249,7 @@ struct BoardView {
 	bool m_lastFileOpenWasInvalid;
 	bool m_validBoard = false;
 	bool m_wantsQuit;
+	bool m_showInfoPane;
 
 	~BoardView();
 

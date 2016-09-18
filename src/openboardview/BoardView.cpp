@@ -1014,6 +1014,34 @@ void BoardView::HelpControls(void) {
 	}
 }
 
+void BoardView::InfoPane(void) {
+	bool dummy = true;
+	double tx, ty;
+
+	ImGuiIO &io = ImGui::GetIO();
+
+	/*
+	 * Originally the dialog was to follow the cursor but it proved to be an overkill
+	 * to try adjust things to keep it within the bounds of the window so as to not
+	 * lose the buttons.
+	 *
+	 * Now it's kept at a fixed point.
+	 */
+	ImGui::SetNextWindowPos(ImVec2(DPIF(50), DPIF(10)));
+
+	if (ImGui::BeginPopupModal("SidePane", &dummy, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_ShowBorders)) {
+
+		if (m_showInfoPane) {
+			m_showInfoPane = false;
+		}
+
+		if (ImGui::Button("Close")) {
+			ImGui::CloseCurrentPopup();
+		}
+		ImGui::EndPopup();
+	}
+}
+
 void BoardView::ContextMenu(void) {
 	bool dummy                       = true;
 	static char contextbuf[10240]    = "";
@@ -1568,7 +1596,12 @@ void BoardView::Update() {
 				obvconfig.WriteBool("fillParts", fillParts);
 				m_needsRedraw = true;
 			}
+
 			ImGui::Separator();
+
+			if (ImGui::MenuItem("Info Pane", "i")) {
+				m_showInfoPane = m_showInfoPane ? false : true;
+			}
 			if (ImGui::MenuItem("Net List", "l")) {
 				m_showNetList = m_showNetList ? false : true;
 			}
