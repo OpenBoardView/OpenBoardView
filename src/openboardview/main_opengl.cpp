@@ -83,7 +83,7 @@ char help[] =
 	-y <height> : Set window height\n\
 	-z <pixels> : Set font size\n\
 	-p <dpi> : Set the dpi\n\
-	-r <renderer> : Set the renderer [ OPENGL1 = 0; OPENGL3 = 1; OPENGLES2 = 2 ]\n\
+	-r <renderer> : Set the renderer [ OPENGL1 = 1; OPENGL3 = 2; OPENGLES2 = 3 ]\n\
 	-d : Debug mode\n\
 ";
 
