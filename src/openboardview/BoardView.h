@@ -158,7 +158,7 @@ struct BoardView {
 	void SetFZKey(const char *keytext);
 	void HelpAbout(void);
 	void HelpControls(void);
-	void SearchColumnGenerate(char *search, int buttons_max);
+	void SearchColumnGenerate(char *title, char *search, int buttons_max);
 	void Preferences(void);
 	void ColorPreferencesItem(
 	    const char *label, int label_width, const char *butlabel, const char *conflabel, int var_width, uint32_t *c);

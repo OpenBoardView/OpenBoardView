@@ -355,32 +355,32 @@ int BoardView::ConfigParse(void) {
 	m_colors.orMaskOutline = byte4swap(obvconfig.ParseHex("orMaskOutline", byte4swap(m_colors.orMaskOutline)));
 
 	/*
-	m_colors.backgroundColor         = byte4swap(obvconfig.ParseHex("backgroundColor", 0xffffffff));
-	m_colors.boardFillColor          = byte4swap(obvconfig.ParseHex("boardFillColor", 0xddddddff));
+	m_colors.backgroundColor = byte4swap(obvconfig.ParseHex("backgroundColor", 0xffffffff));
+	m_colors.boardFillColor  = byte4swap(obvconfig.ParseHex("boardFillColor", 0xddddddff));
 
 	m_colors.partHullColor            = byte4swap(obvconfig.ParseHex("partHullColor", 0x80808080));
-	m_colors.partOutlineColor        = byte4swap(obvconfig.ParseHex("partOutlineColor", 0x444444ff));
-	m_colors.partFillColor           = byte4swap(obvconfig.ParseHex("partFillColor", 0xffffffbb));
+	m_colors.partOutlineColor         = byte4swap(obvconfig.ParseHex("partOutlineColor", 0x444444ff));
+	m_colors.partFillColor            = byte4swap(obvconfig.ParseHex("partFillColor", 0xffffffbb));
 	m_colors.partHighlightedColor     = byte4swap(obvconfig.ParseHex("partHighlightedColor", 0xff0000ff));
 	m_colors.partHighlightedFillColor = byte4swap(obvconfig.ParseHex("partHighlightedFillColor", 0xffeeeeff));
-	m_colors.partTextColor           = byte4swap(obvconfig.ParseHex("partTextColor", 0xff3030ff));
-	m_colors.partTextBackgroundColor = byte4swap(obvconfig.ParseHex("partTextBackgroundColor", 0xffff00ff));
-	m_colors.boardOutlineColor             = byte4swap(obvconfig.ParseHex("boardOutline", 0x444444ff));
-	m_colors.pinDefaultColor               = byte4swap(obvconfig.ParseHex("pinDefault", 0x8888ffff));
-	m_colors.pinGroundColor                = byte4swap(obvconfig.ParseHex("pinGround", 0x2222aaff));
-	m_colors.pinNotConnectedColor          = byte4swap(obvconfig.ParseHex("pinNotConnected", 0xaaaaaaff));
-	m_colors.pinTestPadColor               = byte4swap(obvconfig.ParseHex("pinTestPad", 0x888888ff));
-	m_colors.pinSelectedTextColor          = byte4swap(obvconfig.ParseHex("pinSelectedText", 0xff0000ff));
-	m_colors.pinSelectedColor              = byte4swap(obvconfig.ParseHex("pinSelected", 0x0000ffff));
-	m_colors.pinHaloColor                  = byte4swap(obvconfig.ParseHex("pinHaloColor", 0x00aa00ff));
-	m_colors.pinHighlightedColor           = byte4swap(obvconfig.ParseHex("pinHighlighted", 0x0000ffff));
-	m_colors.pinHighlightSameNetColor      = byte4swap(obvconfig.ParseHex("pinHighlightSameNet", 0x000000ff));
+	m_colors.partTextColor            = byte4swap(obvconfig.ParseHex("partTextColor", 0xff3030ff));
+	m_colors.partTextBackgroundColor  = byte4swap(obvconfig.ParseHex("partTextBackgroundColor", 0xffff00ff));
+	m_colors.boardOutlineColor        = byte4swap(obvconfig.ParseHex("boardOutline", 0x444444ff));
+	m_colors.pinDefaultColor          = byte4swap(obvconfig.ParseHex("pinDefault", 0x8888ffff));
+	m_colors.pinGroundColor           = byte4swap(obvconfig.ParseHex("pinGround", 0x2222aaff));
+	m_colors.pinNotConnectedColor     = byte4swap(obvconfig.ParseHex("pinNotConnected", 0xaaaaaaff));
+	m_colors.pinTestPadColor          = byte4swap(obvconfig.ParseHex("pinTestPad", 0x888888ff));
+	m_colors.pinSelectedTextColor     = byte4swap(obvconfig.ParseHex("pinSelectedText", 0xff0000ff));
+	m_colors.pinSelectedColor         = byte4swap(obvconfig.ParseHex("pinSelected", 0x0000ffff));
+	m_colors.pinHaloColor             = byte4swap(obvconfig.ParseHex("pinHaloColor", 0x00aa00ff));
+	m_colors.pinHighlightedColor      = byte4swap(obvconfig.ParseHex("pinHighlighted", 0x0000ffff));
+	m_colors.pinHighlightSameNetColor = byte4swap(obvconfig.ParseHex("pinHighlightSameNet", 0x000000ff));
 
-	m_colors.annotationPartAliasColor      = byte4swap(obvconfig.ParseHex("annotationPartAlias", 0xffff00ff));
-	m_colors.annotationBoxColor       = byte4swap(obvconfig.ParseHex("annotationBoxColor", 0xff0000aa));
-	m_colors.annotationStalkColor     = byte4swap(obvconfig.ParseHex("annotationStalkColor", 0x000000ff));
+	m_colors.annotationPartAliasColor       = byte4swap(obvconfig.ParseHex("annotationPartAlias", 0xffff00ff));
+	m_colors.annotationBoxColor             = byte4swap(obvconfig.ParseHex("annotationBoxColor", 0xff0000aa));
+	m_colors.annotationStalkColor           = byte4swap(obvconfig.ParseHex("annotationStalkColor", 0x000000ff));
 	m_colors.annotationPopupBackgroundColor = byte4swap(obvconfig.ParseHex("annotationPopupBackground", 0xeeeeeeff));
-	m_colors.annotationPopupTextColor = byte4swap(obvconfig.ParseHex("annotationPopupText", 0x000000ff));
+	m_colors.annotationPopupTextColor       = byte4swap(obvconfig.ParseHex("annotationPopupText", 0x000000ff));
 
 	m_colors.selectedMaskPins    = byte4swap(obvconfig.ParseHex("selectedMaskPins", 0xffffffff));
 	m_colors.selectedMaskParts   = byte4swap(obvconfig.ParseHex("selectedMaskParts", 0xffffffff));
@@ -420,7 +420,7 @@ int BoardView::LoadFile(const std::string &filename) {
 			m_board->Components().clear();
 			m_board->OutlinePoints().clear();
 			//	delete m_file;
-			//	delete m_board;
+			// delete m_board;
 		}
 
 		SetLastFileOpenName(filename);
@@ -1040,25 +1040,41 @@ void BoardView::ShowInfoPane(void) {
 	                 ImGuiWindowFlags_ShowBorders | ImGuiWindowFlags_NoSavedSettings);
 
 	if (m_partHighlighted.size()) {
-		ImGui::Columns(2, "Pins");
 
 		for (auto part : m_partHighlighted) {
-			ImGui::Text("%s", part->name.c_str());
+
+			ImGui::Text("Part: %s", part->name.c_str());
+			ImGui::Text("Pin count: %d", part->pins.size());
+			if (part->mfgcode.size()) ImGui::TextWrapped("Package Info: %s", part->mfgcode.c_str());
+
+			/*
+			 * Generate the pin# and net table
+			 */
+			ImGui::PushItemWidth(-1);
+			ImGui::ListBoxHeader(
+			    (std::string("##") + part->name).c_str()); //, ImVec2(m_board_surface.x/3 -5, m_board_surface.y/2));
 			for (auto pin : part->pins) {
-				ImGui::Text("%s", pin->number.c_str());
+				char ss[1024];
+				//				ImGui::Columns(2);
+				snprintf(ss, sizeof(ss), "%10s %s", pin->number.c_str(), pin->net->name.c_str());
+				if (ImGui::Selectable(ss, false)) {
+					m_pinSelected = pin;
+					m_needsRedraw = true;
+				}
+				//				ImGui::Text("%10s %s", pin->number.c_str(), pin->net->name.c_str());
+				//				ImGui::NextColumn();
+				//				ImGui::TextWrapped("%s", pin->net->name.c_str());
+				//				ImGui::Columns(1);
 			}
-		}
-
-		ImGui::NextColumn();
-
-		for (auto part : m_partHighlighted) {
-			ImGui::Text("Net");
+			ImGui::ListBoxFooter();
+			ImGui::PopItemWidth();
+			/*
 			for (auto &pin : part->pins) {
-				ImGui::Text("%s", pin->net->name.c_str());
 			}
-		}
+			*/
+			ImGui::Separator();
 
-		ImGui::Columns(1);
+		} // for each part in the list
 	}
 
 	ImGui::End();
@@ -1128,8 +1144,8 @@ void BoardView::ContextMenu(void) {
 			}
 
 			/*
-		 * If there was a pin selected, we can extract net/part off it
-			    */
+			 * If there was a pin selected, we can extract net/part off it
+			 */
 
 			if (selection != nullptr) {
 				pin   = selection->number;
@@ -1316,16 +1332,17 @@ void BoardView::ContextMenu(void) {
 	}
 }
 
-void BoardView::SearchColumnGenerate(char *search, int buttons_max) {
+void BoardView::SearchColumnGenerate(char *title, char *search, int buttons_max) {
 
 	int buttons_left = buttons_max;
 
 	if (search[0]) {
+		ImGui::ListBoxHeader(title);
 		if (m_searchComponents) {
 			for (auto &part : m_file->parts) {
 				if (buttons_left > 0) {
 					if (utf8casestr(part.name, search)) {
-						if (ImGui::SmallButton(part.name)) {
+						if (ImGui::Selectable(part.name, false)) {
 							FindComponent(part.name);
 							snprintf(search, 128, "%s", part.name);
 							buttons_left = 0;
@@ -1341,7 +1358,7 @@ void BoardView::SearchColumnGenerate(char *search, int buttons_max) {
 			for (auto &net : m_nets) {
 				if (buttons_left > 0) {
 					if (utf8casestr(net->name.c_str(), search)) {
-						if (ImGui::SmallButton(net->name.c_str())) {
+						if (ImGui::Selectable(net->name.c_str(), false)) {
 							FindNet(net->name.c_str());
 							snprintf(search, 128, "%s", net->name.c_str());
 							buttons_left = 0;
@@ -1351,6 +1368,7 @@ void BoardView::SearchColumnGenerate(char *search, int buttons_max) {
 				}
 			}
 		}
+		ImGui::ListBoxFooter();
 	}
 }
 
@@ -1429,7 +1447,9 @@ void BoardView::SearchComponent(void) {
 			ImGui::SetKeyboardFocusHere(-1);
 		} // set keyboard focus
 
-		SearchColumnGenerate(m_search, 10);
+		ImGui::PushItemWidth(-1);
+		SearchColumnGenerate("##SC1", m_search, 30);
+		ImGui::PopItemWidth();
 
 		ImGui::PushItemWidth(DPI(500));
 		ImGui::NextColumn();
@@ -1438,8 +1458,10 @@ void BoardView::SearchComponent(void) {
 		if (ImGui::InputText("##search2", m_search2, 128, ImGuiInputTextFlags_CharsNoBlank)) {
 			SearchCompound(m_search2);
 		}
+		ImGui::PushItemWidth(-1);
+		SearchColumnGenerate("##SC2", m_search2, 30);
 		ImGui::PopItemWidth();
-		SearchColumnGenerate(m_search2, 10);
+		ImGui::PopItemWidth();
 
 		ImGui::NextColumn();
 		ImGui::Text("Item #3");
@@ -1448,8 +1470,10 @@ void BoardView::SearchComponent(void) {
 		if (ImGui::InputText("##search3", m_search3, 128, ImGuiInputTextFlags_CharsNoBlank)) {
 			SearchCompound(m_search3);
 		}
+		ImGui::PushItemWidth(-1);
+		SearchColumnGenerate("##SC3", m_search3, 30);
 		ImGui::PopItemWidth();
-		SearchColumnGenerate(m_search3, 10);
+		ImGui::PopItemWidth();
 
 		ImGui::Columns(1); // reset back to single column mode
 		ImGui::Separator();
@@ -2088,18 +2112,18 @@ void BoardView::HandleInput() {
 								 * AND it's not in the existing part list, then add it
 								 */
 								/*
-						if (part->visualmode == part->CVMNormal) {
+								if (part->visualmode == part->CVMNormal) {
 								    if (!partInList) {
-						m_partHighlighted.push_back(p_part);
-					}
-				}
+								        m_partHighlighted.push_back(p_part);
+								    }
+								}
 
-						part->visualmode++;
-						part->visualmode %= part->CVMModeCount;
+								part->visualmode++;
+								part->visualmode %= part->CVMModeCount;
 
-						if (part->visualmode == part->CVMNormal) {
-							remove(*part, m_partHighlighted);
-						}
+								if (part->visualmode == part->CVMNormal) {
+								    remove(*part, m_partHighlighted);
+								}
 								*/
 							} // if hit
 						}     // for each part on the board
@@ -2713,7 +2737,7 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 			        text_color = m_colors.partTextColor;
 			    }
 			    show_text = true;
-			        threshold			= 0;
+			    threshold = 0;
 			}
 			*/
 
@@ -3566,14 +3590,14 @@ int qsort_netstrings(const void *a, const void *b) {
 }
 
 /**
-  * CenterView
-  *
-  * Resets the scale and transformation back to original.
-  * Does NOT change the rotation (yet?)
-  *
-  * PLD20160621-1715
-  *
-  */
+ * CenterView
+ *
+ * Resets the scale and transformation back to original.
+ * Does NOT change the rotation (yet?)
+ *
+ * PLD20160621-1715
+ *
+ */
 void BoardView::CenterView(void) {
 	// ImVec2 view = ImGui::GetIO().DisplaySize;
 	ImVec2 view = m_board_surface;
