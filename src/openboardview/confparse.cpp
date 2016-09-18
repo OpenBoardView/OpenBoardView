@@ -30,6 +30,7 @@ dpi=100\r\n\
 \r\n\
 #fontPath=FiraSans-Medium.ttf\r\n\
 fontSize=20\r\n\
+showInfoPanel = true\r\n\
 showPins = true\r\n\
 showNetWeb = true\r\n\
 pinSelectMasks = true\r\n\

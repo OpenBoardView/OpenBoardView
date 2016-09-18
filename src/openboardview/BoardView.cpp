@@ -257,6 +257,7 @@ int BoardView::ConfigParse(void) {
 	pinSelectMasks   = obvconfig.ParseBool("pinSelectMasks", true);
 
 	showFPS                   = obvconfig.ParseBool("showFPS", false);
+	showInfoPanel             = obvconfig.ParseBool("showInfoPanel", true);
 	showPins                  = obvconfig.ParseBool("showPins", true);
 	showNetWeb                = obvconfig.ParseBool("showNetWeb", true);
 	showAnnotations           = obvconfig.ParseBool("showAnnotations", true);
@@ -779,6 +780,10 @@ void BoardView::Preferences(void) {
 
 		if (ImGui::Checkbox("Center/Zoom Search Results", &m_centerZoomSearchResults)) {
 			obvconfig.WriteBool("centerZoomSearchResults", m_centerZoomSearchResults);
+		}
+
+		if (ImGui::Checkbox("Show Info Panel", &showInfoPanel)) {
+			obvconfig.WriteBool("showInfoPanel", showInfoPanel);
 		}
 
 		if (ImGui::Checkbox("Show net web", &showNetWeb)) {
@@ -1611,6 +1616,11 @@ void BoardView::Update() {
 				m_needsRedraw = true;
 			}
 
+			if (ImGui::MenuItem("Show Info Panel", "i")) {
+				showInfoPanel ^= 1;
+				m_needsRedraw = true;
+			}
+
 			ImGui::Separator();
 			if (ImGui::Checkbox("Show FPS", &showFPS)) {
 				obvconfig.WriteBool("showFPS", showFPS);
@@ -1645,7 +1655,7 @@ void BoardView::Update() {
 			ImGui::Separator();
 
 			if (ImGui::MenuItem("Info Pane", "i")) {
-				m_showInfoPane = !m_showInfoPane;
+				showInfoPanel = !showInfoPanel;
 			}
 			if (ImGui::MenuItem("Net List", "l")) {
 				m_showNetList = !m_showNetList;
@@ -1883,7 +1893,7 @@ void BoardView::Update() {
 		m_lastHeight  = io.DisplaySize.y;
 		m_needsRedraw = true;
 	}
-	if (!m_showInfoPane) {
+	if (!showInfoPanel) {
 		m_board_surface = ImVec2(io.DisplaySize.x, io.DisplaySize.y - (m_status_height + m_menu_height));
 	} else {
 		m_board_surface = ImVec2(io.DisplaySize.x - (io.DisplaySize.x / 4), io.DisplaySize.y - (m_status_height + m_menu_height));
@@ -2212,7 +2222,7 @@ void BoardView::HandleInput() {
 			}
 
 		} else if (ImGui::IsKeyPressed(SDLK_i)) {
-			m_showInfoPane = !m_showInfoPane;
+			showInfoPanel = !showInfoPanel;
 
 		} else if (ImGui::IsKeyPressed(SDLK_l)) {
 			// Show Net List
@@ -2273,7 +2283,7 @@ void BoardView::ShowPartList(bool *p_open) {
 
 void BoardView::RenderOverlay() {
 
-	if (m_showInfoPane) {
+	if (showInfoPanel) {
 		ShowInfoPane();
 	}
 	// Listing of Net elements

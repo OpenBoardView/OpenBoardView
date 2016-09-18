@@ -131,6 +131,7 @@ struct BoardView {
 	bool slowCPU              = false;
 	bool showFPS              = false;
 	bool showNetWeb           = true;
+	bool showInfoPanel        = true;
 	bool showPins             = true;
 	bool showAnnotations      = true;
 	bool pinHalo              = true;
@@ -252,7 +253,6 @@ struct BoardView {
 	bool m_lastFileOpenWasInvalid;
 	bool m_validBoard = false;
 	bool m_wantsQuit;
-	bool m_showInfoPane;
 
 	~BoardView();
 
