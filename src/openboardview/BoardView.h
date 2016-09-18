@@ -185,7 +185,7 @@ struct BoardView {
 	ImVec2 m_previous_mouse_pos;
 
 	/* Info/Side Pane */
-	void InfoPane(void);
+	void ShowInfoPane(void);
 
 	bool HighlightedPinIsHovered(void);
 	Pin *m_pinHighlightedHovered    = nullptr;
@@ -217,6 +217,9 @@ struct BoardView {
 	int m_current_side;
 	int m_boardWidth; // board size in what coordinates? thou?
 	int m_boardHeight;
+	float m_menu_height;
+	float m_status_height;
+	ImVec2 m_board_surface;
 
 	ColorScheme m_colors;
 

@@ -240,6 +240,10 @@ int main(int argc, char **argv) {
 	if (g.width == 0) g.width   = app.obvconfig.ParseInt("windowX", 1100);
 	if (g.height == 0) g.height = app.obvconfig.ParseInt("windowY", 700);
 
+	// Preset some workable sizes
+	app.m_board_surface.x = g.width;
+	app.m_board_surface.y = g.height;
+
 	if (g.renderer == Renderer::DEFAULT) {
 		switch (app.obvconfig.ParseInt("renderer", 2)) {
 			case 1: g.renderer = Renderer::OPENGL1; break;

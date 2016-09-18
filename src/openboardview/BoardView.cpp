@@ -1014,11 +1014,16 @@ void BoardView::HelpControls(void) {
 	}
 }
 
-void BoardView::InfoPane(void) {
-	bool dummy = true;
-	double tx, ty;
-
+void BoardView::ShowInfoPane(void) {
+	bool dummy  = true;
 	ImGuiIO &io = ImGui::GetIO();
+	ImVec2 view = io.DisplaySize;
+	double width, height;
+
+	width                        = view.x / 4;
+	if (width < DPIF(100)) width = DPIF(100);
+
+	height = view.y - m_status_height - m_menu_height;
 
 	/*
 	 * Originally the dialog was to follow the cursor but it proved to be an overkill
@@ -1027,19 +1032,36 @@ void BoardView::InfoPane(void) {
 	 *
 	 * Now it's kept at a fixed point.
 	 */
-	ImGui::SetNextWindowPos(ImVec2(DPIF(50), DPIF(10)));
+	ImGui::SetNextWindowPos(ImVec2(view.x - width, m_menu_height));
+	ImGui::SetNextWindowSize(ImVec2(width, height));
+	ImGui::Begin("Info Pane",
+	             NULL,
+	             ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse |
+	                 ImGuiWindowFlags_ShowBorders | ImGuiWindowFlags_NoSavedSettings);
 
-	if (ImGui::BeginPopupModal("SidePane", &dummy, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_ShowBorders)) {
+	if (m_partHighlighted.size()) {
+		ImGui::Columns(2, "Pins");
 
-		if (m_showInfoPane) {
-			m_showInfoPane = false;
+		for (auto part : m_partHighlighted) {
+			ImGui::Text("%s", part->name.c_str());
+			for (auto pin : part->pins) {
+				ImGui::Text("%s", pin->number.c_str());
+			}
 		}
 
-		if (ImGui::Button("Close")) {
-			ImGui::CloseCurrentPopup();
+		ImGui::NextColumn();
+
+		for (auto part : m_partHighlighted) {
+			ImGui::Text("Net");
+			for (auto &pin : part->pins) {
+				ImGui::Text("%s", pin->net->name.c_str());
+			}
 		}
-		ImGui::EndPopup();
+
+		ImGui::Columns(1);
 	}
+
+	ImGui::End();
 }
 
 void BoardView::ContextMenu(void) {
@@ -1471,7 +1493,6 @@ void BoardView::Update() {
 	bool open_file = false;
 	// ImGuiIO &io = ImGui::GetIO();
 	char *preset_filename = NULL;
-	float menu_height     = 0;
 	ImGuiIO &io           = ImGui::GetIO();
 
 	/**
@@ -1491,7 +1512,7 @@ void BoardView::Update() {
 	}
 
 	if (ImGui::BeginMainMenuBar()) {
-		menu_height = ImGui::GetWindowHeight();
+		m_menu_height = ImGui::GetWindowHeight();
 
 		/*
 		 * Create these dialogs, but they're not actually
@@ -1600,13 +1621,13 @@ void BoardView::Update() {
 			ImGui::Separator();
 
 			if (ImGui::MenuItem("Info Pane", "i")) {
-				m_showInfoPane = m_showInfoPane ? false : true;
+				m_showInfoPane = !m_showInfoPane;
 			}
 			if (ImGui::MenuItem("Net List", "l")) {
-				m_showNetList = m_showNetList ? false : true;
+				m_showNetList = !m_showNetList;
 			}
 			if (ImGui::MenuItem("Part List", "k")) {
-				m_showPartList = m_showPartList ? false : true;
+				m_showPartList = !m_showPartList;
 			}
 
 			ImGui::EndMenu();
@@ -1775,18 +1796,19 @@ void BoardView::Update() {
 	}
 
 	ImGuiWindowFlags flags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
-	                         ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings;
+	                         ImGuiWindowFlags_ShowBorders | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse |
+	                         ImGuiWindowFlags_NoSavedSettings;
 
 	ImGuiWindowFlags draw_surface_flags = flags | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoBringToFrontOnFocus;
 
 	/*
 	 * Status footer
 	 */
-	float status_height = (DPIF(10.0f) + ImGui::GetFontSize());
+	m_status_height = (DPIF(10.0f) + ImGui::GetFontSize());
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(DPIF(4.0f), DPIF(3.0f)));
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
-	ImGui::SetNextWindowPos(ImVec2{0, io.DisplaySize.y - status_height});
-	ImGui::SetNextWindowSize(ImVec2(io.DisplaySize.x, status_height));
+	ImGui::SetNextWindowPos(ImVec2{0, io.DisplaySize.y - m_status_height});
+	ImGui::SetNextWindowSize(ImVec2(io.DisplaySize.x, m_status_height));
 	ImGui::Begin("status", nullptr, flags | ImGuiWindowFlags_NoFocusOnAppearing);
 	if (m_file && m_board && m_pinSelected) {
 		auto pin = m_pinSelected;
@@ -1831,13 +1853,20 @@ void BoardView::Update() {
 	/*
 	 * Drawing surface, where the actual PCB/board is plotted out
 	 */
-	ImGui::SetNextWindowPos(ImVec2(0, menu_height));
+	ImGui::SetNextWindowPos(ImVec2(0, m_menu_height));
 	if (io.DisplaySize.x != m_lastWidth || io.DisplaySize.y != m_lastHeight) {
 		m_lastWidth   = io.DisplaySize.x;
 		m_lastHeight  = io.DisplaySize.y;
 		m_needsRedraw = true;
 	}
-	ImGui::SetNextWindowSize(ImVec2(io.DisplaySize.x, io.DisplaySize.y - (status_height + menu_height)));
+	if (!m_showInfoPane) {
+		m_board_surface = ImVec2(io.DisplaySize.x, io.DisplaySize.y - (m_status_height + m_menu_height));
+	} else {
+		m_board_surface = ImVec2(io.DisplaySize.x - (io.DisplaySize.x / 4), io.DisplaySize.y - (m_status_height + m_menu_height));
+	}
+
+	ImGui::SetNextWindowSize(m_board_surface);
+
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
 	ImGui::PushStyleColor(ImGuiCol_WindowBg, ImColor(m_colors.backgroundColor));
 
@@ -2158,6 +2187,9 @@ void BoardView::HandleInput() {
 				m_wantsQuit = true;
 			}
 
+		} else if (ImGui::IsKeyPressed(SDLK_i)) {
+			m_showInfoPane = !m_showInfoPane;
+
 		} else if (ImGui::IsKeyPressed(SDLK_l)) {
 			// Show Net List
 			m_showNetList = m_showNetList ? false : true;
@@ -2217,6 +2249,9 @@ void BoardView::ShowPartList(bool *p_open) {
 
 void BoardView::RenderOverlay() {
 
+	if (m_showInfoPane) {
+		ShowInfoPane();
+	}
 	// Listing of Net elements
 	if (m_showNetList) {
 		ShowNetList(&m_showNetList);
@@ -3540,7 +3575,8 @@ int qsort_netstrings(const void *a, const void *b) {
   *
   */
 void BoardView::CenterView(void) {
-	ImVec2 view = ImGui::GetIO().DisplaySize;
+	// ImVec2 view = ImGui::GetIO().DisplaySize;
+	ImVec2 view = m_board_surface;
 
 	float dx = 1.1f * (m_boardWidth);
 	float dy = 1.1f * (m_boardHeight);
@@ -3570,14 +3606,16 @@ void BoardView::SetFile(BRDFile *file) {
 		if (pa.y > max_y) max_y = pa.y;
 	}
 
+	// ImVec2 view = ImGui::GetIO().DisplaySize;
+	ImVec2 view = m_board_surface;
+
 	m_mx = (float)(min_x + max_x) / 2.0f;
 	m_my = (float)(min_y + max_y) / 2.0f;
 
-	ImVec2 view = ImGui::GetIO().DisplaySize;
-	float dx    = 1.1f * (max_x - min_x);
-	float dy    = 1.1f * (max_y - min_y);
-	float sx    = dx > 0 ? view.x / dx : 1.0f;
-	float sy    = dy > 0 ? view.y / dy : 1.0f;
+	float dx = 1.1f * (max_x - min_x);
+	float dy = 1.1f * (max_y - min_y);
+	float sx = dx > 0 ? view.x / dx : 1.0f;
+	float sy = dy > 0 ? view.y / dy : 1.0f;
 
 	m_scale       = sx < sy ? sx : sy;
 	m_boardWidth  = max_x - min_x;
@@ -3710,7 +3748,8 @@ void BoardView::Mirror(void) {
 }
 
 void BoardView::SetTarget(float x, float y) {
-	ImVec2 view  = ImGui::GetIO().DisplaySize;
+	// ImVec2 view  = ImGui::GetIO().DisplaySize;
+	ImVec2 view  = m_board_surface;
 	ImVec2 coord = ScreenToCoord(view.x / 2.0f, view.y / 2.0f);
 	m_dx += coord.x - x;
 	m_dy += coord.y - y;
@@ -3727,7 +3766,8 @@ inline bool BoardView::ComponentIsVisible(const Component *part) {
 }
 
 inline bool BoardView::IsVisibleScreen(float x, float y, float radius, const ImGuiIO &io) {
-	if (x < -radius || y < -radius || x - radius > io.DisplaySize.x || y - radius > io.DisplaySize.y) return false;
+	// if (x < -radius || y < -radius || x - radius > io.DisplaySize.x || y - radius > io.DisplaySize.y) return false;
+	if (x < -radius || y < -radius || x - radius > m_board_surface.x || y - radius > m_board_surface.y) return false;
 	return true;
 }
 
@@ -3856,7 +3896,8 @@ void BoardView::SetLastFileOpenName(const std::string &name) {
 
 void BoardView::FlipBoard(int mode) {
 	ImVec2 mpos = ImGui::GetMousePos();
-	ImVec2 view = ImGui::GetIO().DisplaySize;
+	// ImVec2 view = ImGui::GetIO().DisplaySize;
+	ImVec2 view = m_board_surface;
 	ImVec2 bpos = ScreenToCoord(mpos.x, mpos.y);
 	auto io     = ImGui::GetIO();
 
