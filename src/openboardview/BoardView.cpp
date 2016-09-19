@@ -1048,9 +1048,23 @@ void BoardView::ShowInfoPane(void) {
 
 		for (auto part : m_partHighlighted) {
 
-			ImGui::Text("Part: %s", part->name.c_str());
-			ImGui::Text("Pin count: %d", part->pins.size());
-			if (part->mfgcode.size()) ImGui::TextWrapped("Package Info: %s", part->mfgcode.c_str());
+			ImGui::Columns(2);
+			ImGui::PushItemWidth(-1);
+			ImGui::Text("Part");
+			ImGui::Text("Pin count");
+			if (part->mfgcode.size()) {
+				ImGui::PushItemWidth(-1);
+				ImGui::TextWrapped("Package Info");
+			}
+			ImGui::PopItemWidth();
+
+			ImGui::NextColumn();
+
+			ImGui::Text("%s", part->name.c_str());
+			ImGui::Text("%d", part->pins.size());
+			if (part->mfgcode.size()) ImGui::TextWrapped("%s", part->mfgcode.c_str());
+
+			ImGui::Columns(1);
 
 			/*
 			 * Generate the pin# and net table
@@ -1065,6 +1079,9 @@ void BoardView::ShowInfoPane(void) {
 					m_pinSelected = pin;
 					m_needsRedraw = true;
 				}
+				ImGui::PushStyleColor(ImGuiCol_Border, ImColor(0xffeeeeee));
+				ImGui::Separator();
+				ImGui::PopStyleColor();
 			}
 			ImGui::ListBoxFooter();
 			ImGui::PopItemWidth();
@@ -3241,7 +3258,7 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 				ImVec2 text_size    = ImGui::CalcTextSize(text.c_str());
 				ImVec2 mfgcode_size = ImGui::CalcTextSize(mcode.c_str());
 
-				if (mfgcode_size.x > text_size.x) text_size.x = mfgcode_size.x;
+				if ((!showInfoPanel) && (mfgcode_size.x > text_size.x)) text_size.x = mfgcode_size.x;
 
 				float top_y = a.y;
 
@@ -3260,7 +3277,7 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 				                    m_colors.partTextBackgroundColor,
 				                    0.0f);
 				draw->AddText(pos, m_colors.partTextColor, text.c_str());
-				if (mcode.size()) {
+				if ((!showInfoPanel) && (mcode.size())) {
 					//	pos.y += text_size.y;
 					pos.y += text_size.y + DPIF(2.0f);
 					draw->AddRectFilled(ImVec2(pos.x - DPIF(2.0f), pos.y - DPIF(2.0f)),
