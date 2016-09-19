@@ -104,7 +104,7 @@ enum DrawChannel {
 };
 
 enum FlipModes { flipModeVP = 0, flipModeMP = 1, NUM_FLIP_MODES };
-enum SearchModes { searchModeAny, searchModePrefix, searchModeWhole };
+enum SearchModes { searchModeSub, searchModePrefix, searchModeWhole };
 
 struct BoardView {
 	BRDFile *m_file;
@@ -168,6 +168,9 @@ struct BoardView {
 	bool AnyItemVisible(void);
 	void ThemeSetStyle(const char *name);
 
+	bool m_centerZoomNets = true;
+	void CenterZoomNet(string netname);
+
 	bool m_centerZoomSearchResults = true;
 	void CenterZoomSearchResults(void);
 	int EPCCheck(void);
@@ -206,11 +209,11 @@ struct BoardView {
 	char m_search2[128];
 	char m_search3[128];
 	char m_netFilter[128];
-	int m_searchMode = searchModeAny;
+	int m_searchMode = searchModeSub;
 	std::string m_lastFileOpenName;
 	float m_dx; // display top-right coordinate?
 	float m_dy;
-	float m_mx; // board *maxiumum* size? scaled relative to m_boardwidth/height
+	float m_mx; // board MID POINTS
 	float m_my;
 	float m_scale = 1.0f;
 	float m_lastWidth; // previously checked on-screen window size; use to redraw

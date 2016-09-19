@@ -1043,10 +1043,23 @@ void BoardView::ShowInfoPane(void) {
 	             ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse |
 	                 ImGuiWindowFlags_ShowBorders | ImGuiWindowFlags_NoSavedSettings);
 
+	ImGui::Text("Board Statistics");
+	if (m_board) {
+		ImGui::Text("Pins: %ld", m_board->Pins().size());
+		ImGui::Text("Parts:  %ld", m_board->Components().size());
+		ImGui::Text("Parts:  %ld", m_board->Nets().size());
+		ImGui::Text("Size: %0.2f x %0.2f\"", m_boardWidth / 1000.0f, m_boardHeight / 1000.0f);
+		ImGui::Separator();
+		ImGui::Checkbox("Zoom on selected net", &m_centerZoomNets);
+	} else {
+		ImGui::Text("No board currently loaded.");
+	}
+
 	if (m_partHighlighted.size()) {
 
 		for (auto part : m_partHighlighted) {
 
+			ImGui::Text(" ");
 			ImGui::Columns(2);
 			ImGui::PushItemWidth(-1);
 			ImGui::Text("Part");
@@ -1076,6 +1089,7 @@ void BoardView::ShowInfoPane(void) {
 				snprintf(ss, sizeof(ss), "%4s  %s", pin->number.c_str(), pin->net->name.c_str());
 				if (ImGui::Selectable(ss, false)) {
 					m_pinSelected = pin;
+					CenterZoomNet(pin->net->name);
 					m_needsRedraw = true;
 					//					m_listPartsOnPinNet = true;
 				}
@@ -1085,7 +1099,6 @@ void BoardView::ShowInfoPane(void) {
 			}
 			ImGui::ListBoxFooter();
 			ImGui::PopItemWidth();
-			ImGui::Separator();
 
 		} // for each part in the list
 	}
@@ -1436,8 +1449,9 @@ void BoardView::SearchComponent(void) {
 		} // exit button
 
 		ImGui::SameLine();
-		ImGui::Dummy(ImVec2(DPI(200), 1));
-		ImGui::SameLine();
+		//		ImGui::Dummy(ImVec2(DPI(200), 1));
+		//		ImGui::SameLine();
+		ImGui::PushItemWidth(-1);
 		ImGui::Text("ENTER: Search, ESC: Exit, TAB: next field");
 
 		ImGui::Separator();
@@ -1448,15 +1462,17 @@ void BoardView::SearchComponent(void) {
 
 		{
 			ImGui::SameLine();
-			ImGui::PushItemWidth(-1);
-			if (ImGui::RadioButton("Any", &m_searchMode, searchModeAny)) {
-				m_searchMode = searchModeAny;
+			ImGui::Text(" Search mode: ");
+			ImGui::SameLine();
+			if (ImGui::RadioButton("Substring", &m_searchMode, searchModeSub)) {
+				m_searchMode = searchModeSub;
 			}
 			ImGui::SameLine();
 			if (ImGui::RadioButton("Prefix", &m_searchMode, searchModePrefix)) {
 				m_searchMode = searchModePrefix;
 			}
 			ImGui::SameLine();
+			ImGui::PushItemWidth(-1);
 			if (ImGui::RadioButton("Whole", &m_searchMode, searchModeWhole)) {
 				m_searchMode = searchModeWhole;
 			}
@@ -2330,6 +2346,45 @@ void BoardView::RenderOverlay() {
  *
  *
  */
+
+void BoardView::CenterZoomNet(string netname) {
+	ImVec2 view = m_board_surface;
+	ImVec2 min, max;
+	int i = 0;
+
+	if (!m_centerZoomNets) return;
+
+	min.x = min.y = FLT_MAX;
+	max.x = max.y = FLT_MIN;
+
+	for (auto pin : m_board->Pins()) {
+		auto pp = pin.get();
+		if (pp->net->name == netname) {
+			auto p                 = pp->position;
+			if (p.x < min.x) min.x = p.x;
+			if (p.y < min.y) min.y = p.y;
+			if (p.x > max.x) max.x = p.x;
+			if (p.y > max.y) max.y = p.y;
+		}
+	}
+
+	// Bounds check!
+	if ((min.x == FLT_MAX) || (min.y == FLT_MAX) || (max.x == FLT_MIN) || (max.y == FLT_MIN)) return;
+
+	if (debug) fprintf(stderr, "CenterzoomNet: bbox[%d]: %0.1f %0.1f - %0.1f %0.1f\n", i, min.x, min.y, max.x, max.y);
+
+	float dx = 1.6f * (max.x - min.x);
+	float dy = 1.6f * (max.y - min.y);
+	float sx = dx > 0 ? view.x / dx : 1.0f;
+	float sy = dy > 0 ? view.y / dy : 1.0f;
+
+	//  m_rotation = 0;
+	m_scale = sx < sy ? sx : sy;
+	m_dx    = (max.x - min.x) / 2 + min.x;
+	m_dy    = (max.y - min.y) / 2 + min.y;
+	SetTarget(m_dx, m_dy);
+	m_needsRedraw = true;
+}
 
 void BoardView::CenterZoomSearchResults(void) {
 	ImVec2 view = ImGui::GetIO().DisplaySize;
@@ -3889,7 +3944,7 @@ bool BoardView::strstrModeSearch(const char *haystack, const char *needle) {
 
 	sr = strcasestr(haystack, needle);
 	if (sr) {
-		if ((m_searchMode == searchModeAny) || ((m_searchMode == searchModePrefix) && (sr == haystack)) ||
+		if ((m_searchMode == searchModeSub) || ((m_searchMode == searchModePrefix) && (sr == haystack)) ||
 		    ((m_searchMode == searchModeWhole) && (sr == haystack) && (nl == hl))) {
 			return true;
 		}
