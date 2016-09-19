@@ -258,6 +258,7 @@ int BoardView::ConfigParse(void) {
 
 	showFPS                   = obvconfig.ParseBool("showFPS", false);
 	showInfoPanel             = obvconfig.ParseBool("showInfoPanel", true);
+	m_info_surface.x          = obvconfig.ParseInt("infoPanelWidth", 350);
 	showPins                  = obvconfig.ParseBool("showPins", true);
 	showNetWeb                = obvconfig.ParseBool("showNetWeb", true);
 	showAnnotations           = obvconfig.ParseBool("showAnnotations", true);
@@ -1021,13 +1022,15 @@ void BoardView::HelpControls(void) {
 
 void BoardView::ShowInfoPane(void) {
 	ImGuiIO &io = ImGui::GetIO();
-	ImVec2 view = io.DisplaySize;
-	double width, height;
+	ImVec2 ds   = io.DisplaySize;
 
-	width                        = view.x / 4;
-	if (width < DPIF(100)) width = DPIF(100);
+	if (m_info_surface.x < DPIF(100)) {
+		//	fprintf(stderr,"Too small (%f), set to (%f)\n", width, DPIF(100));
+		m_info_surface.x  = DPIF(100) + 1;
+		m_board_surface.x = ds.x - m_info_surface.x;
+	}
 
-	height = view.y - m_status_height - m_menu_height;
+	m_info_surface.y = m_board_surface.y;
 
 	/*
 	 * Originally the dialog was to follow the cursor but it proved to be an overkill
@@ -1036,12 +1039,37 @@ void BoardView::ShowInfoPane(void) {
 	 *
 	 * Now it's kept at a fixed point.
 	 */
-	ImGui::SetNextWindowPos(ImVec2(view.x - width, m_menu_height));
-	ImGui::SetNextWindowSize(ImVec2(width, height));
-	ImGui::Begin("Info Pane",
+	ImGui::SetNextWindowPos(ImVec2(ds.x - m_info_surface.x, m_menu_height));
+	ImGui::SetNextWindowSize(m_info_surface);
+	ImGui::Begin("Info Panel",
 	             NULL,
 	             ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse |
 	                 ImGuiWindowFlags_ShowBorders | ImGuiWindowFlags_NoSavedSettings);
+
+	if (ImGui::IsMouseDragging(0)) {
+		if ((m_dragging_token == 0) && (io.MouseClickedPos[0].x > m_board_surface.x)) m_dragging_token = 2; // own it.
+		if (m_dragging_token == 2) {
+			ImVec2 delta = ImGui::GetMouseDragDelta();
+			if ((abs(delta.x) > 500) || (abs(delta.y) > 500)) {
+				delta.x = 0;
+				delta.y = 0;
+			} // If the delta values are crazy just drop them (happens when panning
+			// off screen). 500 arbritary chosen
+			ImGui::ResetMouseDragDelta();
+			m_board_surface.x += delta.x;
+			m_info_surface.x = ds.x - m_board_surface.x;
+			if (m_board_surface.x < ds.x * 0.66) {
+				m_board_surface.x = ds.x * 0.66;
+				m_info_surface.x  = ds.x - m_board_surface.x;
+			}
+			if (delta.x > 0) m_needsRedraw = true;
+		}
+	} else {
+		if (m_dragging_token == 2) {
+			obvconfig.WriteInt("infoPanelWidth", m_info_surface.x);
+		}
+		m_dragging_token = 0;
+	}
 
 	ImGui::Text("Board Statistics");
 	if (m_board) {
@@ -1939,7 +1967,7 @@ void BoardView::Update() {
 	if (!showInfoPanel) {
 		m_board_surface = ImVec2(io.DisplaySize.x, io.DisplaySize.y - (m_status_height + m_menu_height));
 	} else {
-		m_board_surface = ImVec2(io.DisplaySize.x - (io.DisplaySize.x / 4), io.DisplaySize.y - (m_status_height + m_menu_height));
+		m_board_surface = ImVec2(io.DisplaySize.x - m_info_surface.x, io.DisplaySize.y - (m_status_height + m_menu_height));
 	}
 
 	ImGui::SetNextWindowSize(m_board_surface);
@@ -2041,20 +2069,25 @@ void BoardView::HandleInput() {
 
 	if (ImGui::IsWindowHovered()) {
 
-		if (ImGui::IsMouseDragging()) {
-			ImVec2 delta = ImGui::GetMouseDragDelta();
-			if ((abs(delta.x) > 500) || (abs(delta.y) > 500)) {
-				delta.x = 0;
-				delta.y = 0;
-			} // If the delta values are crazy just drop them (happens when panning
-			// off screen). 500 arbritary chosen
-			ImGui::ResetMouseDragDelta();
-			ImVec2 td = ScreenToCoord(delta.x, delta.y, 0);
-			m_dx += td.x;
-			m_dy += td.y;
-			m_draggingLastFrame = true;
-			m_needsRedraw       = true;
+		if (ImGui::IsMouseDragging(0)) {
+			if ((m_dragging_token == 0) && (io.MouseClickedPos[0].x < m_board_surface.x)) m_dragging_token = 1; // own it.
+			if (m_dragging_token == 1) {
+				//		   if ((io.MouseClickedPos[0].x < m_info_surface.x)) {
+				ImVec2 delta = ImGui::GetMouseDragDelta();
+				if ((abs(delta.x) > 500) || (abs(delta.y) > 500)) {
+					delta.x = 0;
+					delta.y = 0;
+				} // If the delta values are crazy just drop them (happens when panning
+				// off screen). 500 arbritary chosen
+				ImGui::ResetMouseDragDelta();
+				ImVec2 td = ScreenToCoord(delta.x, delta.y, 0);
+				m_dx += td.x;
+				m_dy += td.y;
+				m_draggingLastFrame = true;
+				m_needsRedraw       = true;
+			}
 		} else {
+			m_dragging_token = 0;
 
 			if (m_lastFileOpenWasInvalid == false) {
 				// Conext menu

@@ -243,7 +243,7 @@ int main(int argc, char **argv) {
 	// Preset some workable sizes
 	app.m_board_surface.x = g.width;
 	app.m_board_surface.y = g.height;
-	if (app.showInfoPanel) app.m_board_surface.x -= app.m_board_surface.x / 4;
+	if (app.showInfoPanel) app.m_board_surface.x -= app.m_info_surface.x;
 
 	if (g.renderer == Renderer::DEFAULT) {
 		switch (app.obvconfig.ParseInt("renderer", 2)) {

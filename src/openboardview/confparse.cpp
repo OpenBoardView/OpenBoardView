@@ -22,7 +22,7 @@ char default_conf[] =
 #  3 = ???\r\n\
 renderer=1\r\n\
 \r\n\
-windowX=1100\r\n\
+windowX=1200\r\n\
 windowY=700\r\n\
 \r\n\
 # Reference DPI is 100, increase if you have a higher density (ie, small 4K or 2K screen)\r\n\
@@ -31,6 +31,7 @@ dpi=100\r\n\
 #fontPath=FiraSans-Medium.ttf\r\n\
 fontSize=20\r\n\
 showInfoPanel = true\r\n\
+infoPanelWidth = 300\r\n\
 showPins = true\r\n\
 showNetWeb = true\r\n\
 pinSelectMasks = true\r\n\

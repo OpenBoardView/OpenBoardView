@@ -226,6 +226,8 @@ struct BoardView {
 	float m_menu_height;
 	float m_status_height;
 	ImVec2 m_board_surface;
+	ImVec2 m_info_surface;
+	int m_dragging_token = 0; // 1 = board window, 2 = side pane
 
 	ColorScheme m_colors;
 
