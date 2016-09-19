@@ -1043,11 +1043,21 @@ void BoardView::ShowInfoPane(void) {
 	ImGui::SetNextWindowSize(m_info_surface);
 	ImGui::Begin("Info Panel",
 	             NULL,
-	             ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse |
+	             ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize |
 	                 ImGuiWindowFlags_ShowBorders | ImGuiWindowFlags_NoSavedSettings);
 
+	if ((m_dragging_token == 0) && (io.MousePos.x > m_board_surface.x) && (io.MousePos.x < (m_board_surface.x + DPIF(12.0f)))) {
+		ImDrawList *draw = ImGui::GetWindowDrawList();
+		draw->AddRectFilled(ImVec2(m_board_surface.x, m_menu_height),
+		                    ImVec2(m_board_surface.x + DPIF(12.0f), m_board_surface.y + m_menu_height),
+		                    ImColor(0x88888888));
+		//			DrawHex( draw, io.MousePos, DPIF(10.0f), ImColor(0xFF0000FF) );
+	}
+
 	if (ImGui::IsMouseDragging(0)) {
-		if ((m_dragging_token == 0) && (io.MouseClickedPos[0].x > m_board_surface.x)) m_dragging_token = 2; // own it.
+		if ((m_dragging_token == 0) && (io.MouseClickedPos[0].x > m_board_surface.x) &&
+		    (io.MouseClickedPos[0].x < (m_board_surface.x + DPIF(20.0f))))
+			m_dragging_token = 2; // own it.
 		if (m_dragging_token == 2) {
 			ImVec2 delta = ImGui::GetMouseDragDelta();
 			if ((abs(delta.x) > 500) || (abs(delta.y) > 500)) {
