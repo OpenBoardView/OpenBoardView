@@ -104,6 +104,7 @@ enum DrawChannel {
 };
 
 enum FlipModes { flipModeVP = 0, flipModeMP = 1, NUM_FLIP_MODES };
+enum SearchModes { searchModeAny, searchModePrefix, searchModeWhole };
 
 struct BoardView {
 	BRDFile *m_file;
@@ -205,6 +206,7 @@ struct BoardView {
 	char m_search2[128];
 	char m_search3[128];
 	char m_netFilter[128];
+	int m_searchMode = searchModeAny;
 	std::string m_lastFileOpenName;
 	float m_dx; // display top-right coordinate?
 	float m_dy;
@@ -291,6 +293,7 @@ struct BoardView {
 	// ImGuiIO screen rect.
 	// bool IsVisibleScreen(float x, float y, float radius = 0.0f);
 
+	bool strstrModeSearch(const char *haystack, const char *needle);
 	bool PartIsHighlighted(const Component &component);
 	void FindNet(const char *net);
 	void FindNetNoClear(const char *name);
