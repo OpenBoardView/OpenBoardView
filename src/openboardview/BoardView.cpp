@@ -1081,11 +1081,11 @@ void BoardView::ShowInfoPane(void) {
 		m_dragging_token = 0;
 	}
 
-	ImGui::Text("Board Statistics");
 	if (m_board) {
+		RA("Statistics", m_info_surface.x - DPIF(20.0f));
 		ImGui::Text("Pins: %ld", m_board->Pins().size());
-		ImGui::Text("Parts:  %ld", m_board->Components().size());
-		ImGui::Text("Parts:  %ld", m_board->Nets().size());
+		ImGui::Text("Parts: %ld", m_board->Components().size());
+		ImGui::Text("Parts: %ld", m_board->Nets().size());
 		ImGui::Text("Size: %0.2f x %0.2f\"", m_boardWidth / 1000.0f, m_boardHeight / 1000.0f);
 		ImGui::Separator();
 		ImGui::Checkbox("Zoom on selected net", &m_centerZoomNets);
@@ -1121,7 +1121,11 @@ void BoardView::ShowInfoPane(void) {
 			 */
 			ImGui::PushItemWidth(-1);
 			std::string str = std::string("##") + part->name;
-			ImGui::ListBoxHeader(str.c_str()); //, ImVec2(m_board_surface.x/3 -5, m_board_surface.y/2));
+			ImVec2 listSize;
+			int pc          = part->pins.size();
+			if (pc > 20) pc = 20;
+			listSize        = ImVec2(-1, pc * ImGui::GetFontSize() * 1.45);
+			ImGui::ListBoxHeader(str.c_str(), listSize); //, ImVec2(m_board_surface.x/3 -5, m_board_surface.y/2));
 			for (auto pin : part->pins) {
 				char ss[1024];
 				snprintf(ss, sizeof(ss), "%4s  %s", pin->number.c_str(), pin->net->name.c_str());
@@ -2416,8 +2420,8 @@ void BoardView::CenterZoomNet(string netname) {
 
 	if (debug) fprintf(stderr, "CenterzoomNet: bbox[%d]: %0.1f %0.1f - %0.1f %0.1f\n", i, min.x, min.y, max.x, max.y);
 
-	float dx = 1.6f * (max.x - min.x);
-	float dy = 1.6f * (max.y - min.y);
+	float dx = 2.0f * (max.x - min.x);
+	float dy = 2.0f * (max.y - min.y);
 	float sx = dx > 0 ? view.x / dx : 1.0f;
 	float sy = dy > 0 ? view.y / dy : 1.0f;
 

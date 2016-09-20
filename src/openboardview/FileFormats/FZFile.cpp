@@ -62,6 +62,7 @@ void FZFile::decode(char *source, size_t size) {
 		// buf[pos] xor A -> is our resulting byte
 		currentByte = source[pos];
 		source[pos] = ((uint8_t)(currentByte ^ (A & 0xFF)));
+		// fprintf(stdout,"%c",source[pos]);
 
 		// pushing in a stream of buf[pos] chars 'from the right'
 		// and shift whole array 8 bits to the left
@@ -194,7 +195,17 @@ FZFile::FZFile(std::vector<char> &buf, uint32_t *fzkey) {
 	char *arena_end = file_buf + file_buf_size - 1;
 	*arena_end      = 0;
 
-	FZFile::decode(file_buf, buffer_size); // first decrypt buffer
+	/*
+	 * Some non-encrypted, but zip-encoded files are popping up now and then.
+	 *
+	 * Thanks to piernov for noticing the starting byte sequence
+	 *
+	 *
+	 */
+	char rawzip_sig[] = {0x42, 0x78, 0x05, 0x00};
+	if (memcmp(file_buf, rawzip_sig, 4)) {
+		FZFile::decode(file_buf, buffer_size); // first decrypt buffer
+	}
 	size_t content_size = 0;
 	size_t descr_size   = 0;
 	char *descr;
