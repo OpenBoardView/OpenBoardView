@@ -1703,6 +1703,7 @@ void BoardView::Update() {
 
 			if (ImGui::MenuItem("Show Info Panel", "i")) {
 				showInfoPanel ^= 1;
+				obvconfig.WriteBool("showInfoPanel", showInfoPanel ? true : false);
 				m_needsRedraw = true;
 			}
 
@@ -2313,6 +2314,7 @@ void BoardView::HandleInput() {
 
 		} else if (ImGui::IsKeyPressed(SDLK_i)) {
 			showInfoPanel = !showInfoPanel;
+			obvconfig.WriteBool("showInfoPanel", showInfoPanel ? true : false);
 
 		} else if (ImGui::IsKeyPressed(SDLK_l)) {
 			// Show Net List

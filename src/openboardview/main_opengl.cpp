@@ -240,11 +240,6 @@ int main(int argc, char **argv) {
 	if (g.width == 0) g.width   = app.obvconfig.ParseInt("windowX", 1100);
 	if (g.height == 0) g.height = app.obvconfig.ParseInt("windowY", 700);
 
-	// Preset some workable sizes
-	app.m_board_surface.x = g.width;
-	app.m_board_surface.y = g.height;
-	if (app.showInfoPanel) app.m_board_surface.x -= app.m_info_surface.x;
-
 	if (g.renderer == Renderer::DEFAULT) {
 		switch (app.obvconfig.ParseInt("renderer", 2)) {
 			case 1: g.renderer = Renderer::OPENGL1; break;
@@ -364,6 +359,11 @@ int main(int argc, char **argv) {
 
 	// Now that the configuration file is loaded in to BoardView, parse its settings.
 	app.ConfigParse();
+
+	// Preset some workable sizes
+	app.m_board_surface.x = g.width;
+	app.m_board_surface.y = g.height;
+	if (app.showInfoPanel) app.m_board_surface.x -= app.m_info_surface.x;
 
 	if (g.font_size == 0.0f) g.font_size = app.obvconfig.ParseDouble("fontSize", 20.0f);
 	g.font_size                          = (g.font_size * app.dpi) / 100;
