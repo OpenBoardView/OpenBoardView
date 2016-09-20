@@ -200,16 +200,25 @@ FZFile::FZFile(std::vector<char> &buf, uint32_t *fzkey) {
 	 *
 	 * Thanks to piernov for noticing the starting byte sequence
 	 *
-	 *
+	 * Attempt to decode using the decode() call and subsequently
+	 * split the file to get the content.  If that fails, then try again
+	 * without decoding.
 	 */
-	char rawzip_sig[] = {0x42, 0x78, 0x05, 0x00};
-	if (memcmp(file_buf, rawzip_sig, 4)) {
-		FZFile::decode(file_buf, buffer_size); // first decrypt buffer
-	}
+
+	FZFile::decode(file_buf, buffer_size); // RC6 decryption
+
 	size_t content_size = 0;
 	size_t descr_size   = 0;
 	char *descr;
 	char *content = FZFile::split(file_buf, buffer_size, content_size, descr, descr_size); // then split it
+
+	if (!content) {
+		/*
+		 * Decryption must have failed, so try again now without decrypting the data
+		 */
+		std::copy(buf.begin(), buf.end(), file_buf);
+		content = FZFile::split(file_buf, buffer_size, content_size, descr, descr_size); // then split it
+	}
 
 	ENSURE(content != nullptr);
 	ENSURE(content_size > 0);
