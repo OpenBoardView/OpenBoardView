@@ -1096,6 +1096,7 @@ void BoardView::ShowInfoPane(void) {
 	}
 
 	if (m_partHighlighted.size()) {
+		ImGui::Separator();
 
 		for (auto part : m_partHighlighted) {
 
