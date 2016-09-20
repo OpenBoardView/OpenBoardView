@@ -1087,7 +1087,7 @@ void BoardView::ShowInfoPane(void) {
 		RA("Statistics", m_info_surface.x - DPIF(20.0f));
 		ImGui::Text("Pins: %ld", m_board->Pins().size());
 		ImGui::Text("Parts: %ld", m_board->Components().size());
-		ImGui::Text("Parts: %ld", m_board->Nets().size());
+		ImGui::Text("Nets: %ld", m_board->Nets().size());
 		ImGui::Text("Size: %0.2f x %0.2f\"", m_boardWidth / 1000.0f, m_boardHeight / 1000.0f);
 		ImGui::Separator();
 		ImGui::Checkbox("Zoom on selected net", &m_centerZoomNets);
