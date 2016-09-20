@@ -205,20 +205,29 @@ FZFile::FZFile(std::vector<char> &buf, uint32_t *fzkey) {
 	 * without decoding.
 	 */
 
-	FZFile::decode(file_buf, buffer_size); // RC6 decryption
+	uint8_t sig[] = {0x78, 0x9C};
+	if (memcmp((file_buf + 4), sig, 2)) {
+
+		/*
+		 * Doesn't have the zlib signature, so decode it first.
+		 *
+		 * 1 in ~2^16 chance of a false hit.
+		 */
+		FZFile::decode(file_buf, buffer_size); // RC6 decryption
+	}
 
 	size_t content_size = 0;
 	size_t descr_size   = 0;
 	char *descr;
 	char *content = FZFile::split(file_buf, buffer_size, content_size, descr, descr_size); // then split it
 
-	if (!content) {
-		/*
-		 * Decryption must have failed, so try again now without decrypting the data
-		 */
-		std::copy(buf.begin(), buf.end(), file_buf);
-		content = FZFile::split(file_buf, buffer_size, content_size, descr, descr_size); // then split it
-	}
+	/*
+if (!content) {
+	 // Decryption must have failed, so try again now without decrypting the data
+	std::copy(buf.begin(), buf.end(), file_buf);
+	content = FZFile::split(file_buf, buffer_size, content_size, descr, descr_size); // then split it
+}
+*/
 
 	ENSURE(content != nullptr);
 	ENSURE(content_size > 0);
