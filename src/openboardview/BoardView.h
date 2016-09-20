@@ -215,9 +215,10 @@ struct BoardView {
 	float m_dy;
 	float m_mx; // board MID POINTS
 	float m_my;
-	float m_scale = 1.0f;
-	float m_lastWidth; // previously checked on-screen window size; use to redraw
-	                   // when window is resized?
+	float m_scale       = 1.0f;
+	float m_scale_floor = 1.0f; // scale which displays the entire board
+	float m_lastWidth;          // previously checked on-screen window size; use to redraw
+	                            // when window is resized?
 	float m_lastHeight;
 	int m_rotation; // set to 0 for original orientation [0-4]
 	int m_current_side;

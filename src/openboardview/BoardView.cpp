@@ -931,6 +931,7 @@ void BoardView::HelpControls(void) {
 		ImGui::Spacing();
 		ImGui::Spacing();
 
+		ImGui::Text("Toggle information panel");
 		ImGui::Text("Search for component/Net");
 		ImGui::Text("Display component list");
 		ImGui::Text("Display net list");
@@ -971,6 +972,7 @@ void BoardView::HelpControls(void) {
 		ImGui::Spacing();
 		ImGui::Spacing();
 
+		ImGui::Text("i");
 		ImGui::Text("CTRL-f, /");
 		ImGui::Text("k");
 		ImGui::Text("l");
@@ -2428,9 +2430,11 @@ void BoardView::CenterZoomNet(string netname) {
 	float sy = dy > 0 ? view.y / dy : 1.0f;
 
 	//  m_rotation = 0;
-	m_scale = sx < sy ? sx : sy;
-	m_dx    = (max.x - min.x) / 2 + min.x;
-	m_dy    = (max.y - min.y) / 2 + min.y;
+	m_scale                              = sx < sy ? sx : sy;
+	if (m_scale < m_scale_floor) m_scale = m_scale_floor;
+
+	m_dx = (max.x - min.x) / 2 + min.x;
+	m_dy = (max.y - min.y) / 2 + min.y;
 	SetTarget(m_dx, m_dy);
 	m_needsRedraw = true;
 }
@@ -2470,15 +2474,17 @@ void BoardView::CenterZoomSearchResults(void) {
 
 	if (debug) fprintf(stderr, "CenterzoomSearchResults: bbox[%d]: %0.1f %0.1f - %0.1f %0.1f\n", i, min.x, min.y, max.x, max.y);
 
-	float dx = 1.3f * (max.x - min.x);
-	float dy = 1.3f * (max.y - min.y);
+	float dx = 2.0f * (max.x - min.x);
+	float dy = 2.0f * (max.y - min.y);
 	float sx = dx > 0 ? view.x / dx : 1.0f;
 	float sy = dy > 0 ? view.y / dy : 1.0f;
 
 	//  m_rotation = 0;
-	m_scale = sx < sy ? sx : sy;
-	m_dx    = (max.x - min.x) / 2 + min.x;
-	m_dy    = (max.y - min.y) / 2 + min.y;
+	m_scale                              = sx < sy ? sx : sy;
+	if (m_scale < m_scale_floor) m_scale = m_scale_floor;
+
+	m_dx = (max.x - min.x) / 2 + min.x;
+	m_dy = (max.y - min.y) / 2 + min.y;
 	SetTarget(m_dx, m_dy);
 	m_needsRedraw = true;
 }
@@ -3749,7 +3755,7 @@ void BoardView::CenterView(void) {
 	float sy = dy > 0 ? view.y / dy : 1.0f;
 
 	//  m_rotation = 0;
-	m_scale = sx < sy ? sx : sy;
+	m_scale_floor = m_scale = sx < sy ? sx : sy;
 	SetTarget(m_mx, m_my);
 	m_needsRedraw = true;
 }
@@ -3782,9 +3788,9 @@ void BoardView::SetFile(BRDFile *file) {
 	float sx = dx > 0 ? view.x / dx : 1.0f;
 	float sy = dy > 0 ? view.y / dy : 1.0f;
 
-	m_scale       = sx < sy ? sx : sy;
-	m_boardWidth  = max_x - min_x;
-	m_boardHeight = max_y - min_y;
+	m_scale_floor = m_scale = sx < sy ? sx : sy;
+	m_boardWidth            = max_x - min_x;
+	m_boardHeight           = max_y - min_y;
 	SetTarget(m_mx, m_my);
 
 	m_pinHighlighted.reserve(m_board->Components().size());
