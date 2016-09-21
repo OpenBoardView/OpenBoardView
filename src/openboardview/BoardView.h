@@ -168,7 +168,8 @@ struct BoardView {
 	bool AnyItemVisible(void);
 	void ThemeSetStyle(const char *name);
 
-	bool m_centerZoomNets = true;
+	bool infoPanelCenterZoomNets   = true;
+	bool infoPanelSelectPartsOnNet = false;
 	void CenterZoomNet(string netname);
 
 	bool m_centerZoomSearchResults = true;

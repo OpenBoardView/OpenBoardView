@@ -205,8 +205,9 @@ FZFile::FZFile(std::vector<char> &buf, uint32_t *fzkey) {
 	 * without decoding.
 	 */
 
-	uint8_t sig[] = {0x78, 0x9C};
-	if (memcmp((file_buf + 4), sig, 2)) {
+	uint8_t s1 = file_buf[4];
+	uint8_t s2 = file_buf[5];
+	if (!((s1 == 0x78) && ((s2 == 0x9C) || (s2 == 0xDA)))) {
 
 		/*
 		 * Doesn't have the zlib signature, so decode it first.

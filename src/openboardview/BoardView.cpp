@@ -258,6 +258,9 @@ int BoardView::ConfigParse(void) {
 
 	showFPS                   = obvconfig.ParseBool("showFPS", false);
 	showInfoPanel             = obvconfig.ParseBool("showInfoPanel", true);
+	infoPanelSelectPartsOnNet = obvconfig.ParseBool("infoPanelSelectPartsOnNet", true);
+	infoPanelCenterZoomNets   = obvconfig.ParseBool("infoPanelCenterZoomNets", true);
+
 	m_info_surface.x          = obvconfig.ParseInt("infoPanelWidth", 350);
 	showPins                  = obvconfig.ParseBool("showPins", true);
 	showNetWeb                = obvconfig.ParseBool("showNetWeb", true);
@@ -459,8 +462,8 @@ int BoardView::LoadFile(const std::string &filename) {
 				 * Set pins to a known lower size, they get resized
 				 * in DrawParts() when the component is analysed
 				 */
-				for (auto &pin : m_board->Pins()) {
-					auto p      = pin.get();
+				for (auto &p : m_board->Pins()) {
+					//					auto p      = pin.get();
 					p->diameter = 7;
 				}
 
@@ -1090,34 +1093,35 @@ void BoardView::ShowInfoPane(void) {
 		ImGui::Text("Nets: %ld", m_board->Nets().size());
 		ImGui::Text("Size: %0.2f x %0.2f\"", m_boardWidth / 1000.0f, m_boardHeight / 1000.0f);
 		ImGui::Separator();
-		ImGui::Checkbox("Zoom on selected net", &m_centerZoomNets);
+		if (ImGui::Checkbox("Zoom on selected net", &infoPanelCenterZoomNets)) {
+			obvconfig.WriteBool("infoPanelCenterZoomNets", infoPanelCenterZoomNets);
+		}
+		if (ImGui::Checkbox("Select all parts on net", &infoPanelSelectPartsOnNet)) {
+			obvconfig.WriteBool("infoPanelSelectPartsOnNet", infoPanelSelectPartsOnNet);
+		}
 	} else {
 		ImGui::Text("No board currently loaded.");
 	}
 
 	if (m_partHighlighted.size()) {
 		ImGui::Separator();
+		ImGui::Text("%d parts selected", m_partHighlighted.size());
 
 		for (auto part : m_partHighlighted) {
 
 			ImGui::Text(" ");
-			ImGui::Columns(2);
-			ImGui::PushItemWidth(-1);
-			ImGui::Text("Part");
-			ImGui::Text("Pin count");
-			if (part->mfgcode.size()) {
-				ImGui::PushItemWidth(-1);
-				ImGui::TextWrapped("Package Info");
+
+			if (ImGui::SmallButton(part->name.c_str())) {
+				if (!ComponentIsVisible(part)) FlipBoard();
+				if (part->centerpoint.x && part->centerpoint.y)
+					SetTarget(part->centerpoint.x, part->centerpoint.y);
+				else
+					SetTarget(part->pins[0]->position.x, part->pins[0]->position.y);
+				m_needsRedraw = 1;
 			}
-			ImGui::PopItemWidth();
-
-			ImGui::NextColumn();
-
-			ImGui::Text("%s", part->name.c_str());
-			ImGui::Text("%ld", part->pins.size());
+			ImGui::SameLine();
+			ImGui::Text("%ld Pin(s)", part->pins.size());
 			if (part->mfgcode.size()) ImGui::TextWrapped("%s", part->mfgcode.c_str());
-
-			ImGui::Columns(1);
 
 			/*
 			 * Generate the pin# and net table
@@ -1127,13 +1131,15 @@ void BoardView::ShowInfoPane(void) {
 			ImVec2 listSize;
 			int pc          = part->pins.size();
 			if (pc > 20) pc = 20;
-			listSize        = ImVec2(-1, pc * ImGui::GetFontSize() * 1.45);
+			listSize        = ImVec2(0.80 * m_info_surface.x, pc * ImGui::GetFontSize() * 1.45);
 			ImGui::ListBoxHeader(str.c_str(), listSize); //, ImVec2(m_board_surface.x/3 -5, m_board_surface.y/2));
 			for (auto pin : part->pins) {
 				char ss[1024];
 				snprintf(ss, sizeof(ss), "%4s  %s", pin->number.c_str(), pin->net->name.c_str());
 				if (ImGui::Selectable(ss, false)) {
 					m_pinSelected = pin;
+					m_partHighlighted.clear();
+					m_partHighlighted.push_back(pin->component);
 					CenterZoomNet(pin->net->name);
 					m_needsRedraw = true;
 					//					m_listPartsOnPinNet = true;
@@ -1146,6 +1152,8 @@ void BoardView::ShowInfoPane(void) {
 			ImGui::PopItemWidth();
 
 		} // for each part in the list
+		ImGui::Separator();
+		ImGui::Text("End of list");
 	}
 
 	ImGui::End();
@@ -1233,10 +1241,10 @@ void BoardView::ContextMenu(void) {
 				 */
 
 				for (auto &part : m_board->Components()) {
-					int hit     = 0;
-					auto p_part = part.get();
+					int hit = 0;
+					//					auto p_part = part.get();
 
-					if (!ComponentIsVisible(p_part)) continue;
+					if (!ComponentIsVisible(part.get())) continue;
 
 					// Work out if the point is inside the hull
 					{
@@ -1244,7 +1252,7 @@ void BoardView::ContextMenu(void) {
 						outline_pt *poly;
 
 						n    = 4;
-						poly = p_part->outline;
+						poly = part->outline;
 
 						for (i = 0, j = n - 1; i < n; j = i++) {
 							if (((poly[i].y > pos.y) != (poly[j].y > pos.y)) &&
@@ -1253,7 +1261,7 @@ void BoardView::ContextMenu(void) {
 						}
 					} // hull test
 					if (hit) {
-						partn = p_part->name;
+						partn = part->name;
 
 						ImGui::SameLine();
 					}
@@ -2161,10 +2169,10 @@ void BoardView::HandleInput() {
 						bool any_hits = false;
 
 						for (auto part : m_board->Components()) {
-							int hit     = 0;
-							auto p_part = part.get();
+							int hit = 0;
+							//							auto p_part = part.get();
 
-							if (!ComponentIsVisible(p_part)) continue;
+							if (!ComponentIsVisible(part.get())) continue;
 
 							// Work out if the point is inside the hull
 							{
@@ -2172,7 +2180,7 @@ void BoardView::HandleInput() {
 								outline_pt *poly;
 
 								n    = 4;
-								poly = p_part->outline;
+								poly = part->outline;
 
 								for (i = 0, j = n - 1; i < n; j = i++) {
 									if (((poly[i].y > pos.y) != (poly[j].y > pos.y)) &&
@@ -2193,21 +2201,21 @@ void BoardView::HandleInput() {
 								 */
 								if (io.KeyCtrl) {
 									if (!partInList) {
-										m_partHighlighted.push_back(p_part);
-										p_part->visualmode = part->CVMSelected;
+										m_partHighlighted.push_back(part.get());
+										part->visualmode = part->CVMSelected;
 									} else {
 										remove(*part, m_partHighlighted);
-										p_part->visualmode = part->CVMNormal;
+										part->visualmode = part->CVMNormal;
 									}
 
 								} else {
-									for (auto p : m_partHighlighted) {
+									for (auto &p : m_partHighlighted) {
 										p->visualmode = p->CVMNormal;
 									}
 									m_partHighlighted.clear(); // only append to list if ctrl is pressed to collect multiples
 									if (!partInList) {
-										m_partHighlighted.push_back(p_part);
-										p_part->visualmode = part->CVMSelected;
+										m_partHighlighted.push_back(part.get());
+										part->visualmode = part->CVMSelected;
 									}
 								}
 
@@ -2237,9 +2245,9 @@ void BoardView::HandleInput() {
 						 * non pin, non part area, then we clear everything
 						 */
 						if ((!any_hits) && (!io.KeyCtrl)) {
-							for (auto part : m_board->Components()) {
-								auto p        = part.get();
-								p->visualmode = p->CVMNormal;
+							for (auto &part : m_board->Components()) {
+								//								auto p        = part.get();
+								part->visualmode = part->CVMNormal;
 							}
 							m_partHighlighted.clear();
 						}
@@ -2404,19 +2412,25 @@ void BoardView::CenterZoomNet(string netname) {
 	ImVec2 min, max;
 	int i = 0;
 
-	if (!m_centerZoomNets) return;
+	if (!infoPanelCenterZoomNets) return;
 
 	min.x = min.y = FLT_MAX;
 	max.x = max.y = FLT_MIN;
 
-	for (auto pin : m_board->Pins()) {
-		auto pp = pin.get();
-		if (pp->net->name == netname) {
-			auto p                 = pp->position;
+	for (auto &pin : m_board->Pins()) {
+		if (pin->net->name == netname) {
+			auto p                 = pin->position;
 			if (p.x < min.x) min.x = p.x;
 			if (p.y < min.y) min.y = p.y;
 			if (p.x > max.x) max.x = p.x;
 			if (p.y > max.y) max.y = p.y;
+
+			if ((infoPanelSelectPartsOnNet) && (pin->type != Pin::kPinTypeTestPad) &&
+			    (pin->component->visualmode == pin->component->CVMNormal)) {
+				pin->component->visualmode = pin->component->CVMSelected;
+				m_partHighlighted.push_back(pin->component);
+				//	fprintf(stderr,"partCP: %f %f\n", pin->component->centerpoint.x, pin->component->centerpoint.y);
+			}
 		}
 	}
 
@@ -2513,8 +2527,8 @@ int BoardView::EPCCheck(void) {
 	}
 
 	for (side = 0; side < 2; side++) {
-		for (auto pin : m_board->Pins()) {
-			auto p = pin.get();
+		for (auto &p : m_board->Pins()) {
+			// auto p = pin.get();
 			int l, r;
 			int jump = 1;
 			Point fp;
@@ -2845,8 +2859,8 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 	draw->ChannelsSetCurrent(kChannelPins);
 
 	for (auto &pin : m_board->Pins()) {
-		auto p_pin = pin.get();
-		float psz  = pin->diameter * m_scale;
+		//	auto p_pin = pin.get();
+		float psz = pin->diameter * m_scale;
 		uint32_t fill_color;
 
 		// continue if pin is not visible anyway
@@ -2902,7 +2916,8 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 			}
 
 			// pin selected overwrites everything
-			if (p_pin == m_pinSelected) {
+			// if (p_pin == m_pinSelected) {
+			if (pin.get() == m_pinSelected) {
 				color      = m_colors.pinSelectedColor;
 				text_color = m_colors.pinSelectedTextColor;
 				show_text  = true;
@@ -2910,7 +2925,8 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 			}
 
 			// If the part itself is highlighted ( CVMShowPins )
-			if (p_pin->component->visualmode == p_pin->component->CVMSelected) {
+			// if (p_pin->component->visualmode == p_pin->component->CVMSelected) {
+			if (pin->component->visualmode == pin->component->CVMSelected) {
 				show_text = true;
 			}
 
@@ -2951,7 +2967,8 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 					}
 			}
 
-			if (p_pin == m_pinSelected) {
+			// if (p_pin == m_pinSelected) {
+			if (pin.get() == m_pinSelected) {
 				draw->AddCircle(ImVec2(pos.x, pos.y), psz + 1.25, m_colors.pinSelectedTextColor, segments);
 			}
 
@@ -2999,9 +3016,6 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 		int pincount = 0;
 		double min_x, min_y, max_x, max_y, aspect;
 		outline_pt dbox[4]; // default box, if there's nothing else claiming to render the part different.
-		auto p_part = part.get();
-
-		if (!ComponentIsVisible(p_part)) continue;
 
 		if (part->is_dummy()) continue;
 
@@ -3027,7 +3041,7 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 				continue;
 			}
 
-			for (auto pin : part->pins) {
+			for (auto &pin : part->pins) {
 				pincount++;
 
 				// scale box around pins as a fallback, else either use polygon or convex
@@ -3059,6 +3073,10 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 				}
 			}
 
+			part->omin        = ImVec2(min_x, min_y);
+			part->omax        = ImVec2(max_x, max_y);
+			part->centerpoint = ImVec2((max_x - min_x) / 2 + min_x, (max_y - min_y) / 2 + min_y);
+
 			distance = sqrt((max_x - min_x) * (max_x - min_x) + (max_y - min_y) * (max_y - min_y));
 
 			float pin_radius = m_pinDiameter / 2.0f;
@@ -3077,62 +3095,62 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 				if ((distance > 52) && (distance < 57)) {
 					// 0603
 					pin_radius = 15;
-					for (auto pin : part->pins) {
+					for (auto &pin : part->pins) {
 						pin->diameter = pin_radius; // * 0.05;
 					}
 
 				} else if ((distance > 247) && (distance < 253)) {
 					// SMC diode?
 					pin_radius = 50;
-					for (auto pin : part->pins) {
+					for (auto &pin : part->pins) {
 						pin->diameter = pin_radius; // * 0.05;
 					}
 
 				} else if ((distance > 195) && (distance < 199)) {
 					// Inductor?
 					pin_radius = 50;
-					for (auto pin : part->pins) {
+					for (auto &pin : part->pins) {
 						pin->diameter = pin_radius; // * 0.05;
 					}
 
 				} else if ((distance > 165) && (distance < 169)) {
 					// SMB diode?
 					pin_radius = 35;
-					for (auto pin : part->pins) {
+					for (auto &pin : part->pins) {
 						pin->diameter = pin_radius; // * 0.05;
 					}
 
 				} else if ((distance > 101) && (distance < 109)) {
 					// SMA diode / tant cap
 					pin_radius = 30;
-					for (auto pin : part->pins) {
+					for (auto &pin : part->pins) {
 						pin->diameter = pin_radius; // * 0.05;
 					}
 
 				} else if ((distance > 108) && (distance < 112)) {
 					// 1206
 					pin_radius = 30;
-					for (auto pin : part->pins) {
+					for (auto &pin : part->pins) {
 						pin->diameter = pin_radius; // * 0.05;
 					}
 
 				} else if ((distance > 64) && (distance < 68)) {
 					// 0805
 					pin_radius = 25;
-					for (auto pin : part->pins) {
+					for (auto &pin : part->pins) {
 						pin->diameter = pin_radius; // * 0.05;
 					}
 
 				} else if ((distance > 18) && (distance < 22)) {
 					// 0201 cap/resistor?
 					pin_radius = 5;
-					for (auto pin : part->pins) {
+					for (auto &pin : part->pins) {
 						pin->diameter = pin_radius; // * 0.05;
 					}
 				} else if ((distance > 28) && (distance < 32)) {
 					// 0402 cap/resistor
 					pin_radius = 10;
-					for (auto pin : part->pins) {
+					for (auto &pin : part->pins) {
 						pin->diameter = pin_radius; // * 0.05;
 					}
 				}
@@ -3157,8 +3175,8 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 			dbox[0].y = dbox[1].y = min_y;
 			dbox[3].y = dbox[2].y = max_y;
 
-			p0 = p_part->name[0];
-			p1 = p_part->name[1];
+			p0 = part->name[0];
+			p1 = part->name[1];
 
 			/*
 			 * Draw all 2~3 pin devices as if they're not orthagonal.  It's a bit more
@@ -3167,14 +3185,14 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 			 */
 
 			if ((pincount == 3) && (abs(aspect > 0.5)) &&
-			    ((strchr("DQZ", p0) || (strchr("DQZ", p1)) || strcmp(p_part->name.c_str(), "LED")))) {
+			    ((strchr("DQZ", p0) || (strchr("DQZ", p1)) || strcmp(part->name.c_str(), "LED")))) {
 				outline_pt *hpt;
 
 				memcpy(part->outline, dbox, sizeof(dbox));
 				part->outline_done = true;
 
 				hpt = part->hull = (outline_pt *)malloc(sizeof(outline_pt) * 3);
-				for (auto pin : part->pins) {
+				for (auto &pin : part->pins) {
 					hpt->x = pin->position.x;
 					hpt->y = pin->position.y;
 					hpt++;
@@ -3195,7 +3213,7 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 
 				if (((p0 == 'L') || (p1 == 'L')) && (distance > 50)) {
 					pin_radius = 15;
-					for (auto pin : part->pins) {
+					for (auto &pin : part->pins) {
 						pin->diameter = pin_radius; // * 0.05;
 					}
 					army = distance / 2;
@@ -3204,7 +3222,7 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 					double mpx, mpy;
 
 					pin_radius = 15;
-					for (auto pin : part->pins) {
+					for (auto &pin : part->pins) {
 						pin->diameter = pin_radius; // * 0.05;
 					}
 					army = distance / 2 - distance / 4;
@@ -3214,10 +3232,10 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 					mpy = dy / 2 + part->pins[0]->position.y;
 					VHRotateV(&mpx, &mpy, dx / 2 + part->pins[0]->position.x, dy / 2 + part->pins[0]->position.y, angle);
 
-					p_part->expanse        = distance;
-					p_part->centerpoint.x  = mpx;
-					p_part->centerpoint.y  = mpy;
-					p_part->component_type = p_part->kComponentTypeCapacitor;
+					part->expanse        = distance;
+					part->centerpoint.x  = mpx;
+					part->centerpoint.y  = mpy;
+					part->component_type = part->kComponentTypeCapacitor;
 
 				} else {
 					armx = army = pin_radius;
@@ -3328,7 +3346,9 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 			//				fprintf(stderr, "Part wasn't rendered (%s)\n", part->name.c_str());
 			//			}
 
-		} // if outline_done
+		} // if !outline_done
+
+		if (!ComponentIsVisible(part.get())) continue;
 
 		if (part->outline_done) {
 
@@ -3430,7 +3450,7 @@ void BoardView::DrawPartTooltips(ImDrawList *draw) {
  * I am loathing that I have to add this, but basically check every pin on the board so we can
  * determine if we're hovering over a testpad
  */
-	for (auto p : m_board->Pins()) {
+	for (auto &p : m_board->Pins()) {
 		auto pin = p.get();
 		if (pin->type == Pin::kPinTypeTestPad) {
 			float dx   = pin->position.x - pos.x;
@@ -3455,11 +3475,11 @@ void BoardView::DrawPartTooltips(ImDrawList *draw) {
 	}
 
 	currentlyHoveredPart = nullptr;
-	for (auto part : m_board->Components()) {
-		int hit     = 0;
-		auto p_part = part.get();
+	for (auto &part : m_board->Components()) {
+		int hit = 0;
+		//		auto p_part = part.get();
 
-		if (!ComponentIsVisible(p_part)) continue;
+		if (!ComponentIsVisible(part.get())) continue;
 
 		// Work out if the point is inside the hull
 		{
@@ -3467,7 +3487,7 @@ void BoardView::DrawPartTooltips(ImDrawList *draw) {
 			outline_pt *poly;
 
 			n    = 4;
-			poly = p_part->outline;
+			poly = part->outline;
 
 			for (i = 0, j = n - 1; i < n; j = i++) {
 				if (((poly[i].y > pos.y) != (poly[j].y > pos.y)) &&
@@ -3478,7 +3498,7 @@ void BoardView::DrawPartTooltips(ImDrawList *draw) {
 
 		// If we're inside a part
 		if (hit) {
-			currentlyHoveredPart = p_part;
+			currentlyHoveredPart = part.get();
 			//			fprintf(stderr,"InPart: %s\n", currentlyHoveredPart->name.c_str());
 			if (part->outline_done) {
 
@@ -3609,7 +3629,7 @@ bool BoardView::HighlightedPinIsHovered(void) {
 	/*
 	 * See if any of the pins listed in the m_pinHighlighted vector are hovered over
 	 */
-	for (auto p : m_pinHighlighted) {
+	for (auto &p : m_pinHighlighted) {
 		ImVec2 a = ImVec2(p->position.x, p->position.y);
 		double r = p->diameter / 2.0f;
 		if ((mpc.x > a.x - r) && (mpc.x < a.x + r) && (mpc.y > a.y - r) && (mpc.y < a.y + r)) {
@@ -3621,13 +3641,13 @@ bool BoardView::HighlightedPinIsHovered(void) {
 	/*
 	 * See if any of the pins in the same network as the SELECTED pin (single) are hovered
 	 */
-	for (auto pin : m_board->Pins()) {
-		auto p   = pin.get();
+	for (auto &p : m_board->Pins()) {
+		//	auto p   = pin.get();
 		double r = p->diameter / 2.0f * m_scale;
 		if (m_pinSelected && p->net == m_pinSelected->net) {
 			ImVec2 a = ImVec2(p->position.x, p->position.y);
 			if ((mpc.x > a.x - r) && (mpc.x < a.x + r) && (mpc.y > a.y - r) && (mpc.y < a.y + r)) {
-				m_pinHighlightedHovered = p;
+				m_pinHighlightedHovered = p.get();
 				return true;
 			}
 		}
@@ -3636,8 +3656,8 @@ bool BoardView::HighlightedPinIsHovered(void) {
 	/*
 	 * See if any pins of a highlighted part are hovered
 	 */
-	for (auto part : m_partHighlighted) {
-		for (auto p : part->pins) {
+	for (auto &part : m_partHighlighted) {
+		for (auto &p : part->pins) {
 			double r = p->diameter / 2.0f * m_scale;
 			ImVec2 a = ImVec2(p->position.x, p->position.y);
 			if ((mpc.x > a.x - r) && (mpc.x < a.x + r) && (mpc.y > a.y - r) && (mpc.y < a.y + r)) {
@@ -3684,7 +3704,7 @@ void BoardView::DrawSelectedPins(ImDrawList *draw) {
 	ImVec2 hull[1024];
 	int i = 0, hpc = 0;
 	if ((m_pinHighlighted.size()) < 3) return;
-	for (auto p : m_pinHighlighted) {
+	for (auto &p : m_pinHighlighted) {
 		pl[i] = CoordToScreen(p->position.x, p->position.y);
 		i++;
 	}
@@ -3894,8 +3914,8 @@ void BoardView::Mirror(void) {
 		p->x = max.x - p->x;
 	}
 
-	for (auto pin : m_board->Pins()) {
-		auto p        = pin.get();
+	for (auto &p : m_board->Pins()) {
+		//	auto p        = pin.get();
 		p->position.x = max.x - p->position.x;
 	}
 
@@ -3956,14 +3976,14 @@ bool BoardView::AnyItemVisible(void) {
 	bool any_visible = false;
 
 	if (m_searchComponents) {
-		for (auto p : m_partHighlighted) {
+		for (auto &p : m_partHighlighted) {
 			any_visible |= ComponentIsVisible(p);
 		}
 	}
 
 	if (!any_visible) {
 		if (m_searchNets) {
-			for (auto p : m_pinHighlighted) {
+			for (auto &p : m_pinHighlighted) {
 				any_visible |= ComponentIsVisible(p->component);
 			}
 		}
@@ -4015,9 +4035,9 @@ void BoardView::FindNetNoClear(const char *name) {
 
 	if (*name) {
 
-		for (auto net : m_board->Nets()) {
+		for (auto &net : m_board->Nets()) {
 			if (strstrModeSearch(net->name.c_str(), name)) {
-				for (auto pin : net->pins) {
+				for (auto &pin : net->pins) {
 					m_pinHighlighted.push_back(pin);
 				}
 			}
@@ -4048,7 +4068,7 @@ void BoardView::FindComponentNoClear(const char *name) {
 
 		if (part_found != nullptr) {
 			//		if (m_partHighlighted.size()) {
-			for (auto pin : part_found->pins) {
+			for (auto &pin : part_found->pins) {
 				m_pinHighlighted.push_back(pin);
 			}
 		}

@@ -56,6 +56,8 @@ panFactor = 30\r\n\
 panModifier = 5\r\n\
 \r\n\
 centerZoomSearchResults = true\r\n\
+infoPanelCenterZoomNets = true\r\n\
+infoPanelSelectPartsOnNet = false\r\n\
 \r\n\
 # Flip board modes\r\n\
 #  0: flip whole board in view port, shift-flip to flip around mouse ptr\r\n\
