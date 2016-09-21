@@ -166,6 +166,7 @@ struct BoardView {
 	void HelpControls(void);
 	void SearchColumnGenerate(char *title, char *search, int buttons_max);
 	void Preferences(void);
+	void SaveAllColors(void);
 	void ColorPreferencesItem(
 	    const char *label, int label_width, const char *butlabel, const char *conflabel, int var_width, uint32_t *c);
 	void ColorPreferences(void);

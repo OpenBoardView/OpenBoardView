@@ -147,12 +147,14 @@ void BoardView::ThemeSetStyle(const char *name) {
 		m_colors.annotationStalkColor           = byte4swap(0xaaaaaaff);
 		m_colors.annotationPopupBackgroundColor = byte4swap(0x888888ff);
 		m_colors.annotationPopupTextColor       = byte4swap(0xffffffff);
-		m_colors.selectedMaskPins               = byte4swap(0xffffff8f);
-		m_colors.selectedMaskParts              = byte4swap(0xffffff8f);
-		m_colors.selectedMaskOutline            = byte4swap(0xffffff8f);
-		m_colors.orMaskPins                     = byte4swap(0x0);
-		m_colors.orMaskParts                    = byte4swap(0x0);
-		m_colors.orMaskOutline                  = byte4swap(0x0);
+
+		m_colors.selectedMaskPins    = byte4swap(0xffffffff);
+		m_colors.selectedMaskParts   = byte4swap(0xffffffff);
+		m_colors.selectedMaskOutline = byte4swap(0xffffffff);
+
+		m_colors.orMaskPins    = byte4swap(0x0);
+		m_colors.orMaskParts   = byte4swap(0x0);
+		m_colors.orMaskOutline = byte4swap(0x0);
 
 	} else {
 		// light theme default
@@ -234,12 +236,14 @@ void BoardView::ThemeSetStyle(const char *name) {
 		m_colors.annotationStalkColor           = byte4swap(0x000000ff);
 		m_colors.annotationPopupBackgroundColor = byte4swap(0xeeeeeeff);
 		m_colors.annotationPopupTextColor       = byte4swap(0x000000ff);
-		m_colors.selectedMaskPins               = byte4swap(0xffffffff);
-		m_colors.selectedMaskParts              = byte4swap(0xffffffff);
-		m_colors.selectedMaskOutline            = byte4swap(0xffffffff);
-		m_colors.orMaskPins                     = byte4swap(0xccccccff);
-		m_colors.orMaskParts                    = byte4swap(0x787878ff);
-		m_colors.orMaskOutline                  = byte4swap(0x888888ff);
+
+		m_colors.selectedMaskPins    = byte4swap(0xffffffff);
+		m_colors.selectedMaskParts   = byte4swap(0xffffffff);
+		m_colors.selectedMaskOutline = byte4swap(0xffffffff);
+
+		m_colors.orMaskPins    = byte4swap(0x0);
+		m_colors.orMaskParts   = byte4swap(0x0);
+		m_colors.orMaskOutline = byte4swap(0x0);
 	}
 }
 
@@ -530,6 +534,43 @@ void BoardView::ColorPreferencesItem(
 	ImGui::PopItemWidth();
 }
 
+void BoardView::SaveAllColors(void) {
+
+	obvconfig.WriteHex("backgroundColor", byte4swap(m_colors.backgroundColor));
+	obvconfig.WriteHex("boardFillColor", byte4swap(m_colors.boardFillColor));
+	obvconfig.WriteHex("boardOutlineColor", byte4swap(m_colors.boardOutlineColor));
+	obvconfig.WriteHex("partOutlineColor", byte4swap(m_colors.partOutlineColor));
+	obvconfig.WriteHex("partHullColor", byte4swap(m_colors.partHullColor));
+	obvconfig.WriteHex("partFillColor", byte4swap(m_colors.partFillColor));
+	obvconfig.WriteHex("partTextColor", byte4swap(m_colors.partTextColor));
+	obvconfig.WriteHex("partTextBackgroundColor", byte4swap(m_colors.partTextBackgroundColor));
+	obvconfig.WriteHex("pinDefaultColor", byte4swap(m_colors.pinDefaultColor));
+	obvconfig.WriteHex("pinDefaultTextColor", byte4swap(m_colors.pinDefaultTextColor));
+	obvconfig.WriteHex("pinGroundColor", byte4swap(m_colors.pinGroundColor));
+	obvconfig.WriteHex("pinNotConnectedColor", byte4swap(m_colors.pinNotConnectedColor));
+	obvconfig.WriteHex("pinTestPadColor", byte4swap(m_colors.pinTestPadColor));
+	obvconfig.WriteHex("pinTestPadFillColor", byte4swap(m_colors.pinTestPadFillColor));
+	obvconfig.WriteHex("pinSelectedColor", byte4swap(m_colors.pinSelectedColor));
+	obvconfig.WriteHex("pinSelectedTextColor", byte4swap(m_colors.pinSelectedTextColor));
+	obvconfig.WriteHex("pinSelectedFillColor", byte4swap(m_colors.pinSelectedFillColor));
+	obvconfig.WriteHex("pinSameNetColor", byte4swap(m_colors.pinSameNetColor));
+	obvconfig.WriteHex("pinSameNetTextColor", byte4swap(m_colors.pinSameNetTextColor));
+	obvconfig.WriteHex("pinSameNetFillColor", byte4swap(m_colors.pinSameNetFillColor));
+	obvconfig.WriteHex("pinHaloColor", byte4swap(m_colors.pinHaloColor));
+	obvconfig.WriteHex("pinNetWebColor", byte4swap(m_colors.pinNetWebColor));
+	obvconfig.WriteHex("pinNetWebOSColor", byte4swap(m_colors.pinNetWebOSColor));
+	obvconfig.WriteHex("annotationPopupTextColor", byte4swap(m_colors.annotationPopupTextColor));
+	obvconfig.WriteHex("annotationPopupBackgroundColor", byte4swap(m_colors.annotationPopupBackgroundColor));
+	obvconfig.WriteHex("annotationBoxColor", byte4swap(m_colors.annotationBoxColor));
+	obvconfig.WriteHex("annotationStalkColor", byte4swap(m_colors.annotationStalkColor));
+	obvconfig.WriteHex("selectedMaskOutline", byte4swap(m_colors.selectedMaskOutline));
+	obvconfig.WriteHex("selectedMaskParts", byte4swap(m_colors.selectedMaskParts));
+	obvconfig.WriteHex("selectedMaskPins", byte4swap(m_colors.selectedMaskPins));
+	obvconfig.WriteHex("orMaskPins", byte4swap(m_colors.orMaskPins));
+	obvconfig.WriteHex("orMaskParts", byte4swap(m_colors.orMaskParts));
+	obvconfig.WriteHex("orMaskOutline", byte4swap(m_colors.orMaskOutline));
+}
+
 void BoardView::ColorPreferences(void) {
 	bool dummy = true;
 	//	ImGui::PushStyleColor(ImGuiCol_PopupBg, ImColor(0xffe0e0e0));
@@ -549,12 +590,14 @@ void BoardView::ColorPreferences(void) {
 			if (ImGui::RadioButton("Light", &tc, 0)) {
 				obvconfig.WriteStr("colorTheme", "light");
 				ThemeSetStyle("light");
+				SaveAllColors();
 				m_needsRedraw = true;
 			}
 			ImGui::SameLine();
 			if (ImGui::RadioButton("Dark", &tc, 1)) {
 				obvconfig.WriteStr("colorTheme", "dark");
 				ThemeSetStyle("dark");
+				SaveAllColors();
 				m_needsRedraw = true;
 			}
 		}

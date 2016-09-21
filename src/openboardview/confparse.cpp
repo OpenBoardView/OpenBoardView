@@ -80,7 +80,6 @@ boardFillColor	= 0xddddddff\r\n\
 partOutlineColor = 0x444444ff\r\n\
 partHullColor			= 0x80808080\r\n\
 partFillColor = 0xffffffbb\r\n\
-partFillSelectedColor = 0xffe0e0ff\r\n\
 partTextColor			= 0xff3030ff\r\n\
 partTextBackgroundColor			= 0xffff00ff\r\n\
 \r\n\
