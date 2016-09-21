@@ -1165,15 +1165,20 @@ void BoardView::ShowInfoPane(void) {
 				char ss[1024];
 				snprintf(ss, sizeof(ss), "%4s  %s", pin->number.c_str(), pin->net->name.c_str());
 				if (ImGui::Selectable(ss, (pin == m_pinSelected))) {
-					m_pinSelected = pin;
-					for (auto p : m_partHighlighted) {
-						pin->component->visualmode = pin->component->CVMNormal;
-					};
-					m_pinHighlighted.clear();
-					//					m_pinSelected.push_back(pin);
-					m_partHighlighted.clear();
-					m_partHighlighted.push_back(pin->component);
-					CenterZoomNet(pin->net->name);
+					if ((pin->type == Pin::kPinTypeNotConnected) || (pin->type == Pin::kPinTypeUnkown) || (pin->net->is_ground)) {
+						// do nothing for now
+						//
+					} else {
+						m_pinSelected = pin;
+						for (auto p : m_partHighlighted) {
+							pin->component->visualmode = pin->component->CVMNormal;
+						};
+						m_pinHighlighted.clear();
+						//					m_pinSelected.push_back(pin);
+						m_partHighlighted.clear();
+						m_partHighlighted.push_back(pin->component);
+						CenterZoomNet(pin->net->name);
+					}
 					m_needsRedraw = true;
 				}
 				ImGui::PushStyleColor(ImGuiCol_Border, ImColor(0xffeeeeee));
