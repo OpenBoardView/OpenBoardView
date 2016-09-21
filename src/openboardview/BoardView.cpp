@@ -1138,11 +1138,13 @@ void BoardView::ShowInfoPane(void) {
 				snprintf(ss, sizeof(ss), "%4s  %s", pin->number.c_str(), pin->net->name.c_str());
 				if (ImGui::Selectable(ss, false)) {
 					m_pinSelected = pin;
+					for (auto p : m_partHighlighted) {
+						pin->component->visualmode = pin->component->CVMNormal;
+					};
 					m_partHighlighted.clear();
 					m_partHighlighted.push_back(pin->component);
 					CenterZoomNet(pin->net->name);
 					m_needsRedraw = true;
-					//					m_listPartsOnPinNet = true;
 				}
 				ImGui::PushStyleColor(ImGuiCol_Border, ImColor(0xffeeeeee));
 				ImGui::Separator();
@@ -1986,8 +1988,10 @@ void BoardView::Update() {
 	 */
 	ImGui::SetNextWindowPos(ImVec2(0, m_menu_height));
 	if (io.DisplaySize.x != m_lastWidth || io.DisplaySize.y != m_lastHeight) {
-		m_lastWidth   = io.DisplaySize.x;
-		m_lastHeight  = io.DisplaySize.y;
+		//		m_lastWidth   = io.DisplaySize.x;
+		//		m_lastHeight  = io.DisplaySize.y;
+		m_lastWidth   = m_board_surface.x;
+		m_lastHeight  = m_board_surface.y;
 		m_needsRedraw = true;
 	}
 	if (!showInfoPanel) {
@@ -2425,11 +2429,11 @@ void BoardView::CenterZoomNet(string netname) {
 			if (p.x > max.x) max.x = p.x;
 			if (p.y > max.y) max.y = p.y;
 
-			if ((infoPanelSelectPartsOnNet) && (pin->type != Pin::kPinTypeTestPad) &&
-			    (pin->component->visualmode == pin->component->CVMNormal)) {
-				pin->component->visualmode = pin->component->CVMSelected;
-				m_partHighlighted.push_back(pin->component);
-				//	fprintf(stderr,"partCP: %f %f\n", pin->component->centerpoint.x, pin->component->centerpoint.y);
+			if ((infoPanelSelectPartsOnNet) && (pin->type != Pin::kPinTypeTestPad)) {
+				if (!contains(*(pin->component), m_partHighlighted)) {
+					pin->component->visualmode = pin->component->CVMSelected;
+					m_partHighlighted.push_back(pin->component);
+				}
 			}
 		}
 	}
@@ -3446,12 +3450,13 @@ void BoardView::DrawPartTooltips(ImDrawList *draw) {
 	ImVec2 spos = ImGui::GetMousePos();
 	ImVec2 pos  = ScreenToCoord(spos.x, spos.y);
 
+	if (spos.x > m_board_surface.x) return;
 	/*
  * I am loathing that I have to add this, but basically check every pin on the board so we can
  * determine if we're hovering over a testpad
  */
-	for (auto &p : m_board->Pins()) {
-		auto pin = p.get();
+	for (auto &pin : m_board->Pins()) {
+
 		if (pin->type == Pin::kPinTypeTestPad) {
 			float dx   = pin->position.x - pos.x;
 			float dy   = pin->position.y - pos.y;
