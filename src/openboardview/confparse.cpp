@@ -80,6 +80,8 @@ boardFillColor	= 0xddddddff\r\n\
 partOutlineColor = 0x444444ff\r\n\
 partHullColor			= 0x80808080\r\n\
 partFillColor = 0xffffffbb\r\n\
+partHighlightedFillColor = 0xf0f0f0ff\r\n\
+partHighlightedColor = 0xff0000ee\r\n\
 partTextColor			= 0xff3030ff\r\n\
 partTextBackgroundColor			= 0xffff00ff\r\n\
 \r\n\
@@ -131,7 +133,7 @@ orMaskOutline	= 0x00000000\r\n\
 #FZKey = 0x12345678, 0x12345678\r\n\
 FZKey =   \r\n\
 \r\n\
-";
+# END OF CONF\r\n";
 
 /*
  * Original dark theme
@@ -210,7 +212,7 @@ int Confparse::SaveDefault(const std::string &utf8_filename) {
 
 	nested = true;
 	if (file.is_open()) {
-		file.write(default_conf, sizeof(default_conf));
+		file.write(default_conf, sizeof(default_conf) - 1);
 		file.close();
 		Load(utf8_filename);
 

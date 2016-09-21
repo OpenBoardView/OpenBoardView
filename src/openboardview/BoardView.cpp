@@ -119,7 +119,7 @@ void BoardView::ThemeSetStyle(const char *name) {
 		m_colors.partOutlineColor         = byte4swap(0x999999ff);
 		m_colors.partFillColor            = byte4swap(0x22222299);
 		m_colors.partHighlightedColor     = byte4swap(0xffffffff);
-		m_colors.partHighlightedFillColor = byte4swap(0x444444ff);
+		m_colors.partHighlightedFillColor = byte4swap(0x333333ff);
 		m_colors.partTextColor            = byte4swap(0x111111ff);
 		m_colors.partTextBackgroundColor  = byte4swap(0xffff00ff);
 		m_colors.boardOutlineColor        = byte4swap(0xff4444ff);
@@ -208,7 +208,7 @@ void BoardView::ThemeSetStyle(const char *name) {
 		m_colors.partOutlineColor         = byte4swap(0x444444ff);
 		m_colors.partFillColor            = byte4swap(0xffffffbb);
 		m_colors.partHighlightedColor     = byte4swap(0xff0000ff);
-		m_colors.partHighlightedFillColor = byte4swap(0xffeeeeff);
+		m_colors.partHighlightedFillColor = byte4swap(0xf0f0f0ff);
 		m_colors.partTextColor            = byte4swap(0xff3030ff);
 		m_colors.partTextBackgroundColor  = byte4swap(0xffff00ff);
 		m_colors.boardOutlineColor        = byte4swap(0x444444ff);
@@ -544,6 +544,8 @@ void BoardView::SaveAllColors(void) {
 	obvconfig.WriteHex("partFillColor", byte4swap(m_colors.partFillColor));
 	obvconfig.WriteHex("partTextColor", byte4swap(m_colors.partTextColor));
 	obvconfig.WriteHex("partTextBackgroundColor", byte4swap(m_colors.partTextBackgroundColor));
+	obvconfig.WriteHex("partHighlightedColor", byte4swap(m_colors.partHighlightedColor));
+	obvconfig.WriteHex("partHighlightedFillColor", byte4swap(m_colors.partHighlightedFillColor));
 	obvconfig.WriteHex("pinDefaultColor", byte4swap(m_colors.pinDefaultColor));
 	obvconfig.WriteHex("pinDefaultTextColor", byte4swap(m_colors.pinDefaultTextColor));
 	obvconfig.WriteHex("pinGroundColor", byte4swap(m_colors.pinGroundColor));

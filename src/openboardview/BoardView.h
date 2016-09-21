@@ -56,7 +56,7 @@ struct ColorScheme {
 	uint32_t partHullColor            = 0x80808080;
 	uint32_t partFillColor            = 0xffffffff;
 	uint32_t partHighlightedColor     = 0xff0000ee;
-	uint32_t partHighlightedFillColor = 0xffeeeeff;
+	uint32_t partHighlightedFillColor = 0xf0f0f0ff;
 	uint32_t boardOutlineColor        = 0xff00ffff;
 
 	//	uint32_t boxColor = 0xffcccccc;
