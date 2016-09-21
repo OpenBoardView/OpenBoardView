@@ -1136,11 +1136,13 @@ void BoardView::ShowInfoPane(void) {
 			for (auto pin : part->pins) {
 				char ss[1024];
 				snprintf(ss, sizeof(ss), "%4s  %s", pin->number.c_str(), pin->net->name.c_str());
-				if (ImGui::Selectable(ss, false)) {
+				if (ImGui::Selectable(ss, (pin == m_pinSelected))) {
 					m_pinSelected = pin;
 					for (auto p : m_partHighlighted) {
 						pin->component->visualmode = pin->component->CVMNormal;
 					};
+					m_pinHighlighted.clear();
+					//					m_pinSelected.push_back(pin);
 					m_partHighlighted.clear();
 					m_partHighlighted.push_back(pin->component);
 					CenterZoomNet(pin->net->name);
@@ -2166,7 +2168,15 @@ void BoardView::HandleInput() {
 
 					m_pinSelected = selection;
 					if (m_pinSelected) {
+						if (!io.KeyCtrl) {
+							for (auto p : m_board->Components()) {
+								p->visualmode = p->CVMNormal;
+							}
+							m_partHighlighted.resize(0);
+							m_pinHighlighted.resize(0);
+						}
 						m_pinSelected->component->visualmode = m_pinSelected->component->CVMSelected;
+						m_partHighlighted.push_back(m_pinSelected->component);
 					}
 
 					if (m_pinSelected == nullptr) {
@@ -2213,10 +2223,11 @@ void BoardView::HandleInput() {
 									}
 
 								} else {
-									for (auto &p : m_partHighlighted) {
+									for (auto p : m_board->Components()) {
 										p->visualmode = p->CVMNormal;
 									}
-									m_partHighlighted.clear(); // only append to list if ctrl is pressed to collect multiples
+									m_partHighlighted.resize(0);
+									m_pinHighlighted.resize(0);
 									if (!partInList) {
 										m_partHighlighted.push_back(part.get());
 										part->visualmode = part->CVMSelected;
@@ -2863,15 +2874,14 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 	draw->ChannelsSetCurrent(kChannelPins);
 
 	for (auto &pin : m_board->Pins()) {
-		//	auto p_pin = pin.get();
-		float psz = pin->diameter * m_scale;
-		uint32_t fill_color;
+		float psz           = pin->diameter * m_scale;
+		uint32_t fill_color = 0x88888888; // fallback fill colour
 
 		// continue if pin is not visible anyway
+		if (!ComponentIsVisible(pin->component)) continue;
+
 		ImVec2 pos = CoordToScreen(pin->position.x, pin->position.y);
 		{
-			if (!ComponentIsVisible(pin->component)) continue;
-
 			if (!IsVisibleScreen(pos.x, pos.y, psz, io)) continue;
 		}
 
@@ -2885,9 +2895,8 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 		{
 			if (contains(*pin, m_pinHighlighted)) {
 				text_color = color = m_colors.pinSelectedTextColor;
-
-				show_text = true;
-				threshold = 0;
+				show_text          = true;
+				threshold          = 0;
 			}
 
 			if (!pin->net || pin->type == Pin::kPinTypeNotConnected) {
@@ -2913,9 +2922,17 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 				show_text  = false;
 			}
 
+			// If the part itself is highlighted ( CVMShowPins )
+			// if (p_pin->component->visualmode == p_pin->component->CVMSelected) {
+			if (pin->component->visualmode == pin->component->CVMSelected) {
+				show_text = true;
+				color     = m_colors.pinHighlightedColor;
+			}
+
 			// pin is on the same net as selected pin: highlight > rest
 			if (!show_text && m_pinSelected && pin->net == m_pinSelected->net) {
 				color     = m_colors.pinHighlightSameNetColor;
+				show_text = true; // is this something we want? Maybe an optional thing?
 				threshold = 0;
 			}
 
@@ -2928,14 +2945,9 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 				threshold  = 0;
 			}
 
-			// If the part itself is highlighted ( CVMShowPins )
-			// if (p_pin->component->visualmode == p_pin->component->CVMSelected) {
-			if (pin->component->visualmode == pin->component->CVMSelected) {
-				show_text = true;
-			}
-
 			// don't show text if it doesn't make sense
-			if (pin->component->pins.size() <= 1 || pin->type == Pin::kPinTypeTestPad) show_text = false;
+			if (pin->component->pins.size() <= 1) show_text  = false;
+			if (pin->type == Pin::kPinTypeTestPad) show_text = false;
 		}
 
 		// Drawing
@@ -4102,6 +4114,7 @@ void BoardView::SearchCompound(const char *item) {
 	if (*item == '\0') return;
 	m_pinHighlighted.clear();
 	m_partHighlighted.clear();
+	//	ClearAllHighlights();
 
 	SearchCompoundNoClear(item);
 }
