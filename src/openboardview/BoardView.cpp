@@ -227,7 +227,7 @@ void BoardView::ThemeSetStyle(const char *name) {
 		m_colors.pinSameNetFillColor = byte4swap(0x9999ffff);
 		m_colors.pinSameNetTextColor = byte4swap(0x111111ff);
 
-		m_colors.pinHaloColor     = byte4swap(0x88888888);
+		m_colors.pinHaloColor     = byte4swap(0x22FF2288);
 		m_colors.pinNetWebColor   = byte4swap(0xff000044);
 		m_colors.pinNetWebOSColor = byte4swap(0x0000ff33);
 
