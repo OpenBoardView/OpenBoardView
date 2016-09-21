@@ -68,13 +68,17 @@ struct ColorScheme {
 	uint32_t pinTestPadColor      = 0xff888888;
 	uint32_t pinTestPadFillColor  = 0x882d9ebd; // FF8C00
 
-	uint32_t pinSelectedColor         = 0xff00eeee;
-	uint32_t pinSelectedTextColor     = 0xff00eeee;
-	uint32_t pinHaloColor             = 0x8f00ff00;
-	uint32_t pinHighlightedColor      = 0xffffffff;
-	uint32_t pinHighlightSameNetColor = 0xff99f8ff;
-	uint32_t pinNetWebColor           = 0xff0000ff;
-	uint32_t pinNetWebOSColor         = 0x0000ff22;
+	uint32_t pinSelectedColor     = 0xff00ee00;
+	uint32_t pinSelectedFillColor = 0xffff8888;
+	uint32_t pinSelectedTextColor = 0xffffffff;
+
+	uint32_t pinSameNetColor     = 0xffaa4040;
+	uint32_t pinSameNetFillColor = 0xffff9999;
+	uint32_t pinSameNetTextColor = 0xff111111;
+
+	uint32_t pinHaloColor     = 0x8822FF22;
+	uint32_t pinNetWebColor   = 0xff0000ff;
+	uint32_t pinNetWebOSColor = 0x0000ff22;
 
 	uint32_t annotationPartAliasColor       = 0xcc00ffff;
 	uint32_t annotationBoxColor             = 0xaa0000ff;
@@ -82,9 +86,9 @@ struct ColorScheme {
 	uint32_t annotationPopupBackgroundColor = 0xffeeeeee;
 	uint32_t annotationPopupTextColor       = 0xff000000;
 
-	uint32_t selectedMaskPins    = 0x4FFFFFFF;
-	uint32_t selectedMaskParts   = 0x8FFFFFFF;
-	uint32_t selectedMaskOutline = 0x8FFFFFFF;
+	uint32_t selectedMaskPins    = 0xFFFFFFFF;
+	uint32_t selectedMaskParts   = 0xFFFFFFFF;
+	uint32_t selectedMaskOutline = 0xFFFFFFFF;
 
 	uint32_t orMaskPins    = 0x00000000;
 	uint32_t orMaskParts   = 0x00000000;
@@ -135,12 +139,12 @@ struct BoardView {
 	bool showInfoPanel        = true;
 	bool showPins             = true;
 	bool showAnnotations      = true;
-	bool pinHalo              = true;
-	float pinHaloDiameter     = 1.25;
-	float pinHaloThickness    = 1.5;
+	bool pinHalo              = false;
+	float pinHaloDiameter     = 1.1;
+	float pinHaloThickness    = 4.00;
 	bool fillParts            = true;
 	bool boardFill            = true;
-	int boardFillSpacing      = 5;
+	int boardFillSpacing      = 3;
 	bool boardMinMaxDone      = false;
 
 	bool showPosition  = true;
@@ -201,6 +205,7 @@ struct BoardView {
 	ImVec2 m_showContextMenuPos;
 
 	Pin *m_pinSelected = nullptr;
+	//	Net *m_netSelected = nullptr;
 	vector<Pin *> m_pinHighlighted;
 	vector<Component *> m_partHighlighted;
 	char m_cachedDrawList[sizeof(ImDrawList)];

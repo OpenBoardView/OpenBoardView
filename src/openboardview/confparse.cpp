@@ -41,9 +41,9 @@ pinShapeSquare = false\r\n\
 \r\n\
 slowCPU =       false\r\n\
 showFPS =       false\r\n\
-pinHalo =        true\r\n\
-pinHaloDiameter = 1.25\r\n\
-pinHaloThickness = 2\r\n\
+pinHalo =       false\r\n\
+pinHaloDiameter = 1.1\r\n\
+pinHaloThickness = 4\r\n\
 \r\n\
 fillParts =		true\r\n\
 boardFill =		true\r\n\
@@ -57,12 +57,12 @@ panModifier = 5\r\n\
 \r\n\
 centerZoomSearchResults = true\r\n\
 infoPanelCenterZoomNets = true\r\n\
-infoPanelSelectPartsOnNet = false\r\n\
+infoPanelSelectPartsOnNet = true\r\n\
 \r\n\
 # Flip board modes\r\n\
 #  0: flip whole board in view port, shift-flip to flip around mouse ptr\r\n\
 #  1: flip around mouse ptr, shift-flip to flip view port\r\n\
-flipMode = 0\r\n\
+flipMode = 1\r\n\
 \r\n\
 showAnnotations = true\r\n\
 annotationBoxSize = 15\r\n\
@@ -83,18 +83,33 @@ partFillColor = 0xffffffbb\r\n\
 partFillSelectedColor = 0xffe0e0ff\r\n\
 partTextColor			= 0xff3030ff\r\n\
 partTextBackgroundColor			= 0xffff00ff\r\n\
+\r\n\
+# Pin colourings.\r\n\
+#  default is for pins that aren't selected\r\n\
+#  selected is for the actual clicked on pin\r\n\
+#  highlighted is for pins usually on the same network as the selected\r\n\
+#\r\n\
+# There's an absense of 'fill' colours on most because the CPU hit is\r\n\
+# moderately high to do them all \r\n\
+#\r\n\
 boardOutlineColor			= 0x444444ff\r\n\
-pinDefaultColor				= 0x8888ffff\r\n\
-pinDefaultTextColor			= 0x0000ccff\r\n\
+pinDefaultColor				= 0x8888ccff\r\n\
+pinDefaultTextColor			= 0x444488ff\r\n\
 pinGroundColor				= 0x2222aaff\r\n\
 pinNotConnectedColor		= 0xaaaaaaff\r\n\
 pinTestPadColor				= 0x888888ff\r\n\
 pinTestPadFillColor				= 0xbd9e2dff\r\n\
+\r\n\
 pinSelectedColor				= 0x0000ffff\r\n\
-pinSelectedTextColor			= 0xff0000ff\r\n\
-pinHighlightedColor			= 0x0000ffff\r\n\
-pinHaloColor			= 0x00aa00ff\r\n\
-pinHighlightSameNetColor	= 0x000000ff\r\n\
+pinSelectedFillColor			= 0x8888ffff\r\n\
+pinSelectedTextColor			= 0xffffffff\r\n\
+\r\n\
+pinSameNetColor			= 0x0000ffff\r\n\
+pinSameNetFillColor		= 0x9999ffff\r\n\
+pinSameNetTextColor		= 0x111111ff\r\n\
+\r\n\
+pinHaloColor			= 0x22FF2288\r\n\
+\r\n\
 pinNetWebColor = 0xff000044\r\n\
 pinNetWebOSColor = 0x0000ff33\r\n\
 \r\n\
@@ -105,11 +120,11 @@ annotationStalkColor = 0x000000ff\r\n\
 \r\n\
 selectedMaskPins		= 0xffffffff\r\n\
 selectedMaskParts		= 0xffffffff\r\n\
-selectedMaskOutline	= 0xffffffff\r\n\
+selectedMaskOutline		= 0xffffffff\r\n\
 \r\n\
-orMaskPins		= 0xccccccff\r\n\
-orMaskParts		= 0x787878ff\r\n\
-orMaskOutline	= 0x888888ff\r\n\
+orMaskPins		= 0x00000000\r\n\
+orMaskParts		= 0x00000000\r\n\
+orMaskOutline	= 0x00000000\r\n\
 # EndColors\r\n\
 \r\n\
 # FZKey requires 44 32-bit values in order for it to work.\r\n\

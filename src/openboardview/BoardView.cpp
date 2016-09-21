@@ -113,29 +113,35 @@ void BoardView::ThemeSetStyle(const char *name) {
 		style.Colors[ImGuiCol_TextSelectedBg]       = ImVec4(0.00f, 0.00f, 1.00f, 0.35f);
 		style.Colors[ImGuiCol_ModalWindowDarkening] = ImVec4(0.20f, 0.20f, 0.20f, 0.35f);
 
-		m_colors.backgroundColor                = byte4swap(0x14121cff);
-		m_colors.boardFillColor                 = byte4swap(0x202020ff);
-		m_colors.partHullColor                  = byte4swap(0x80808080);
-		m_colors.partOutlineColor               = byte4swap(0x999999ff);
-		m_colors.partFillColor                  = byte4swap(0x22222299);
-		m_colors.partHighlightedColor           = byte4swap(0xffffffff);
-		m_colors.partHighlightedFillColor       = byte4swap(0x444444ff);
-		m_colors.partTextColor                  = byte4swap(0x111111ff);
-		m_colors.partTextBackgroundColor        = byte4swap(0xffff00ff);
-		m_colors.boardOutlineColor              = byte4swap(0xff4444ff);
-		m_colors.pinDefaultColor                = byte4swap(0x4040ffff);
-		m_colors.pinDefaultTextColor            = byte4swap(0xffffffff);
-		m_colors.pinGroundColor                 = byte4swap(0x0300C3ff);
-		m_colors.pinNotConnectedColor           = byte4swap(0xaaaaaaff);
-		m_colors.pinTestPadColor                = byte4swap(0x888888ff);
-		m_colors.pinTestPadFillColor            = byte4swap(0xbd9e2d88);
-		m_colors.pinSelectedTextColor           = byte4swap(0xffff00ff);
-		m_colors.pinSelectedColor               = byte4swap(0x00ff00ff);
-		m_colors.pinHaloColor                   = byte4swap(0x00aa00ff);
-		m_colors.pinHighlightedColor            = byte4swap(0x0000ffff);
-		m_colors.pinHighlightSameNetColor       = byte4swap(0x000000ff);
-		m_colors.pinNetWebColor                 = byte4swap(0xff888888);
-		m_colors.pinNetWebOSColor               = byte4swap(0x8888ff88);
+		m_colors.backgroundColor          = byte4swap(0x14121cff);
+		m_colors.boardFillColor           = byte4swap(0x202020ff);
+		m_colors.partHullColor            = byte4swap(0x80808080);
+		m_colors.partOutlineColor         = byte4swap(0x999999ff);
+		m_colors.partFillColor            = byte4swap(0x22222299);
+		m_colors.partHighlightedColor     = byte4swap(0xffffffff);
+		m_colors.partHighlightedFillColor = byte4swap(0x444444ff);
+		m_colors.partTextColor            = byte4swap(0x111111ff);
+		m_colors.partTextBackgroundColor  = byte4swap(0xffff00ff);
+		m_colors.boardOutlineColor        = byte4swap(0xff4444ff);
+		m_colors.pinDefaultColor          = byte4swap(0x4040ffff);
+		m_colors.pinDefaultTextColor      = byte4swap(0xffffffff);
+		m_colors.pinGroundColor           = byte4swap(0x0300C3ff);
+		m_colors.pinNotConnectedColor     = byte4swap(0xaaaaaaff);
+		m_colors.pinTestPadColor          = byte4swap(0x888888ff);
+		m_colors.pinTestPadFillColor      = byte4swap(0xbd9e2d88);
+
+		m_colors.pinSelectedColor     = byte4swap(0x00ff00ff);
+		m_colors.pinSelectedFillColor = byte4swap(0x8888ffff);
+		m_colors.pinSelectedTextColor = byte4swap(0xffffffff);
+
+		m_colors.pinSameNetColor     = byte4swap(0x0000ffff);
+		m_colors.pinSameNetFillColor = byte4swap(0x9999ffff);
+		m_colors.pinSameNetTextColor = byte4swap(0x111111ff);
+
+		m_colors.pinHaloColor     = byte4swap(0xffffff88);
+		m_colors.pinNetWebColor   = byte4swap(0xff888888);
+		m_colors.pinNetWebOSColor = byte4swap(0x8888ff88);
+
 		m_colors.annotationPartAliasColor       = byte4swap(0xffff00ff);
 		m_colors.annotationBoxColor             = byte4swap(0xaaaa88aa);
 		m_colors.annotationStalkColor           = byte4swap(0xaaaaaaff);
@@ -194,29 +200,35 @@ void BoardView::ThemeSetStyle(const char *name) {
 		style.Colors[ImGuiCol_TextSelectedBg]       = ImVec4(0.26f, 0.59f, 0.98f, 0.35f);
 		style.Colors[ImGuiCol_ModalWindowDarkening] = ImVec4(0.20f, 0.20f, 0.20f, 0.35f);
 
-		m_colors.backgroundColor                = byte4swap(0xffffffff);
-		m_colors.boardFillColor                 = byte4swap(0xddddddff);
-		m_colors.partHullColor                  = byte4swap(0x80808080);
-		m_colors.partOutlineColor               = byte4swap(0x444444ff);
-		m_colors.partFillColor                  = byte4swap(0xffffffbb);
-		m_colors.partHighlightedColor           = byte4swap(0xff0000ff);
-		m_colors.partHighlightedFillColor       = byte4swap(0xffeeeeff);
-		m_colors.partTextColor                  = byte4swap(0xff3030ff);
-		m_colors.partTextBackgroundColor        = byte4swap(0xffff00ff);
-		m_colors.boardOutlineColor              = byte4swap(0x444444ff);
-		m_colors.pinDefaultColor                = byte4swap(0x8888ffff);
-		m_colors.pinDefaultTextColor            = byte4swap(0x0000ccff);
-		m_colors.pinGroundColor                 = byte4swap(0x2222aaff);
-		m_colors.pinNotConnectedColor           = byte4swap(0xaaaaaaff);
-		m_colors.pinTestPadColor                = byte4swap(0x888888ff);
-		m_colors.pinTestPadFillColor            = byte4swap(0xbd9e2d88);
-		m_colors.pinSelectedTextColor           = byte4swap(0xff0000ff);
-		m_colors.pinSelectedColor               = byte4swap(0x0000ffff);
-		m_colors.pinHaloColor                   = byte4swap(0x00aa00ff);
-		m_colors.pinHighlightedColor            = byte4swap(0x0000ffff);
-		m_colors.pinHighlightSameNetColor       = byte4swap(0x000000ff);
-		m_colors.pinNetWebColor                 = byte4swap(0xff000044);
-		m_colors.pinNetWebOSColor               = byte4swap(0x0000ff33);
+		m_colors.backgroundColor          = byte4swap(0xffffffff);
+		m_colors.boardFillColor           = byte4swap(0xddddddff);
+		m_colors.partHullColor            = byte4swap(0x80808080);
+		m_colors.partOutlineColor         = byte4swap(0x444444ff);
+		m_colors.partFillColor            = byte4swap(0xffffffbb);
+		m_colors.partHighlightedColor     = byte4swap(0xff0000ff);
+		m_colors.partHighlightedFillColor = byte4swap(0xffeeeeff);
+		m_colors.partTextColor            = byte4swap(0xff3030ff);
+		m_colors.partTextBackgroundColor  = byte4swap(0xffff00ff);
+		m_colors.boardOutlineColor        = byte4swap(0x444444ff);
+		m_colors.pinDefaultColor          = byte4swap(0x8888ffff);
+		m_colors.pinDefaultTextColor      = byte4swap(0x0000ccff);
+		m_colors.pinGroundColor           = byte4swap(0x2222aaff);
+		m_colors.pinNotConnectedColor     = byte4swap(0xaaaaaaff);
+		m_colors.pinTestPadColor          = byte4swap(0x888888ff);
+		m_colors.pinTestPadFillColor      = byte4swap(0xbd9e2d88);
+
+		m_colors.pinSelectedColor     = byte4swap(0x888888ff);
+		m_colors.pinSelectedFillColor = byte4swap(0x8888ffff);
+		m_colors.pinSelectedTextColor = byte4swap(0xffffffff);
+
+		m_colors.pinSameNetColor     = byte4swap(0x888888ff);
+		m_colors.pinSameNetFillColor = byte4swap(0x9999ffff);
+		m_colors.pinSameNetTextColor = byte4swap(0x111111ff);
+
+		m_colors.pinHaloColor     = byte4swap(0x88888888);
+		m_colors.pinNetWebColor   = byte4swap(0xff000044);
+		m_colors.pinNetWebOSColor = byte4swap(0x0000ff33);
+
 		m_colors.annotationPartAliasColor       = byte4swap(0xffff00ff);
 		m_colors.annotationBoxColor             = byte4swap(0xff0000aa);
 		m_colors.annotationStalkColor           = byte4swap(0x000000ff);
@@ -334,12 +346,16 @@ int BoardView::ConfigParse(void) {
 	m_colors.pinNotConnectedColor = byte4swap(obvconfig.ParseHex("pinNotConnectedColor", byte4swap(m_colors.pinNotConnectedColor)));
 	m_colors.pinTestPadColor      = byte4swap(obvconfig.ParseHex("pinTestPadColor", byte4swap(m_colors.pinTestPadColor)));
 	m_colors.pinTestPadFillColor  = byte4swap(obvconfig.ParseHex("pinTestPadFillColor", byte4swap(m_colors.pinTestPadFillColor)));
+
 	m_colors.pinSelectedTextColor = byte4swap(obvconfig.ParseHex("pinSelectedTextColor", byte4swap(m_colors.pinSelectedTextColor)));
+	m_colors.pinSelectedFillColor = byte4swap(obvconfig.ParseHex("pinSelectedFillColor", byte4swap(m_colors.pinSelectedFillColor)));
 	m_colors.pinSelectedColor     = byte4swap(obvconfig.ParseHex("pinSelectedColor", byte4swap(m_colors.pinSelectedColor)));
-	m_colors.pinHaloColor         = byte4swap(obvconfig.ParseHex("pinHaloColor", byte4swap(m_colors.pinHaloColor)));
-	m_colors.pinHighlightedColor  = byte4swap(obvconfig.ParseHex("pinHighlightedColor", byte4swap(m_colors.pinHighlightedColor)));
-	m_colors.pinHighlightSameNetColor =
-	    byte4swap(obvconfig.ParseHex("pinHighlightSameNetColor", byte4swap(m_colors.pinHighlightSameNetColor)));
+
+	m_colors.pinSameNetTextColor = byte4swap(obvconfig.ParseHex("pinSameNetTextColor", byte4swap(m_colors.pinSameNetTextColor)));
+	m_colors.pinSameNetFillColor = byte4swap(obvconfig.ParseHex("pinSameNetFillColor", byte4swap(m_colors.pinSameNetFillColor)));
+	m_colors.pinSameNetColor     = byte4swap(obvconfig.ParseHex("pinSameNetColor", byte4swap(m_colors.pinSameNetColor)));
+
+	m_colors.pinHaloColor   = byte4swap(obvconfig.ParseHex("pinHaloColor", byte4swap(m_colors.pinHaloColor)));
 	m_colors.pinNetWebColor = byte4swap(obvconfig.ParseHex("pinNetWebColor", byte4swap(m_colors.pinNetWebColor)));
 
 	m_colors.annotationPartAliasColor =
@@ -358,43 +374,6 @@ int BoardView::ConfigParse(void) {
 	m_colors.orMaskPins    = byte4swap(obvconfig.ParseHex("orMaskPins", byte4swap(m_colors.orMaskPins)));
 	m_colors.orMaskParts   = byte4swap(obvconfig.ParseHex("orMaskParts", byte4swap(m_colors.orMaskParts)));
 	m_colors.orMaskOutline = byte4swap(obvconfig.ParseHex("orMaskOutline", byte4swap(m_colors.orMaskOutline)));
-
-	/*
-	m_colors.backgroundColor = byte4swap(obvconfig.ParseHex("backgroundColor", 0xffffffff));
-	m_colors.boardFillColor  = byte4swap(obvconfig.ParseHex("boardFillColor", 0xddddddff));
-
-	m_colors.partHullColor            = byte4swap(obvconfig.ParseHex("partHullColor", 0x80808080));
-	m_colors.partOutlineColor         = byte4swap(obvconfig.ParseHex("partOutlineColor", 0x444444ff));
-	m_colors.partFillColor            = byte4swap(obvconfig.ParseHex("partFillColor", 0xffffffbb));
-	m_colors.partHighlightedColor     = byte4swap(obvconfig.ParseHex("partHighlightedColor", 0xff0000ff));
-	m_colors.partHighlightedFillColor = byte4swap(obvconfig.ParseHex("partHighlightedFillColor", 0xffeeeeff));
-	m_colors.partTextColor            = byte4swap(obvconfig.ParseHex("partTextColor", 0xff3030ff));
-	m_colors.partTextBackgroundColor  = byte4swap(obvconfig.ParseHex("partTextBackgroundColor", 0xffff00ff));
-	m_colors.boardOutlineColor        = byte4swap(obvconfig.ParseHex("boardOutline", 0x444444ff));
-	m_colors.pinDefaultColor          = byte4swap(obvconfig.ParseHex("pinDefault", 0x8888ffff));
-	m_colors.pinGroundColor           = byte4swap(obvconfig.ParseHex("pinGround", 0x2222aaff));
-	m_colors.pinNotConnectedColor     = byte4swap(obvconfig.ParseHex("pinNotConnected", 0xaaaaaaff));
-	m_colors.pinTestPadColor          = byte4swap(obvconfig.ParseHex("pinTestPad", 0x888888ff));
-	m_colors.pinSelectedTextColor     = byte4swap(obvconfig.ParseHex("pinSelectedText", 0xff0000ff));
-	m_colors.pinSelectedColor         = byte4swap(obvconfig.ParseHex("pinSelected", 0x0000ffff));
-	m_colors.pinHaloColor             = byte4swap(obvconfig.ParseHex("pinHaloColor", 0x00aa00ff));
-	m_colors.pinHighlightedColor      = byte4swap(obvconfig.ParseHex("pinHighlighted", 0x0000ffff));
-	m_colors.pinHighlightSameNetColor = byte4swap(obvconfig.ParseHex("pinHighlightSameNet", 0x000000ff));
-
-	m_colors.annotationPartAliasColor       = byte4swap(obvconfig.ParseHex("annotationPartAlias", 0xffff00ff));
-	m_colors.annotationBoxColor             = byte4swap(obvconfig.ParseHex("annotationBoxColor", 0xff0000aa));
-	m_colors.annotationStalkColor           = byte4swap(obvconfig.ParseHex("annotationStalkColor", 0x000000ff));
-	m_colors.annotationPopupBackgroundColor = byte4swap(obvconfig.ParseHex("annotationPopupBackground", 0xeeeeeeff));
-	m_colors.annotationPopupTextColor       = byte4swap(obvconfig.ParseHex("annotationPopupText", 0x000000ff));
-
-	m_colors.selectedMaskPins    = byte4swap(obvconfig.ParseHex("selectedMaskPins", 0xffffffff));
-	m_colors.selectedMaskParts   = byte4swap(obvconfig.ParseHex("selectedMaskParts", 0xffffffff));
-	m_colors.selectedMaskOutline = byte4swap(obvconfig.ParseHex("selectedMaskOutline", 0xffffffff));
-
-	m_colors.orMaskPins    = byte4swap(obvconfig.ParseHex("orMaskPins", 0xccccccff));
-	m_colors.orMaskParts   = byte4swap(obvconfig.ParseHex("orMaskParts", 0x787878ff));
-	m_colors.orMaskOutline = byte4swap(obvconfig.ParseHex("orMaskOutline", 0x888888ff));
-	*/
 
 	/*
 	 * The asus .fz file formats require a specific key to be decoded.
@@ -618,14 +597,20 @@ void BoardView::ColorPreferences(void) {
 		ColorPreferencesItem("NC", DPI(200), "##PinNC", "pinNotConnectedColor", DPI(150), &m_colors.pinNotConnectedColor);
 		ColorPreferencesItem("Test pad", DPI(200), "##PinTP", "pinTestPadColor", DPI(150), &m_colors.pinTestPadColor);
 		ColorPreferencesItem("Test pad fill", DPI(200), "##PinTPF", "pinTestPadFillColor", DPI(150), &m_colors.pinTestPadFillColor);
-		ColorPreferencesItem("Selected", DPI(200), "##PinSelected", "pinSelectedColor", DPI(150), &m_colors.pinSelectedColor);
+
+		ColorPreferencesItem("Selected", DPI(200), "##PinSelectedColor", "pinSelectedColor", DPI(150), &m_colors.pinSelectedColor);
 		ColorPreferencesItem(
-		    "Selected text", DPI(200), "##PinSelectedText", "pinSelectedTextColor", DPI(150), &m_colors.pinSelectedTextColor);
+		    "Selected fill", DPI(200), "##PinSelectedFillColor", "pinSelectedFillColor", DPI(150), &m_colors.pinSelectedFillColor);
 		ColorPreferencesItem(
-		    "Highlighted", DPI(200), "##PinHighlighted", "pinHighlightedColor", DPI(150), &m_colors.pinHighlightedColor);
+		    "Selected text", DPI(200), "##PinSelectedTextColor", "pinSelectedTextColor", DPI(150), &m_colors.pinSelectedTextColor);
+
+		ColorPreferencesItem("Same Net", DPI(200), "##PinSameNetColor", "pinSameNetColor", DPI(150), &m_colors.pinSameNetColor);
+		ColorPreferencesItem(
+		    "SameNet fill", DPI(200), "##PinSameNetFillColor", "pinSameNetFillColor", DPI(150), &m_colors.pinSameNetFillColor);
+		ColorPreferencesItem(
+		    "SameNet text", DPI(200), "##PinSameNetTextColor", "pinSameNetTextColor", DPI(150), &m_colors.pinSameNetTextColor);
+
 		ColorPreferencesItem("Halo", DPI(200), "##PinHalo", "pinHaloColor", DPI(150), &m_colors.pinHaloColor);
-		ColorPreferencesItem(
-		    "Same net", DPI(200), "##PinSameNet", "pinHighlightSameNetColor", DPI(150), &m_colors.pinHighlightSameNetColor);
 		ColorPreferencesItem("Net web strands", DPI(200), "##NetWebStrands", "pinNetWebColor", DPI(150), &m_colors.pinNetWebColor);
 		ColorPreferencesItem(
 		    "Net web (otherside)", DPI(200), "##NetWebOSStrands", "pinNetWebOSColor", DPI(150), &m_colors.pinNetWebOSColor);
@@ -2875,7 +2860,11 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 
 	for (auto &pin : m_board->Pins()) {
 		float psz           = pin->diameter * m_scale;
-		uint32_t fill_color = 0x88888888; // fallback fill colour
+		uint32_t fill_color = 0xFFFF8888; // fallback fill colour
+		uint32_t text_color = m_colors.pinDefaultTextColor;
+		uint32_t color      = (m_colors.pinDefaultColor & cmask) | omask;
+		bool fill_pin       = false;
+		bool show_text      = false;
 
 		// continue if pin is not visible anyway
 		if (!ComponentIsVisible(pin->component)) continue;
@@ -2888,13 +2877,11 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 		if ((!m_pinSelected) && (psz < threshold)) continue;
 
 		// color & text depending on app state & pin type
-		uint32_t color      = (m_colors.pinDefaultColor & cmask) | omask;
-		uint32_t text_color = m_colors.pinDefaultTextColor;
-		bool show_text      = false;
 
 		{
 			if (contains(*pin, m_pinHighlighted)) {
 				text_color = color = m_colors.pinSelectedTextColor;
+				fill_pin           = true;
 				show_text          = true;
 				threshold          = 0;
 			}
@@ -2926,14 +2913,17 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 			// if (p_pin->component->visualmode == p_pin->component->CVMSelected) {
 			if (pin->component->visualmode == pin->component->CVMSelected) {
 				show_text = true;
-				color     = m_colors.pinHighlightedColor;
+				color     = m_colors.pinDefaultColor;
 			}
 
 			// pin is on the same net as selected pin: highlight > rest
-			if (!show_text && m_pinSelected && pin->net == m_pinSelected->net) {
-				color     = m_colors.pinHighlightSameNetColor;
-				show_text = true; // is this something we want? Maybe an optional thing?
-				threshold = 0;
+			if (m_pinSelected && pin->net == m_pinSelected->net) {
+				color      = m_colors.pinSameNetColor;
+				text_color = m_colors.pinSameNetTextColor;
+				fill_color = m_colors.pinSameNetFillColor;
+				fill_pin   = true;
+				show_text  = true; // is this something we want? Maybe an optional thing?
+				threshold  = 0;
 			}
 
 			// pin selected overwrites everything
@@ -2942,6 +2932,7 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 				color      = m_colors.pinSelectedColor;
 				text_color = m_colors.pinSelectedTextColor;
 				show_text  = true;
+				fill_pin   = true;
 				threshold  = 0;
 			}
 
@@ -2974,11 +2965,15 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 				default:
 					if ((psz > 3) && (psz > threshold)) {
 						if (pinShapeSquare) {
+							if (fill_pin)
+								draw->AddRectFilled(ImVec2(pos.x - h, pos.y - h), ImVec2(pos.x + h, pos.y + h), fill_color);
 							draw->AddRect(ImVec2(pos.x - h, pos.y - h), ImVec2(pos.x + h, pos.y + h), color);
 						} else {
+							if (fill_pin) draw->AddCircleFilled(ImVec2(pos.x, pos.y), psz, fill_color, segments);
 							draw->AddCircle(ImVec2(pos.x, pos.y), psz, color, segments);
 						}
 					} else if (psz > threshold) {
+						if (fill_pin) draw->AddRectFilled(ImVec2(pos.x - h, pos.y - h), ImVec2(pos.x + h, pos.y + h), fill_color);
 						draw->AddRect(ImVec2(pos.x - h, pos.y - h), ImVec2(pos.x + h, pos.y + h), color);
 					}
 			}
@@ -2988,7 +2983,7 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 				draw->AddCircle(ImVec2(pos.x, pos.y), psz + 1.25, m_colors.pinSelectedTextColor, segments);
 			}
 
-			if ((color == m_colors.pinHighlightSameNetColor) && (pinHalo == true)) {
+			if ((color == m_colors.pinSameNetColor) && (pinHalo == true)) {
 				draw->AddCircle(ImVec2(pos.x, pos.y), psz * pinHaloDiameter, m_colors.pinHaloColor, segments, pinHaloThickness);
 			}
 
