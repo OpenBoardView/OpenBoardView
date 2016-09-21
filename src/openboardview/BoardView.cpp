@@ -1801,21 +1801,21 @@ void BoardView::Update() {
 
 		ImGui::SameLine();
 		if (ImGui::Button(" - ")) {
-			Zoom(m_lastWidth / 2, m_lastHeight / 2, -zoomFactor);
+			Zoom(m_board_surface.x / 2, m_board_surface.y / 2, -zoomFactor);
 		}
 		ImGui::SameLine();
 		if (ImGui::Button(" + ")) {
-			Zoom(m_lastWidth / 2, m_lastHeight / 2, +zoomFactor);
+			Zoom(m_board_surface.x / 2, m_board_surface.y / 2, zoomFactor);
 		}
 		ImGui::SameLine();
 		ImGui::Dummy(ImVec2(DPI(20), 1));
 		ImGui::SameLine();
 		if (ImGui::Button("-")) {
-			Zoom(m_lastWidth / 2, m_lastHeight / 2, -zoomFactor / zoomModifier);
+			Zoom(m_board_surface.x / 2, m_board_surface.y / 2, -zoomFactor / zoomModifier);
 		}
 		ImGui::SameLine();
 		if (ImGui::Button("+")) {
-			Zoom(m_lastWidth / 2, m_lastHeight / 2, +zoomFactor / zoomModifier);
+			Zoom(m_board_surface.x / 2, m_board_surface.y / 2, zoomFactor / zoomModifier);
 		}
 
 		ImGui::SameLine();
@@ -2296,10 +2296,10 @@ void BoardView::HandleInput() {
 			Rotate(-1);
 
 		} else if (ImGui::IsKeyPressed(KM(SDL_SCANCODE_KP_PLUS)) || ImGui::IsKeyPressed(SDLK_EQUALS)) {
-			Zoom(m_lastWidth / 2, m_lastHeight / 2, zoomFactor);
+			Zoom(m_board_surface.x / 2, m_board_surface.y / 2, zoomFactor);
 
 		} else if (ImGui::IsKeyPressed(KM(SDL_SCANCODE_KP_MINUS)) || ImGui::IsKeyPressed(SDLK_MINUS)) {
-			Zoom(m_lastWidth / 2, m_lastHeight / 2, -zoomFactor);
+			Zoom(m_board_surface.x / 2, m_board_surface.y / 2, -zoomFactor);
 
 		} else if (ImGui::IsKeyPressed(KM(SDL_SCANCODE_KP_2)) || ImGui::IsKeyPressed(SDLK_s)) {
 			Pan(DIR_DOWN, panFactor);
