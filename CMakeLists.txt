@@ -1,5 +1,5 @@
 cmake_policy(SET CMP0048 OLD)
-set(PROJECT_VERSION "R6")
+set(PROJECT_VERSION "R7")
 project(OpenBoardView)
 cmake_minimum_required(VERSION 2.8.9)
 
