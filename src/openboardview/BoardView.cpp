@@ -76,7 +76,7 @@ void BoardView::ThemeSetStyle(const char *name) {
 		style.Colors[ImGuiCol_Border]        = ImVec4(0.70f, 0.70f, 0.70f, 0.65f);
 		style.Colors[ImGuiCol_BorderShadow]  = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
 		style.Colors[ImGuiCol_FrameBg] =
-		    ImVec4(0.80f, 0.80f, 0.80f, 0.30f); // Background of checkbox, radio button, plot, slider, text input
+		    ImVec4(0.30f, 0.30f, 0.30f, 1.0f); // Background of checkbox, radio button, plot, slider, text input
 		style.Colors[ImGuiCol_FrameBgHovered]       = ImVec4(0.90f, 0.80f, 0.80f, 0.40f);
 		style.Colors[ImGuiCol_FrameBgActive]        = ImVec4(0.90f, 0.65f, 0.65f, 0.45f);
 		style.Colors[ImGuiCol_TitleBg]              = ImVec4(0.27f, 0.27f, 0.54f, 0.83f);
@@ -143,7 +143,7 @@ void BoardView::ThemeSetStyle(const char *name) {
 		m_colors.pinNetWebOSColor = byte4swap(0x8888ff88);
 
 		m_colors.annotationPartAliasColor       = byte4swap(0xffff00ff);
-		m_colors.annotationBoxColor             = byte4swap(0xaaaa88aa);
+		m_colors.annotationBoxColor             = byte4swap(0xcccc88ff);
 		m_colors.annotationStalkColor           = byte4swap(0xaaaaaaff);
 		m_colors.annotationPopupBackgroundColor = byte4swap(0x888888ff);
 		m_colors.annotationPopupTextColor       = byte4swap(0xffffffff);
@@ -579,7 +579,11 @@ void BoardView::ColorPreferences(void) {
 	//	ImGui::PushStyleColor(ImGuiCol_PopupBg, ImColor(0xffe0e0e0));
 	ImGui::SetNextWindowPosCenter();
 	if (ImGui::BeginPopupModal("Colour Preferences", &dummy, ImGuiWindowFlags_AlwaysAutoResize)) {
-		if (m_showColorPreferences) m_showColorPreferences = false;
+
+		if (m_showColorPreferences) {
+			m_showColorPreferences = false;
+			m_tooltips_enabled     = false;
+		}
 
 		ImGui::Dummy(ImVec2(1, DPI(5)));
 		RA("Base theme", DPI(200));
@@ -688,9 +692,14 @@ void BoardView::ColorPreferences(void) {
 		ImGui::Separator();
 
 		if (ImGui::Button("Done") || ImGui::IsKeyPressed(SDLK_ESCAPE)) {
+			m_tooltips_enabled = true;
 			ImGui::CloseCurrentPopup();
 		}
 		ImGui::EndPopup();
+	}
+
+	if (!dummy) {
+		m_tooltips_enabled = true;
 	}
 	//	ImGui::PopStyleColor();
 }
@@ -701,7 +710,10 @@ void BoardView::Preferences(void) {
 	ImGui::SetNextWindowPosCenter();
 	if (ImGui::BeginPopupModal("Preferences", &dummy, ImGuiWindowFlags_AlwaysAutoResize)) {
 		int t;
-		if (m_showPreferences) m_showPreferences = false;
+		if (m_showPreferences) {
+			m_showPreferences  = false;
+			m_tooltips_enabled = false;
+		}
 
 		t = obvconfig.ParseInt("windowX", 1100);
 		RA("Window Width", DPI(200));
@@ -874,8 +886,13 @@ void BoardView::Preferences(void) {
 
 		if (ImGui::Button("Done") || ImGui::IsKeyPressed(SDLK_ESCAPE)) {
 			ImGui::CloseCurrentPopup();
+			m_tooltips_enabled = true;
 		}
 		ImGui::EndPopup();
+	}
+
+	if (!dummy) {
+		m_tooltips_enabled = true;
 	}
 	//	ImGui::PopStyleColor();
 }
@@ -884,11 +901,15 @@ void BoardView::HelpAbout(void) {
 	bool dummy = true;
 	ImGui::SetNextWindowPosCenter();
 	if (ImGui::BeginPopupModal("About", &dummy, ImGuiWindowFlags_AlwaysAutoResize)) {
-		if (m_showHelpAbout) m_showHelpAbout = false;
+		if (m_showHelpAbout) {
+			m_showHelpAbout    = false;
+			m_tooltips_enabled = false;
+		}
 		ImGui::Text("Openflex Boardview");
 		ImGui::Text("Build %s %s", OBV_BUILD, __TIMESTAMP__);
 		ImGui::Text("http://openboardview.org");
 		if (ImGui::Button("Close") || ImGui::IsKeyPressed(SDLK_ESCAPE)) {
+			m_tooltips_enabled = true;
 			ImGui::CloseCurrentPopup();
 		}
 		ImGui::Dummy(ImVec2(1, DPI(10)));
@@ -936,17 +957,25 @@ void BoardView::HelpAbout(void) {
 		    "SOFTWARE.");
 		ImGui::EndPopup();
 	}
+
+	if (!dummy) {
+		m_tooltips_enabled = true;
+	}
 }
 
 void BoardView::HelpControls(void) {
 	bool dummy = true;
 	ImGui::SetNextWindowPosCenter();
 	if (ImGui::BeginPopupModal("Controls", &dummy, ImGuiWindowFlags_AlwaysAutoResize)) {
-		if (m_showHelpControls) m_showHelpControls = false;
+		if (m_showHelpControls) {
+			m_showHelpControls = false;
+			m_tooltips_enabled = false;
+		}
 		ImGui::Text("KEYBOARD CONTROLS");
 		ImGui::SameLine();
 
 		if (ImGui::Button("Close") || ImGui::IsKeyPressed(SDLK_ESCAPE)) {
+			m_tooltips_enabled = true;
 			ImGui::CloseCurrentPopup();
 		}
 		ImGui::Separator();
@@ -1054,11 +1083,16 @@ void BoardView::HelpControls(void) {
 
 		ImGui::EndPopup();
 	}
+	if (!dummy) {
+		m_tooltips_enabled = true;
+	}
 }
 
 void BoardView::ShowInfoPane(void) {
 	ImGuiIO &io = ImGui::GetIO();
 	ImVec2 ds   = io.DisplaySize;
+
+	if (!showInfoPanel) return;
 
 	if (m_info_surface.x < DPIF(100)) {
 		//	fprintf(stderr,"Too small (%f), set to (%f)\n", width, DPIF(100));
@@ -1118,11 +1152,13 @@ void BoardView::ShowInfoPane(void) {
 	}
 
 	if (m_board) {
-		RA("Statistics", m_info_surface.x - DPIF(20.0f));
+		ImGui::Columns(2);
 		ImGui::Text("Pins: %ld", m_board->Pins().size());
 		ImGui::Text("Parts: %ld", m_board->Components().size());
+		ImGui::NextColumn();
 		ImGui::Text("Nets: %ld", m_board->Nets().size());
-		ImGui::Text("Size: %0.2f x %0.2f\"", m_boardWidth / 1000.0f, m_boardHeight / 1000.0f);
+		ImGui::TextWrapped("Size: %0.2f x %0.2f\"", m_boardWidth / 1000.0f, m_boardHeight / 1000.0f);
+		ImGui::Columns(1);
 		ImGui::Separator();
 		if (ImGui::Checkbox("Zoom on selected net", &infoPanelCenterZoomNets)) {
 			obvconfig.WriteBool("infoPanelCenterZoomNets", infoPanelCenterZoomNets);
@@ -1162,7 +1198,7 @@ void BoardView::ShowInfoPane(void) {
 			ImVec2 listSize;
 			int pc          = part->pins.size();
 			if (pc > 20) pc = 20;
-			listSize        = ImVec2(0.80 * m_info_surface.x, pc * ImGui::GetFontSize() * 1.45);
+			listSize        = ImVec2(m_info_surface.x - DPIF(50), pc * ImGui::GetFontSize() * 1.45);
 			ImGui::ListBoxHeader(str.c_str(), listSize); //, ImVec2(m_board_surface.x/3 -5, m_board_surface.y/2));
 			for (auto pin : part->pins) {
 				char ss[1024];
@@ -1192,8 +1228,10 @@ void BoardView::ShowInfoPane(void) {
 			ImGui::PopItemWidth();
 
 		} // for each part in the list
+		ImGui::Text(" ");
 		ImGui::Separator();
-		ImGui::Text("End of list");
+		ImGui::Separator();
+		ImGui::Separator();
 	}
 
 	ImGui::End();
@@ -1229,8 +1267,11 @@ void BoardView::ContextMenu(void) {
 	if (ImGui::BeginPopupModal("Annotations", &dummy, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_ShowBorders)) {
 
 		if (m_showContextMenu) {
-			contextbuf[0]     = 0;
-			m_showContextMenu = false;
+			contextbuf[0]      = 0;
+			m_showContextMenu  = false;
+			m_tooltips_enabled = false;
+			//			m_parent_occluded = true;
+			for (auto &ann : m_annotations.annotations) ann.hovered = false;
 		}
 
 		/*
@@ -1346,6 +1387,7 @@ void BoardView::ContextMenu(void) {
 							m_annotations.GenerateList();
 							m_needsRedraw      = true;
 							m_tooltips_enabled = true;
+							// m_parent_occluded = false;
 							ImGui::CloseCurrentPopup();
 						}
 						ImGui::SameLine();
@@ -1353,6 +1395,7 @@ void BoardView::ContextMenu(void) {
 							ImGui::CloseCurrentPopup();
 							m_annotationnew_retain = false;
 							m_tooltips_enabled     = true;
+							// m_parent_occluded = false;
 						}
 						ImGui::Separator();
 					}
@@ -1425,6 +1468,7 @@ void BoardView::ContextMenu(void) {
 					m_annotations.Remove(m_annotations.annotations[m_annotation_clicked_id].id);
 					m_annotations.GenerateList();
 					m_needsRedraw = true;
+					// m_parent_occluded = false;
 					ImGui::CloseCurrentPopup();
 				}
 			}
@@ -1437,10 +1481,11 @@ void BoardView::ContextMenu(void) {
 			m_annotationnew_retain  = false;
 			m_annotationedit_retain = false;
 			m_tooltips_enabled      = true;
+			// m_parent_occluded = false;
 			ImGui::CloseCurrentPopup();
 		}
 		ImGui::EndPopup();
-		m_tooltips_enabled = true;
+		//	m_tooltips_enabled = true;
 	}
 
 	/** if the dialog was closed by using the (X) icon **/
@@ -1448,6 +1493,7 @@ void BoardView::ContextMenu(void) {
 		m_annotationnew_retain  = false;
 		m_annotationedit_retain = false;
 		m_tooltips_enabled      = true;
+		// m_parent_occluded = false;
 	}
 }
 
@@ -1509,7 +1555,9 @@ void BoardView::SearchComponent(void) {
 		const char *first_button3 = m_search3;
 
 		if (m_showSearch) {
-			m_showSearch = false;
+			m_showSearch       = false;
+			m_tooltips_enabled = false;
+			fprintf(stderr, "Tooltips disabled\n");
 		}
 
 		// Column 1, implied.
@@ -1535,9 +1583,10 @@ void BoardView::SearchComponent(void) {
 		ImGui::SameLine();
 		if (ImGui::Button("Exit") || ImGui::IsKeyPressed(SDLK_ESCAPE)) {
 			FindComponent("");
-			m_search[0]  = '\0';
-			m_search2[0] = '\0';
-			m_search3[0] = '\0';
+			m_search[0]        = '\0';
+			m_search2[0]       = '\0';
+			m_search3[0]       = '\0';
+			m_tooltips_enabled = true;
 			ImGui::CloseCurrentPopup();
 		} // exit button
 
@@ -1629,9 +1678,13 @@ void BoardView::SearchComponent(void) {
 			SearchCompoundNoClear(m_search3);
 			CenterZoomSearchResults();
 			ImGui::CloseCurrentPopup();
+			m_tooltips_enabled = true;
 		} // response to keyboard ENTER
 
 		ImGui::EndPopup();
+	}
+	if (!dummy) {
+		m_tooltips_enabled = true;
 	}
 }
 
@@ -2437,9 +2490,8 @@ void BoardView::ShowPartList(bool *p_open) {
 
 void BoardView::RenderOverlay() {
 
-	if (showInfoPanel) {
-		ShowInfoPane();
-	}
+	ShowInfoPane();
+
 	// Listing of Net elements
 	if (m_showNetList) {
 		ShowNetList(&m_showNetList);
@@ -2918,6 +2970,7 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 		uint32_t color      = (m_colors.pinDefaultColor & cmask) | omask;
 		bool fill_pin       = false;
 		bool show_text      = false;
+		bool draw_ring      = true;
 
 		// continue if pin is not visible anyway
 		if (!ComponentIsVisible(pin->component)) continue;
@@ -2936,6 +2989,7 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 				text_color = color = m_colors.pinSelectedTextColor;
 				fill_pin           = true;
 				show_text          = true;
+				draw_ring          = false;
 				threshold          = 0;
 			}
 
@@ -2975,6 +3029,7 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 				color                       = m_colors.pinSameNetColor;
 				text_color                  = m_colors.pinSameNetTextColor;
 				fill_color                  = m_colors.pinSameNetFillColor;
+				draw_ring                   = false;
 				fill_pin                    = true;
 				show_text                   = true; // is this something we want? Maybe an optional thing?
 				threshold                   = 0;
@@ -2986,6 +3041,7 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 				if (psz < fontSize / 2) psz = fontSize / 2;
 				color                       = m_colors.pinSelectedColor;
 				text_color                  = m_colors.pinSelectedTextColor;
+				draw_ring                   = false;
 				show_text                   = true;
 				fill_pin                    = true;
 				threshold                   = 0;
@@ -3022,16 +3078,14 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 						if (pinShapeSquare) {
 							if (fill_pin)
 								draw->AddRectFilled(ImVec2(pos.x - h, pos.y - h), ImVec2(pos.x + h, pos.y + h), fill_color);
-							if (color != m_colors.pinSameNetColor)
-								draw->AddRect(ImVec2(pos.x - h, pos.y - h), ImVec2(pos.x + h, pos.y + h), color);
+							if (draw_ring) draw->AddRect(ImVec2(pos.x - h, pos.y - h), ImVec2(pos.x + h, pos.y + h), color);
 						} else {
 							if (fill_pin) draw->AddCircleFilled(ImVec2(pos.x, pos.y), psz, fill_color, segments);
-							if (color != m_colors.pinSameNetColor) draw->AddCircle(ImVec2(pos.x, pos.y), psz, color, segments);
+							if (draw_ring) draw->AddCircle(ImVec2(pos.x, pos.y), psz, color, segments);
 						}
 					} else if (psz > threshold) {
 						if (fill_pin) draw->AddRectFilled(ImVec2(pos.x - h, pos.y - h), ImVec2(pos.x + h, pos.y + h), fill_color);
-						if (color != m_colors.pinSameNetColor)
-							draw->AddRect(ImVec2(pos.x - h, pos.y - h), ImVec2(pos.x + h, pos.y + h), color);
+						if (draw_ring) draw->AddRect(ImVec2(pos.x - h, pos.y - h), ImVec2(pos.x + h, pos.y + h), color);
 					}
 			}
 
@@ -3051,10 +3105,10 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 				ImVec2 text_size = ImGui::CalcTextSize(pin_number);
 				ImVec2 pos_adj   = ImVec2(pos.x - text_size.x * 0.5f, pos.y - text_size.y * 0.5f);
 
-				draw->ChannelsSetCurrent(kChannelText);
+				//				draw->ChannelsSetCurrent(kChannelText);
 				draw->AddText(pos_adj, text_color, pin_number);
 
-				draw->ChannelsSetCurrent(kChannelPins);
+				//				draw->ChannelsSetCurrent(kChannelPins);
 			}
 		}
 	}
@@ -3513,6 +3567,8 @@ void BoardView::DrawPartTooltips(ImDrawList *draw) {
 	ImVec2 spos = ImGui::GetMousePos();
 	ImVec2 pos  = ScreenToCoord(spos.x, spos.y);
 
+	//	if (m_parent_occluded) return;
+	if (!m_tooltips_enabled) return;
 	if (spos.x > m_board_surface.x) return;
 	/*
  * I am loathing that I have to add this, but basically check every pin on the board so we can
@@ -3625,6 +3681,7 @@ void BoardView::DrawPartTooltips(ImDrawList *draw) {
 }
 
 inline void BoardView::DrawPinTooltips(ImDrawList *draw) {
+	if (!m_tooltips_enabled) return;
 	draw->ChannelsSetCurrent(kChannelAnnotations);
 
 	if (HighlightedPinIsHovered()) {
@@ -3643,6 +3700,7 @@ inline void BoardView::DrawPinTooltips(ImDrawList *draw) {
 inline void BoardView::DrawAnnotations(ImDrawList *draw) {
 
 	if (!showAnnotations) return;
+	if (!m_tooltips_enabled) return;
 
 	draw->ChannelsSetCurrent(kChannelAnnotations);
 
@@ -3743,6 +3801,7 @@ int BoardView::AnnotationIsHovered(void) {
 	bool is_hovered = false;
 	int i           = 0;
 
+	if (!m_tooltips_enabled) return false;
 	m_annotation_last_hovered = 0;
 
 	for (auto &ann : m_annotations.annotations) {

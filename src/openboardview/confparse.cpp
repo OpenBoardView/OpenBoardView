@@ -65,7 +65,7 @@ infoPanelSelectPartsOnNet = true\r\n\
 flipMode = 1\r\n\
 \r\n\
 showAnnotations = true\r\n\
-annotationBoxSize = 15\r\n\
+annotationBoxSize = 20\r\n\
 annotationBoxOffset = 8\r\n\
 #\r\n\
 # \"XRayBlue\" Theme by Inflex (20160724)\r\n\
@@ -80,7 +80,7 @@ boardFillColor	= 0xddddddff\r\n\
 partOutlineColor = 0x444444ff\r\n\
 partHullColor			= 0x80808080\r\n\
 partFillColor = 0xffffffbb\r\n\
-partHighlightedFillColor = 0xf0f0f0ff\r\n\
+partHighlightedFillColor = 0xf4f0f0ff\r\n\
 partHighlightedColor = 0xff0000ee\r\n\
 partTextColor			= 0xff3030ff\r\n\
 partTextBackgroundColor			= 0xffff00ff\r\n\

@@ -56,7 +56,7 @@ struct ColorScheme {
 	uint32_t partHullColor            = 0x80808080;
 	uint32_t partFillColor            = 0xffffffff;
 	uint32_t partHighlightedColor     = 0xff0000ee;
-	uint32_t partHighlightedFillColor = 0xf0f0f0ff;
+	uint32_t partHighlightedFillColor = 0xf4f0f0ff;
 	uint32_t boardOutlineColor        = 0xff00ffff;
 
 	//	uint32_t boxColor = 0xffcccccc;
@@ -191,6 +191,7 @@ struct BoardView {
 	bool m_annotationnew_retain   = false;
 	bool m_annotationedit_retain  = false;
 	bool m_tooltips_enabled       = true;
+	bool m_parent_occluded        = false;
 	int m_annotation_last_hovered = 0;
 	int m_annotation_clicked_id   = 0;
 	int m_hoverframes             = 0;
