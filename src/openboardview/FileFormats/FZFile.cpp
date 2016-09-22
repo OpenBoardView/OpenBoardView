@@ -215,6 +215,7 @@ FZFile::FZFile(std::vector<char> &buf, uint32_t *fzkey) {
 		 * 1 in ~2^16 chance of a false hit.
 		 */
 		FZFile::decode(file_buf, buffer_size); // RC6 decryption
+		                                       // fprintf(stderr,"FZFile:Decoded\n");
 	}
 
 	size_t content_size = 0;
@@ -250,6 +251,10 @@ if (!content) {
 
 	char **lines_descr = stringfile(descr);
 	ENSURE(lines_descr);
+
+	// For some reason, some boards have COMMAs as decimal separators. Will wonders ever cease ( I realise this is a regional thing
+	// )?
+	std::replace(content, content + content_size, ',', '.');
 
 	// Parse the content part (parts, pins, nails)
 
