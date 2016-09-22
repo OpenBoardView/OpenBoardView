@@ -1190,9 +1190,9 @@ void BoardView::ShowInfoPane(void) {
 					             abs(part->outline[2].y - part->outline[0].y) * m_scale / m_board_surface.y);
 					if ((psz.x > 1) || (psz.y > 1)) {
 						if (psz.x > psz.y) {
-							m_scale /= (2 * psz.x);
+							m_scale /= (2.5 * psz.x);
 						} else {
-							m_scale /= (2 * psz.y);
+							m_scale /= (2.5 * psz.y);
 						}
 					}
 
@@ -1202,6 +1202,34 @@ void BoardView::ShowInfoPane(void) {
 				}
 				m_needsRedraw = 1;
 			}
+			ImGui::SameLine();
+			{
+				char bn[128];
+				snprintf(bn, sizeof(bn), "Z##%s", part->name.c_str());
+				if (ImGui::SmallButton(bn)) {
+					if (!ComponentIsVisible(part)) FlipBoard();
+					if (part->centerpoint.x && part->centerpoint.y) {
+						ImVec2 psz;
+
+						/*
+						 * Check to see if we need to zoom BACK a bit to fit the part in to view
+						 */
+						psz = ImVec2(abs(part->outline[2].x - part->outline[0].x) * m_scale / m_board_surface.x,
+						             abs(part->outline[2].y - part->outline[0].y) * m_scale / m_board_surface.y);
+						if (psz.x > psz.y) {
+							m_scale /= (2.5 * psz.x);
+						} else {
+							m_scale /= (2.5 * psz.y);
+						}
+
+						SetTarget(part->centerpoint.x, part->centerpoint.y);
+					} else {
+						SetTarget(part->pins[0]->position.x, part->pins[0]->position.y);
+					}
+					m_needsRedraw = 1;
+				}
+			}
+
 			ImGui::SameLine();
 			ImGui::Text("%ld Pin(s)", part->pins.size());
 			if (part->mfgcode.size()) ImGui::TextWrapped("%s", part->mfgcode.c_str());
