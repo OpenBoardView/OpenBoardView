@@ -277,6 +277,7 @@ int BoardView::ConfigParse(void) {
 	showInfoPanel             = obvconfig.ParseBool("showInfoPanel", true);
 	infoPanelSelectPartsOnNet = obvconfig.ParseBool("infoPanelSelectPartsOnNet", true);
 	infoPanelCenterZoomNets   = obvconfig.ParseBool("infoPanelCenterZoomNets", true);
+	partZoomScaleOutFactor    = obvconfig.ParseDouble("partZoomScaleOutFactor", 2.5f);
 
 	m_info_surface.x          = obvconfig.ParseInt("infoPanelWidth", 350);
 	showPins                  = obvconfig.ParseBool("showPins", true);
@@ -825,6 +826,13 @@ void BoardView::Preferences(void) {
 			obvconfig.WriteFloat("pinHaloThickness", pinHaloThickness);
 		}
 
+		RA("Info Panel Zoom", DPI(200));
+		ImGui::SameLine();
+		if (ImGui::InputFloat("##partZoomScaleOutFactor", &partZoomScaleOutFactor)) {
+			if (partZoomScaleOutFactor < 1.1) partZoomScaleOutFactor = 1.1;
+			obvconfig.WriteFloat("partZoomScaleOutFactor", partZoomScaleOutFactor);
+		}
+
 		if (ImGui::Checkbox("Center/Zoom Search Results", &m_centerZoomSearchResults)) {
 			obvconfig.WriteBool("centerZoomSearchResults", m_centerZoomSearchResults);
 		}
@@ -1190,9 +1198,9 @@ void BoardView::ShowInfoPane(void) {
 					             abs(part->outline[2].y - part->outline[0].y) * m_scale / m_board_surface.y);
 					if ((psz.x > 1) || (psz.y > 1)) {
 						if (psz.x > psz.y) {
-							m_scale /= (2.5 * psz.x);
+							m_scale /= (partZoomScaleOutFactor * psz.x);
 						} else {
-							m_scale /= (2.5 * psz.y);
+							m_scale /= (partZoomScaleOutFactor * psz.y);
 						}
 					}
 
@@ -1217,9 +1225,9 @@ void BoardView::ShowInfoPane(void) {
 						psz = ImVec2(abs(part->outline[2].x - part->outline[0].x) * m_scale / m_board_surface.x,
 						             abs(part->outline[2].y - part->outline[0].y) * m_scale / m_board_surface.y);
 						if (psz.x > psz.y) {
-							m_scale /= (2.5 * psz.x);
+							m_scale /= (partZoomScaleOutFactor * psz.x);
 						} else {
-							m_scale /= (2.5 * psz.y);
+							m_scale /= (partZoomScaleOutFactor * psz.y);
 						}
 
 						SetTarget(part->centerpoint.x, part->centerpoint.y);
@@ -2075,7 +2083,7 @@ void BoardView::Update() {
 	m_status_height = (DPIF(10.0f) + ImGui::GetFontSize());
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(DPIF(4.0f), DPIF(3.0f)));
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
-	ImGui::SetNextWindowPos(ImVec2{0, io.DisplaySize.y - m_status_height});
+	ImGui::SetNextWindowPos(ImVec2(0, io.DisplaySize.y - m_status_height));
 	ImGui::SetNextWindowSize(ImVec2(io.DisplaySize.x, m_status_height));
 	ImGui::Begin("status", nullptr, flags | ImGuiWindowFlags_NoFocusOnAppearing);
 	if (m_file && m_board && m_pinSelected) {
@@ -2118,6 +2126,11 @@ void BoardView::Update() {
 	ImGui::PopStyleVar();
 	ImGui::PopStyleVar();
 
+	if (!showInfoPanel) {
+		m_board_surface = ImVec2(io.DisplaySize.x, io.DisplaySize.y - (m_status_height + m_menu_height));
+	} else {
+		m_board_surface = ImVec2(io.DisplaySize.x - m_info_surface.x, io.DisplaySize.y - (m_status_height + m_menu_height));
+	}
 	/*
 	 * Drawing surface, where the actual PCB/board is plotted out
 	 */
@@ -2128,11 +2141,6 @@ void BoardView::Update() {
 		m_lastWidth   = m_board_surface.x;
 		m_lastHeight  = m_board_surface.y;
 		m_needsRedraw = true;
-	}
-	if (!showInfoPanel) {
-		m_board_surface = ImVec2(io.DisplaySize.x, io.DisplaySize.y - (m_status_height + m_menu_height));
-	} else {
-		m_board_surface = ImVec2(io.DisplaySize.x - m_info_surface.x, io.DisplaySize.y - (m_status_height + m_menu_height));
 	}
 
 	ImGui::SetNextWindowSize(m_board_surface);
@@ -4007,6 +4015,7 @@ ImVec2 BoardView::CoordToScreen(float x, float y, float w) {
 
 ImVec2 BoardView::ScreenToCoord(float x, float y, float w) {
 	float tx, ty;
+
 	switch (m_rotation) {
 		case 0:
 			tx = x;

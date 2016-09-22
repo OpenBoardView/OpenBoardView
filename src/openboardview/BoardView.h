@@ -122,6 +122,7 @@ struct BoardView {
 	double dpiscale              = 1.0f;
 	double fontSize              = 20.0f;
 	float zoomFactor             = 0.5f;
+	float partZoomScaleOutFactor = 2.5f;
 	int zoomModifier             = 5;
 	int panFactor                = 30;
 	int panModifier              = 5;
