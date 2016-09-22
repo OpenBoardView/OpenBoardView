@@ -95,7 +95,7 @@ partTextBackgroundColor			= 0xffff00ff\r\n\
 #\r\n\
 boardOutlineColor			= 0x444444ff\r\n\
 pinDefaultColor				= 0x8888ccff\r\n\
-pinDefaultTextColor			= 0x444488ff\r\n\
+pinDefaultTextColor			= 0x666688ff\r\n\
 pinGroundColor				= 0x2222aaff\r\n\
 pinNotConnectedColor		= 0xaaaaaaff\r\n\
 pinTestPadColor				= 0x888888ff\r\n\
