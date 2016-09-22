@@ -120,6 +120,7 @@ struct BoardView {
 	int history_file_has_changed = 0;
 	int dpi                      = 0;
 	double dpiscale              = 1.0f;
+	double fontSize              = 20.0f;
 	float zoomFactor             = 0.5f;
 	int zoomModifier             = 5;
 	int panFactor                = 30;

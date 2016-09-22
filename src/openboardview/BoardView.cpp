@@ -252,6 +252,7 @@ int BoardView::ConfigParse(void) {
 	const char *v     = obvconfig.ParseStr("colorTheme", "light");
 	ThemeSetStyle(v);
 
+	fontSize            = obvconfig.ParseDouble("fontSize", 20);
 	pinSizeThresholdLow = obvconfig.ParseDouble("pinSizeThresholdLow", 0);
 	pinShapeSquare      = obvconfig.ParseBool("pinShapeSquare", false);
 	pinShapeCircle      = obvconfig.ParseBool("pinShapeCircle", true);
@@ -2908,6 +2909,8 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 
 	draw->ChannelsSetCurrent(kChannelPins);
 
+	if (m_pinSelected) DrawNetWeb(draw);
+
 	for (auto &pin : m_board->Pins()) {
 		float psz           = pin->diameter * m_scale;
 		uint32_t fill_color = 0xFFFF8888; // fallback fill colour
@@ -2968,22 +2971,24 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 
 			// pin is on the same net as selected pin: highlight > rest
 			if (m_pinSelected && pin->net == m_pinSelected->net) {
-				color      = m_colors.pinSameNetColor;
-				text_color = m_colors.pinSameNetTextColor;
-				fill_color = m_colors.pinSameNetFillColor;
-				fill_pin   = true;
-				show_text  = true; // is this something we want? Maybe an optional thing?
-				threshold  = 0;
+				if (psz < fontSize / 2) psz = fontSize / 2;
+				color                       = m_colors.pinSameNetColor;
+				text_color                  = m_colors.pinSameNetTextColor;
+				fill_color                  = m_colors.pinSameNetFillColor;
+				fill_pin                    = true;
+				show_text                   = true; // is this something we want? Maybe an optional thing?
+				threshold                   = 0;
 			}
 
 			// pin selected overwrites everything
 			// if (p_pin == m_pinSelected) {
 			if (pin.get() == m_pinSelected) {
-				color      = m_colors.pinSelectedColor;
-				text_color = m_colors.pinSelectedTextColor;
-				show_text  = true;
-				fill_pin   = true;
-				threshold  = 0;
+				if (psz < fontSize / 2) psz = fontSize / 2;
+				color                       = m_colors.pinSelectedColor;
+				text_color                  = m_colors.pinSelectedTextColor;
+				show_text                   = true;
+				fill_pin                    = true;
+				threshold                   = 0;
 			}
 
 			// don't show text if it doesn't make sense
@@ -3017,25 +3022,28 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 						if (pinShapeSquare) {
 							if (fill_pin)
 								draw->AddRectFilled(ImVec2(pos.x - h, pos.y - h), ImVec2(pos.x + h, pos.y + h), fill_color);
-							draw->AddRect(ImVec2(pos.x - h, pos.y - h), ImVec2(pos.x + h, pos.y + h), color);
+							if (color != m_colors.pinSameNetColor)
+								draw->AddRect(ImVec2(pos.x - h, pos.y - h), ImVec2(pos.x + h, pos.y + h), color);
 						} else {
 							if (fill_pin) draw->AddCircleFilled(ImVec2(pos.x, pos.y), psz, fill_color, segments);
-							draw->AddCircle(ImVec2(pos.x, pos.y), psz, color, segments);
+							if (color != m_colors.pinSameNetColor) draw->AddCircle(ImVec2(pos.x, pos.y), psz, color, segments);
 						}
 					} else if (psz > threshold) {
 						if (fill_pin) draw->AddRectFilled(ImVec2(pos.x - h, pos.y - h), ImVec2(pos.x + h, pos.y + h), fill_color);
-						draw->AddRect(ImVec2(pos.x - h, pos.y - h), ImVec2(pos.x + h, pos.y + h), color);
+						if (color != m_colors.pinSameNetColor)
+							draw->AddRect(ImVec2(pos.x - h, pos.y - h), ImVec2(pos.x + h, pos.y + h), color);
 					}
 			}
 
 			// if (p_pin == m_pinSelected) {
-			if (pin.get() == m_pinSelected) {
-				draw->AddCircle(ImVec2(pos.x, pos.y), psz + 1.25, m_colors.pinSelectedTextColor, segments);
-			}
+			//		if (pin.get() == m_pinSelected) {
+			//			draw->AddCircle(ImVec2(pos.x, pos.y), psz + 1.25, m_colors.pinSelectedTextColor, segments);
+			//		}
 
-			if ((color == m_colors.pinSameNetColor) && (pinHalo == true)) {
-				draw->AddCircle(ImVec2(pos.x, pos.y), psz * pinHaloDiameter, m_colors.pinHaloColor, segments, pinHaloThickness);
-			}
+			//		if ((color == m_colors.pinSameNetColor) && (pinHalo == true)) {
+			//			draw->AddCircle(ImVec2(pos.x, pos.y), psz * pinHaloDiameter, m_colors.pinHaloColor, segments,
+			// pinHaloThickness);
+			//		}
 
 			if (show_text) {
 				const char *pin_number = pin->number.c_str();
@@ -3050,8 +3058,6 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 			}
 		}
 	}
-
-	if (m_pinSelected) DrawNetWeb(draw);
 }
 
 inline void BoardView::DrawParts(ImDrawList *draw) {
