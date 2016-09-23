@@ -2594,13 +2594,14 @@ void BoardView::CenterZoomNet(string netname) {
 
 	if (debug) fprintf(stderr, "CenterzoomNet: bbox[%d]: %0.1f %0.1f - %0.1f %0.1f\n", i, min.x, min.y, max.x, max.y);
 
-	float dx = 2.0f * (max.x - min.x);
-	float dy = 2.0f * (max.y - min.y);
+	float dx = (max.x - min.x);
+	float dy = (max.y - min.y);
 	float sx = dx > 0 ? view.x / dx : 1.0f;
 	float sy = dy > 0 ? view.y / dy : 1.0f;
 
 	//  m_rotation = 0;
-	m_scale                              = sx < sy ? sx : sy;
+	m_scale = sx < sy ? sx : sy;
+	m_scale /= partZoomScaleOutFactor;
 	if (m_scale < m_scale_floor) m_scale = m_scale_floor;
 
 	m_dx = (max.x - min.x) / 2 + min.x;
@@ -2650,7 +2651,8 @@ void BoardView::CenterZoomSearchResults(void) {
 	float sy = dy > 0 ? view.y / dy : 1.0f;
 
 	//  m_rotation = 0;
-	m_scale                              = sx < sy ? sx : sy;
+	m_scale = sx < sy ? sx : sy;
+	m_scale /= partZoomScaleOutFactor;
 	if (m_scale < m_scale_floor) m_scale = m_scale_floor;
 
 	m_dx = (max.x - min.x) / 2 + min.x;
