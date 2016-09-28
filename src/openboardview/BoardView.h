@@ -209,7 +209,7 @@ struct BoardView {
 	ImVec2 m_showContextMenuPos;
 
 	Pin *m_pinSelected = nullptr;
-	//	Net *m_netSelected = nullptr;
+	//	vector<Net *> m_netHiglighted;
 	vector<Pin *> m_pinHighlighted;
 	vector<Component *> m_partHighlighted;
 	char m_cachedDrawList[sizeof(ImDrawList)];

@@ -1609,7 +1609,7 @@ void BoardView::SearchComponent(void) {
 		if (m_showSearch) {
 			m_showSearch       = false;
 			m_tooltips_enabled = false;
-			fprintf(stderr, "Tooltips disabled\n");
+			//			fprintf(stderr, "Tooltips disabled\n");
 		}
 
 		// Column 1, implied.
@@ -2981,6 +2981,7 @@ void BoardView::DrawNetWeb(ImDrawList *draw) {
 			              1);
 		}
 	}
+
 	return;
 }
 
@@ -3040,11 +3041,13 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 
 		{
 			if (contains(*pin, m_pinHighlighted)) {
+				if (psz < fontSize / 2) psz = fontSize / 2;
 				text_color = color = m_colors.pinSelectedTextColor;
 				fill_pin           = true;
 				show_text          = true;
-				draw_ring          = false;
+				draw_ring          = true;
 				threshold          = 0;
+				draw->AddCircle(ImVec2(pos.x, pos.y), psz * pinHaloDiameter, m_colors.pinHaloColor, 32);
 			}
 
 			if (!pin->net || pin->type == Pin::kPinTypeNotConnected) {
