@@ -1617,6 +1617,7 @@ void BoardView::SearchComponent(void) {
 		//
 		if (ImGui::Button("Search")) {
 			// FindComponent(first_button);
+			m_tooltips_enabled = true;
 			SearchCompound(first_button);
 			SearchCompoundNoClear(first_button2);
 			SearchCompoundNoClear(first_button3);
@@ -1748,6 +1749,7 @@ void BoardView::ClearAllHighlights(void) {
 	m_search2[0]                                             = '\0';
 	m_search3[0]                                             = '\0';
 	m_needsRedraw                                            = true;
+	m_tooltips_enabled                                       = true;
 	for (auto part : m_board->Components()) part->visualmode = part->CVMNormal;
 	m_partHighlighted.clear();
 	m_pinHighlighted.clear();
@@ -2955,6 +2957,32 @@ inline void BoardView::DrawOutline(ImDrawList *draw) {
 	} // for
 }
 
+void BoardView::DrawSelectedWeb(ImDrawList *draw) {
+	if (!showNetWeb) return;
+
+	bool first = true;
+	Point fp;
+	/*
+	 * Some nets we don't bother showing, because they're not relevant or
+	 * produce too many results (such as ground!)
+	 */
+	for (auto &p : m_pinHighlighted) {
+		if (first) {
+			fp    = p->position;
+			first = false;
+		}
+		uint32_t col = m_colors.pinNetWebColor;
+		if (!ComponentIsVisible(p->component)) {
+			col = m_colors.pinNetWebOSColor;
+			draw->AddCircle(CoordToScreen(p->position.x, p->position.y), p->diameter * m_scale, col, 16);
+		}
+
+		draw->AddLine(CoordToScreen(fp.x, fp.y), CoordToScreen(p->position.x, p->position.y), ImColor(col), 1);
+	}
+
+	return;
+}
+
 void BoardView::DrawNetWeb(ImDrawList *draw) {
 	if (!showNetWeb) return;
 
@@ -3017,6 +3045,7 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 	draw->ChannelsSetCurrent(kChannelPins);
 
 	if (m_pinSelected) DrawNetWeb(draw);
+	//	if (m_pinHighlighted.size()) DrawSelectedWeb(draw);
 
 	for (auto &pin : m_board->Pins()) {
 		float psz           = pin->diameter * m_scale;
