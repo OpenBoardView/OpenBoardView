@@ -58,7 +58,7 @@ panModifier = 5\r\n\
 centerZoomSearchResults = true\r\n\
 infoPanelCenterZoomNets = true\r\n\
 infoPanelSelectPartsOnNet = true\r\n\
-partZoomScaleOutFactor = 2.5\r\n\
+partZoomScaleOutFactor = 3.0\r\n\
 \r\n\
 # Flip board modes\r\n\
 #  0: flip whole board in view port, shift-flip to flip around mouse ptr\r\n\
@@ -102,7 +102,7 @@ pinNotConnectedColor		= 0xaaaaaaff\r\n\
 pinTestPadColor				= 0x888888ff\r\n\
 pinTestPadFillColor				= 0xbd9e2dff\r\n\
 \r\n\
-pinSelectedColor				= 0x0000ffff\r\n\
+pinSelectedColor				= 0x00000000\r\n\
 pinSelectedFillColor			= 0x8888ffff\r\n\
 pinSelectedTextColor			= 0xffffffff\r\n\
 \r\n\

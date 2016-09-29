@@ -66,9 +66,9 @@ struct ColorScheme {
 	uint32_t pinGroundColor       = 0xff0000bb;
 	uint32_t pinNotConnectedColor = 0xffff0000;
 	uint32_t pinTestPadColor      = 0xff888888;
-	uint32_t pinTestPadFillColor  = 0x882d9ebd; // FF8C00
+	uint32_t pinTestPadFillColor  = 0xff8dc6d6;
 
-	uint32_t pinSelectedColor     = 0xff00ee00;
+	uint32_t pinSelectedColor     = 0x00000000;
 	uint32_t pinSelectedFillColor = 0xffff8888;
 	uint32_t pinSelectedTextColor = 0xffffffff;
 
@@ -122,7 +122,7 @@ struct BoardView {
 	double dpiscale              = 1.0f;
 	double fontSize              = 20.0f;
 	float zoomFactor             = 0.5f;
-	float partZoomScaleOutFactor = 2.5f;
+	float partZoomScaleOutFactor = 3.0f;
 	int zoomModifier             = 5;
 	int panFactor                = 30;
 	int panModifier              = 5;

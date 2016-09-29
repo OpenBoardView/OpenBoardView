@@ -128,7 +128,7 @@ void BoardView::ThemeSetStyle(const char *name) {
 		m_colors.pinGroundColor           = byte4swap(0x0300C3ff);
 		m_colors.pinNotConnectedColor     = byte4swap(0xaaaaaaff);
 		m_colors.pinTestPadColor          = byte4swap(0x888888ff);
-		m_colors.pinTestPadFillColor      = byte4swap(0xbd9e2d88);
+		m_colors.pinTestPadFillColor      = byte4swap(0x6c5b1fff);
 
 		m_colors.pinSelectedColor     = byte4swap(0x00ff00ff);
 		m_colors.pinSelectedFillColor = byte4swap(0x8888ffff);
@@ -217,9 +217,9 @@ void BoardView::ThemeSetStyle(const char *name) {
 		m_colors.pinGroundColor           = byte4swap(0x2222aaff);
 		m_colors.pinNotConnectedColor     = byte4swap(0xaaaaaaff);
 		m_colors.pinTestPadColor          = byte4swap(0x888888ff);
-		m_colors.pinTestPadFillColor      = byte4swap(0xbd9e2d88);
+		m_colors.pinTestPadFillColor      = byte4swap(0xd6c68dff);
 
-		m_colors.pinSelectedColor     = byte4swap(0x888888ff);
+		m_colors.pinSelectedColor     = byte4swap(0x00000000);
 		m_colors.pinSelectedFillColor = byte4swap(0x8888ffff);
 		m_colors.pinSelectedTextColor = byte4swap(0xffffffff);
 
@@ -277,7 +277,7 @@ int BoardView::ConfigParse(void) {
 	showInfoPanel             = obvconfig.ParseBool("showInfoPanel", true);
 	infoPanelSelectPartsOnNet = obvconfig.ParseBool("infoPanelSelectPartsOnNet", true);
 	infoPanelCenterZoomNets   = obvconfig.ParseBool("infoPanelCenterZoomNets", true);
-	partZoomScaleOutFactor    = obvconfig.ParseDouble("partZoomScaleOutFactor", 2.5f);
+	partZoomScaleOutFactor    = obvconfig.ParseDouble("partZoomScaleOutFactor", 3.0f);
 
 	m_info_surface.x          = obvconfig.ParseInt("infoPanelWidth", 350);
 	showPins                  = obvconfig.ParseBool("showPins", true);
@@ -1256,7 +1256,10 @@ void BoardView::ShowInfoPane(void) {
 				char ss[1024];
 				snprintf(ss, sizeof(ss), "%4s  %s", pin->number.c_str(), pin->net->name.c_str());
 				if (ImGui::Selectable(ss, (pin == m_pinSelected))) {
+					ClearAllHighlights();
+
 					if ((pin->type == Pin::kPinTypeNotConnected) || (pin->type == Pin::kPinTypeUnkown) || (pin->net->is_ground)) {
+						m_partHighlighted.push_back(pin->component);
 						// do nothing for now
 						//
 					} else {
@@ -1264,9 +1267,6 @@ void BoardView::ShowInfoPane(void) {
 						for (auto p : m_partHighlighted) {
 							pin->component->visualmode = pin->component->CVMNormal;
 						};
-						m_pinHighlighted.clear();
-						//					m_pinSelected.push_back(pin);
-						m_partHighlighted.clear();
 						m_partHighlighted.push_back(pin->component);
 						CenterZoomNet(pin->net->name);
 					}
@@ -2598,6 +2598,17 @@ void BoardView::CenterZoomNet(string netname) {
 
 	float dx = (max.x - min.x);
 	float dy = (max.y - min.y);
+	float sx = dx > 0 ? view.x / dx : FLT_MAX;
+	float sy = dy > 0 ? view.y / dy : FLT_MAX;
+
+	m_scale                         = sx < sy ? sx : sy;
+	if (m_scale == FLT_MAX) m_scale = m_scale_floor;
+	m_scale /= partZoomScaleOutFactor;
+	if (m_scale < m_scale_floor) m_scale = m_scale_floor;
+
+	/*
+	float dx = (max.x - min.x);
+	float dy = (max.y - min.y);
 	float sx = dx > 0 ? view.x / dx : 1.0f;
 	float sy = dy > 0 ? view.y / dy : 1.0f;
 
@@ -2605,6 +2616,7 @@ void BoardView::CenterZoomNet(string netname) {
 	m_scale = sx < sy ? sx : sy;
 	m_scale /= partZoomScaleOutFactor;
 	if (m_scale < m_scale_floor) m_scale = m_scale_floor;
+	*/
 
 	m_dx = (max.x - min.x) / 2 + min.x;
 	m_dy = (max.y - min.y) / 2 + min.y;
@@ -2613,7 +2625,8 @@ void BoardView::CenterZoomNet(string netname) {
 }
 
 void BoardView::CenterZoomSearchResults(void) {
-	ImVec2 view = ImGui::GetIO().DisplaySize;
+	// ImVec2 view = ImGui::GetIO().DisplaySize;
+	ImVec2 view = m_board_surface;
 	ImVec2 min, max;
 	int i = 0;
 
@@ -2646,14 +2659,15 @@ void BoardView::CenterZoomSearchResults(void) {
 	if ((min.x == FLT_MAX) || (min.y == FLT_MAX) || (max.x == FLT_MIN) || (max.y == FLT_MIN)) return;
 
 	if (debug) fprintf(stderr, "CenterzoomSearchResults: bbox[%d]: %0.1f %0.1f - %0.1f %0.1f\n", i, min.x, min.y, max.x, max.y);
+	// fprintf(stderr, "CenterzoomSearchResults: bbox[%d]: %0.1f %0.1f - %0.1f %0.1f\n", i, min.x, min.y, max.x, max.y);
 
-	float dx = 2.0f * (max.x - min.x);
-	float dy = 2.0f * (max.y - min.y);
-	float sx = dx > 0 ? view.x / dx : 1.0f;
-	float sy = dy > 0 ? view.y / dy : 1.0f;
+	float dx = (max.x - min.x);
+	float dy = (max.y - min.y);
+	float sx = dx > 0 ? view.x / dx : FLT_MAX;
+	float sy = dy > 0 ? view.y / dy : FLT_MAX;
 
-	//  m_rotation = 0;
-	m_scale = sx < sy ? sx : sy;
+	m_scale                         = sx < sy ? sx : sy;
+	if (m_scale == FLT_MAX) m_scale = m_scale_floor;
 	m_scale /= partZoomScaleOutFactor;
 	if (m_scale < m_scale_floor) m_scale = m_scale_floor;
 
@@ -3069,14 +3083,20 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 		// color & text depending on app state & pin type
 
 		{
+			/*
+			 * Pins resulting from a net search
+			 */
 			if (contains(*pin, m_pinHighlighted)) {
 				if (psz < fontSize / 2) psz = fontSize / 2;
-				text_color = color = m_colors.pinSelectedTextColor;
-				fill_pin           = true;
-				show_text          = true;
-				draw_ring          = true;
-				threshold          = 0;
-				draw->AddCircle(ImVec2(pos.x, pos.y), psz * pinHaloDiameter, m_colors.pinHaloColor, 32);
+				text_color                  = m_colors.pinSelectedTextColor;
+				fill_color                  = m_colors.pinSelectedFillColor;
+				color                       = m_colors.pinSelectedColor;
+				// text_color = color = m_colors.pinSameNetColor;
+				fill_pin  = true;
+				show_text = true;
+				draw_ring = true;
+				threshold = 0;
+				//				draw->AddCircle(ImVec2(pos.x, pos.y), psz * pinHaloDiameter, ImColor(0xff0000ff), 32);
 			}
 
 			if (!pin->net || pin->type == Pin::kPinTypeNotConnected) {
@@ -3086,15 +3106,16 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 			}
 
 			/*
+			 * If the part is selected, as part of search or otherwise
+			 */
 			if (PartIsHighlighted(*pin->component)) {
-			    if (!show_text) {
-			        color      = m_colors.pinHighlightSameNet;
-			        text_color = m_colors.partTextColor;
-			    }
-			    show_text = true;
-			    threshold = 0;
+				color      = m_colors.pinDefaultColor;
+				text_color = m_colors.pinDefaultTextColor;
+				fill_pin   = false;
+				draw_ring  = true;
+				show_text  = true;
+				threshold  = 0;
 			}
-			*/
 
 			if (pin->type == Pin::kPinTypeTestPad) {
 				color      = (m_colors.pinTestPadColor & cmask) | omask;
@@ -3105,8 +3126,12 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 			// If the part itself is highlighted ( CVMShowPins )
 			// if (p_pin->component->visualmode == p_pin->component->CVMSelected) {
 			if (pin->component->visualmode == pin->component->CVMSelected) {
-				show_text = true;
-				color     = m_colors.pinDefaultColor;
+				color      = m_colors.pinDefaultColor;
+				text_color = m_colors.pinDefaultTextColor;
+				fill_pin   = false;
+				draw_ring  = true;
+				show_text  = true;
+				threshold  = 0;
 			}
 
 			// pin is on the same net as selected pin: highlight > rest
@@ -3127,6 +3152,7 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 				if (psz < fontSize / 2) psz = fontSize / 2;
 				color                       = m_colors.pinSelectedColor;
 				text_color                  = m_colors.pinSelectedTextColor;
+				fill_color                  = m_colors.pinSelectedFillColor;
 				draw_ring                   = false;
 				show_text                   = true;
 				fill_pin                    = true;
@@ -3149,6 +3175,13 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 			if (segments > 32) segments = 32;
 			if (segments < 8) segments  = 8;
 			float h                     = psz / 2 + 0.5f;
+
+			/*
+			 * if we're going to be showing the text of a pin, then we really
+			 * should make sure that the drawn pin is at least as big as a single
+			 * character so it doesn't look messy
+			 */
+			if ((show_text) && (psz < fontSize / 2)) psz = fontSize / 2;
 
 			switch (pin->type) {
 				case Pin::kPinTypeTestPad:
@@ -3191,10 +3224,9 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 				ImVec2 text_size = ImGui::CalcTextSize(pin_number);
 				ImVec2 pos_adj   = ImVec2(pos.x - text_size.x * 0.5f, pos.y - text_size.y * 0.5f);
 
-				//				draw->ChannelsSetCurrent(kChannelText);
+				draw->ChannelsSetCurrent(kChannelText);
 				draw->AddText(pos_adj, text_color, pin_number);
-
-				//				draw->ChannelsSetCurrent(kChannelPins);
+				draw->ChannelsSetCurrent(kChannelPins);
 			}
 		}
 	}
@@ -3667,12 +3699,9 @@ void BoardView::DrawPartTooltips(ImDrawList *draw) {
 			float dy   = pin->position.y - pos.y;
 			float dist = dx * dx + dy * dy;
 			if ((dist < (pin->diameter * pin->diameter))) {
+				float pd = pin->diameter * m_scale;
 
-				draw->AddCircle(CoordToScreen(pin->position.x, pin->position.y),
-				                pin->diameter * m_scale,
-				                m_colors.pinHaloColor,
-				                32,
-				                pinHaloThickness);
+				draw->AddCircle(CoordToScreen(pin->position.x, pin->position.y), pd, m_colors.pinHaloColor, 32, pinHaloThickness);
 				ImGui::PushStyleColor(ImGuiCol_Text, ImColor(m_colors.annotationPopupTextColor));
 				ImGui::PushStyleColor(ImGuiCol_PopupBg, ImColor(m_colors.annotationPopupBackgroundColor));
 				ImGui::BeginTooltip();
