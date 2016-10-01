@@ -4,7 +4,9 @@ Linux SDL/ImGui edition software for viewing .brd files, intended as a drop-in
 replacement for the "Test_Link" software.
 
 
-[![Demo Video](https://github.com/inflex/OpenBoardView/blob/inflex-ui-features/asset/screenshot.png)](https://www.youtube.com/watch?v=rObeatsf660)
+[![Walkthrough of Openflex Boardview R7.2](http://img.youtube.com/vi/6CrNRo1UP5g/0.jpg)](http://www.youtube.com/watch?v=6CrNRo1UP5g "Openflex Boardview R7.2 demonstration, with voice-over")
+
+[![Demo Video](https://github.com/inflex/OpenBoardView/blob/inflex-ui-features/asset/screenshot.png)]()
 
 
 ![Common net pin halo](https://github.com/inflex/OpenBoardView/blob/inflex-ui-features/asset/screenshot-halo.png)
