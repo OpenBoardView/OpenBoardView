@@ -88,7 +88,7 @@ const std::vector<char> load_font(const std::string &name) {
 
 	wchar_t *wname = utf8_to_wide(name.c_str());
 
-	fontHandle = CreateFont(0, 0, 0, 0, 0, 0, 0, 0, 0, OUT_TT_ONLY_PRECIS, 0, 0, 0, wname);
+	fontHandle = CreateFont(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, name.empty() ? NULL : wname);
 	if (!fontHandle) {
 		std::cerr << "CreateFont failed" << std::endl;
 		free(wname);
