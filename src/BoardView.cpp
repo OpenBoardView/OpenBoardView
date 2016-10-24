@@ -35,16 +35,23 @@ void BoardView::ShowError(char *msg) {
 
 #pragma region Update Logic
 void BoardView::Update() {
+	bool open_file = false;
 	float menu_height = 0;
-	const ImGuiIO &io = ImGui::GetIO();
+	ImGuiIO &io = ImGui::GetIO();
 
+	if (ImGui::IsKeyDown(17) && ImGui::IsKeyPressed('O', false)) {
+		open_file = true;
+		// the dialog will likely eat our WM_KEYUP message for CTRL and O:
+		io.KeysDown[17] = false;
+		io.KeysDown['O'] = false;
+	}
 	if (ImGui::BeginMainMenuBar()) {
 		menu_height = ImGui::GetWindowHeight();
 		if (ImGui::BeginMenu("File")) {
 			if (ImGui::MenuItem("Open", "Ctrl+O")) {
-				m_open_file = true;
+				open_file = true;
 			}
-			if (ImGui::MenuItem("Quit", "Ctrl+Q")) {
+			if (ImGui::MenuItem("Quit")) {
 				m_wantsQuit = true;
 			}
 			ImGui::EndMenu();
@@ -214,8 +221,7 @@ void BoardView::Update() {
 		ImGui::EndMainMenuBar();
 	}
 
-	if (m_open_file) {
-		m_open_file = false;
+	if (open_file) {
 		char *filename = show_file_picker();
 		if (filename) {
 			OpenFile(filename);
@@ -270,36 +276,8 @@ void BoardView::Update() {
 	ImGui::PopStyleVar();
 }
 
-// Zoom in or out on a location.
-// target: the coordiates to center on, relative to the current window/view
-// zoom: the amount to zoom. neggative will zoom out, positive will zoom in.
-void BoardView::ChangeZoom(ImVec2 target, float zoom) {
-
-	ImVec2 coord = ScreenToCoord(target.x, target.y);
-	m_scale = m_scale * powf(2.0f, zoom);
-	ImVec2 dtarget = CoordToScreen(coord.x, coord.y);
-	ImVec2 td = ScreenToCoord(target.x - dtarget.x, target.y - dtarget.y, 0);
-	m_dx += td.x;
-	m_dy += td.y;
-	m_needsRedraw = true;
-}
-
-// Check for keyboard or mouse input; handle keyboard shortcuts as well as other controls
 void BoardView::HandleInput() {
-	ImGuiIO &io = ImGui::GetIO();
-	float speed = 1;
-
-	// Modifiers
-	if (!io.WantCaptureKeyboard) {
-		if (io.KeyCtrl) {
-			speed *= 0.2f;
-		}
-		if (io.KeyShift) {
-			speed *= 5.0f;
-		}
-	}
-
-	// Mouse
+	const ImGuiIO &io = ImGui::GetIO();
 	if (ImGui::IsWindowHovered()) {
 		// Pan:
 		if (ImGui::IsMouseDragging()) {
@@ -338,107 +316,34 @@ void BoardView::HandleInput() {
 		float mwheel = io.MouseWheel;
 		if (mwheel != 0.0f) {
 			const ImVec2 &target = io.MousePos;
-			mwheel *= 0.3f * speed;
-			ChangeZoom(target, mwheel);
+			ImVec2 coord = ScreenToCoord(target.x, target.y);
+			mwheel *= 0.5f;
+			// Ctrl slows down the zoom speed:
+			if (ImGui::IsKeyDown(17)) {
+				mwheel *= 0.1f;
+			}
+			m_scale = m_scale * powf(2.0f, mwheel);
+
+			ImVec2 dtarget = CoordToScreen(coord.x, coord.y);
+			ImVec2 td = ScreenToCoord(target.x - dtarget.x, target.y - dtarget.y, 0);
+			m_dx += td.x;
+			m_dy += td.y;
+			m_needsRedraw = true;
 		}
 	}
-
-	// Keyboard
 	if (!io.WantCaptureKeyboard) {
-		// Zoom; Will zoom on the centre of the viewport, not on the mouse:
-
-		// I, + or PgUp to zoom in
-		if (ImGui::IsKeyPressed('I') || ImGui::IsKeyPressed(187) ||
-		    ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_PageUp)) || ImGui::IsKeyPressed(0x6B)) {
-			ImVec2 target = ImGui::GetWindowSize();
-			target.x *= 0.5f;
-			target.y *= 0.5f;
-
-			float zoom = 0.3f;
-			// We don't apply speed modifier to I or O as Ctrl+O clashes with Open
-			if (!ImGui::IsKeyPressed('I'))
-				zoom *= speed;
-
-			ChangeZoom(target, zoom);
-		}
-
-		// O, - or PgDn to zoom out
-		if (ImGui::IsKeyPressed('O') || ImGui::IsKeyPressed(189) ||
-		    ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_PageDown)) ||
-		    ImGui::IsKeyPressed(0x6D)) {
-			ImVec2 target = ImGui::GetWindowSize();
-			target.x *= 0.5f;
-			target.y *= 0.5f;
-
-			float zoom = -0.3f;
-			if (!ImGui::IsKeyPressed('O'))
-				zoom *= speed;
-
-			ChangeZoom(target, zoom);
-		}
-
-		// WASD or arrow keys to pan around:
-		// Move viewport by a percentage of the screen width/height
-		{
-			ImVec2 delta(0.0f, 0.0f);
-
-			float dist = 0.125f * speed;
-
-			if (ImGui::IsKeyPressed('W') || ImGui::IsKeyPressed(0x68) ||
-			    ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_UpArrow)))
-				delta.y = dist;
-			if (ImGui::IsKeyPressed('S') || ImGui::IsKeyPressed(0x62) ||
-			    ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_DownArrow)))
-				delta.y = -dist;
-			if (ImGui::IsKeyPressed('A') || ImGui::IsKeyPressed(0x64) ||
-			    ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_LeftArrow)))
-				delta.x = dist;
-			if (ImGui::IsKeyPressed('D') || ImGui::IsKeyPressed(0x66) ||
-			    ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_RightArrow)))
-				delta.x = -dist;
-
-			if (delta.x != 0.0f || delta.y != 0.0f) {
-
-				// Account for zoom level by using screen coordinates (TODO easier using m_scale?)
-				ImVec2 dims = ImGui::GetWindowSize();
-				ImVec2 dimc = ScreenToCoord(dims.x, dims.y, 0);
-				ImVec2 c = ScreenToCoord(0.0f, 0.0f, 0);
-				ImVec2 motion((dimc.x - c.x) * delta.x, (dimc.y - c.y) * delta.y);
-				m_dx += motion.x;
-				m_dy += motion.y;
-				m_needsRedraw = true;
-			}
-		}
-
 		// Flip board:
 		if (ImGui::IsKeyPressed(' ')) {
 			FlipBoard();
 		}
 
-		// Rotate board:
-
-		// R and period rotate clockwise
+		// Rotate board: R and period rotate clockwise; comma rotates
+		// counter-clockwise
 		if (ImGui::IsKeyPressed('R') || ImGui::IsKeyPressed(190)) {
 			Rotate(1);
 		}
-		// comma rotates counter-clockwise
 		if (ImGui::IsKeyPressed(188)) {
 			Rotate(-1);
-		}
-
-		// Shortcuts
-
-		// Ctrl+O to open a file
-		if (io.KeyCtrl && ImGui::IsKeyPressed('O', false)) {
-			m_open_file = true;
-			// the dialog will likely eat our WM_KEYUP message for CTRL and O:
-			io.KeysDown[17] = false;
-			io.KeysDown['O'] = false;
-		}
-
-		// Ctrl+Q as alternative quit shortcut (Alt-F4 is already handled by Windows)
-		if (io.KeyCtrl && ImGui::IsKeyPressed('Q')) {
-			m_wantsQuit = true;
 		}
 
 		// Search for net

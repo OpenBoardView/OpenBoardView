@@ -89,7 +89,6 @@ struct BoardView {
 	int m_current_side;
 	int m_boardWidth;
 	int m_boardHeight;
-	bool m_open_file;
 
 	ColorScheme m_colors;
 
@@ -123,7 +122,6 @@ struct BoardView {
 	void ShowPartList(bool *p_open);
 
 	void Update();
-	void ChangeZoom(ImVec2 coord, float scale);
 	void HandleInput();
 	void RenderOverlay();
 	void DrawOutline(ImDrawList *draw);
