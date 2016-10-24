@@ -66,8 +66,6 @@ char *fix_to_utf8(char *s, char **arena, char *arena_end) {
 	if (p + 1 >= arena_end)
 		goto done;
 	*p++ = 0;
-
-// GOTO done
 done:
 	*arena = p;
 	return begin;
@@ -75,12 +73,11 @@ done:
 
 BRDFile::BRDFile(const char *buf, size_t buffer_size) {
 	memset(this, 0, sizeof(*this));
-
-	#define ENSURE(X) \
-	  assert(X);      \
-	  if (!(X))       \
-	    return;
-
+#define ENSURE(X)                                                                                  \
+	assert(X);                                                                                     \
+	if (!(X))                                                                                      \
+		goto FAIL_LABEL;
+#define FAIL_LABEL fail
 	ENSURE(buffer_size > 4);
 	size_t file_buf_size = 3 * (1 + buffer_size);
 	file_buf = (char *)malloc(file_buf_size);
@@ -115,17 +112,10 @@ BRDFile::BRDFile(const char *buf, size_t buffer_size) {
 	int nails_idx = 0;
 	char **lines = stringfile(file_buf);
 	if (!lines)
-		return;
+		goto fail;
 	char **lines_begin = lines;
-
-	#undef ENSURE
-	#define ENSURE(X)      \
-	  assert(X);           \
-	  if (!(X)) {          \
-	    free(lines_begin); \
-	    return;            \
-	  }
-
+#undef FAIL_LABEL
+#define FAIL_LABEL fail_lines
 	while (*lines) {
 		char *line = *lines;
 		++lines;
@@ -161,16 +151,15 @@ BRDFile::BRDFile(const char *buf, size_t buffer_size) {
 
 		char *p = line;
 		char *s;
-
-		#define LOAD_INT(var) var = strtol(p, &p, 10)
-		#define LOAD_STR(var)                        \
-		  while (isspace((uint8_t)*p))               \
-		    ++p;                                     \
-		  s = p;                                     \
-		  while (!isspace((uint8_t)*p))              \
-		    ++p;                                     \
-		  *p++ = 0;                                  \
-		  var = fix_to_utf8(s, &arena, arena_end);
+#define LOAD_INT(var) var = strtol(p, &p, 10)
+#define LOAD_STR(var)                                                                              \
+	while (isspace((uint8_t)*p))                                                                   \
+		++p;                                                                                       \
+	s = p;                                                                                         \
+	while (!isspace((uint8_t)*p))                                                                  \
+		++p;                                                                                       \
+	*p++ = 0;                                                                                      \
+	var = fix_to_utf8(s, &arena, arena_end);
 
 		switch (current_block) {
 		case 2: { // var_data
@@ -229,9 +218,11 @@ BRDFile::BRDFile(const char *buf, size_t buffer_size) {
 		}
 	}
 	valid = current_block != 0;
-}
-
-// Ensure this files #defines dont bleed out
+fail_lines:
+	free(lines_begin);
+fail:;
 #undef LOAD_STR
 #undef LOAD_INT
+#undef FAIL_LABEL
 #undef ENSURE
+}
