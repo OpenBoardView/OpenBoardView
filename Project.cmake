@@ -5,7 +5,7 @@
 # Run by CMakeLists.txt
 #
 
-project("OpenBoardView" LANGUAGES CXX VERSION "0.4.0")
+project("OpenBoardView" LANGUAGES CXX VERSION "0.3.0")
 set(PRETTY_NAME "Open Board View")
 
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Software for viewing .brd files, intended as a drop-in replacement for the
