@@ -174,7 +174,8 @@ BRDBoard::BRDBoard(const BRDFile *const boardFile)
 					}
 				} else {
 					// not sure this can happen -> no info
-					// It does happen in .fz apparently and produces a SEGFAULT… Use unconnected net.
+					// It does happen in .fz apparently and produces a SEGFAULT… Use
+					// unconnected net.
 					pin->net  = net_map[kNetUnconnectedPrefix].get();
 					pin->type = Pin::kPinTypeNotConnected;
 				}
@@ -182,7 +183,8 @@ BRDBoard::BRDBoard(const BRDFile *const boardFile)
 
 			// TODO: should either depend on file specs or type etc
 			//
-			//  if(brd_pin.radius) pin->diameter = brd_pin.radius; // some format (.fz) contains a radius field
+			//  if(brd_pin.radius) pin->diameter = brd_pin.radius; // some format
+			//  (.fz) contains a radius field
 			//    else pin->diameter = 0.5f;
 			pin->diameter = brd_pin.radius; // some format (.fz) contains a radius field
 
@@ -191,7 +193,6 @@ BRDBoard::BRDBoard(const BRDFile *const boardFile)
 		}
 
 		// remove all dummy components from vector, add our official dummy
-		// TODO: formatting looks a bit off
 		components_.erase(
 		    remove_if(begin(components_), end(components_), [](shared_ptr<Component> &comp) { return comp->is_dummy(); }),
 		    end(components_));

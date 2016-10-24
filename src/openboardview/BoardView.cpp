@@ -363,22 +363,34 @@ void BoardView::Update() {
 			ImGui::Separator();
 			ImGui::Text("The MIT License");
 			ImGui::TextWrapped(
-			    "Permission is hereby granted, free of charge, to any person obtaining a copy of "
-			    "this software and associated documentation files (the \"Software\"), to deal in "
-			    "the Software without restriction, including without limitation the rights to use, "
-			    "copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the "
-			    "Software, and to permit persons to whom the Software is furnished to do so, "
-			    "subject to the following conditions: ");
+			    "Permission is hereby granted, free of charge, to any person "
+			    "obtaining a copy "
+			    "of this software and associated documentation files (the "
+			    "\"Software\"), to deal "
+			    "in the Software without restriction, including without limitation "
+			    "the rights "
+			    "to use, copy, modify, merge, publish, distribute, sublicense, "
+			    "and/or sell "
+			    "copies of the Software, and to permit persons to whom the Software "
+			    "is "
+			    "furnished to do so, subject to the following conditions: ");
 			ImGui::TextWrapped(
-			    "The above copyright notice and this permission notice shall be included in all "
+			    "The above copyright notice and this permission "
+			    "notice shall be included in all "
 			    "copies or substantial portions of the Software.");
 			ImGui::TextWrapped(
-			    "THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR "
-			    "IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS "
-			    "FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR "
-			    "COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER "
-			    "LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, "
-			    "OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE "
+			    "THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY "
+			    "OF ANY KIND, EXPRESS OR "
+			    "IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES "
+			    "OF MERCHANTABILITY, "
+			    "FITNESS FOR A PARTICULAR PURPOSE AND "
+			    "NONINFRINGEMENT. IN NO EVENT SHALL THE "
+			    "AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY "
+			    "CLAIM, DAMAGES OR OTHER "
+			    "LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR "
+			    "OTHERWISE, ARISING FROM, "
+			    "OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE "
+			    "OR OTHER DEALINGS IN THE "
 			    "SOFTWARE.");
 			ImGui::EndPopup();
 		}
@@ -488,7 +500,8 @@ void BoardView::Zoom(float osd_x, float osd_y, float zoom) {
 	target.y = osd_y;
 	coord    = ScreenToCoord(target.x, target.y);
 
-	// Adjust the scale of the whole view, then get the new coordinates ( as CoordToScreen utilises m_scale )
+	// Adjust the scale of the whole view, then get the new coordinates ( as
+	// CoordToScreen utilises m_scale )
 	m_scale        = m_scale * powf(2.0f, zoom);
 	ImVec2 dtarget = CoordToScreen(coord.x, coord.y);
 
@@ -550,7 +563,8 @@ void BoardView::HandleInput() {
 	const ImGuiIO &io = ImGui::GetIO();
 
 	// ImGuiContext& g = *GImGui;
-	//	fprintf(stderr,"%s =!? %s\n", g.CurrentWindow->Name, g.FocusedWindow->Name);
+	//	fprintf(stderr,"%s =!? %s\n", g.CurrentWindow->Name,
+	// g.FocusedWindow->Name);
 
 	if (ImGui::IsWindowHovered()) {
 		if (ImGui::IsMouseDragging()) {
@@ -558,7 +572,8 @@ void BoardView::HandleInput() {
 			if ((abs(delta.x) > 500) || (abs(delta.y) > 500)) {
 				delta.x = 0;
 				delta.y = 0;
-			} // If the delta values are crazy just drop them (happens when panning off screen). 500 arbritary chosen
+			} // If the delta values are crazy just drop them (happens when panning
+			// off screen). 500 arbritary chosen
 			ImGui::ResetMouseDragDelta();
 			ImVec2 td = ScreenToCoord(delta.x, delta.y, 0);
 			m_dx += td.x;
@@ -617,7 +632,8 @@ void BoardView::HandleInput() {
 
 	if (!io.WantCaptureKeyboard) {
 #define PAN_AMOUNT 30
-		//		fprintf(stderr,"DEL/. = %d,  c = %d\n", SDL_SCANCODE_KP_PERIOD, SDLK_c);
+		//		fprintf(stderr,"DEL/. = %d,  c = %d\n", SDL_SCANCODE_KP_PERIOD,
+		// SDLK_c);
 		if (ImGui::IsKeyPressed(SDLK_n)) {
 			// Search for net
 			m_showNetfilterSearch = true;
@@ -757,7 +773,8 @@ inline void BoardView::DrawOutline(ImDrawList *draw) {
 		// jump double/dud points
 		if (pa.x == pb.x && pa.y == pb.y) continue;
 
-		// if we encounter our hull/poly start point, then we've now created the closed
+		// if we encounter our hull/poly start point, then we've now created the
+		// closed
 		// hull, jump the next segment and reset the first-point
 		if ((!jump) && (fp.x == pb.x) && (fp.y == pb.y)) {
 			if (i < outline.size() - 2) {
@@ -799,7 +816,7 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 		// continue if pin is not visible anyway
 		ImVec2 pos = CoordToScreen(pin->position.x, pin->position.y);
 		{
-			if (!ElementIsVisible(p_pin)) continue;
+			if (!ComponentIsVisible(pin->component)) continue;
 
 			if (!IsVisibleScreen(pos.x, pos.y, psz, io)) continue;
 		}
@@ -862,7 +879,8 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 			int segments;
 			draw->ChannelsSetCurrent(kChannelImages);
 
-			// for the round pin representations, choose how many circle segments need based on the pin size
+			// for the round pin representations, choose how many circle segments need
+			// based on the pin size
 			segments                    = trunc(psz);
 			if (segments > 32) segments = 32;
 			if (segments < 8) segments  = 8;
@@ -880,6 +898,12 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 					else if (psz > threshold)
 						draw->AddRect(ImVec2(pos.x - 1, pos.y - 1), ImVec2(pos.x + 1, pos.y + 1), color);
 			}
+
+			//				if ( color == m_colors.pinHighlightSameNet ) {
+			//					draw->AddCircle(ImVec2(pos.x, pos.y), psz +1.25, 0x4F00FF00,
+			// segments
+			//);
+			//				}
 
 			if (show_text) {
 				const char *pin_number = pin->number.c_str();
@@ -905,7 +929,8 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 	struct ImVec2 pva[1000], *ppp;
 	uint32_t color = m_colors.boxColor;
 	int rendered   = 0;
-	char p0, p1; // first two characters of the part name, code-writing convenience more than anything else
+	char p0, p1; // first two characters of the part name, code-writing
+	             // convenience more than anything else
 
 	if (m_pinSelected) color &= m_colors.selectedMaskParts;
 
@@ -914,7 +939,7 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 		double min_x, min_y, max_x, max_y;
 		auto p_part = part.get();
 
-		if (!ElementIsVisible(p_part)) continue;
+		if (!ComponentIsVisible(p_part)) continue;
 
 		if (part->is_dummy()) continue;
 
@@ -922,7 +947,8 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 		for (auto pin : part->pins) {
 			pincount++;
 
-			// scale box around pins as a fallback, else either use polygon or convex hull for better shape fidelity
+			// scale box around pins as a fallback, else either use polygon or convex
+			// hull for better shape fidelity
 			if (pincount == 1) {
 				min_x = pin->position.x;
 				min_y = pin->position.y;
@@ -1041,7 +1067,8 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 		p0 = p_part->name[0];
 		p1 = p_part->name[1];
 
-		/** Draw all 2~3 pin devices as if they're not orthagonal.  It's a bit more CPU
+		/** Draw all 2~3 pin devices as if they're not orthagonal.  It's a bit more
+		 * CPU
 		 * overhead but it keeps the code simpler and saves us replicating things.
 		 */
 		if ((pincount < 4) && ((strchr("CRLD", p0) || (strchr("CRLD", p1))))) {
@@ -1077,7 +1104,8 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 				mpy = dy / 2 + part->pins[0]->position.y;
 				VHRotateV(&mpx, &mpy, dx / 2 + part->pins[0]->position.x, dy / 2 + part->pins[0]->position.y, angle);
 				mp = CoordToScreen(mpx, mpy);
-				// for the round pin representations, choose how many circle segments need based on the pin size
+				// for the round pin representations, choose how many circle segments
+				// need based on the pin size
 				segments                    = trunc(distance);
 				if (segments < 8) segments  = 8;
 				if (segments > 36) segments = 36;
@@ -1120,8 +1148,8 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 				ImVec2 *hull;
 				int hpc;
 
-				hull = (ImVec2 *)malloc(sizeof(ImVec2) *
-				                        pincount); // massive overkill since our hull will only require the perimeter points
+				hull = (ImVec2 *)malloc(sizeof(ImVec2) * pincount); // massive overkill since our hull will
+				                                                    // only require the perimeter points
 				if (hull) {
 					// Find our hull
 					hpc = VHConvexHull(hull, pva, pincount); // (hpc = hull pin count)
@@ -1136,8 +1164,10 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 							hull[i] = CoordToScreen(hull[i].x, hull[i].y);
 						}
 
-						// first, tighten the hull, removes any small angle segments, such as a sequence of pins in a line
-						// hpc = TightenHull(hull, hpc, 0.1f); // tighten the hull a bit more, this might be an overkill
+						// first, tighten the hull, removes any small angle segments, such
+						// as a sequence of pins in a line
+						// hpc = TightenHull(hull, hpc, 0.1f); // tighten the hull a bit
+						// more, this might be an overkill
 						draw->AddPolyline(hull, hpc, m_colors.partHullColor, true, 1.0f, false);
 						VHMBBCalculate(bbox, hull, hpc, pin_radius * m_scale);
 						draw->AddPolyline(bbox, 4, color, true, 1.0f, false);
@@ -1155,7 +1185,8 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 				}
 
 			} else {
-				// if it wasn't at an odd angle, or wasn't large, or wasn't a connector, just an ordinary
+				// if it wasn't at an odd angle, or wasn't large, or wasn't a connector,
+				// just an ordinary
 				// type part, then this is where we'll likely end up
 				draw->AddRect(min, max, color);
 				rendered = 1;
@@ -1368,12 +1399,12 @@ void BoardView::SetTarget(float x, float y) {
 	m_dy += coord.y - y;
 }
 
-inline bool BoardView::ElementIsVisible(const BoardElement *element) {
-	if (!element) return true; // no component? => no board side info
+inline bool BoardView::ComponentIsVisible(const Component *part) {
+	if (!part) return true; // no component? => no board side info
 
-	if (element->board_side == kBoardSideBoth) return true;
+	if (part->board_side == kBoardSideBoth) return true;
 
-	if (element->board_side == m_current_side) return true;
+	if (part->board_side == m_current_side) return true;
 
 	return false;
 }
@@ -1407,7 +1438,7 @@ void BoardView::SetNetFilter(const char *net) {
 		for (auto &net : m_board->Nets()) {
 			if (is_prefix(net_name, net->name)) {
 				for (auto pin : net->pins) {
-					any_visible |= ElementIsVisible(pin->component);
+					any_visible |= ComponentIsVisible(pin->component);
 					m_pinHighlighted.push_back(pin);
 					// highlighting all components that belong to this net
 					if (!contains(*pin->component, m_partHighlighted)) {
@@ -1439,7 +1470,7 @@ void BoardView::FindComponentNoClear(const char *name) {
 			if (is_prefix(comp_name, component->name)) {
 				auto p = component.get();
 				m_partHighlighted.push_back(p);
-				any_visible |= ElementIsVisible(p);
+				any_visible |= ComponentIsVisible(p);
 				part_found = p;
 			}
 		}

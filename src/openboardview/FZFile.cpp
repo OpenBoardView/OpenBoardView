@@ -79,13 +79,15 @@ void FZFile::decode(char *source, size_t size) {
 }
 
 /*
- * Sets content_size to the length of the compressed content from the decoded fz file
+ * Sets content_size to the length of the compressed content from the decoded fz
+ * file
  */
 char *FZFile::split(char *file_buf, size_t buffer_size, size_t &content_size) {
 	int descr_len = (file_buf[buffer_size - 1] << 24) + (file_buf[buffer_size - 2] << 16) + (file_buf[buffer_size - 3] << 8) +
 	                file_buf[buffer_size - 4]; // read last 4 bytes as little endian 32-bit int.
 	if (descr_len < 0 || (unsigned)descr_len > buffer_size) return nullptr;
-	// if(descr != nullptr) *descr = file_buf+buffer_size-descr_len+4; // discard descr for now
+	// if(descr != nullptr) *descr = file_buf+buffer_size-descr_len+4; // discard
+	// descr for now
 	content_size = buffer_size - descr_len;
 	return file_buf;
 }
@@ -198,8 +200,9 @@ FZFile::FZFile(const char *buf, size_t buffer_size) {
 	char *content       = FZFile::split(file_buf, buffer_size, content_size); // then split it, discarding descr part
 	ENSURE(content != nullptr);
 	ENSURE(content_size > 0);
-	content =
-	    FZFile::decompress(file_buf + 4, content_size, content_size); // and decompress zlib content data, discard first 4 bytes
+	content = FZFile::decompress(file_buf + 4,
+	                             content_size,
+	                             content_size); // and decompress zlib content data, discard first 4 bytes
 	ENSURE(content != nullptr);
 	ENSURE(content_size > 0);
 

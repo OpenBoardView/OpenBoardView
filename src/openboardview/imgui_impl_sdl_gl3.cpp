@@ -1,10 +1,14 @@
 // ImGui SDL2 binding with OpenGL3
-// In this binding, ImTextureID is used to store an OpenGL 'GLuint' texture identifier. Read the FAQ about ImTextureID in imgui.cpp.
+// In this binding, ImTextureID is used to store an OpenGL 'GLuint' texture
+// identifier. Read the FAQ about ImTextureID in imgui.cpp.
 
-// You can copy and use unmodified imgui_impl_* files in your project. See main.cpp for an example of using this.
-// If you use this binding you'll need to call 4 functions: ImGui_ImplXXXX_Init(), ImGui_ImplXXXX_NewFrame(), ImGui::Render() and
+// You can copy and use unmodified imgui_impl_* files in your project. See
+// main.cpp for an example of using this.
+// If you use this binding you'll need to call 4 functions:
+// ImGui_ImplXXXX_Init(), ImGui_ImplXXXX_NewFrame(), ImGui::Render() and
 // ImGui_ImplXXXX_Shutdown().
-// If you are new to ImGui, see examples/README.txt and documentation at the top of imgui.cpp.
+// If you are new to ImGui, see examples/README.txt and documentation at the top
+// of imgui.cpp.
 // https://github.com/ocornut/imgui
 
 #include "imgui.h"
@@ -33,12 +37,14 @@ static int g_AttribLocationTex = 0, g_AttribLocationProjMtx = 0;
 static int g_AttribLocationPosition = 0, g_AttribLocationUV = 0, g_AttribLocationColor = 0;
 static unsigned int g_VboHandle = 0, g_VaoHandle = 0, g_ElementsHandle = 0;
 
-// This is the main rendering function that you have to implement and provide to ImGui (via setting up 'RenderDrawListsFn' in the
-// ImGuiIO structure)
+// This is the main rendering function that you have to implement and provide to
+// ImGui (via setting up 'RenderDrawListsFn' in the ImGuiIO structure)
 // If text or lines are blurry when integrating ImGui in your engine:
-// - in your Render function, try translating your projection matrix by (0.5f,0.5f) or (0.375f,0.375f)
+// - in your Render function, try translating your projection matrix by
+// (0.5f,0.5f) or (0.375f,0.375f)
 void ImGui_ImplSdlGL3_RenderDrawLists(ImDrawData *draw_data) {
-	// Avoid rendering when minimized, scale coordinates for retina displays (screen coordinates != framebuffer coordinates)
+	// Avoid rendering when minimized, scale coordinates for retina displays
+	// (screen coordinates != framebuffer coordinates)
 	ImGuiIO &io   = ImGui::GetIO();
 	int fb_width  = (int)(io.DisplaySize.x * io.DisplayFramebufferScale.x);
 	int fb_height = (int)(io.DisplaySize.y * io.DisplayFramebufferScale.y);
@@ -73,7 +79,8 @@ void ImGui_ImplSdlGL3_RenderDrawLists(ImDrawData *draw_data) {
 	GLboolean last_enable_depth_test   = glIsEnabled(GL_DEPTH_TEST);
 	GLboolean last_enable_scissor_test = glIsEnabled(GL_SCISSOR_TEST);
 
-	// Setup render state: alpha-blending enabled, no face culling, no depth testing, scissor enabled
+	// Setup render state: alpha-blending enabled, no face culling, no depth
+	// testing, scissor enabled
 	glEnable(GL_BLEND);
 	glBlendEquation(GL_FUNC_ADD);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -190,7 +197,9 @@ bool ImGui_ImplSdlGL3_ProcessEvent(SDL_Event *event) {
 			int key = event->key.keysym.sym & ~SDLK_SCANCODE_MASK;
 			if (event->key.keysym.sym & (1 << 30)) {
 				key |= 0x100;
-				//					fprintf(stderr,"SDL Highbit remask %x -> %x\n", event->key.keysym.sym, key);
+				//					fprintf(stderr,"SDL Highbit
+				// remask %x -> %x\n",
+				// event->key.keysym.sym, key);
 			}
 
 			io.KeysDown[key] = (event->type == SDL_KEYDOWN);
@@ -209,10 +218,8 @@ void ImGui_ImplSdlGL3_CreateFontsTexture() {
 	ImGuiIO &io = ImGui::GetIO();
 	unsigned char *pixels;
 	int width, height;
-	io.Fonts->GetTexDataAsRGBA32(
-	    &pixels,
-	    &width,
-	    &height); // Load as RGBA 32-bits for OpenGL3 demo because it is more likely to be compatible with user's existing shader.
+	io.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height); // Load as RGBA 32-bits for OpenGL3 demo because it is more
+	                                                        // likely to be compatible with user's existing shader.
 
 	// Upload texture to graphics system
 	GLint last_texture;
@@ -354,9 +361,11 @@ void ImGui_ImplSdlGL3_InvalidateDeviceObjects() {
 }
 
 bool ImGui_ImplSdlGL3_Init(SDL_Window *window) {
-	ImGuiIO &io                   = ImGui::GetIO();
-	io.KeyMap[ImGuiKey_Tab]       = SDLK_TAB; // Keyboard mapping. ImGui will use those indices to peek into the io.KeyDown[] array.
-	io.KeyMap[ImGuiKey_LeftArrow] = SDL_SCANCODE_LEFT;
+	ImGuiIO &io             = ImGui::GetIO();
+	io.KeyMap[ImGuiKey_Tab] = SDLK_TAB; // Keyboard mapping. ImGui will use those
+	                                    // indices to peek into the io.KeyDown[]
+	                                    // array.
+	io.KeyMap[ImGuiKey_LeftArrow]  = SDL_SCANCODE_LEFT;
 	io.KeyMap[ImGuiKey_RightArrow] = SDL_SCANCODE_RIGHT;
 	io.KeyMap[ImGuiKey_UpArrow]    = SDL_SCANCODE_UP;
 	io.KeyMap[ImGuiKey_DownArrow]  = SDL_SCANCODE_DOWN;
@@ -375,8 +384,10 @@ bool ImGui_ImplSdlGL3_Init(SDL_Window *window) {
 	io.KeyMap[ImGuiKey_Y]          = SDLK_y;
 	io.KeyMap[ImGuiKey_Z]          = SDLK_z;
 
-	io.RenderDrawListsFn = ImGui_ImplSdlGL3_RenderDrawLists; // Alternatively you can set this to NULL and call ImGui::GetDrawData()
-	                                                         // after ImGui::Render() to get the same ImDrawData pointer.
+	io.RenderDrawListsFn = ImGui_ImplSdlGL3_RenderDrawLists; // Alternatively you can set this to
+	                                                         // NULL and call ImGui::GetDrawData()
+	// after ImGui::Render() to get the same
+	// ImDrawData pointer.
 	io.SetClipboardTextFn = ImGui_ImplSdlGL3_SetClipboardText;
 	io.GetClipboardTextFn = ImGui_ImplSdlGL3_GetClipboardText;
 
@@ -417,19 +428,22 @@ void ImGui_ImplSdlGL3_NewFrame(SDL_Window *window) {
 	g_Time              = current_time;
 
 	// Setup inputs
-	// (we already got mouse wheel, keyboard keys & characters from SDL_PollEvent())
+	// (we already got mouse wheel, keyboard keys & characters from
+	// SDL_PollEvent())
 	int mx, my;
 	Uint32 mouseMask = SDL_GetMouseState(&mx, &my);
 	if (SDL_GetWindowFlags(window) & SDL_WINDOW_MOUSE_FOCUS)
-		io.MousePos =
-		    ImVec2((float)mx, (float)my); // Mouse position, in pixels (set to -1,-1 if no mouse / on another screen, etc.)
+		io.MousePos = ImVec2((float)mx, (float)my); // Mouse position, in pixels
+	                                                // (set to -1,-1 if no mouse /
+	                                                // on another screen, etc.)
 	else
 		io.MousePos = ImVec2(-1, -1);
 
-	io.MouseDown[0] = g_MousePressed[0] || (mouseMask & SDL_BUTTON(SDL_BUTTON_LEFT)) != 0; // If a mouse press event came, always
-	                                                                                       // pass it as "mouse held this frame", so
-	                                                                                       // we don't miss click-release events
-	                                                                                       // that are shorter than 1 frame.
+	io.MouseDown[0] =
+	    g_MousePressed[0] || (mouseMask & SDL_BUTTON(SDL_BUTTON_LEFT)) != 0; // If a mouse press event came, always pass it as
+	                                                                         // "mouse held this frame", so we don't miss
+	                                                                         // click-release events that are shorter than 1
+	                                                                         // frame.
 	io.MouseDown[1]   = g_MousePressed[1] || (mouseMask & SDL_BUTTON(SDL_BUTTON_RIGHT)) != 0;
 	io.MouseDown[2]   = g_MousePressed[2] || (mouseMask & SDL_BUTTON(SDL_BUTTON_MIDDLE)) != 0;
 	g_MousePressed[0] = g_MousePressed[1] = g_MousePressed[2] = false;

@@ -44,7 +44,8 @@ bool TextureDDS::dx9Load(LPDIRECT3DDEVICE9 g_pd3dDevice) {
 bool TextureDDS::glLoad() {
 	// Create one OpenGL texture
 	glGenTextures(1, &textureID);
-	// "Bind" the newly created texture : all future texture functions will modify this texture
+	// "Bind" the newly created texture : all future texture functions will modify
+	// this texture
 	glBindTexture(GL_TEXTURE_2D, textureID);
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 

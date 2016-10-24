@@ -16,8 +16,8 @@ void VHRotateV(double *px, double *py, double ox, double oy, double theta) {
 	tx = *px - ox;
 	ty = *py - oy;
 
-	// With not a lot of parts on the boards, we can get away with using the precision trig functions, might have to change to LUT
-	// based later.
+	// With not a lot of parts on the boards, we can get away with using the
+	// precision trig functions, might have to change to LUT based later.
 	ttx = tx * cos(theta) - ty * sin(theta);
 	tty = tx * sin(theta) + ty * cos(theta);
 
@@ -31,8 +31,8 @@ ImVec2 VHRotateV(ImVec2 v, ImVec2 o, double theta) {
 	tx = v.x - o.x;
 	ty = v.y - o.y;
 
-	// With not a lot of parts on the boards, we can get away with using the precision trig functions, might have to change to LUT
-	// based later.
+	// With not a lot of parts on the boards, we can get away with using the
+	// precision trig functions, might have to change to LUT based later.
 	ttx = tx * cos(theta) - ty * sin(theta);
 	tty = tx * sin(theta) + ty * cos(theta);
 
@@ -61,7 +61,8 @@ void VHMBBCalculate(ImVec2 box[], ImVec2 *hull, int n, double psz) {
 	int lowest_i;
 	double lowest;
 
-	// Find the lowest hull point, if it's below the x-axis just bring it up to compensate
+	// Find the lowest hull point, if it's below the x-axis just bring it up to
+	// compensate
 	// NOTE: we're not modifying the actual hull point, just a copy
 	lowest   = DBL_MAX;
 	lowest_i = 0;
@@ -105,9 +106,10 @@ void VHMBBCalculate(ImVec2 box[], ImVec2 *hull, int n, double psz) {
 
 		if (area < mbArea) {
 			mbArea  = area;
-			mbAngle = cumulative_angle; // total angle we've had to rotate the board to get to this orientation;
-			mba     = ImVec2(left, bot);
-			mbb     = ImVec2(right, top);
+			mbAngle = cumulative_angle; // total angle we've had to rotate the board
+			                            // to get to this orientation;
+			mba = ImVec2(left, bot);
+			mbb = ImVec2(right, top);
 		}
 	} // for all points on hull
 
@@ -117,7 +119,8 @@ void VHMBBCalculate(ImVec2 box[], ImVec2 *hull, int n, double psz) {
 	mbb.x += psz;
 	mbb.y += psz;
 
-	// Form our rectangle, has to be all 4 points as it's a polygon now that'll be rotated
+	// Form our rectangle, has to be all 4 points as it's a polygon now that'll be
+	// rotated
 	box[0] = VHRotateV(mba, origin, +mbAngle);
 	box[1] = VHRotateV(ImVec2(mbb.x, mba.y), origin, +mbAngle);
 	box[2] = VHRotateV(mbb, origin, +mbAngle);
@@ -186,8 +189,8 @@ int VHConvexHull(ImVec2 hull[], ImVec2 points[], int n) {
 }
 
 int VHTightenHull(ImVec2 hull[], int n, double threshold) {
-	// theory: circle the hull, compare 3 points at a time, if the mid point is sub-angular then make it equal the first point and
-	// move to the 3rd.
+	// theory: circle the hull, compare 3 points at a time, if the mid point is
+	// sub-angular then make it equal the first point and move to the 3rd.
 	int i, ni;
 	ImVec2 *a, *b, *c;
 	double a1, a2, ad;
@@ -205,7 +208,8 @@ int VHTightenHull(ImVec2 hull[], int n, double threshold) {
 			ad = a2 - a1;
 
 		if (ad < threshold) {
-			//			fprintf(stderr,"angle below threshold (%0.2f)\n", ad);
+			//			fprintf(stderr,"angle below threshold
+			//(%0.2f)\n", ad);
 			*b = *a;
 		}
 	} // end first cycle

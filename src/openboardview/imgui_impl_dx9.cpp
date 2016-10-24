@@ -1,12 +1,16 @@
 // ImGui Win32 + DirectX9 binding
-// In this binding, ImTextureID is used to store a 'LPDIRECT3DTEXTURE9' texture identifier. Read the
+// In this binding, ImTextureID is used to store a 'LPDIRECT3DTEXTURE9' texture
+// identifier. Read the
 // FAQ about ImTextureID in imgui.cpp.
 
-// You can copy and use unmodified imgui_impl_* files in your project. See main.cpp for an example
+// You can copy and use unmodified imgui_impl_* files in your project. See
+// main.cpp for an example
 // of using this.
-// If you use this binding you'll need to call 4 functions: ImGui_ImplXXXX_Init(),
+// If you use this binding you'll need to call 4 functions:
+// ImGui_ImplXXXX_Init(),
 // ImGui_ImplXXXX_NewFrame(), ImGui::Render() and ImGui_ImplXXXX_Shutdown().
-// If you are new to ImGui, see examples/README.txt and documentation at the top of imgui.cpp.
+// If you are new to ImGui, see examples/README.txt and documentation at the top
+// of imgui.cpp.
 // https://github.com/ocornut/imgui
 
 #include "imgui_impl_dx9.h"
@@ -37,10 +41,12 @@ struct CUSTOMVERTEX {
 };
 #define D3DFVF_CUSTOMVERTEX (D3DFVF_XYZ | D3DFVF_DIFFUSE | D3DFVF_TEX1)
 
-// This is the main rendering function that you have to implement and provide to ImGui (via setting
+// This is the main rendering function that you have to implement and provide to
+// ImGui (via setting
 // up 'RenderDrawListsFn' in the ImGuiIO structure)
 // If text or lines are blurry when integrating ImGui in your engine:
-// - in your Render function, try translating your projection matrix by (0.5f,0.5f) or
+// - in your Render function, try translating your projection matrix by
+// (0.5f,0.5f) or
 // (0.375f,0.375f)
 void ImGui_ImplDX9_RenderDrawLists(ImDrawData *draw_data) {
 	// Avoid rendering when minimized
@@ -109,7 +115,8 @@ void ImGui_ImplDX9_RenderDrawLists(ImDrawData *draw_data) {
 	g_pd3dDevice->SetIndices(g_pIB);
 	g_pd3dDevice->SetFVF(D3DFVF_CUSTOMVERTEX);
 
-	// Setup render state: fixed-pipeline, alpha-blending, no face culling, no depth testing
+	// Setup render state: fixed-pipeline, alpha-blending, no face culling, no
+	// depth testing
 	g_pd3dDevice->SetPixelShader(NULL);
 	g_pd3dDevice->SetVertexShader(NULL);
 	g_pd3dDevice->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
@@ -132,7 +139,8 @@ void ImGui_ImplDX9_RenderDrawLists(ImDrawData *draw_data) {
 	g_pd3dDevice->SetSamplerState(0, D3DSAMP_MIPFILTER, D3DTEXF_LINEAR);
 
 	// Setup orthographic projection matrix
-	// Being agnostic of whether <d3dx9.h> or <DirectXMath.h> can be used, we aren't relying on
+	// Being agnostic of whether <d3dx9.h> or <DirectXMath.h> can be used, we
+	// aren't relying on
 	// D3DXMatrixIdentity()/D3DXMatrixOrthoOffCenterLH() or
 	// DirectX::XMMatrixIdentity()/DirectX::XMMatrixOrthographicOffCenterLH()
 	{

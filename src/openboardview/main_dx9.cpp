@@ -142,7 +142,8 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	ImGui_ImplDX9_Init(hwnd, g_pd3dDevice);
 
 	// Load Fonts
-	// (there is a default font, this is only if you want to change it. see extra_fonts/README.txt
+	// (there is a default font, this is only if you want to change it. see
+	// extra_fonts/README.txt
 	// for more details)
 	ImGuiIO &io = ImGui::GetIO();
 	int ttf_size;

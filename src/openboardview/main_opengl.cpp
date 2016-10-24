@@ -1,5 +1,6 @@
 // ImGui - standalone example application for SDL2 + OpenGL
-// If you are new to ImGui, see examples/README.txt and documentation at the top of imgui.cpp.
+// If you are new to ImGui, see examples/README.txt and documentation at the top
+// of imgui.cpp.
 
 #include "BoardView.h"
 #include "history.h"
@@ -115,7 +116,7 @@ int parse_parameters(int argc, char **argv, struct globals *g) {
 			 * for extended parameters, nothing yet required
 			 *
 			 *
-		} else if (strncmp(p,"--", 2) == 0) {
+		  } else if (strncmp(p,"--", 2) == 0) {
 
 			 */
 		}
@@ -279,7 +280,8 @@ int main(int argc, char **argv) {
 			ImGui_ImplSdlGL3_ProcessEvent(&event);
 
 			if (event.type == SDL_DROPFILE) {
-				// Validate the file before replacing the current one, not that we should have to, but always better to be safe
+				// Validate the file before replacing the current one, not that we
+				// should have to, but always better to be safe
 				struct stat buffer;
 				if (stat(event.drop.file, &buffer) == 0) {
 					app.LoadFile(strdup(event.drop.file));
@@ -289,8 +291,9 @@ int main(int argc, char **argv) {
 			if (event.type == SDL_QUIT) done = true;
 		}
 
-		//		if (SDL_GetWindowFlags(window) & (SDL_WINDOW_MINIMIZED|SDL_WINDOW_HIDDEN)) { usleep(50000); continue; } // stops
-		// OVB/SDL consuming masses of CPU when it should be idling.
+		//		if (SDL_GetWindowFlags(window) &
+		//(SDL_WINDOW_MINIMIZED|SDL_WINDOW_HIDDEN)) { usleep(50000); continue; } //
+		// stops OVB/SDL consuming masses of CPU when it should be idling.
 		if (!(sleepout--)) {
 			usleep(50000);
 			sleepout = 0;
@@ -299,7 +302,8 @@ int main(int argc, char **argv) {
 
 		ImGui_ImplSdlGL3_NewFrame(window);
 
-		// If we have a board to view being passed from command line, then "inject" it here.
+		// If we have a board to view being passed from command line, then "inject"
+		// it here.
 		if (preload_required) {
 			app.LoadFile(strdup(g.input_file));
 			preload_required = false;
@@ -312,7 +316,8 @@ int main(int argc, char **argv) {
 			SDL_PushEvent(&sdlevent);
 		}
 
-		// Update the title of the SDL app if the board filename has changed. - PLD20160618
+		// Update the title of the SDL app if the board filename has changed. -
+		// PLD20160618
 		if (app.history_file_has_changed) {
 			char scratch[1024];
 			snprintf(scratch, sizeof(scratch), "OpenFlex Board Viewer - %s", app.fhistory.history[0]);

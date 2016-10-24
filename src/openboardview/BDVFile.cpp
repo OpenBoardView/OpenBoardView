@@ -60,7 +60,8 @@ BDVFile::BDVFile(const char *buf, size_t buffer_size) {
 		if (!line[0]) continue;
 		if (!strcmp(line, "<<format.asc>>")) {
 			current_block = 1;
-			lines += 8; // Skip 8 unused lines before 1st point. Might not work with all files.
+			lines += 8; // Skip 8 unused lines before 1st point. Might not work with
+			            // all files.
 			continue;
 		}
 		if (!strcmp(line, "<<pins.asc>>")) {
