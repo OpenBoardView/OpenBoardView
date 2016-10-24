@@ -48,12 +48,10 @@ int Confparse::SaveDefault(const char *utf8_filename) {
 	std::ofstream file;
 	file.open(utf8_filename, std::ios::out | std::ios::binary | std::ios::ate);
 
-	fprintf(stderr, "Writing the default config to %s\n", utf8_filename);
 	nested = true;
 	if (file.is_open()) {
 		file.write(default_conf, sizeof(default_conf));
 		file.close();
-		fprintf(stderr, "Closed new config, now try reading...\n");
 		Load(utf8_filename);
 
 		return 0;
