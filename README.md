@@ -15,24 +15,11 @@ and run it.
 If you run into any issues starting the executable, you may need to install
 the [DirectX 9.0c End-user Runtime](https://www.microsoft.com/en-us/download/details.aspx?id=8109).
 
-### Controls
+### Usage
 
-- `Ctrl`+`O`: Open a .brd file
-- `Ctrl`+`Q`: Quit
-- `W`,`A`,`S`,`D`, Directional Arrows, Numpad or mouse drag: Move around
-- `+`/`-`, `I`/`O` or scroll: Zoom in or out
-- `R` or `.`: Rotate clockwise
-- `,`: Rotate anticlockwise
-- `Spacebar`: Flip the Board
-- `Ctrl`: Slow down movement and zoom speed
-- `Shift`: Speed up movement and zoom speed
-
-- `N`: Search by power net
-- `C`: Search by component name
-- `K`: Display component list
-- `L`: Display power net list
-- Click on pin: Highlight pins on network
-- `ESC`: Clear highlighted items
+- Ctrl-O: Open a .brd file
+- N: Search by power net
+- C: Search by component name
 
 ### Building
 
