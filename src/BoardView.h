@@ -150,6 +150,4 @@ struct BoardView {
 	void FindComponent(const char *name);
 	void SetLastFileOpenName(char *name);
 	void FlipBoard();
-
-	void OpenFile(char *filename);
 };

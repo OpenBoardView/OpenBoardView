@@ -224,7 +224,20 @@ void BoardView::Update() {
 	if (open_file) {
 		char *filename = show_file_picker();
 		if (filename) {
-			OpenFile(filename);
+			SetLastFileOpenName(filename);
+			size_t buffer_size;
+			char *buffer = file_as_buffer(&buffer_size, filename);
+			if (buffer) {
+				BRDFile *file = new BRDFile(buffer, buffer_size);
+				if (file->valid) {
+					SetFile(file);
+				} else {
+					// TODO: error details? -- would need the loader to say what's wrong.
+					ShowError("Cannot parse the file.");
+					delete file;
+				}
+				free(buffer);
+			}
 		}
 	}
 
@@ -863,23 +876,6 @@ void BoardView::FlipBoard() {
 		Rotate(2);
 	}
 	m_needsRedraw = true;
-}
-
-void BoardView::OpenFile(char *filename) {
-	SetLastFileOpenName(filename);
-	size_t buffer_size;
-	char *buffer = file_as_buffer(&buffer_size, filename);
-	if (buffer) {
-		BRDFile *file = new BRDFile(buffer, buffer_size);
-		if (file->valid) {
-			SetFile(file);
-		} else {
-			// TODO: error details? -- would need the loader to say what's wrong.
-			ShowError("Cannot parse the file.");
-			delete file;
-		}
-		free(buffer);
-	}
 }
 
 BitVec::~BitVec() {
