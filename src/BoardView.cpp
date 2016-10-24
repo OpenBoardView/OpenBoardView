@@ -345,49 +345,6 @@ void BoardView::HandleInput() {
 
 	// Keyboard
 	if (!io.WantCaptureKeyboard) {
-		// Shortcuts
-
-		// Ctrl+O to open a file
-		if (io.KeyCtrl && ImGui::IsKeyPressed('O', false)) {
-			m_open_file = true;
-			// the dialog will likely eat our WM_KEYUP message for CTRL and O:
-			io.KeysDown[17] = false;
-			io.KeysDown['O'] = false;
-			return;
-		}
-
-		// Ctrl+Q as alternative quit shortcut (Alt-F4 is already handled by Windows)
-		if (io.KeyCtrl && ImGui::IsKeyPressed('Q')) {
-			m_wantsQuit = true;
-			return;
-		}
-
-		// Search for net
-		if (ImGui::IsKeyPressed('N')) {
-			m_showNetfilterSearch = true;
-			return;
-		}
-
-		// Search for component
-		if (ImGui::IsKeyPressed('C')) {
-			m_showComponentSearch = true;
-			return;
-		}
-
-		// Show Net List
-		if (ImGui::IsKeyPressed('L')) {
-			m_showNetList = m_showNetList ? false : true;
-			return;
-		}
-
-		// Show Part List
-		if (ImGui::IsKeyPressed('K')) {
-			m_showPartList = m_showPartList ? false : true;
-			return;
-		}
-
-		// Controls
-
 		// Zoom; Will zoom on the centre of the viewport, not on the mouse:
 
 		// I, + or PgUp to zoom in
@@ -467,6 +424,41 @@ void BoardView::HandleInput() {
 		// comma rotates counter-clockwise
 		if (ImGui::IsKeyPressed(188)) {
 			Rotate(-1);
+		}
+
+		// Shortcuts
+
+		// Ctrl+O to open a file
+		if (io.KeyCtrl && ImGui::IsKeyPressed('O', false)) {
+			m_open_file = true;
+			// the dialog will likely eat our WM_KEYUP message for CTRL and O:
+			io.KeysDown[17] = false;
+			io.KeysDown['O'] = false;
+		}
+
+		// Ctrl+Q as alternative quit shortcut (Alt-F4 is already handled by Windows)
+		if (io.KeyCtrl && ImGui::IsKeyPressed('Q')) {
+			m_wantsQuit = true;
+		}
+
+		// Search for net
+		if (ImGui::IsKeyPressed('N')) {
+			m_showNetfilterSearch = true;
+		}
+
+		// Search for component
+		if (ImGui::IsKeyPressed('C')) {
+			m_showComponentSearch = true;
+		}
+
+		// Show Net List
+		if (ImGui::IsKeyPressed('L')) {
+			m_showNetList = m_showNetList ? false : true;
+		}
+
+		// Show Part List
+		if (ImGui::IsKeyPressed('K')) {
+			m_showPartList = m_showPartList ? false : true;
 		}
 	}
 }
