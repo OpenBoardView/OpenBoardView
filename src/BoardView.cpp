@@ -31,17 +31,14 @@ BoardView::~BoardView() {
 #pragma region Update Logic
 void BoardView::Update() {
 	bool open_file = false;
-	float menu_height = 0;
-	ImGuiIO &io = ImGui::GetIO();
-
 	if (ImGui::IsKeyDown(17) && ImGui::IsKeyPressed('O', false)) {
 		open_file = true;
 		// the dialog will likely eat our WM_KEYUP message for CTRL and O:
+		ImGuiIO &io = ImGui::GetIO();
 		io.KeysDown[17] = false;
 		io.KeysDown['O'] = false;
 	}
 	if (ImGui::BeginMainMenuBar()) {
-		menu_height = ImGui::GetWindowHeight();
 		if (ImGui::BeginMenu("File")) {
 			if (ImGui::MenuItem("Open", "Ctrl+O")) {
 				open_file = true;
@@ -241,37 +238,20 @@ void BoardView::Update() {
 	                         ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings;
 	ImGuiWindowFlags draw_surface_flags =
 	    flags | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoBringToFrontOnFocus;
-
-	// Status Footer
-	float status_height = (10.0f + ImGui::GetFontSize());
-
-	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(4.0f, 3.0f));
-	ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
-	ImGui::SetNextWindowPos(ImVec2{0, io.DisplaySize.y - status_height});
-	ImGui::SetNextWindowSize(ImVec2(io.DisplaySize.x, status_height));
-	ImGui::Begin("status", nullptr, flags | ImGuiWindowFlags_NoFocusOnAppearing);
-	if (m_file && m_board && m_pinSelected) {
-		auto pin = m_pinSelected;
-		ImGui::Text("Part: %s   Pin: %d   Net: %s   Probe: %d   (%s.)",
-		            pin->component->name.c_str(), pin->number, pin->net->name.c_str(),
-		            pin->net->number, pin->component->mount_type_str().c_str());
-	}
-	ImGui::End();
-	ImGui::PopStyleVar();
-	ImGui::PopStyleVar();
-
-	// Drawing surface, where the actual PCB/board is plotted out
-	ImGui::SetNextWindowPos(ImVec2(0, menu_height));
+	ImGui::SetNextWindowPos(ImVec2{0, 0});
+	const ImGuiIO &io = ImGui::GetIO();
 	if (io.DisplaySize.x != m_lastWidth || io.DisplaySize.y != m_lastHeight) {
 		m_lastWidth = io.DisplaySize.x;
 		m_lastHeight = io.DisplaySize.y;
 		m_needsRedraw = true;
 	}
-	ImGui::SetNextWindowSize(
-	    ImVec2(io.DisplaySize.x, io.DisplaySize.y - (status_height + menu_height)));
+	ImGui::SetNextWindowSize(io.DisplaySize);
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
 	ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
-
+	if (m_firstFrame) {
+		ImGui::SetNextWindowFocus();
+		m_firstFrame = false;
+	}
 	ImGui::Begin("surface", nullptr, draw_surface_flags);
 	HandleInput();
 	DrawBoard();
@@ -281,12 +261,28 @@ void BoardView::Update() {
 	// Overlay
 	RenderOverlay();
 
+	// Status Footer
+	float status_height = (10.0f + ImGui::GetFontSize());
+
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(4.0f, 3.0f));
+	ImGui::SetNextWindowPos(ImVec2{0, io.DisplaySize.y - status_height});
+	ImGui::SetNextWindowSize(ImVec2(io.DisplaySize.x, status_height));
+	ImGui::Begin("status", nullptr, flags);
+	if (m_file && m_board && m_pinSelected) {
+		auto pin = m_pinSelected;
+		ImGui::Text("Part: %s   Pin: %d   Net: %s   Probe: %d   (%s.)",
+		            pin->component->name.c_str(), pin->number, pin->net->name.c_str(),
+		            pin->net->number, pin->component->mount_type_str().c_str());
+	}
+	ImGui::End();
+	ImGui::PopStyleVar();
+
 	ImGui::PopStyleVar();
 }
 
 void BoardView::HandleInput() {
 	const ImGuiIO &io = ImGui::GetIO();
-	if (ImGui::IsWindowHovered()) {
+	if (ImGui::IsWindowFocused()) {
 		// Pan:
 		if (ImGui::IsMouseDragging()) {
 			ImVec2 delta = ImGui::GetMouseDragDelta();
