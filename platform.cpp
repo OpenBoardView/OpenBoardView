@@ -1,5 +1,3 @@
-#ifdef _WIN32
-
 #define _CRT_SECURE_NO_WARNINGS 1
 #include "platform.h"
 #include "imgui/imgui.h"
@@ -90,5 +88,3 @@ unsigned char *LoadAsset(int *asset_size, int asset_id) {
 }
 
 ImTextureID TextureIDs[NUM_GLOBAL_TEXTURES];
-
-#endif // _WIN32
