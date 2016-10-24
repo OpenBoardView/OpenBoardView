@@ -28,11 +28,6 @@ BoardView::~BoardView() {
 	free(m_lastFileOpenName);
 }
 
-void BoardView::ShowError(char *msg) {
-	m_lastErrorMsg = msg;
-	m_showError = true;
-}
-
 #pragma region Update Logic
 void BoardView::Update() {
 	bool open_file = false;
@@ -94,9 +89,9 @@ void BoardView::Update() {
 		if (m_showComponentSearch && m_file) {
 			ImGui::OpenPopup("Search for Component");
 		}
-		if (m_showError) {
-			ImGui::OpenPopup("Error");
-			m_showError = false;
+		if (m_lastFileOpenWasInvalid) {
+			ImGui::OpenPopup("Error opening file");
+			m_lastFileOpenWasInvalid = false;
 		}
 		if (ImGui::BeginPopupModal("Search for Net", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
 			if (m_showNetfilterSearch) {
@@ -211,8 +206,9 @@ void BoardView::Update() {
 			    "SOFTWARE.");
 			ImGui::EndPopup();
 		}
-		if (ImGui::BeginPopupModal("Error")) {
-			ImGui::Text("There was an error: %s", m_lastErrorMsg);
+		if (ImGui::BeginPopupModal("Error opening file")) {
+			ImGui::Text("There was an error opening the file: %s", m_lastFileOpenName);
+			// TODO: error details? -- would need the loader to say what's wrong.
 			if (ImGui::Button("OK")) {
 				ImGui::CloseCurrentPopup();
 			}
@@ -232,8 +228,7 @@ void BoardView::Update() {
 				if (file->valid) {
 					SetFile(file);
 				} else {
-					// TODO: error details? -- would need the loader to say what's wrong.
-					ShowError("Cannot parse the file.");
+					m_lastFileOpenWasInvalid = true;
 					delete file;
 				}
 				free(buffer);
