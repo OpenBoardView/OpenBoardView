@@ -873,7 +873,6 @@ void BoardView::OpenFile(char *filename) {
 		BRDFile *file = new BRDFile(buffer, buffer_size);
 		if (file->valid) {
 			SetFile(file);
-			m_wantsTitleChange = true;
 		} else {
 			// TODO: error details? -- would need the loader to say what's wrong.
 			ShowError("Cannot parse the file.");

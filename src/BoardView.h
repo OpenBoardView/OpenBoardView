@@ -112,7 +112,6 @@ struct BoardView {
 	bool m_firstFrame = true;
 	bool m_showError;
 	bool m_wantsQuit;
-	bool m_wantsTitleChange;
 
 	~BoardView();
 
