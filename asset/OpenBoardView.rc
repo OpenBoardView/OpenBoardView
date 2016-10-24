@@ -9,6 +9,7 @@
 //
 
 ASSET_FIRA_SANS              ASSET              "FiraSans-Medium.ttf"
+ASSET_EMPTY_CIRCLE           ASSET              "empty_circle.dds"
 
 /////////////////////////////////////////////////////////////////////////////
 //
