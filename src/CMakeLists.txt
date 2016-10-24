@@ -35,14 +35,6 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 		CXX_STANDARD 11       # Use C++11
 )
 
-target_compile_definitions(${PROJECT_NAME} PRIVATE
-	# Define metadata
-	"-DPROJECT_NAME=\"${PROJECT_NAME}\""
-	"-DPRETTY_NAME=\"${PRETTY_NAME}\""
-	"-DPROJECT_VERSION=\"${PROJECT_VERSION}\""
-	"-DPROJECT_VENDOR=\"${CPACK_PACKAGE_VENDOR}\""
-	"-DPROJECT_URL=\"${PROJECT_URL}\"")
-
 if (MSVC)
 	target_compile_definitions(${PROJECT_NAME} PRIVATE
 		-D_CRT_SECURE_NO_WARNINGS

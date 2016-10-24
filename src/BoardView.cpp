@@ -489,8 +489,8 @@ void BoardView::ShowHelpAbout() {
 		if (m_showHelpAbout)
 			m_showHelpAbout = false;
 
-		ImGui::Text(PROJECT_NAME " version " PROJECT_VERSION);
-		ImGui::Text(PROJECT_URL);
+		ImGui::Text("OpenBoardView");
+		ImGui::Text("https://github.com/OpenBoardView/OpenBoardView");
 		if (ImGui::Button("Close") || ImGui::IsKeyPressed(27)) {
 			ImGui::CloseCurrentPopup();
 		}
@@ -498,8 +498,8 @@ void BoardView::ShowHelpAbout() {
 		ImGui::Text("License info");
 		ImGui::Unindent();
 		ImGui::Separator();
-		ImGui::Text(PROJECT_NAME " is MIT Licensed");
-		ImGui::Text("Copyright (c) 2016 " PROJECT_VENDOR " and " PROJECT_NAME " contributors");
+		ImGui::Text("OpenBoardView is MIT Licensed");
+		ImGui::Text("Copyright (c) 2016 Chloridite and OpenBoardView contributors");
 		ImGui::Spacing();
 		ImGui::Text("ImGui is MIT Licensed");
 		ImGui::Text("Copyright (c) 2014-2015 Omar Cornut and ImGui contributors");

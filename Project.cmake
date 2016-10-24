@@ -14,9 +14,6 @@ set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Software for viewing .brd files, intended
 # Owner
 set(CPACK_PACKAGE_VENDOR "Chloridite")
 
-# URL
-set(PROJECT_URL "https://github.com/OpenBoardView/OpenBoardView")
-
 # Ensure CPack uses the same data as CMake
 set(CPACK_PACKAGE_NAME ${PROJECT_NAME})
 set(CPACK_PACKAGE_VERSION_MAJOR ${PROJECT_VERSION_MAJOR})
