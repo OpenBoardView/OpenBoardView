@@ -51,18 +51,6 @@ char *show_file_picker() {
 					"_Open", GTK_RESPONSE_ACCEPT,
 					NULL );
 
-	/* Filter file types */
-	GtkFileFilter *filter1 = gtk_file_filter_new();
-	gtk_file_filter_set_name(filter1, "All Files");
-	gtk_file_filter_add_pattern(filter1, "*");
-
-	GtkFileFilter *filter2 = gtk_file_filter_new();
-	gtk_file_filter_set_name(filter2, "BRD Files");
-	gtk_file_filter_add_pattern(filter2, "*.brd");
-
-	gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(dialog), filter1);
-	gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(dialog), filter2);
-
 	if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_ACCEPT) {
 		char *filename = nullptr;
 
