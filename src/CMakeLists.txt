@@ -1,76 +1,76 @@
-### src/CMakeLists.txt ###
-#
-#
+## COMMON ##
+if(NOT APPLE AND NOT WIN32 OR MINGW)
+	find_package(PkgConfig REQUIRED)
+endif()
 
-# SOURCES to be added to main target
-set(SOURCES
-	main.cpp
+## imgui ##
+execute_process(
+	COMMAND git submodule update --init src/imgui
+	WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+)
+add_definitions("-DImDrawIdx=unsigned int") # short is not enough for us
+add_library(imgui STATIC imgui/imgui.cpp imgui/imgui_draw.cpp)
+#install(TARGETS imgui DESTINATION ${INSTALL_ARCHIVE_DIR}) # No need to install a static lib
 
-	BoardView.cpp
-	BRDBoard.cpp
-	BRDFile.cpp
-	NetList.cpp
-	PartList.cpp
-
-	imgui_impl_dx9.cpp
-	platform_win32.cpp)
-
-## Add main target
-add_executable(${PROJECT_NAME}
-	WIN32
-	${SOURCES}
-	${ICON})
-
-target_link_libraries(${PROJECT_NAME} PRIVATE
-	${LIBS}
-	${PLATFORM_LIBS}
+## utf8.h ##
+execute_process(
+	COMMAND git submodule update --init src/utf8
+	WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
 )
 
-target_include_directories(${PROJECT_NAME} PRIVATE
-	${CMAKE_CURRENT_SOURCE_DIR}
-	${INCLUDE_DIRS}
+## zlib ##
+find_package(ZLIB)
+if(NOT ZLIB_FOUND)
+	execute_process(
+		COMMAND git submodule update --init src/zlib
+		WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+	)
+	execute_process( # Dirty workaround to prevent zlib from building examples
+		COMMAND sed "/^# Example binaries$/,$d" -i src/zlib/CMakeLists.txt
+		WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+	)
+
+	set(SKIP_INSTALL_FILES YES)
+	set(SKIP_INSTALL_HEADERS NO)
+	add_subdirectory(zlib)
+
+	if(WIN32)
+		set(ZLIB_LIBRARIES zlibstatic CACHE INTERNAL "zlib library")
+	else()
+		set(ZLIB_LIBRARIES z CACHE INTERNAL "zlib library")
+	endif()
+	set(ZLIB_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/zlib ${CMAKE_BINARY_DIR}/src/zlib)
+endif()
+
+## SQLite3 ##
+find_package(SQLite3)
+if(NOT SQLITE3_FOUND)
+	add_subdirectory(sqlite3)
+endif()
+
+## glad ##
+execute_process(
+	COMMAND git submodule update --init src/glad
+	WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
 )
+set(GLAD_PROFILE "compatibility" CACHE STRING "GL Profile" FORCE) # Using OpenGL Compatibility profile (for enabling use of fixed-function pipeline)
+set(GLAD_API "gl=3.2,gles2=2.0" CACHE STRING "GL versions" FORCE) # Build for OpenGL 3.2 and OpenGLES 2
+set(GLAD_EXTENSIONS "GL_EXT_texture_compression_s3tc,GL_OES_element_index_uint" CACHE STRING "Gl exts" FORCE) # S3TC used to load texture for pins — delete when removing support. The other is used by GLES2.
+set(GLAD_NO_LOADER ON CACHE BOOL "Disable loader" FORCE) # We're using SDL2 loader
+add_subdirectory(glad)
 
-set_target_properties(${PROJECT_NAME} PROPERTIES
-		CXX_STANDARD 11       # Use C++11
-)
-
-target_compile_definitions(${PROJECT_NAME} PRIVATE
-	# Define metadata
-	"-DPROJECT_NAME=\"${PROJECT_NAME}\""
-	"-DPRETTY_NAME=\"${PRETTY_NAME}\""
-	"-DPROJECT_VERSION=\"${PROJECT_VERSION}\""
-	"-DPROJECT_VENDOR=\"${CPACK_PACKAGE_VENDOR}\""
-	"-DPROJECT_URL=\"${PROJECT_URL}\"")
-
-if (MSVC)
-	target_compile_definitions(${PROJECT_NAME} PRIVATE
-		-D_CRT_SECURE_NO_WARNINGS
-		-D_UNICODE -DUNICODE)
+## SDL2 ##
+if(APPLE)
+	find_package(SDL2 REQUIRED)
+	set(SDL2_INCLUDE_DIRS "${SDL2_INCLUDE_DIR}")
+	set(SDL2_LIBRARIES "${SDL2_LIBRARY}")
+elseif(WIN32 AND NOT MINGW)
+	set(SDL2_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/SDL2/include")
+	set(SDL2_LIBRARIES "SDL2main" "SDL2")
+	set(SDL2_LIBRARY_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/SDL2/lib/x86")
+else()
+	pkg_check_modules(SDL2 REQUIRED sdl2)
 endif()
+add_definitions(-DENABLE_SDL2)
 
-# Warnings
-set(SHOW_WARNINGS "normal" CACHE STRING "Compile time warnings to show. Can be \"normal\", \"all\" or \"all_extra\".")
-set_property(CACHE SHOW_WARNINGS PROPERTY STRINGS "normal" "all" "all_extra")
-option(WARNINGS_ARE_ERRORS "Compile time warnings are treated as errors."
-	OFF)
-if(SHOW_WARNINGS STREQUAL "all")
-	if(MSVC)
-		set(WARN_FLAGS "-W4")
-	endif()
-elseif(SHOW_WARNINGS STREQUAL "all_extra")
-	if(MSVC)
-		set(WARN_FLAGS "-Wall")
-	endif()
-endif()
-if(WARNINGS_ARE_ERRORS)
-	if(MSVC)
-		set(WARN_FLAGS ${WARN_FLAGS} "-WX")
-	endif()
-endif()
-if(WARN_FLAGS)
-	target_compile_options(${PROJECT_NAME} PRIVATE ${WARN_FLAGS})
-endif()
-
-# Inastll/packageing location
-install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION ${INSTALL_BIN_DIR})
+add_subdirectory(openboardview)

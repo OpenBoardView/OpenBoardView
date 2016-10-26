@@ -1,6 +1,14 @@
-[submodule "utf8"]
-	path = lib/utf8
+[submodule "src/zlib"]
+	path = src/zlib
+	url = https://github.com/madler/zlib.git
+[submodule "src/utf8"]
+	path = src/utf8
 	url = https://github.com/sheredom/utf8.h.git
-[submodule "imgui"]
-	path = lib/imgui
-	url = https://github.com/ocornut/imgui.git
+	branch = master
+[submodule "src/glad"]
+	path = src/glad
+	url = https://github.com/Dav1dde/glad.git
+[submodule "src/imgui"]
+	path = src/imgui
+	url = http://github.com/inflex/imgui
+	branch = master

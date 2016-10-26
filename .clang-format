@@ -1,11 +1,40 @@
+# .clang-format (YAML)
+
 BasedOnStyle: LLVM
-PointerBindsToType: false
-AllowShortFunctionsOnASingleLine: false
+
+# Indentation
+IndentWidth: 4
+TabWidth: 4
+UseTab: ForIndentation
+
+# Used for line wrapping and defining a "short" statement
+ColumnLimit: 132
+
+# Allow short statements on one line
+AllowShortFunctionsOnASingleLine: Empty
+AllowShortIfStatementsOnASingleLine: true
+AllowShortLoopsOnASingleLine: true
+AllowShortCaseLabelsOnASingleLine: true
+
+# Sensible alignments
+AlignConsecutiveAssignments: true
+AlignOperands: true
+AlignEscapedNewlinesLeft: true
+AlignAfterOpenBracket: Align
+BinPackArguments:  false # Break after each arg if they won't fit on one line
+BinPackParameters: false
+
+# Line breaks
 BreakBeforeBraces: Attach
 BreakConstructorInitializersBeforeComma: true
 AlwaysBreakTemplateDeclarations: true
 AlwaysBreakBeforeMultilineStrings: true
-IndentWidth: 4
-TabWidth: 4
-UseTab: ForIndentation
-ColumnLimit: 100
+
+# Misc
+PointerBindsToType: false
+IndentCaseLabels: true
+
+# Includes ordering
+IncludeCategories:
+  - Regex:           '^"platform.h"$' # Keep platform.h first
+    Priority:        -1

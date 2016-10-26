@@ -1,0 +1,84 @@
+git:
+  depth: 9999999
+os:
+- linux
+compiler:
+- clang
+matrix:
+  include:
+  - os: linux
+    compiler: gcc
+    env: DEPLOY=yes DEPLOY_DEB=yes
+  - os: linux
+    compiler: gcc
+    env: DEPLOY=yes DEPLOY_RPM=yes
+  - os: osx
+    compiler: clang
+    env: DEPLOY=yes
+  - os: linux
+    compiler: gcc
+    env: CROSS=mingw64 DEPLOY=yes
+dist: trusty
+sudo: required
+language: cpp
+addons:
+  apt:
+    sources:
+    - ubuntu-toolchain-r-test
+    packages:
+    - gcc-6
+    - g++-6
+install: |-
+  if [ "$TRAVIS_OS_NAME" == "linux" ]
+  then
+    if [ "$CROSS" == "mingw64" ] # Cross compiling for Windows
+    then
+      sudo add-apt-repository "deb http://fr.archive.ubuntu.com/ubuntu/ xenial main restricted universe multiverse" # We need an up-to-date MinGW
+      sudo apt-get update
+      sudo apt-get install -t xenial gcc-mingw-w64-i686 g++-mingw-w64-i686 mingw32-runtime
+      wget https://www.libsdl.org/release/SDL2-devel-2.0.4-mingw.tar.gz # Manually install the SDL2 mingw dev files
+      tar -xf SDL2-devel-2.0.4-mingw.tar.gz
+      pushd SDL2-2.0.4
+      sudo make cross CROSS_PATH=/usr
+      popd
+    else
+      sudo apt-get -qy install libsdl2-dev libgtk-3-dev rpm
+    fi
+  elif [ "$TRAVIS_OS_NAME" == "osx" ]
+  then
+    brew update
+    brew install sdl2
+  fi
+script: |-
+  if [ "$CXX" = "g++" ]; then export CXX="g++-6" CC="gcc-6"; fi
+  ./build.sh || exit 1
+  if [ "$DEPLOY_DEB" == "yes" ] || [ "$DEPLOY_RPM" == "yes" ]
+  then
+    pushd release_build
+    make package
+    popd
+  fi
+before_deploy: |-
+  if [ "$TRAVIS_OS_NAME" == "osx" ]
+  then
+    export DEPLOY_FILES=$(ls OpenBoardView-*.dmg)
+  elif [ "$CROSS" == "mingw64" ]
+  then
+    export DEPLOY_FILES=bin/openboardview.exe
+  elif [ "$DEPLOY_DEB" == "yes" ]
+  then
+    export DEPLOY_FILES=$(ls OpenBoardView-*.deb)
+  elif [ "$DEPLOY_RPM" == "yes" ]
+  then
+    export DEPLOY_FILES=$(ls OpenBoardView-*.rpm)
+  fi
+deploy:
+  provider: releases
+  api_key:
+    secure: moFwXyAl3mTnYx2RY3kYJ9cutRaEiQrCurkwSFkPsFBqFJQpSG5ld72W1JEoQqlrJBeLEix2rtY9XRfQWGKTxuqJbdz1S7hyA5+Oo4HUYZfDkp7/nG7aIzql1G+rheSP7fbq4XAjTPyVbiYfVS/hh6RuZ/E11Zp33PdtQoenvFJYZnL/0UxN9cVmKWgE7vHzOszfuvPM21odOTyoZbUfZHZlYtR0xbY/mqoUFmcFbH+7H6pn3PINdtoycYq/TfPtxrHmLOlysWdABtbK+fdjneeg4ZaK3Rg7uAnNOrI8h5vOWuP0kj2YTc9aDmMgCeunPncTDBU3h6qL/DGN7BDzsHsBdEk9iuxX+coUe+3RQbRoy36m4RfzeEHZJNVCLu4yhZ5NzjR28QZxpfKGc9Jg8OHL9T3P2KFISjJX1bJ+d5xBbbcewe1KsAzG7zokHNEdzPMZSU5iOO+bamsjZ1SIm2dzcPjwpxSoZSL+2ZCurhZgEyKydBzRSFeDCHaifYv6rM98jZLcmDp0KZFzY07OrrgPbAoZFsICEPnpYA57VN7EPG0G7t3iGqcyCvr5E5A5ZUe7bwA3mqY1/0QPkZQQaSXeHbT45mlAEMBZRixLBgFOvCSq4U1O6cibAwBT+qQ8Xq6D3vJjhmodzwHz1aaPAlf/tm1LZguZf86TPjWrg5U=
+  file_glob: true
+  file: "${DEPLOY_FILES}"
+  skip_cleanup: true
+  on:
+    tags: true
+    condition: "$DEPLOY == yes"
