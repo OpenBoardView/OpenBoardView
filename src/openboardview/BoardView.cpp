@@ -1580,7 +1580,7 @@ void BoardView::SearchColumnGenerate(const std::string& title, std::pair<SharedV
 	ImGui::ListBoxHeader(title.c_str());
 
 	if (m_searchComponents) {
-		if (results.first.empty()) {
+		if (results.first.empty() && (!m_searchNets || results.second.empty())) { // show suggestions only if there is no result at all
 			auto s = scparts.suggest(search);
 			if (s.size() > 0) {
 				ImGui::Text("Did you mean...");
@@ -1591,7 +1591,7 @@ void BoardView::SearchColumnGenerate(const std::string& title, std::pair<SharedV
 	}
 
 	if (m_searchNets) {
-		if (results.second.empty()) {
+		if (results.second.empty() && (!m_searchComponents || results.first.empty())) {
 			auto s = scnets.suggest(search);
 			if (s.size() > 0) {
 				ImGui::Text("Did you mean...");
@@ -4296,7 +4296,7 @@ void BoardView::SearchCompoundNoClear(const char *item) {
 	if (debug) fprintf(stderr, "Searching for '%s'\n", item);
 	if (m_searchComponents) FindComponentNoClear(item);
 	if (m_searchNets) FindNetNoClear(item);
-	if (!AnyItemVisible()) FlipBoard(1); // passing 1 to override flipBoard parameter
+	if (!m_partHighlighted.empty() && !m_pinHighlighted.empty() && !AnyItemVisible()) FlipBoard(1); // passing 1 to override flipBoard parameter
 }
 
 void BoardView::SearchCompound(const char *item) {
