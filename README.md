@@ -1,10 +1,10 @@
-## Open Board Viewer [![Build Status](https://travis-ci.org/inflex/OpenBoardView.svg?branch=inflex-ui-features)](https://travis-ci.org/inflex/OpenBoardView)
+## Open Board Viewer [![Build Status](https://travis-ci.org/OpenBoardView/OpenBoardView.svg?branch=master)](https://travis-ci.org/inflex/OpenBoardView)
 
 Linux SDL/ImGui edition software for viewing .brd files, intended as a drop-in
-replacement for the "Test_Link" software.
+replacement for the "Test_Link" software and "Landrex".
 
 
-[![Walkthrough of Openflex Boardview R7.2](http://img.youtube.com/vi/6CrNRo1UP5g/0.jpg)](http://www.youtube.com/watch?v=6CrNRo1UP5g "Openflex Boardview R7.2 demonstration, with voice-over")
+[![Walkthrough of OpenBoardView R7.2](http://img.youtube.com/vi/6CrNRo1UP5g/0.jpg)](http://www.youtube.com/watch?v=6CrNRo1UP5g "OpenBoardView R7.2 demonstration, with voice-over")
 
 [![Demo Video](https://github.com/inflex/OpenBoardView/blob/inflex-ui-features/asset/screenshot.png)]()
 
@@ -42,7 +42,7 @@ For Ubuntu developers, you'll need the following packages at a minium;
 
 1. Clone the project
 
-    $ git clone --recursive 'https://github.com/inflex/OpenBoardView'
+    $ git clone --recursive 'https://github.com/OpenBoardView/OpenBoardView'
 
 2. Build it
 
@@ -69,6 +69,11 @@ For Ubuntu developers, you'll need the following packages at a minium;
 - Space, Middle mouse click: Flip board
 - R/./Numpad-Del: Rotate clockwise
 - ,/Numpad-Ins: Rotate counter-clockwise
+- /, Ctrl-F: Search
+- ESC: Clear search results and selected parts
+- Ctrl-O: Open file select dialog
+- p: Toggle pin display
+- m: Mirror board across Y-axis
 - L: Show net list
 - K: Show part list
 
