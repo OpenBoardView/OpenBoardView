@@ -2629,6 +2629,8 @@ void BoardView::CenterZoomSearchResults(void) {
 	ImVec2 min, max;
 	int i = 0;
 
+	if (!showPins) showPins = true; // Louis Rossmann UI failure fix.
+
 	if (!m_centerZoomSearchResults) return;
 
 	min.x = min.y = FLT_MAX;
