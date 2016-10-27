@@ -77,7 +77,7 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	CHAR history_file[MAX_PATH];
 	CHAR conf_file[MAX_PATH];
 
-	static const wchar_t *class_name = L"Openflex Boardview";
+	static const wchar_t *class_name = L"OpenBoardView";
 
 	/*
 	 * To make OBV very easy to use and transportable among windows
@@ -134,7 +134,7 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	sizey = app.obvconfig.ParseInt("windowY", 600);
 
 	HWND hwnd = CreateWindow(class_name,
-	                         _T("Openflex Board Viewer"),
+	                         _T("OpenBoardView"),
 	                         WS_OVERLAPPEDWINDOW,
 	                         CW_USEDEFAULT,
 	                         CW_USEDEFAULT,

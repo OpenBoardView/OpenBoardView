@@ -13,7 +13,7 @@
  */
 char default_conf[] =
     "#\r\n\
-# OpenFlex Board View configuration file (inflex-ui)\r\n\
+# OpenBoardView configuration\r\n\
 #\r\n\
 # Renderer options\r\n\
 #  0 = OpenGL1\r\n\
@@ -143,7 +143,7 @@ FZKey =   \r\n\
 /*
 char default_conf[] =
     "#\r\n\
-# OpenFlex Board View configuration file (inflex-ui)\r\n\
+# OpenBoardView configuration file (inflex-ui)\r\n\
 #\r\n\
 windowX=1280\r\n\
 windowY=900\r\n\

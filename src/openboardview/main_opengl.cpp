@@ -1,10 +1,10 @@
 /**
- * Open[Flex] Board View
+ * OpenBoardView
  *
- * Copyright chloridite 2016
  * Copyright inflex 2016 (Paul Daniels)
+ * Copyright chloridite 2016
  *
- * Git Fork: https://github.com/inflex/OpenBoardView
+ * https://github.com/OpenBoardView/OpenBoardView
  *
  */
 
@@ -278,7 +278,7 @@ int main(int argc, char **argv) {
 
 	SDL_DisplayMode current;
 	SDL_GetCurrentDisplayMode(0, &current);
-	window = SDL_CreateWindow("Openflex Boardviewer",
+	window = SDL_CreateWindow("OpenBoardView",
 	                          SDL_WINDOWPOS_CENTERED,
 	                          SDL_WINDOWPOS_CENTERED,
 	                          g.width,
@@ -494,7 +494,7 @@ int main(int argc, char **argv) {
 		// PLD20160618
 		if (app.history_file_has_changed) {
 			char scratch[1024];
-			snprintf(scratch, sizeof(scratch), "Openflex Boardviewer - %s", app.fhistory.history[0]);
+			snprintf(scratch, sizeof(scratch), "OpenBoardView - %s", app.fhistory.history[0]);
 			SDL_SetWindowTitle(window, scratch);
 			app.history_file_has_changed = 0;
 		}
