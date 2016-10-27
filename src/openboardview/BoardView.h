@@ -5,6 +5,7 @@
 #include "confparse.h"
 #include "history.h"
 #include "imgui/imgui.h"
+#include "Searcher.h"
 #include <stdint.h>
 #include <vector>
 
@@ -108,7 +109,6 @@ enum DrawChannel {
 };
 
 enum FlipModes { flipModeVP = 0, flipModeMP = 1, NUM_FLIP_MODES };
-enum SearchModes { searchModeSub, searchModePrefix, searchModeWhole };
 
 struct BoardView {
 	BRDFile *m_file;
@@ -116,6 +116,7 @@ struct BoardView {
 
 	Confparse obvconfig;
 	FHistory fhistory;
+	Searcher searcher;
 	bool debug                   = false;
 	int history_file_has_changed = 0;
 	int dpi                      = 0;
@@ -166,7 +167,8 @@ struct BoardView {
 	void SetFZKey(const char *keytext);
 	void HelpAbout(void);
 	void HelpControls(void);
-	void SearchColumnGenerate(char *title, char *search, int buttons_max);
+	template<class T> void ShowSearchResults(std::vector<T> results, char *search, int &limit);
+	void SearchColumnGenerate(const std::string& title, char *search, int buttons_max);
 	void Preferences(void);
 	void SaveAllColors(void);
 	void ColorPreferencesItem(
@@ -202,24 +204,21 @@ struct BoardView {
 	void ShowInfoPane(void);
 
 	bool HighlightedPinIsHovered(void);
-	Pin *m_pinHighlightedHovered    = nullptr;
-	Pin *currentlyHoveredPin        = nullptr;
-	Component *currentlyHoveredPart = nullptr;
+	std::shared_ptr<Pin> m_pinHighlightedHovered    = nullptr;
+	std::shared_ptr<Pin> currentlyHoveredPin        = nullptr;
+	std::shared_ptr<Component> currentlyHoveredPart = nullptr;
 
 	ImVec2 m_showContextMenuPos;
 
-	Pin *m_pinSelected = nullptr;
+	std::shared_ptr<Pin> m_pinSelected = nullptr;
 	//	vector<Net *> m_netHiglighted;
-	vector<Pin *> m_pinHighlighted;
-	vector<Component *> m_partHighlighted;
+	SharedVector<Pin> m_pinHighlighted;
+	SharedVector<Component> m_partHighlighted;
 	char m_cachedDrawList[sizeof(ImDrawList)];
 	ImVector<char> m_cachedDrawCommands;
 	SharedVector<Net> m_nets;
-	char m_search[128];
-	char m_search2[128];
-	char m_search3[128];
+	char m_search[3][128];
 	char m_netFilter[128];
-	int m_searchMode = searchModeSub;
 	std::string m_lastFileOpenName;
 	float m_dx; // display top-right coordinate?
 	float m_dy;
@@ -303,15 +302,14 @@ struct BoardView {
 
 	// Returns true if the part is shown on the currently displayed side of the
 	// board.
-	bool ComponentIsVisible(const Component *part);
+	bool ComponentIsVisible(const std::shared_ptr<Component> part);
 	bool IsVisibleScreen(float x, float y, float radius, const ImGuiIO &io);
 	// Returns true if the circle described by screen coordinates x, y, and radius
 	// is visible in the
 	// ImGuiIO screen rect.
 	// bool IsVisibleScreen(float x, float y, float radius = 0.0f);
 
-	bool strstrModeSearch(const char *haystack, const char *needle);
-	bool PartIsHighlighted(const Component &component);
+	bool PartIsHighlighted(const std::shared_ptr<Component> component);
 	void FindNet(const char *net);
 	void FindNetNoClear(const char *name);
 	void FindComponent(const char *name);

@@ -117,7 +117,7 @@ BRDBoard::BRDBoard(const BRDFile *const boardFile)
 		for (size_t i = 0; i < pins.size(); i++) {
 			// (originally from BoardView::DrawPins)
 			const BRDPin &brd_pin = pins[i];
-			Component *comp       = components_[brd_pin.part - 1].get();
+			std::shared_ptr<Component> comp       = components_[brd_pin.part - 1];
 
 			if (!comp) continue;
 
@@ -126,14 +126,14 @@ BRDBoard::BRDBoard(const BRDFile *const boardFile)
 			if (comp->is_dummy()) {
 				// component is virtual, i.e. "...", pin is test pad
 				pin->type      = Pin::kPinTypeTestPad;
-				pin->component = comp_dummy.get();
-				comp_dummy->pins.push_back(pin.get());
+				pin->component = comp_dummy;
+				comp_dummy->pins.push_back(pin);
 			} else {
 				// component is regular / not virtual
 				pin->type       = Pin::kPinTypeComponent;
 				pin->component  = comp;
 				pin->board_side = pin->component->board_side;
-				comp->pins.push_back(pin.get());
+				comp->pins.push_back(pin);
 			}
 
 			// determine pin number on part
@@ -191,7 +191,7 @@ BRDBoard::BRDBoard(const BRDFile *const boardFile)
 			//    else pin->diameter = 0.5f;
 			pin->diameter = brd_pin.radius; // some format (.fz) contains a radius field
 
-			pin->net->pins.push_back(pin.get());
+			pin->net->pins.push_back(pin);
 			pins_.push_back(pin);
 		}
 
