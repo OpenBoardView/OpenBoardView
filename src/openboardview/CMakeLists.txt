@@ -79,6 +79,7 @@ set(SOURCES
 	NetList.cpp
 	PartList.cpp
 	Searcher.cpp
+	SpellCorrector.cpp
 	main_opengl.cpp
 )
 

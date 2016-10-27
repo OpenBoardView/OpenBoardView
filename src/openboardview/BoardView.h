@@ -6,6 +6,7 @@
 #include "history.h"
 #include "imgui/imgui.h"
 #include "Searcher.h"
+#include "SpellCorrector.h"
 #include <stdint.h>
 #include <vector>
 
@@ -117,6 +118,8 @@ struct BoardView {
 	Confparse obvconfig;
 	FHistory fhistory;
 	Searcher searcher;
+	SpellCorrector scnets;
+	SpellCorrector scparts;
 	bool debug                   = false;
 	int history_file_has_changed = 0;
 	int dpi                      = 0;
@@ -167,7 +170,7 @@ struct BoardView {
 	void SetFZKey(const char *keytext);
 	void HelpAbout(void);
 	void HelpControls(void);
-	template<class T> void ShowSearchResults(std::vector<T> results, char *search, int &limit);
+	template<class T> void ShowSearchResults(std::vector<T> results, char *search, int &limit, void (BoardView::*onSelect)(const char *));
 	void SearchColumnGenerate(const std::string& title, std::pair<SharedVector<Component>, SharedVector<Net>> results, char *search, int limit);
 	void Preferences(void);
 	void SaveAllColors(void);

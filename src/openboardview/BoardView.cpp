@@ -1556,11 +1556,20 @@ std::pair<SharedVector<Component>, SharedVector<Net>> BoardView::SearchPartsAndN
 	return {parts, nets};
 }
 
-template<class T> void BoardView::ShowSearchResults(std::vector<T> results, char *search, int &limit) {
+const char *getcname(const std::string &name) {
+	return name.c_str();
+}
+
+template<class T> const char *getcname(const T &t) {
+	return t->name.c_str();
+}
+
+template<class T> void BoardView::ShowSearchResults(std::vector<T> results, char *search, int &limit, void (BoardView::*onSelect)(const char *)) {
 	for (auto &r : results) {
-		if (ImGui::Selectable(r->name.c_str(), false)) {
-			FindComponent(r->name.c_str());
-			snprintf(search, 128, "%s", r->name.c_str());
+		const char *cname = getcname(r);
+		if (ImGui::Selectable(cname, false)) {
+			(this->*onSelect)(cname);
+			snprintf(search, 128, "%s", cname);
 			limit = 0;
 		}
 		limit--;
@@ -1570,8 +1579,27 @@ template<class T> void BoardView::ShowSearchResults(std::vector<T> results, char
 void BoardView::SearchColumnGenerate(const std::string& title, std::pair<SharedVector<Component>, SharedVector<Net>> results, char *search, int limit) {
 	ImGui::ListBoxHeader(title.c_str());
 
-	ShowSearchResults(results.first, search, limit);
-	ShowSearchResults(results.second, search, limit);
+	if (m_searchComponents) {
+		if (results.first.empty()) {
+			auto s = scparts.suggest(search);
+			if (s.size() > 0) {
+				ImGui::Text("Did you mean...");
+				ShowSearchResults(s, search, limit, &BoardView::FindComponent);
+			}
+		} else
+			ShowSearchResults(results.first, search, limit, &BoardView::FindComponent);
+	}
+
+	if (m_searchNets) {
+		if (results.second.empty()) {
+			auto s = scnets.suggest(search);
+			if (s.size() > 0) {
+				ImGui::Text("Did you mean...");
+				ShowSearchResults(s, search, limit, &BoardView::FindNet);
+			}
+		} else
+			ShowSearchResults(results.second, search, limit, &BoardView::FindNet);
+	}
 
 	ImGui::ListBoxFooter();
 }
@@ -4009,6 +4037,14 @@ void BoardView::SetFile(BRDFile *file) {
 	m_board = new BRDBoard(file);
 	searcher.setParts(m_board->Components());
 	searcher.setNets(m_board->Nets());
+
+	std::vector<std::string> netnames;
+	for (auto &n : m_board->Nets()) netnames.push_back(n->name);
+	std::vector<std::string> partnames;
+	for (auto &p : m_board->Components()) netnames.push_back(p->name);
+
+	scnets.setDictionary(netnames);
+	scparts.setDictionary(partnames);
 
 	m_nets = m_board->Nets();
 
