@@ -1548,6 +1548,14 @@ void BoardView::ContextMenu(void) {
 	}
 }
 
+std::pair<SharedVector<Component>, SharedVector<Net>> BoardView::SearchPartsAndNets(const char *search, int limit) {
+	SharedVector<Component> parts;
+	SharedVector<Net> nets;
+	if (m_searchComponents) parts = searcher.parts(search, limit);
+	if (m_searchNets) nets = searcher.nets(search, limit);
+	return {parts, nets};
+}
+
 template<class T> void BoardView::ShowSearchResults(std::vector<T> results, char *search, int &limit) {
 	for (auto &r : results) {
 		if (ImGui::Selectable(r->name.c_str(), false)) {
@@ -1559,18 +1567,11 @@ template<class T> void BoardView::ShowSearchResults(std::vector<T> results, char
 	}
 }
 
-void BoardView::SearchColumnGenerate(const std::string& title, char *search, int limit) {
-	if (!search[0]) return;
-
+void BoardView::SearchColumnGenerate(const std::string& title, std::pair<SharedVector<Component>, SharedVector<Net>> results, char *search, int limit) {
 	ImGui::ListBoxHeader(title.c_str());
 
-	if (m_searchComponents) {
-		ShowSearchResults(searcher.parts(search, limit), search, limit);
-	}
-
-	if (m_searchNets) {
-		ShowSearchResults(searcher.nets(search, limit), search, limit);
-	}
+	ShowSearchResults(results.first, search, limit);
+	ShowSearchResults(results.second, search, limit);
 
 	ImGui::ListBoxFooter();
 }
@@ -1666,9 +1667,15 @@ void BoardView::SearchComponent(void) {
 
 			ImGui::PushItemWidth(-1);
 
-			if (ImGui::InputText(searchLabel.c_str(), m_search[i-1], 128, ImGuiInputTextFlags_CharsNoBlank)) {
-				SearchCompound(m_search[i-1]);
-			}
+			bool searching = m_search[i-1][0] != '\0'; // Text typed in the search box
+			auto results = SearchPartsAndNets(m_search[i-1], 30); // Perform the search for both nets and parts
+			bool hasResults = !results.first.empty() || !results.second.empty(); // We found some nets or some parts
+
+			if (searching && !hasResults) ImGui::PushStyleColor(ImGuiCol_FrameBg, ImColor(0xFF6666FF));
+			auto ret = ImGui::InputText(searchLabel.c_str(), m_search[i-1], 128, ImGuiInputTextFlags_CharsNoBlank);
+			if (searching && !hasResults) ImGui::PopStyleColor();
+
+			if (ret) SearchCompound(m_search[i-1]);
 
 			ImGui::PopItemWidth();
 
@@ -1677,7 +1684,7 @@ void BoardView::SearchComponent(void) {
 			} // set keyboard focus
 
 			ImGui::PushItemWidth(-1);
-			SearchColumnGenerate("##SC" + istr, m_search[i-1], 30);
+			if (searching) SearchColumnGenerate("##SC" + istr, results, m_search[i-1], 30);
 			ImGui::PopItemWidth();
 			if (i == 1) ImGui::PushItemWidth(DPI(500));
 			else if (i == 2) ImGui::PopItemWidth();

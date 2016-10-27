@@ -168,7 +168,7 @@ struct BoardView {
 	void HelpAbout(void);
 	void HelpControls(void);
 	template<class T> void ShowSearchResults(std::vector<T> results, char *search, int &limit);
-	void SearchColumnGenerate(const std::string& title, char *search, int buttons_max);
+	void SearchColumnGenerate(const std::string& title, std::pair<SharedVector<Component>, SharedVector<Net>> results, char *search, int limit);
 	void Preferences(void);
 	void SaveAllColors(void);
 	void ColorPreferencesItem(
@@ -318,6 +318,8 @@ struct BoardView {
 	void SearchNetNoClear(const char *net);
 	void SearchCompound(const char *item);
 	void SearchCompoundNoClear(const char *item);
+	std::pair<SharedVector<Component>, SharedVector<Net>> SearchPartsAndNets(const char *search, int limit);
+
 
 	void SetLastFileOpenName(const std::string &name);
 	void FlipBoard(int mode = 0);
