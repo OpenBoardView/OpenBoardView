@@ -1,4 +1,4 @@
-## Open Board Viewer [![Build Status](https://travis-ci.org/OpenBoardView/OpenBoardView.svg?branch=master)](https://travis-ci.org/inflex/OpenBoardView)
+## Open Board Viewer [![Build Status](https://travis-ci.org/OpenBoardView/OpenBoardView.svg?branch=master)](https://travis-ci.org/OpenBoardView/OpenBoardView)
 
 Linux SDL/ImGui edition software for viewing .brd files, intended as a drop-in
 replacement for the "Test_Link" software and "Landrex".
@@ -6,12 +6,12 @@ replacement for the "Test_Link" software and "Landrex".
 
 [![Walkthrough of OpenBoardView R7.2](http://img.youtube.com/vi/6CrNRo1UP5g/0.jpg)](http://www.youtube.com/watch?v=6CrNRo1UP5g "OpenBoardView R7.2 demonstration, with voice-over")
 
-[![Demo Video](https://github.com/inflex/OpenBoardView/blob/inflex-ui-features/asset/screenshot.png)]()
+[![Demo Video](https://github.com/OpenBoardView/OpenBoardView/blob/master/asset/screenshot.png)]()
 
 
-![Common net pin halo](https://github.com/inflex/OpenBoardView/blob/inflex-ui-features/asset/screenshot-halo.png)
+![Common net pin halo](https://github.com/OpenBoardView/OpenBoardView/blob/master/asset/screenshot-halo.png)
 
-![Part searching](https://github.com/inflex/OpenBoardView/blob/inflex-ui-features/asset/screenshot-partsearch.png)
+![Part searching](https://github.com/OpenBoardView/OpenBoardView/blob/master/asset/screenshot-partsearch.png)
 
 
 ### Features
