@@ -57,8 +57,7 @@ For Ubuntu developers, you'll need the following packages at a minium;
 
 ### Usage
 
-- N: Search by power net
-- C: Search by component name
+- Ctrl-O: Open file select dialog
 
 - w/a/s/d: pan viewport over board
 - x: Reset zoom and center
@@ -69,11 +68,13 @@ For Ubuntu developers, you'll need the following packages at a minium;
 - Space, Middle mouse click: Flip board
 - R/./Numpad-Del: Rotate clockwise
 - ,/Numpad-Ins: Rotate counter-clockwise
+
 - /, Ctrl-F: Search
 - ESC: Clear search results and selected parts
-- Ctrl-O: Open file select dialog
+
 - p: Toggle pin display
 - m: Mirror board across Y-axis
+
 - L: Show net list
 - K: Show part list
 
