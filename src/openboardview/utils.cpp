@@ -68,7 +68,7 @@ std::string lookup_file_insensitive(const std::string &path, const std::string &
 	dir = opendir(path.c_str()); /* any suitable directory name  */
 	if (!dir) return filefound;
 
-	while (dent = readdir(dir)) {
+	while ((dent = readdir(dir)) != NULL) {
 		std::string cfile(dent->d_name);
 		if (compare_string_insensitive(cfile, filename)) filefound = path + cfile;
 	}

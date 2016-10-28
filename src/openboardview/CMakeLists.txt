@@ -63,7 +63,7 @@ link_directories(
 
 
 set(SOURCES
-		annotations.cpp
+	annotations.cpp
 	confparse.cpp
 	vectorhulls.cpp
 	history.cpp
@@ -78,6 +78,8 @@ set(SOURCES
 	FileFormats/FZFile.cpp
 	NetList.cpp
 	PartList.cpp
+	Searcher.cpp
+	SpellCorrector.cpp
 	main_opengl.cpp
 )
 

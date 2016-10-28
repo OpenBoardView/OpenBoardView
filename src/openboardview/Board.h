@@ -50,19 +50,19 @@ inline static bool is_prefix(string prefix, string base) {
 }
 
 template <class T>
-inline static bool contains(const T &element, vector<T *> &v) {
-	return find(begin(v), end(v), &element) != end(v);
+inline static bool contains(const T &element, vector<T> &v) {
+	return find(begin(v), end(v), element) != end(v);
 }
 
 template <class T>
-inline static bool contains(T &element, vector<T *> &v) {
-	return find(begin(v), end(v), &element) != end(v);
+inline static bool contains(T &element, vector<T> &v) {
+	return find(begin(v), end(v), element) != end(v);
 }
 
 template <class T>
-inline void remove(T &element, vector<T *> &v) {
+inline void remove(T &element, vector<T> &v) {
 
-	auto it = std::find(v.begin(), v.end(), &element);
+	auto it = std::find(v.begin(), v.end(), element);
 
 	if (it != v.end()) {
 		using std::swap;
@@ -102,7 +102,7 @@ struct Net : BoardElement {
 	string name;
 	bool is_ground;
 
-	vector<Pin *> pins;
+	SharedVector<Pin> pins;
 
 	string UniqueId() const {
 		return kBoardNetPrefix + name;
@@ -140,7 +140,7 @@ struct Pin : BoardElement {
 	Net *net;
 
 	// Contact belonging to this component (pin), nullptr if nail.
-	Component *component;
+	std::shared_ptr<Component> component;
 
 	string UniqueId() const {
 		return kBoardPinPrefix + number;
@@ -177,7 +177,7 @@ struct Component : BoardElement {
 	string mfgcode;
 
 	// Pins belonging to this component.
-	vector<Pin *> pins;
+	SharedVector<Pin> pins;
 
 	// Post calculated outlines
 	//

@@ -74,3 +74,7 @@ const std::vector<char> load_font(const std::string &name);
 
 enum class UserDir { Config, Data };
 const std::string get_user_dir(const UserDir userdir);
+
+#ifdef _WIN32
+char *strcasestr(const char *str, const char *pattern);
+#endif
