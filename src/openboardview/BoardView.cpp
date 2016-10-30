@@ -1700,7 +1700,7 @@ void BoardView::SearchComponent(void) {
 			bool hasResults = !results.first.empty() || !results.second.empty(); // We found some nets or some parts
 
 			if (searching && !hasResults) ImGui::PushStyleColor(ImGuiCol_FrameBg, ImColor(0xFF6666FF));
-			auto ret = ImGui::InputText(searchLabel.c_str(), m_search[i-1], 128, ImGuiInputTextFlags_CharsNoBlank);
+			auto ret = ImGui::InputText(searchLabel.c_str(), m_search[i-1], 128, ImGuiInputTextFlags_CharsNoBlank|(m_search[0]?ImGuiInputTextFlags_AutoSelectAll:0));
 			if (searching && !hasResults) ImGui::PopStyleColor();
 
 			if (ret) SearchCompound(m_search[i-1]);
