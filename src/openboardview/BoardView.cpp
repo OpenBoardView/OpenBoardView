@@ -24,6 +24,7 @@
 #include "FileFormats/BRD2File.h"
 #include "FileFormats/BRDFile.h"
 #include "FileFormats/BVRFile.h"
+#include "FileFormats/CSTFile.h"
 #include "FileFormats/FZFile.h"
 #include "annotations.h"
 #include "imgui/imgui.h"
@@ -422,6 +423,8 @@ int BoardView::LoadFile(const std::string &filename) {
 				file = new FZFile(buffer, FZKey);
 			} else if (check_fileext(filename, ".bom") || check_fileext(filename, ".asc"))
 				file = new ASCFile(buffer, filename);
+			else if (check_fileext(filename, ".cst"))
+				file = new CSTFile(buffer);
 			else if (BRDFile::verifyFormat(buffer))
 				file = new BRDFile(buffer);
 			else if (BRD2File::verifyFormat(buffer))
