@@ -75,6 +75,7 @@ set(SOURCES
 	FileFormats/BRD2File.cpp
 	FileFormats/BRDFile.cpp
 	FileFormats/BVRFile.cpp
+	FileFormats/CSTFile.cpp
 	FileFormats/FZFile.cpp
 	NetList.cpp
 	PartList.cpp
