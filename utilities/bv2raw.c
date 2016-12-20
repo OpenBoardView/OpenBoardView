@@ -16,6 +16,13 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+/* 2016-12-20: openboardview@think-future.com
+ * add x64 (ubuntu) compile instructions:
+ * gcc -L/usr/lib/x86_64-linux-gnu/ -o bv2raw bv2raw.c -I/usr/include/glib-2.0/ -I/usr/lib/x86_64-linux-gnu/glib-2.0/include/ -lglib-2.0 -lmdb
+ * add short usage information:
+ * Usage: bv2raw boardfile.bv > boardfile.bvr
+ */
+
 #include "mdbtools.h"
 
 #ifdef DMALLOC
@@ -112,6 +119,7 @@ int main(int argc, char **argv) {
 	}
 
 
+	fprintf(outfile,"BVRAW_FORMAT_1\n");
 	for (this_table = 0; this_table < 3; this_table++) {
 
 		table = mdb_read_table_by_name(mdb, tables[this_table], MDB_TABLE);
