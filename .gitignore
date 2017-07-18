@@ -1,5 +1,7 @@
 Debug
 Release
+release_build/
+bin/
 test
 *.aps
 *.opensdf
