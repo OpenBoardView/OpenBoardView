@@ -214,7 +214,7 @@ BRDBoard::BRDBoard(const BRDFile *const boardFile)
 	}
 
 	// Sort components by name
-	sort(begin(components_), end(components_), [](shared_ptr<Component> &lhs, shared_ptr<Component> &rhs) {
+	sort(begin(components_), end(components_), [](const shared_ptr<Component> &lhs, const shared_ptr<Component> &rhs) {
 		return lhs->name < rhs->name;
 	});
 }

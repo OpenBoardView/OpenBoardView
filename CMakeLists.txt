@@ -1,4 +1,6 @@
-cmake_policy(SET CMP0048 OLD)
+if(POLICY CMP0048)
+	cmake_policy(SET CMP0048 OLD)
+endif()
 set(PROJECT_VERSION "R7.3")
 project(OpenBoardView)
 cmake_minimum_required(VERSION 2.8.9)
@@ -37,8 +39,8 @@ message("${PROJECT_NAME} release:${CGreenB} ${OBV_BUILD}${CReset}")
 
 # GCC version check
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-	if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "4.9")
-		message(FATAL_ERROR "GCC version needs to be >= 4.9")
+	if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "4.8")
+		message(FATAL_ERROR "GCC version needs to be >= 4.8")
 	endif()
 endif()
 
