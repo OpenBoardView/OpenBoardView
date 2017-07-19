@@ -25,8 +25,6 @@
 		return fix_to_utf8(s, &arena, arena_end);    \
 	}
 
-static constexpr std::array<uint8_t, 4> signature = {0x23, 0xe2, 0x63, 0x28};
-
 struct BRDPoint {
 	int x;
 	int y;
@@ -88,7 +86,7 @@ class BRDFile {
 	static bool verifyFormat(std::vector<char> &buf);
 
   private:
-	static constexpr std::array<uint8_t, 4> signature = {0x23, 0xe2, 0x63, 0x28};
+	static constexpr std::array<uint8_t, 4> signature = {{0x23, 0xe2, 0x63, 0x28}};
 };
 
 char **stringfile(char *buffer);
