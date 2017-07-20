@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=OpenBoardView
+Comment=Viewer for PCB layouts
+Exec=openboardview -i %f
+Icon=openboardview
+MimeType=application/x-openboardview-board
+Terminal=false
+Type=Application
+Categories=Utility;Viewer;Electronics;GTK;

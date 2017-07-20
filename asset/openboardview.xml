@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mime-info xmlns="http://www.freedesktop.org/standards/shared-mime-info">
+  <mime-type type="application/x-openboardview-board">
+    <sub-class-of type="text/plain"/>
+    <comment>OpenBoardView PCB Layout</comment>
+    <glob pattern="*.asc"/>
+    <glob pattern="*.bdv"/>
+    <glob pattern="*.brd"/>
+    <glob pattern="*.bvr"/>
+    <glob pattern="*.fz"/>
+  </mime-type>
+</mime-info>
