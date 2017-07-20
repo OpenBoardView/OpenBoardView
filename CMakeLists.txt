@@ -1,7 +1,7 @@
 if(POLICY CMP0048)
 	cmake_policy(SET CMP0048 OLD)
 endif()
-set(PROJECT_VERSION "R7.3")
+set(PROJECT_VERSION "R7.4")
 project(OpenBoardView)
 cmake_minimum_required(VERSION 2.8.9)
 
