@@ -37,4 +37,6 @@ IndentCaseLabels: true
 # Includes ordering
 IncludeCategories:
   - Regex:           '^"platform.h"$' # Keep platform.h first
+    Priority:        -2
+  - Regex:           '^"imgui.h"$' # Keep platform.h first
     Priority:        -1
