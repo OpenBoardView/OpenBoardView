@@ -16,11 +16,10 @@ char default_conf[] =
 # OpenBoardView configuration\r\n\
 #\r\n\
 # Renderer options\r\n\
-#  0 = OpenGL1\r\n\
-#  1 = OpenGL3\r\n\
-#  2 = OpenGLES2\r\n\
-#  3 = ???\r\n\
-renderer=1\r\n\
+#  1 = OpenGL1\r\n\
+#  2 = OpenGL3\r\n\
+#  3 = OpenGLES2\r\n\
+renderer=2\r\n\
 \r\n\
 windowX=1200\r\n\
 windowY=700\r\n\
