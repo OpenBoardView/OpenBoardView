@@ -18,10 +18,13 @@
     <comment>Encoded/Plain BRD PCB Layout</comment>
     <glob weight="30" pattern="*.brd"/>
     <magic priority="80">
-      <match type="byte" offset="0" value="0x23"/>
-        <match type="byte" offset="1" value="0xe2"/>
-          <match type="byte" offset="2" value="0x63"/>
+      <match type="byte" offset="0" value="0x23">
+        <match type="byte" offset="1" value="0xe2">
+          <match type="byte" offset="2" value="0x63">
             <match type="byte" offset="3" value="0x28"/>
+          </match>
+        </match>
+      </match>
     </magic>
   </mime-type>
   <mime-type type="application/x-openboardview-brd-r4">
