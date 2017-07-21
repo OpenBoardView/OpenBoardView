@@ -5,7 +5,7 @@
 // See main.cpp for an example of using this.
 // https://github.com/ocornut/imgui
 
-#include "imgui/imgui.h"
+#include "imgui.h"
 #include "imgui_impl_sdl_gles2.h"
 
 // SDL, glad
@@ -167,11 +167,11 @@ void ImGui_ImplSdlGLES2_RenderDrawLists(ImDrawData *draw_data) {
 	glViewport(last_viewport[0], last_viewport[1], (GLsizei)last_viewport[2], (GLsizei)last_viewport[3]);
 }
 
-static const char *ImGui_ImplSdlGLES2_GetClipboardText() {
+static const char *ImGui_ImplSdlGLES2_GetClipboardText(void *) {
 	return SDL_GetClipboardText();
 }
 
-static void ImGui_ImplSdlGLES2_SetClipboardText(const char *text) {
+static void ImGui_ImplSdlGLES2_SetClipboardText(void *, const char *text) {
 	SDL_SetClipboardText(text);
 }
 
@@ -390,6 +390,7 @@ bool ImGui_ImplSdlGLES2_Init(SDL_Window *window) {
 	                                                           // ImDrawData pointer.
 	io.SetClipboardTextFn = ImGui_ImplSdlGLES2_SetClipboardText;
 	io.GetClipboardTextFn = ImGui_ImplSdlGLES2_GetClipboardText;
+	io.ClipboardUserData  = NULL;
 
 	return true;
 }

@@ -1,14 +1,10 @@
 // ImGui SDL2 binding with OpenGL3
-// In this binding, ImTextureID is used to store an OpenGL 'GLuint' texture
-// identifier. Read the FAQ about ImTextureID in imgui.cpp.
+// In this binding, ImTextureID is used to store an OpenGL 'GLuint' texture identifier. Read the FAQ about ImTextureID in imgui.cpp.
 
-// You can copy and use unmodified imgui_impl_* files in your project. See
-// main.cpp for an example of using this.
-// If you use this binding you'll need to call 4 functions:
-// ImGui_ImplXXXX_Init(), ImGui_ImplXXXX_NewFrame(), ImGui::Render() and
+// You can copy and use unmodified imgui_impl_* files in your project. See main.cpp for an example of using this.
+// If you use this binding you'll need to call 4 functions: ImGui_ImplXXXX_Init(), ImGui_ImplXXXX_NewFrame(), ImGui::Render() and
 // ImGui_ImplXXXX_Shutdown().
-// If you are new to ImGui, see examples/README.txt and documentation at the top
-// of imgui.cpp.
+// If you are new to ImGui, see examples/README.txt and documentation at the top of imgui.cpp.
 // https://github.com/ocornut/imgui
 
 #include "imgui.h"
@@ -34,14 +30,12 @@ static int g_AttribLocationTex = 0, g_AttribLocationProjMtx = 0;
 static int g_AttribLocationPosition = 0, g_AttribLocationUV = 0, g_AttribLocationColor = 0;
 static unsigned int g_VboHandle = 0, g_VaoHandle = 0, g_ElementsHandle = 0;
 
-// This is the main rendering function that you have to implement and provide to
-// ImGui (via setting up 'RenderDrawListsFn' in the ImGuiIO structure)
+// This is the main rendering function that you have to implement and provide to ImGui (via setting up 'RenderDrawListsFn' in the
+// ImGuiIO structure)
 // If text or lines are blurry when integrating ImGui in your engine:
-// - in your Render function, try translating your projection matrix by
-// (0.5f,0.5f) or (0.375f,0.375f)
+// - in your Render function, try translating your projection matrix by (0.5f,0.5f) or (0.375f,0.375f)
 void ImGui_ImplSdlGL3_RenderDrawLists(ImDrawData *draw_data) {
-	// Avoid rendering when minimized, scale coordinates for retina displays
-	// (screen coordinates != framebuffer coordinates)
+	// Avoid rendering when minimized, scale coordinates for retina displays (screen coordinates != framebuffer coordinates)
 	ImGuiIO &io   = ImGui::GetIO();
 	int fb_width  = (int)(io.DisplaySize.x * io.DisplayFramebufferScale.x);
 	int fb_height = (int)(io.DisplaySize.y * io.DisplayFramebufferScale.y);
@@ -49,44 +43,49 @@ void ImGui_ImplSdlGL3_RenderDrawLists(ImDrawData *draw_data) {
 	draw_data->ScaleClipRects(io.DisplayFramebufferScale);
 
 	// Backup GL state
+	GLint last_active_texture;
+	glGetIntegerv(GL_ACTIVE_TEXTURE, &last_active_texture);
+	glActiveTexture(GL_TEXTURE0);
 	GLint last_program;
 	glGetIntegerv(GL_CURRENT_PROGRAM, &last_program);
 	GLint last_texture;
 	glGetIntegerv(GL_TEXTURE_BINDING_2D, &last_texture);
-	GLint last_active_texture;
-	glGetIntegerv(GL_ACTIVE_TEXTURE, &last_active_texture);
 	GLint last_array_buffer;
 	glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &last_array_buffer);
 	GLint last_element_array_buffer;
 	glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING, &last_element_array_buffer);
 	GLint last_vertex_array;
 	glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &last_vertex_array);
-	GLint last_blend_src;
-	glGetIntegerv(GL_BLEND_SRC, &last_blend_src);
-	GLint last_blend_dst;
-	glGetIntegerv(GL_BLEND_DST, &last_blend_dst);
+	GLint last_blend_src_rgb;
+	glGetIntegerv(GL_BLEND_SRC_RGB, &last_blend_src_rgb);
+	GLint last_blend_dst_rgb;
+	glGetIntegerv(GL_BLEND_DST_RGB, &last_blend_dst_rgb);
+	GLint last_blend_src_alpha;
+	glGetIntegerv(GL_BLEND_SRC_ALPHA, &last_blend_src_alpha);
+	GLint last_blend_dst_alpha;
+	glGetIntegerv(GL_BLEND_DST_ALPHA, &last_blend_dst_alpha);
 	GLint last_blend_equation_rgb;
 	glGetIntegerv(GL_BLEND_EQUATION_RGB, &last_blend_equation_rgb);
 	GLint last_blend_equation_alpha;
 	glGetIntegerv(GL_BLEND_EQUATION_ALPHA, &last_blend_equation_alpha);
 	GLint last_viewport[4];
 	glGetIntegerv(GL_VIEWPORT, last_viewport);
+	GLint last_scissor_box[4];
+	glGetIntegerv(GL_SCISSOR_BOX, last_scissor_box);
 	GLboolean last_enable_blend        = glIsEnabled(GL_BLEND);
 	GLboolean last_enable_cull_face    = glIsEnabled(GL_CULL_FACE);
 	GLboolean last_enable_depth_test   = glIsEnabled(GL_DEPTH_TEST);
 	GLboolean last_enable_scissor_test = glIsEnabled(GL_SCISSOR_TEST);
 
-	// Setup render state: alpha-blending enabled, no face culling, no depth
-	// testing, scissor enabled
+	// Setup render state: alpha-blending enabled, no face culling, no depth testing, scissor enabled
 	glEnable(GL_BLEND);
 	glBlendEquation(GL_FUNC_ADD);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glDisable(GL_CULL_FACE);
 	glDisable(GL_DEPTH_TEST);
 	glEnable(GL_SCISSOR_TEST);
-	glActiveTexture(GL_TEXTURE0);
 
-	// Setup orthographic projection matrix
+	// Setup viewport, orthographic projection matrix
 	glViewport(0, 0, (GLsizei)fb_width, (GLsizei)fb_height);
 	const float ortho_projection[4][4] = {
 	    {2.0f / io.DisplaySize.x, 0.0f, 0.0f, 0.0f},
@@ -105,17 +104,18 @@ void ImGui_ImplSdlGL3_RenderDrawLists(ImDrawData *draw_data) {
 
 		glBindBuffer(GL_ARRAY_BUFFER, g_VboHandle);
 		glBufferData(GL_ARRAY_BUFFER,
-		             (GLsizeiptr)cmd_list->VtxBuffer.size() * sizeof(ImDrawVert),
-		             (GLvoid *)&cmd_list->VtxBuffer.front(),
+		             (GLsizeiptr)cmd_list->VtxBuffer.Size * sizeof(ImDrawVert),
+		             (const GLvoid *)cmd_list->VtxBuffer.Data,
 		             GL_STREAM_DRAW);
 
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, g_ElementsHandle);
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-		             (GLsizeiptr)cmd_list->IdxBuffer.size() * sizeof(ImDrawIdx),
-		             (GLvoid *)&cmd_list->IdxBuffer.front(),
+		             (GLsizeiptr)cmd_list->IdxBuffer.Size * sizeof(ImDrawIdx),
+		             (const GLvoid *)cmd_list->IdxBuffer.Data,
 		             GL_STREAM_DRAW);
 
-		for (const ImDrawCmd *pcmd = cmd_list->CmdBuffer.begin(); pcmd != cmd_list->CmdBuffer.end(); pcmd++) {
+		for (int cmd_i = 0; cmd_i < cmd_list->CmdBuffer.Size; cmd_i++) {
+			const ImDrawCmd *pcmd = &cmd_list->CmdBuffer[cmd_i];
 			if (pcmd->UserCallback) {
 				pcmd->UserCallback(cmd_list, pcmd);
 			} else {
@@ -135,13 +135,13 @@ void ImGui_ImplSdlGL3_RenderDrawLists(ImDrawData *draw_data) {
 
 	// Restore modified GL state
 	glUseProgram(last_program);
-	glActiveTexture(last_active_texture);
 	glBindTexture(GL_TEXTURE_2D, last_texture);
+	glActiveTexture(last_active_texture);
 	glBindVertexArray(last_vertex_array);
 	glBindBuffer(GL_ARRAY_BUFFER, last_array_buffer);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, last_element_array_buffer);
 	glBlendEquationSeparate(last_blend_equation_rgb, last_blend_equation_alpha);
-	glBlendFunc(last_blend_src, last_blend_dst);
+	glBlendFuncSeparate(last_blend_src_rgb, last_blend_dst_rgb, last_blend_src_alpha, last_blend_dst_alpha);
 	if (last_enable_blend)
 		glEnable(GL_BLEND);
 	else
@@ -159,13 +159,14 @@ void ImGui_ImplSdlGL3_RenderDrawLists(ImDrawData *draw_data) {
 	else
 		glDisable(GL_SCISSOR_TEST);
 	glViewport(last_viewport[0], last_viewport[1], (GLsizei)last_viewport[2], (GLsizei)last_viewport[3]);
+	glScissor(last_scissor_box[0], last_scissor_box[1], (GLsizei)last_scissor_box[2], (GLsizei)last_scissor_box[3]);
 }
 
-static const char *ImGui_ImplSdlGL3_GetClipboardText() {
+static const char *ImGui_ImplSdlGL3_GetClipboardText(void *) {
 	return SDL_GetClipboardText();
 }
 
-static void ImGui_ImplSdlGL3_SetClipboardText(const char *text) {
+static void ImGui_ImplSdlGL3_SetClipboardText(void *, const char *text) {
 	SDL_SetClipboardText(text);
 }
 
@@ -194,7 +195,6 @@ bool ImGui_ImplSdlGL3_ProcessEvent(SDL_Event *event) {
 				int tkey          = key | 0x100;
 				io.KeysDown[tkey] = (event->type == SDL_KEYDOWN);
 			}
-
 			io.KeysDown[key] = (event->type == SDL_KEYDOWN);
 			io.KeyShift      = ((SDL_GetModState() & KMOD_SHIFT) != 0);
 			io.KeyCtrl       = ((SDL_GetModState() & KMOD_CTRL) != 0);
@@ -211,8 +211,10 @@ void ImGui_ImplSdlGL3_CreateFontsTexture() {
 	ImGuiIO &io = ImGui::GetIO();
 	unsigned char *pixels;
 	int width, height;
-	io.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height); // Load as RGBA 32-bits for OpenGL3 demo because it is more
-	                                                        // likely to be compatible with user's existing shader.
+	io.Fonts->GetTexDataAsRGBA32(
+	    &pixels,
+	    &width,
+	    &height); // Load as RGBA 32-bits for OpenGL3 demo because it is more likely to be compatible with user's existing shader.
 
 	// Upload texture to graphics system
 	GLint last_texture;
@@ -314,15 +316,15 @@ void ImGui_ImplSdlGL3_InvalidateDeviceObjects() {
 	if (g_ElementsHandle) glDeleteBuffers(1, &g_ElementsHandle);
 	g_VaoHandle = g_VboHandle = g_ElementsHandle = 0;
 
-	glDetachShader(g_ShaderHandle, g_VertHandle);
-	glDeleteShader(g_VertHandle);
+	if (g_ShaderHandle && g_VertHandle) glDetachShader(g_ShaderHandle, g_VertHandle);
+	if (g_VertHandle) glDeleteShader(g_VertHandle);
 	g_VertHandle = 0;
 
-	glDetachShader(g_ShaderHandle, g_FragHandle);
-	glDeleteShader(g_FragHandle);
+	if (g_ShaderHandle && g_FragHandle) glDetachShader(g_ShaderHandle, g_FragHandle);
+	if (g_FragHandle) glDeleteShader(g_FragHandle);
 	g_FragHandle = 0;
 
-	glDeleteProgram(g_ShaderHandle);
+	if (g_ShaderHandle) glDeleteProgram(g_ShaderHandle);
 	g_ShaderHandle = 0;
 
 	if (g_FontTexture) {
@@ -333,11 +335,9 @@ void ImGui_ImplSdlGL3_InvalidateDeviceObjects() {
 }
 
 bool ImGui_ImplSdlGL3_Init(SDL_Window *window) {
-	ImGuiIO &io             = ImGui::GetIO();
-	io.KeyMap[ImGuiKey_Tab] = SDLK_TAB; // Keyboard mapping. ImGui will use those
-	                                    // indices to peek into the io.KeyDown[]
-	                                    // array.
-	io.KeyMap[ImGuiKey_LeftArrow]  = SDL_SCANCODE_LEFT;
+	ImGuiIO &io                   = ImGui::GetIO();
+	io.KeyMap[ImGuiKey_Tab]       = SDLK_TAB; // Keyboard mapping. ImGui will use those indices to peek into the io.KeyDown[] array.
+	io.KeyMap[ImGuiKey_LeftArrow] = SDL_SCANCODE_LEFT;
 	io.KeyMap[ImGuiKey_RightArrow] = SDL_SCANCODE_RIGHT;
 	io.KeyMap[ImGuiKey_UpArrow]    = SDL_SCANCODE_UP;
 	io.KeyMap[ImGuiKey_DownArrow]  = SDL_SCANCODE_DOWN;
@@ -356,12 +356,11 @@ bool ImGui_ImplSdlGL3_Init(SDL_Window *window) {
 	io.KeyMap[ImGuiKey_Y]          = SDLK_y;
 	io.KeyMap[ImGuiKey_Z]          = SDLK_z;
 
-	io.RenderDrawListsFn = ImGui_ImplSdlGL3_RenderDrawLists; // Alternatively you can set this to
-	                                                         // NULL and call ImGui::GetDrawData()
-	// after ImGui::Render() to get the same
-	// ImDrawData pointer.
+	io.RenderDrawListsFn = ImGui_ImplSdlGL3_RenderDrawLists; // Alternatively you can set this to NULL and call ImGui::GetDrawData()
+	                                                         // after ImGui::Render() to get the same ImDrawData pointer.
 	io.SetClipboardTextFn = ImGui_ImplSdlGL3_SetClipboardText;
 	io.GetClipboardTextFn = ImGui_ImplSdlGL3_GetClipboardText;
+	io.ClipboardUserData  = NULL;
 
 #ifdef _WIN32
 	SDL_SysWMinfo wmInfo;
@@ -400,22 +399,19 @@ void ImGui_ImplSdlGL3_NewFrame(SDL_Window *window) {
 	g_Time              = current_time;
 
 	// Setup inputs
-	// (we already got mouse wheel, keyboard keys & characters from
-	// SDL_PollEvent())
+	// (we already got mouse wheel, keyboard keys & characters from SDL_PollEvent())
 	int mx, my;
 	Uint32 mouseMask = SDL_GetMouseState(&mx, &my);
 	if (SDL_GetWindowFlags(window) & SDL_WINDOW_MOUSE_FOCUS)
-		io.MousePos = ImVec2((float)mx, (float)my); // Mouse position, in pixels
-	                                                // (set to -1,-1 if no mouse /
-	                                                // on another screen, etc.)
+		io.MousePos =
+		    ImVec2((float)mx, (float)my); // Mouse position, in pixels (set to -1,-1 if no mouse / on another screen, etc.)
 	else
 		io.MousePos = ImVec2(-1, -1);
 
-	io.MouseDown[0] =
-	    g_MousePressed[0] || (mouseMask & SDL_BUTTON(SDL_BUTTON_LEFT)) != 0; // If a mouse press event came, always pass it as
-	                                                                         // "mouse held this frame", so we don't miss
-	                                                                         // click-release events that are shorter than 1
-	                                                                         // frame.
+	io.MouseDown[0] = g_MousePressed[0] || (mouseMask & SDL_BUTTON(SDL_BUTTON_LEFT)) != 0; // If a mouse press event came, always
+	                                                                                       // pass it as "mouse held this frame", so
+	                                                                                       // we don't miss click-release events
+	                                                                                       // that are shorter than 1 frame.
 	io.MouseDown[1]   = g_MousePressed[1] || (mouseMask & SDL_BUTTON(SDL_BUTTON_RIGHT)) != 0;
 	io.MouseDown[2]   = g_MousePressed[2] || (mouseMask & SDL_BUTTON(SDL_BUTTON_MIDDLE)) != 0;
 	g_MousePressed[0] = g_MousePressed[1] = g_MousePressed[2] = false;
