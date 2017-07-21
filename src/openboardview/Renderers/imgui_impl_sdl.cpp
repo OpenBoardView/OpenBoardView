@@ -1,6 +1,9 @@
 // ImGui SDL2 binding with OpenGL
 // In this binding, ImTextureID is used to store an OpenGL 'GLuint' texture identifier. Read the FAQ about ImTextureID in imgui.cpp.
 
+// If your context or own usage of OpenGL involve anything GL3/GL4, prefer using the code in sdl_opengl3_example.
+// If you are not sure what that means, prefer using the code in sdl_opengl3_example.
+
 // You can copy and use unmodified imgui_impl_* files in your project. See main.cpp for an example of using this.
 // If you use this binding you'll need to call 4 functions: ImGui_ImplXXXX_Init(), ImGui_ImplXXXX_NewFrame(), ImGui::Render() and
 // ImGui_ImplXXXX_Shutdown().
@@ -45,6 +48,8 @@ void ImGui_ImplSdl_RenderDrawLists(ImDrawData *draw_data) {
 	glGetIntegerv(GL_TEXTURE_BINDING_2D, &last_texture);
 	GLint last_viewport[4];
 	glGetIntegerv(GL_VIEWPORT, last_viewport);
+	GLint last_scissor_box[4];
+	glGetIntegerv(GL_SCISSOR_BOX, last_scissor_box);
 	glPushAttrib(GL_ENABLE_BIT | GL_COLOR_BUFFER_BIT | GL_TRANSFORM_BIT);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -70,14 +75,15 @@ void ImGui_ImplSdl_RenderDrawLists(ImDrawData *draw_data) {
 // Render command lists
 #define OFFSETOF(TYPE, ELEMENT) ((size_t) & (((TYPE *)0)->ELEMENT))
 	for (int n = 0; n < draw_data->CmdListsCount; n++) {
-		const ImDrawList *cmd_list      = draw_data->CmdLists[n];
-		const unsigned char *vtx_buffer = (const unsigned char *)&cmd_list->VtxBuffer.front();
-		const ImDrawIdx *idx_buffer     = &cmd_list->IdxBuffer.front();
-		glVertexPointer(2, GL_FLOAT, sizeof(ImDrawVert), (void *)(vtx_buffer + OFFSETOF(ImDrawVert, pos)));
-		glTexCoordPointer(2, GL_FLOAT, sizeof(ImDrawVert), (void *)(vtx_buffer + OFFSETOF(ImDrawVert, uv)));
-		glColorPointer(4, GL_UNSIGNED_BYTE, sizeof(ImDrawVert), (void *)(vtx_buffer + OFFSETOF(ImDrawVert, col)));
+		const ImDrawList *cmd_list   = draw_data->CmdLists[n];
+		const ImDrawVert *vtx_buffer = cmd_list->VtxBuffer.Data;
+		const ImDrawIdx *idx_buffer  = cmd_list->IdxBuffer.Data;
+		glVertexPointer(2, GL_FLOAT, sizeof(ImDrawVert), (const GLvoid *)((const char *)vtx_buffer + OFFSETOF(ImDrawVert, pos)));
+		glTexCoordPointer(2, GL_FLOAT, sizeof(ImDrawVert), (const GLvoid *)((const char *)vtx_buffer + OFFSETOF(ImDrawVert, uv)));
+		glColorPointer(
+		    4, GL_UNSIGNED_BYTE, sizeof(ImDrawVert), (const GLvoid *)((const char *)vtx_buffer + OFFSETOF(ImDrawVert, col)));
 
-		for (int cmd_i = 0; cmd_i < cmd_list->CmdBuffer.size(); cmd_i++) {
+		for (int cmd_i = 0; cmd_i < cmd_list->CmdBuffer.Size; cmd_i++) {
 			const ImDrawCmd *pcmd = &cmd_list->CmdBuffer[cmd_i];
 			if (pcmd->UserCallback) {
 				pcmd->UserCallback(cmd_list, pcmd);
@@ -108,13 +114,14 @@ void ImGui_ImplSdl_RenderDrawLists(ImDrawData *draw_data) {
 	glPopMatrix();
 	glPopAttrib();
 	glViewport(last_viewport[0], last_viewport[1], (GLsizei)last_viewport[2], (GLsizei)last_viewport[3]);
+	glScissor(last_scissor_box[0], last_scissor_box[1], (GLsizei)last_scissor_box[2], (GLsizei)last_scissor_box[3]);
 }
 
-static const char *ImGui_ImplSdl_GetClipboardText() {
+static const char *ImGui_ImplSdl_GetClipboardText(void *) {
 	return SDL_GetClipboardText();
 }
 
-static void ImGui_ImplSdl_SetClipboardText(const char *text) {
+static void ImGui_ImplSdl_SetClipboardText(void *, const char *text) {
 	SDL_SetClipboardText(text);
 }
 
@@ -214,6 +221,7 @@ bool ImGui_ImplSdl_Init(SDL_Window *window) {
 	                                                      // after ImGui::Render() to get the same ImDrawData pointer.
 	io.SetClipboardTextFn = ImGui_ImplSdl_SetClipboardText;
 	io.GetClipboardTextFn = ImGui_ImplSdl_GetClipboardText;
+	io.ClipboardUserData  = NULL;
 
 #ifdef _WIN32
 	SDL_SysWMinfo wmInfo;
