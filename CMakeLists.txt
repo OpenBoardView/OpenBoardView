@@ -50,8 +50,6 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 	endif()
 endif()
 
-# Install in project directory
-set(CMAKE_INSTALL_PREFIX ${PROJECT_SOURCE_DIR})
 # Extra CMake modules (Find*.cmake) are in CMakeModules/
 set(CMAKE_MODULE_PATH
 	${CMAKE_MODULE_PATH}

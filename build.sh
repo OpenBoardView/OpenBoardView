@@ -26,7 +26,8 @@ if [ "$1" == "--help" ]; then
 fi
 STRCOMPILE="$(tput bold ; tput setaf 2)Compiling$(tput sgr0)"
 COMPILEDIR="release_build"
-COMPILEFLAGS=""
+COMPILEFLAGS="-DCMAKE_INSTALL_PREFIX="
+export DESTDIR="$(cd "$(dirname "$0")" && pwd)"
 BUILDTYPE="$(tput bold ; tput setaf 6)release$(tput sgr0)"
 SCRIPT_ARGC=1 # number of arguments eaten by this script
 if [ "$ARG_LENGTH" -gt 0 -a "$1" == "--debug" -o "$2" == "--debug" ]; then
