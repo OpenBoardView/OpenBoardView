@@ -1,12 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mime-info xmlns="http://www.freedesktop.org/standards/shared-mime-info">
-  <mime-type type="application/x-openboardview-board">
+  <mime-type type="application/x-openboardview-asc">
+    <comment>Asus TSICT PCB Layout</comment>
     <sub-class-of type="text/plain"/>
+    <glob weight="20" pattern="*.asc"/>
+    <magic priority="80">
+      <match type="string" offset="8:60" value="eM-Test Expert"/>
+    </magic>
+  </mime-type>
+  <mime-type type="application/x-openboardview-board">
     <comment>OpenBoardView PCB Layout</comment>
-    <glob pattern="*.asc"/>
     <glob pattern="*.bdv"/>
-    <glob pattern="*.brd"/>
     <glob pattern="*.bvr"/>
     <glob pattern="*.fz"/>
+  </mime-type>
+  <mime-type type="application/x-openboardview-brd-encoded">
+    <comment>Encoded/Plain BRD PCB Layout</comment>
+    <glob weight="30" pattern="*.brd"/>
+    <magic priority="80">
+      <match type="byte" offset="0" value="0x23"/>
+        <match type="byte" offset="1" value="0xe2"/>
+          <match type="byte" offset="2" value="0x63"/>
+            <match type="byte" offset="3" value="0x28"/>
+    </magic>
+  </mime-type>
+  <mime-type type="application/x-openboardview-brd-r4">
+    <comment>TOPTEST BoardViewR4</comment>
+    <sub-class-of type="text/plain"/>
+    <glob weight="30" pattern="*.brd"/>
+    <magic priority="70">
+      <match type="string" offset="0:30" value="BRDOUT:"/>
+    </magic>
   </mime-type>
 </mime-info>
