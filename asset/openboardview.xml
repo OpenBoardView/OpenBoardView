@@ -14,8 +14,8 @@
     <glob pattern="*.bvr"/>
     <glob pattern="*.fz"/>
   </mime-type>
-  <mime-type type="application/x-openboardview-brd-encoded">
-    <comment>Encoded/Plain BRD PCB Layout</comment>
+  <mime-type type="application/x-openboardview-brd-landrex">
+    <comment>Landrex/Testlink PCB Layout</comment>
     <glob weight="30" pattern="*.brd"/>
     <magic priority="80">
       <match type="big32" offset="0" value="0x23e26328"/>
@@ -27,6 +27,16 @@
     <glob weight="30" pattern="*.brd"/>
     <magic priority="70">
       <match type="string" offset="0:30" value="BRDOUT:"/>
+    </magic>
+  </mime-type>
+  <mime-type type="application/x-openboardview-lst">
+    <comment>CAST PCB Layout</comment>
+    <sub-class-of type="text/plain"/>
+    <glob weight="30" pattern="*.lst"/>
+    <magic priority="70">
+      <match type="string" offset="0" value="$VS2">
+        <match type="string" offset="3:120" value="$ASM"/>
+      </match>
     </magic>
   </mime-type>
 </mime-info>
