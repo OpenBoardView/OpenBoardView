@@ -6,8 +6,8 @@ if(APPLE)
 		${CMAKE_CURRENT_SOURCE_DIR}/brd.icns
 	)
 elseif(UNIX)
-	install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/ofbv-app.svg
-		DESTINATION share/icons/hicolor/scalable/apps RENAME openboardview.svg)
+	install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/openboardview.svg
+		DESTINATION share/icons/hicolor/scalable/apps)
 	install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/openboardview.appdata.xml
 		DESTINATION share/appdata)
 	install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/openboardview.desktop
