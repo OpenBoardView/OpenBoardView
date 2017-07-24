@@ -6,6 +6,18 @@ fmtText() {
   echo "$(tput bold; tput setaf ${color})${text}$(tput sgr0)"
 }
 
+helpMsg() {
+  cat << EOH
+Usage: $(fmtText 4 ${0}) [--$(fmtText 5 recompile)] [--$(fmtText 1 debug)] — Build $PROJECT
+          --$(fmtText 5 recompile)   — Delete $(fmtText 6 \$COMPILEDIR) (release_build or debug_build with --$(fmtText 1 debug)) before compiling $PROJECT again
+          --$(fmtText 1 debug)       — Make a $(fmtText 1 debug) build
+
+All extra parameters are passed to cmake.
+Environment variables:
+          CROSS         — Set to "mingw64" to cross-compile for Windows
+EOH
+}
+
 PROJECT="$(fmtText 3 OpenBoardView)"
 if [ -z $THREADS ]; then
     THREADS=1
@@ -22,13 +34,7 @@ if [ -z $THREADS ]; then
 fi
 ARG_LENGTH=$#
 if [ "$1" == "--help" ]; then
-  echo "Usage: $(fmtText 4 ${0}) [--$(fmtText 5 recompile)] [--$(fmtText 1 debug)] — Build $PROJECT"
-  echo "          --$(fmtText 5 recompile)   — Delete $(fmtText 6 \$COMPILEDIR) (release_build or debug_build with --$(fmtText 1 debug)) before compiling $PROJECT again"
-  echo "          --$(fmtText 1 debug)       — Make a $(fmtText 1 debug) build"
-  echo ""
-  echo "All extra parameters are passed to cmake."
-  echo "Environment variables:"
-  echo "          CROSS         — Set to \"mingw64\" to cross-compile for Windows"
+  helpMsg
   exit
 fi
 STRCOMPILE="$(fmtText 2 Compiling)"
