@@ -26,7 +26,9 @@
     <sub-class-of type="text/plain"/>
     <glob weight="30" pattern="*.brd"/>
     <magic priority="70">
-      <match type="string" offset="0:30" value="BRDOUT:"/>
+      <match type="string" offset="0:30" value="BRDOUT:">
+        <match type="string" offset="40:120" value="NETS:"/>
+      </match>
     </magic>
   </mime-type>
   <mime-type type="application/x-openboardview-lst">
