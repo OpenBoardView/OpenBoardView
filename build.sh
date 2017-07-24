@@ -6,6 +6,18 @@ color() {
   echo "$(tput bold; tput setaf ${color})${text}$(tput sgr0)"
 }
 
+helpMsg() {
+  cat << EOH
+Usage: $(color 4 ${0}) [--$(color 5 recompile)] [--$(color 1 debug)] — Build $PROJECT
+          --$(color 5 recompile)   — Delete $(color 6 \$COMPILEDIR) (release_build or debug_build with --$(color 1 debug)) before compiling $PROJECT again
+          --$(color 1 debug)       — Make a $(color 1 debug) build
+
+All extra parameters are passed to cmake.
+Environment variables:
+          CROSS         — Set to "mingw64" to cross-compile for Windows
+EOH
+}
+
 PROJECT="$(color 3 OpenBoardView)"
 if [ -z $THREADS ]; then
     THREADS=1
@@ -22,13 +34,7 @@ if [ -z $THREADS ]; then
 fi
 ARG_LENGTH=$#
 if [ "$1" == "--help" ]; then
-  echo "Usage: $(color 4 ${0}) [--$(color 5 recompile)] [--$(color 1 debug)] — Build $PROJECT"
-  echo "          --$(color 5 recompile)   — Delete $(color 6 \$COMPILEDIR) (release_build or debug_build with --$(color 1 debug)) before compiling $PROJECT again"
-  echo "          --$(color 1 debug)       — Make a $(color 1 debug) build"
-  echo ""
-  echo "All extra parameters are passed to cmake."
-  echo "Environment variables:"
-  echo "          CROSS         — Set to \"mingw64\" to cross-compile for Windows"
+  helpMsg
   exit
 fi
 STRCOMPILE="$(color 2 Compiling)"
