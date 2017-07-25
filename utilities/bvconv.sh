@@ -12,11 +12,11 @@ echo "Usage: $0 input.bv > output.bvr"
 exit 1
 fi
 
-echo "BRRAW_FORMAT_1"
-echo "[Layout]"
-mdb-export "$1" Layout 
-echo "[Nail]"
-mdb-export "$1" Nail
-echo "[Pin]"
-mdb-export "$1" Pin
+echo "BVRAW_FORMAT_1"
+echo "<<Layout>>"
+mdb-export -d$'\t' "$1" Layout
+echo "<<Nail>>"
+mdb-export -d$'\t' "$1" Nail
+echo "<<Pin>>"
+mdb-export -d$'\t' "$1" Pin
 
