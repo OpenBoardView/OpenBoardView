@@ -27,8 +27,8 @@ windowY=700\r\n\
 # Reference DPI is 100, increase if you have a higher density (ie, small 4K or 2K screen)\r\n\
 dpi=100\r\n\
 \r\n\
-#fontPath=FiraSans-Medium.ttf\r\n\
-fontSize=20\r\n\
+fontName = \r\n\
+fontSize = 20\r\n\
 showInfoPanel = true\r\n\
 infoPanelWidth = 300\r\n\
 showPins = true\r\n\
