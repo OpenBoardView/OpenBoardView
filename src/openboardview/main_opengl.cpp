@@ -22,6 +22,7 @@
 #else
 #include <SDL2/SDL.h>
 #endif
+#include <deque>
 #include <sstream>
 #include <stdio.h>
 #include <string>
@@ -90,7 +91,6 @@ char help[] =
 int parse_parameters(int argc, char **argv, struct globals *g) {
 	int param;
 
-
 	/*
 	 * When we're using file-associations, the OS usually just
 	 * passes the filename to be loaded as the single initial
@@ -98,12 +98,11 @@ int parse_parameters(int argc, char **argv, struct globals *g) {
 	 * single param is a valid file, and try load it.
 	 */
 	if (argc == 2) {
-		if( access( argv[1], F_OK ) != -1 ) {
+		if (access(argv[1], F_OK) != -1) {
 			g->input_file = argv[1];
 			return 0;
 		}
 	}
-
 
 	/**
 	 * Decode the input parameters.
@@ -388,7 +387,15 @@ int main(int argc, char **argv) {
 		style.ScrollbarSize *= app.dpi / 100;
 	}
 
-	for (auto name : {"Liberation Sans", "DejaVu Sans", "Arial", "Helvetica", ""}) { // Empty string = use system default font
+	// Font selection
+	std::deque<std::string> fontList(
+	    {"Liberation Sans", "DejaVu Sans", "Arial", "Helvetica", ""}); // Empty string = use system default font
+	std::string customFont(app.obvconfig.ParseStr("fontName", ""));
+
+	if (!customFont.empty()) fontList.push_front(customFont);
+
+	for (const auto &name : fontList) {
+		app.obvconfig.WriteStr("fontName", name.c_str());
 #ifdef _WIN32
 		ImFontConfig font_cfg{};
 		font_cfg.FontDataOwnedByAtlas = false;

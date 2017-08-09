@@ -733,6 +733,16 @@ void BoardView::Preferences(void) {
 			if (t > 320) obvconfig.WriteInt("windowY", t);
 		}
 
+		const char *oldFont = obvconfig.ParseStr("fontName", "");
+		std::vector<char> newFont(oldFont, oldFont + strlen(oldFont) + 1); // Copy string data + '\0' char
+		if (newFont.size() < 256)                                          // reserve space for new font name
+			newFont.resize(256, '\0');                                     // Max font name length is 255 characters
+		RA("Font name", DPI(200));
+		ImGui::SameLine();
+		if (ImGui::InputText("##fontName", newFont.data(), newFont.size())) {
+			obvconfig.WriteStr("fontName", newFont.data());
+		}
+
 		t = obvconfig.ParseInt("fontSize", 20);
 		RA("Font size", DPI(200));
 		ImGui::SameLine();
@@ -747,7 +757,7 @@ void BoardView::Preferences(void) {
 			if ((t > 25) && (t < 600)) obvconfig.WriteInt("dpi", t);
 		}
 		ImGui::PushStyleColor(ImGuiCol_Text, ImColor(0xff4040ff));
-		ImGui::Text("(Program restart is required to properly apply font size and DPI changes)");
+		ImGui::Text("(Program restart is required to properly apply font and DPI changes)");
 		ImGui::PopStyleColor();
 
 		ImGui::Separator();
