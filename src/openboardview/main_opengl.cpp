@@ -394,7 +394,7 @@ int main(int argc, char **argv) {
 
 	if (!customFont.empty()) fontList.push_front(customFont);
 
-	for (auto name : fontList) {
+	for (const auto &name : fontList) {
 		app.obvconfig.WriteStr("fontName", name.c_str());
 #ifdef _WIN32
 		ImFontConfig font_cfg{};

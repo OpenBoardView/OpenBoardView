@@ -735,7 +735,8 @@ void BoardView::Preferences(void) {
 
 		const char *oldFont = obvconfig.ParseStr("fontName", "");
 		std::vector<char> newFont(oldFont, oldFont + strlen(oldFont) + 1); // Copy string data + '\0' char
-		newFont.resize(256, '\0'); // Max font name length is 255 characters
+		if (newFont.size() < 256)                                          // reserve space for new font name
+			newFont.resize(256, '\0');                                     // Max font name length is 255 characters
 		RA("Font name", DPI(200));
 		ImGui::SameLine();
 		if (ImGui::InputText("##fontName", newFont.data(), newFont.size())) {
