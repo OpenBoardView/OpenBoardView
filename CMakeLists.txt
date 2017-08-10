@@ -122,6 +122,15 @@ elseif(UNIX)
 	set(CPACK_RPM_PACKAGE_GROUP "Applications/Engineering")
 	set(CPACK_RPM_PACKAGE_REQUIRES "gtk3") # Probably not working
 	set(CPACK_RPM_PACKAGE_LICENSE "${PROJECT_LICENSE}")
+	set(CPACK_RPM_EXCLUDE_FROM_AUTO_FILELIST_ADDITION
+	    "/usr/share/appdata"
+	    "/usr/share/applications"
+	    "/usr/share/icons"
+	    "/usr/share/icons/hicolor"
+	    "/usr/share/icons/hicolor/scalable"
+	    "/usr/share/icons/hicolor/scalable/apps"
+	    "/usr/share/mime"
+	    "/usr/share/mime/packages")
 elseif(WIN32)
 	set(CPACK_GENERATOR ZIP CACHE STRING "List of generators to build packages with")
 	set(CPACK_INCLUDE_TOPLEVEL_DIRECTORY FALSE)
