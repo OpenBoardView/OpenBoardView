@@ -142,8 +142,16 @@ BRD2File::BRD2File(std::vector<char> &buf) {
 				nail.pos.x = READ_INT();
 				nail.pos.y = READ_INT();
 				int netid  = READ_UINT();
-				nail.net   = nets.at(netid);
-				nail.side  = READ_UINT();
+
+				auto inet = nets.find(netid);
+				if (inet != nets.end())
+					nail.net = inet->second;
+				else {
+					nail.net = "UNCONNECTED";
+					std::cerr << "Missing net id: " << netid << std::endl;
+				}
+
+				nail.side = READ_UINT();
 				nails.push_back(nail);
 
 			} break;
