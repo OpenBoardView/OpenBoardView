@@ -11,4 +11,4 @@
 #define OBV_NAME_LOWER "@PROJECT_NAME_LOWER@"
 #define OBV_VERSION "@PROJECT_VERSION@"
 #define OBV_BUILD "@OBV_BUILD@"
-#define OBV_URL "http://openboardview.org"
+#define OBV_URL "@PROJECT_URL@"
