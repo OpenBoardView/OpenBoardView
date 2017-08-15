@@ -3,14 +3,11 @@
 #ifdef _WIN32
 #ifdef _MSC_VER // Visual Studio prefixes non-standard C functions with _
 #define _CRT_SECURE_NO_WARNINGS 1
-#ifndef OBV_BUILD
-#define OBV_BUILD "unknown"
-#endif
-#endif
+#endif                                  // _MSC_VER
 #define NTDDI_VERSION NTDDI_VISTA       // Not caring about XP. If this is a concern, find a replacement for SHGetKnownFolderPath()
 #define _WIN32_WINNT _WIN32_WINNT_VISTA // and CompareStringEx() in win32.cpp.
 #include <windows.h>
-#endif
+#endif // _WIN32
 
 #include <string>
 #include <vector>
@@ -63,7 +60,7 @@
 #define SDL_SCANCODE_KP_PERIOD VK_DECIMAL
 #define SDL_SCANCODE_KP_PLUS VK_ADD
 #define SDL_SCANCODE_KP_MINUS VK_SUBTRACT
-#endif
+#endif // _WIN32 && !ENABLE_SDL2
 
 // Shows a file dialog (should hang the current thread) and returns the utf8
 // filename picked by the user.
@@ -77,4 +74,4 @@ const std::string get_user_dir(const UserDir userdir);
 
 #ifdef _WIN32
 char *strcasestr(const char *str, const char *pattern);
-#endif
+#endif // _WIN32

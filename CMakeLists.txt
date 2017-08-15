@@ -79,7 +79,12 @@ if(NOT MSVC)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wextra")
 endif()
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-add_definitions(-DOBV_BUILD="${OBV_BUILD}") # Build info
+
+# Inject variables into version.h
+configure_file("${PROJECT_SOURCE_DIR}/src/openboardview/version.in.h"
+			   "${PROJECT_BINARY_DIR}/include/version.h"
+			   @ONLY ESCAPE_QUOTES)
+include_directories("${PROJECT_BINARY_DIR}/include")
 
 add_subdirectory(asset)
 add_subdirectory(src)

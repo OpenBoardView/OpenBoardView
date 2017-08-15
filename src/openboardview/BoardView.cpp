@@ -3,6 +3,7 @@
 #include "history.h"
 #include "utf8/utf8.h"
 #include "utils.h"
+#include "version.h"
 
 #include <cmath>
 #include <iostream>
@@ -926,9 +927,9 @@ void BoardView::HelpAbout(void) {
 			m_showHelpAbout    = false;
 			m_tooltips_enabled = false;
 		}
-		ImGui::Text("OpenBoardView");
+		ImGui::Text("%s %s", OBV_NAME, OBV_VERSION);
 		ImGui::Text("Build %s %s", OBV_BUILD, __TIMESTAMP__);
-		ImGui::Text("http://openboardview.org");
+		ImGui::Text(OBV_URL);
 		if (ImGui::Button("Close") || ImGui::IsKeyPressed(SDLK_ESCAPE)) {
 			m_tooltips_enabled = true;
 			ImGui::CloseCurrentPopup();
@@ -936,7 +937,7 @@ void BoardView::HelpAbout(void) {
 		ImGui::Dummy(ImVec2(1, DPI(10)));
 		ImGui::Text("License info");
 		ImGui::Separator();
-		ImGui::Text("OpenBoardView is MIT Licensed");
+		ImGui::Text(OBV_NAME " is MIT Licensed");
 		ImGui::Text("Copyright (c) 2016 Inflex (Paul Daniels)");
 		ImGui::Text("Copyright (c) 2016 Chloridite (original source)");
 		ImGui::Spacing();
