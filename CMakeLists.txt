@@ -1,9 +1,11 @@
+cmake_minimum_required(VERSION 2.8.9)
+# Disable 3.0 VERSION setting, we will set it manually since we support 2.8
 if(POLICY CMP0048)
 	cmake_policy(SET CMP0048 OLD)
 endif()
-set(PROJECT_VERSION "R7.4")
-project(OpenBoardView)
-cmake_minimum_required(VERSION 2.8.9)
+
+# Include our project variables
+include("version.cmake")
 
 # Colorized output. Checks TERM to exclude Windows command prompt
 if(DEFINED ENV{TERM})
