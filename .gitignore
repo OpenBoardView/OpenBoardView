@@ -1,7 +1,9 @@
-Debug
-Release
-release_build/
-bin/
+/Debug
+/Release
+/release_build/
+/build/
+/bin/
+/lib/
 test
 *.aps
 *.opensdf
