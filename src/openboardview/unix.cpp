@@ -1,10 +1,12 @@
 #ifndef _WIN32
 
 #include "platform.h"
+#include "utils.h"
 #include "imgui/imgui.h"
 #include <SDL2/SDL.h>
 #include <assert.h>
 #include <stdint.h>
+#include <dirent.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 
@@ -240,4 +242,19 @@ const std::string get_user_dir(const UserDir userdir) {
 }
 #endif
 
+// Case insensitive lookup of a filename at the given path
+const std::string lookup_file_insensitive(const std::string &path, const std::string &filename) {
+	std::string filefound;
+	DIR *dir;
+	struct dirent *dent;
+
+	dir = opendir(path.c_str()); /* any suitable directory name  */
+	if (!dir) return filefound;
+
+	while ((dent = readdir(dir)) != NULL) {
+		std::string cfile(dent->d_name);
+		if (compare_string_insensitive(cfile, filename)) filefound = path + cfile;
+	}
+	return filefound;
+}
 #endif

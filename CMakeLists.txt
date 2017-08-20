@@ -19,21 +19,25 @@ if (NOT DEFINED OBV_BUILD)
 			COMMAND git rev-list HEAD --count
 			OUTPUT_VARIABLE GIT_REVISION
 			OUTPUT_STRIP_TRAILING_WHITESPACE
+			WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
 		)
 		execute_process(
 			COMMAND git name-rev --name-only HEAD
 			OUTPUT_VARIABLE GIT_BRANCH
 			OUTPUT_STRIP_TRAILING_WHITESPACE
+			WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
 		)
 		execute_process(
 			COMMAND git config branch.${GIT_BRANCH}.remote
 			OUTPUT_VARIABLE GIT_REMOTE
 			OUTPUT_STRIP_TRAILING_WHITESPACE
+			WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
 		)
 		execute_process(
 			COMMAND git config remote.${GIT_REMOTE}.url
 			OUTPUT_VARIABLE GIT_URL
 			OUTPUT_STRIP_TRAILING_WHITESPACE
+			WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
 		)
 		string(REGEX REPLACE ".*/(.+)/.+$" "\\1" GIT_REPO "${GIT_URL}") # Extract the user from a Github repo URL
 		set(OBV_BUILD "R${GIT_REVISION} ${GIT_REPO}/${GIT_BRANCH}")
@@ -71,10 +75,12 @@ endif()
 set(CMAKE_MACOSX_RPATH ON)
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror=format-security")
-if(NOT MSVC)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
+if(MSVC)
+	add_compile_options("-MT$<$<CONFIG:Debug>:d>") # Link everything statically with MSVC (generator expression to use -MT in release and -MTd in debug mode)
+else()
 	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wextra")
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wextra")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wextra -Werror=format-security")
 endif()
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 add_definitions(-DOBV_BUILD="${OBV_BUILD}") # Build info

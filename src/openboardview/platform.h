@@ -75,6 +75,9 @@ const std::vector<char> load_font(const std::string &name);
 enum class UserDir { Config, Data };
 const std::string get_user_dir(const UserDir userdir);
 
+// Case insensitive lookup of a filename at the given path
+const std::string lookup_file_insensitive(const std::string &path, const std::string &filename);
+
 #ifdef _WIN32
 char *strcasestr(const char *str, const char *pattern);
 #endif
