@@ -1,5 +1,5 @@
 git:
-  depth: 9999999
+  depth: 5
 os:
 - linux
 compiler:
