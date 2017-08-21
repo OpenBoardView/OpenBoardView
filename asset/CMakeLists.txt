@@ -34,7 +34,7 @@ elseif(UNIX)
 	set(CPACK_RPM_POST_INSTALL_SCRIPT_FILE
 	    "postinst" PARENT_SCOPE)
 	set(CPACK_RPM_POST_UNINSTALL_SCRIPT_FILE
-		"postrm" PARENT_SCOPE)
+	    "postrm" PARENT_SCOPE)
 
 endif()
 
