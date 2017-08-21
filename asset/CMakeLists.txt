@@ -7,10 +7,12 @@ if(APPLE)
 	    "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME_LOWER}.icns")
 
 elseif(WIN32)
-	configure_file("project.rc" "${PROJECT_NAME}.rc" COPYONLY)
+	configure_file("project.rc" "${PROJECT_NAME}.rc" @ONLY)
+	configure_file("icon.ico" "${PROJECT_NAME}.ico" COPYONLY)
 
 	SET(ASSETS ${ASSETS}
-	    "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.rc")
+	    "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.rc"
+	    "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.ico")
 
 elseif(UNIX)
 	configure_file("app.desktop" "${PROJECT_NAME_LOWER}.desktop" @ONLY)
