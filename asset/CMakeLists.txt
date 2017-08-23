@@ -31,12 +31,15 @@ elseif(UNIX)
 	        RENAME "${PROJECT_NAME_LOWER}.xml")
 
 	set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA
-	    "postinst"
-	    "postrm" PARENT_SCOPE)
+	    "${CMAKE_CURRENT_SOURCE_DIR}/postinst"
+	    "${CMAKE_CURRENT_SOURCE_DIR}/postrm"
+	    PARENT_SCOPE)
 	set(CPACK_RPM_POST_INSTALL_SCRIPT_FILE
-	    "postinst" PARENT_SCOPE)
+	    "${CMAKE_CURRENT_SOURCE_DIR}/postinst"
+	    PARENT_SCOPE)
 	set(CPACK_RPM_POST_UNINSTALL_SCRIPT_FILE
-	    "postrm" PARENT_SCOPE)
+	    "${CMAKE_CURRENT_SOURCE_DIR}/postrm"
+	    PARENT_SCOPE)
 
 endif()
 
