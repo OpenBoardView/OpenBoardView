@@ -1,9 +1,11 @@
+cmake_minimum_required(VERSION 2.8.9)
+# Disable 3.0 VERSION setting, we will set it manually since we support 2.8
 if(POLICY CMP0048)
 	cmake_policy(SET CMP0048 OLD)
 endif()
-set(PROJECT_VERSION "R7.4")
-project(OpenBoardView)
-cmake_minimum_required(VERSION 2.8.9)
+
+# Include our project variables
+include("version.cmake")
 
 # Colorized output. Checks TERM to exclude Windows command prompt
 if(DEFINED ENV{TERM})
@@ -77,7 +79,12 @@ if(NOT MSVC)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wextra")
 endif()
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-add_definitions(-DOBV_BUILD="${OBV_BUILD}") # Build info
+
+# Inject variables into version.h
+configure_file("${PROJECT_SOURCE_DIR}/src/openboardview/version.in.h"
+			   "${PROJECT_BINARY_DIR}/include/version.h"
+			   @ONLY ESCAPE_QUOTES)
+include_directories("${PROJECT_BINARY_DIR}/include")
 
 add_subdirectory(asset)
 add_subdirectory(src)
@@ -114,7 +121,7 @@ elseif(UNIX)
 	set(CPACK_DEBIAN_PACKAGE_VERSION "1${PROJECT_VERSION}")
 	set(CPACK_RPM_PACKAGE_GROUP "Applications/Engineering")
 	set(CPACK_RPM_PACKAGE_REQUIRES "gtk3") # Probably not working
-	set(CPACK_RPM_PACKAGE_LICENSE "MIT")
+	set(CPACK_RPM_PACKAGE_LICENSE "${PROJECT_LICENSE}")
 elseif(WIN32)
 	set(CPACK_GENERATOR ZIP CACHE STRING "List of generators to build packages with")
 	set(CPACK_INCLUDE_TOPLEVEL_DIRECTORY FALSE)

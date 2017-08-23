@@ -2,6 +2,7 @@
 
 #include "platform.h"
 #include "imgui/imgui.h"
+#include "version.h"
 #include <SDL2/SDL.h>
 #include <assert.h>
 #include <stdint.h>
@@ -233,7 +234,7 @@ const std::string get_user_dir(const UserDir userdir) {
 		}
 	}
 	if (!path.empty()) {
-		path += "/openboardview/";
+		path += "/" OBV_NAME "/";
 		if (create_dirs(path)) return path; // Check if dir already exists and create it otherwise
 	}
 	return "./"; // Something went wrong, use current dir

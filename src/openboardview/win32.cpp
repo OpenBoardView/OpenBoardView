@@ -3,6 +3,7 @@
 #include "platform.h" // Should be kept first
 #include "imgui/imgui.h"
 #include "utf8/utf8.h"
+#include "version.h"
 #include <assert.h>
 #include <codecvt>
 #include <iostream>
@@ -148,7 +149,7 @@ const std::string get_user_dir(const UserDir userdir) {
 
 	if (envVar) {
 		configPath = utf16_to_utf8(envVar);
-		configPath += "\\OpenBoardView\\";
+		configPath += "\\" OBV_NAME "\\";
 		auto configPathu16 = utf8_to_utf16(configPath);
 		cdret = CreateDirectoryW(utf16_to_wchar(configPathu16), NULL); // Doesn't work recursively but it's not an issue here
 	}

@@ -10,6 +10,7 @@
 
 #include "platform.h" // Should be kept first
 #include "utils.h"
+#include "version.h"
 
 #include "BoardView.h"
 #include "history.h"
@@ -78,7 +79,8 @@ char help[] =
 	-h : This help\n\
 	-V : Version information\n\
 	-l : slow CPU mode, disables AA and other items to try provide more FPS\n\
-	-c <config file> : alternative configuration file (default is ~/.config/openboardview/obv.conf)\n\
+	-c <config file> : alternative configuration file (default is ~/.config/" OBV_NAME
+    "/obv.conf)\n\
 	-i <input file> : board file to load\n\
 	-x <width> : Set window width\n\
 	-y <height> : Set window height\n\
@@ -292,12 +294,8 @@ int main(int argc, char **argv) {
 
 	SDL_DisplayMode current;
 	SDL_GetCurrentDisplayMode(0, &current);
-	window = SDL_CreateWindow("OpenBoardView",
-	                          SDL_WINDOWPOS_CENTERED,
-	                          SDL_WINDOWPOS_CENTERED,
-	                          g.width,
-	                          g.height,
-	                          SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
+	window = SDL_CreateWindow(
+	    OBV_NAME, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, g.width, g.height, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
 	if (window == NULL) {
 		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Failed to create the sdlWindow: %s\n", SDL_GetError());
 		cleanupAndExit(1);
@@ -519,7 +517,7 @@ int main(int argc, char **argv) {
 		// PLD20160618
 		if (app.history_file_has_changed) {
 			char scratch[1024];
-			snprintf(scratch, sizeof(scratch), "OpenBoardView - %s", app.fhistory.history[0]);
+			snprintf(scratch, sizeof(scratch), "%s - %s", OBV_NAME, app.fhistory.history[0]);
 			SDL_SetWindowTitle(window, scratch);
 			app.history_file_has_changed = 0;
 		}

@@ -1,8 +1,8 @@
 [Desktop Entry]
-Name=OpenBoardView
+Name=@PROJECT_NAME@
 Comment=Viewer for PCB layouts
-Exec=openboardview -i %f
-Icon=openboardview
+Exec=@PROJECT_NAME_LOWER@ -i %f
+Icon=@PROJECT_NAME_LOWER@
 MimeType=application/x-openboardview-asc;application/x-openboardview-board;application/x-openboardview-brd-landrex;application/x-openboardview-brd-r4;application/x-openboardview-lst
 Terminal=false
 Type=Application

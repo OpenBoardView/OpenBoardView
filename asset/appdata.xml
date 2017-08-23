@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <component type="desktop">
-  <id>openboardview.desktop</id>
+  <id>@PROJECT_NAME_LOWER@.desktop</id>
   <metadata_license>CC0-1.0</metadata_license>
-  <project_license>MIT</project_license>
-  <name>OpenBoardView</name>
+  <project_license>@PROJECT_LICENSE@</project_license>
+  <name>@PROJECT_NAME@</name>
   <summary>Viewer for PCB layouts</summary>
   <description>
     <p>
@@ -24,8 +24,8 @@
   </description>
   <screenshots>
     <screenshot type="default">
-      <image>http://openboardview.org/ofbv-light-dark.png</image>
+      <image>@PROJECT_URL@/ofbv-light-dark.png</image>
     </screenshot>
   </screenshots>
-  <url type="homepage">http://openboardview.org</url>
+  <url type="homepage">@PROJECT_URL@</url>
 </component>

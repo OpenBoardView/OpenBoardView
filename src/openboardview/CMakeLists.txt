@@ -118,7 +118,7 @@ endif()
 # Must be defined in the same directory as the add_executable including the file
 set_source_files_properties(${ASSETS} PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
 
-add_executable(openboardview
+add_executable(${PROJECT_NAME_LOWER}
 	MACOSX_BUNDLE
 	WIN32
 	${SOURCES}
@@ -127,12 +127,12 @@ add_executable(openboardview
 
 if(MINGW) # Dirty fix to force linking all libs (esp. libstdc++) statically for Windows
 	set(CMAKE_EXE_LINKER_FLAGS "-static -static-libgcc -static-libstdc++")
-	set_target_properties(openboardview PROPERTIES LINK_SEARCH_END_STATIC 1)
+	set_target_properties(${PROJECT_NAME_LOWER} PROPERTIES LINK_SEARCH_END_STATIC 1)
 elseif(APPLE)
-set_target_properties(openboardview PROPERTIES MACOSX_BUNDLE_ICON_FILE "brd")
+set_target_properties(${PROJECT_NAME_LOWER} PROPERTIES MACOSX_BUNDLE_ICON_FILE "brd")
 endif()
 
-target_link_libraries(openboardview
+target_link_libraries(${PROJECT_NAME_LOWER}
 	imgui
 	${GLAD_LIBRARIES}
 	${COCOA_LIBRARY}
@@ -141,26 +141,26 @@ target_link_libraries(openboardview
 )
 
 if(MINGW) # Link statically with SDL2 for Windows
-	target_link_libraries(openboardview
+	target_link_libraries(${PROJECT_NAME_LOWER}
 		${SDL2_STATIC_LIBRARIES}
 	)
 else()
 	if(NOT APPLE)
-		target_link_libraries(openboardview
+		target_link_libraries(${PROJECT_NAME_LOWER}
 			${FONTCONFIG_LIBRARIES}
 		)
 	endif()
-	target_link_libraries(openboardview
+	target_link_libraries(${PROJECT_NAME_LOWER}
 		${SDL2_LIBRARIES}
 	)
 endif()
 if(NOT WIN32)
-	target_link_libraries(openboardview
+	target_link_libraries(${PROJECT_NAME_LOWER}
 		dl
 	)
 endif()
 
 install(TARGETS
-	openboardview
+	${PROJECT_NAME_LOWER}
 	RUNTIME DESTINATION ${INSTALL_RUNTIME_DIR}
 	BUNDLE DESTINATION ${INSTALL_BUNDLE_DIR})
