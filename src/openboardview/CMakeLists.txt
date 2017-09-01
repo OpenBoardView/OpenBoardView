@@ -44,6 +44,11 @@ find_package(PkgConfig REQUIRED)
 	endif(APPLE)
 endif()
 
+## WIN32 ##
+if(WIN32 AND NOT MINGW)
+	set(WIN32_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/win32)
+endif()
+
 include_directories(
 	${CMAKE_CURRENT_SOURCE_DIR}
 	${CMAKE_CURRENT_SOURCE_DIR}/..
@@ -55,6 +60,7 @@ include_directories(
 	${ZLIB_INCLUDE_DIRS}
 	${SQLITE3_INCLUDE_DIRS}
 	${FONTCONFIG_INCLUDE_DIRS}
+	${WIN32_INCLUDE_DIRS}
 )
 
 link_directories(
