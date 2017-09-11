@@ -42,7 +42,7 @@ install: |-
       sudo make cross CROSS_PATH=/usr
       popd
     else
-      sudo apt-get -qy install libsdl2-dev libgtk-3-dev rpm
+      sudo apt-get -qy install libsdl2-dev libgtk-3-dev rpm libegl1-mesa-dev libgles2-mesa-dev # Manual installation of the last 2 shouldn't be required, but it is now…
     fi
   elif [ "$TRAVIS_OS_NAME" == "osx" ]
   then
