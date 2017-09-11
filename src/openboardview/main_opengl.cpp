@@ -29,9 +29,7 @@
 #include <string>
 #include <sys/stat.h>
 #include <sys/types.h>
-#ifndef _MSC_VER
 #include <unistd.h>
-#endif
 
 // Rendering stuff
 #ifdef ENABLE_GL1
