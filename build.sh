@@ -57,7 +57,8 @@ fi
 if [ "$CROSS" = "mingw64" ]; then
   COMPILEFLAGS="$COMPILEFLAGS -DCMAKE_TOOLCHAIN_FILE=../Toolchain-mingw64.cmake"
 fi
-COMPILEFLAGS="$COMPILEFLAGS ${@:${SCRIPT_ARGC}}" # pass other arguments to CMAKE
+SUBSTRING=$(echo $@ | cut -d ' ' -f ${SCRIPT_ARGC}-)
+COMPILEFLAGS="$COMPILEFLAGS ${SUBSTRING}" # pass other arguments to CMAKE
 if [ $THREADS -lt 1 ]; then
   color 1 "Unable to detect number of threads, using 1 thread."
   THREADS=1
