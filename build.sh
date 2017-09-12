@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/sh
 
 color() {
   color="$1"
