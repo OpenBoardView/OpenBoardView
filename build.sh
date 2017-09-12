@@ -75,20 +75,20 @@ fi
 echo "$STRCOMPILE $PROJECT using $(color 4 $THREADS) $STRTHREADS ($BUILDTYPE build)"
 echo "Extra flags passed to CMake: $COMPILEFLAGS"
 cmake $COMPILEFLAGS ..
-[[ "$?" != "0" ]] && color 1 "CMAKE FAILED" && exit 1
+[ "$?" != "0" ] && color 1 "CMAKE FAILED" && exit 1
 if `echo "$COMPILEFLAGS" | grep -q "DEBUG"`; then
   make -j$THREADS install
-  [[ "$?" != "0" ]] && color 1 "MAKE INSTALL FAILED" && exit 1
+  [ "$?" != "0" ] && color 1 "MAKE INSTALL FAILED" && exit 1
 else
   make -j$THREADS install/strip
-  [[ "$?" != "0" ]] && color 1 "MAKE INSTALL/STRIP FAILED" && exit 1
+  [ "$?" != "0" ] && color 1 "MAKE INSTALL/STRIP FAILED" && exit 1
 fi
 
 case "$(uname -s)" in
   *Darwin*)
     # Generate DMG
     make package
-    [[ "$?" != "0" ]] && color 1 "MAKE PACKAGE FAILED" && exit 1
+    [ "$?" != "0" ] && color 1 "MAKE PACKAGE FAILED" && exit 1
     ;;
   *)
     # Give right execution permissions to executables
