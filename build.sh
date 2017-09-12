@@ -33,7 +33,7 @@ if [ -z $THREADS ]; then
     esac
 fi
 ARG_LENGTH=$#
-if [ "$1" == "--help" ]; then
+if [ "$1" = "--help" ]; then
   helpMsg
   exit
 fi
@@ -43,18 +43,18 @@ COMPILEFLAGS="-DCMAKE_INSTALL_PREFIX="
 export DESTDIR="$(cd "$(dirname "$0")" && pwd)"
 BUILDTYPE="$(color 6 release)"
 SCRIPT_ARGC=1 # number of arguments eaten by this script
-if [ "$ARG_LENGTH" -gt 0 -a "$1" == "--debug" -o "$2" == "--debug" ]; then
+if [ "$ARG_LENGTH" -gt 0 -a "$1" = "--debug" -o "$2" = "--debug" ]; then
   COMPILEDIR="debug_build"
   COMPILEFLAGS="$COMPILEFLAGS -DCMAKE_BUILD_TYPE=DEBUG"
   BUILDTYPE="$(color 1 debug)"
   SCRIPT_ARGC=$((SCRIPT_ARGC+1))
 fi
-if [ "$ARG_LENGTH" -gt 0 -a "$1" == "--recompile" -o "$2" == "--recompile" ]; then
+if [ "$ARG_LENGTH" -gt 0 -a "$1" = "--recompile" -o "$2" = "--recompile" ]; then
   STRCOMPILE="$(color 5 Recompiling)"
   rm -rf $COMPILEDIR
   SCRIPT_ARGC=$((SCRIPT_ARGC+1))
 fi
-if [ "$CROSS" == "mingw64" ]; then
+if [ "$CROSS" = "mingw64" ]; then
   COMPILEFLAGS="$COMPILEFLAGS -DCMAKE_TOOLCHAIN_FILE=../Toolchain-mingw64.cmake"
 fi
 COMPILEFLAGS="$COMPILEFLAGS ${@:${SCRIPT_ARGC}}" # pass other arguments to CMAKE
