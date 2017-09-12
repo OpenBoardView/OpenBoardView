@@ -66,7 +66,8 @@ fi
 if [ ! -d $COMPILEDIR ]; then
   mkdir $COMPILEDIR
 fi
-pushd $COMPILEDIR
+LASTDIR=$PWD
+cd $COMPILEDIR
 STRTHREADS="threads"
 if [ $THREADS -eq 1 ]; then
   STRTHREADS="thread"
@@ -93,12 +94,12 @@ case "$(uname -s)" in
     ;;
   *)
     # Give right execution permissions to executables
-    popd
-    pushd bin
+    cd $LASTDIR
+    cd bin
     for i in openboardview; do chmod +x $i; done
 
     ;;
 esac
 
-popd
+cd $LASTDIR
 exit 0
