@@ -1731,7 +1731,9 @@ void BoardView::ClearAllHighlights(void) {
 	m_search[2][0]                                             = '\0';
 	m_needsRedraw                                            = true;
 	m_tooltips_enabled                                       = true;
-	for (auto part : m_board->Components()) part->visualmode = part->CVMNormal;
+	if (m_board != NULL) {
+		for (auto part : m_board->Components()) part->visualmode = part->CVMNormal;
+	}
 	m_partHighlighted.clear();
 	m_pinHighlighted.clear();
 }
