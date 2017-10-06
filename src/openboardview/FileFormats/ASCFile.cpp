@@ -37,13 +37,14 @@ void ASCFile::parse_pin(char *&p, char *&s, char *&arena, char *&arena_end, char
 		p += 4; // Skip "Part" string
 		BRDPart part;
 
-		part.name = READ_STR();
-		char *loc = READ_STR();
+		part.name      = READ_STR();
+		part.part_type = BRDPartType::SMD;
+		char *loc      = READ_STR();
 		if (!strcmp(loc, "(T)"))
-			part.type = 10; // SMD part on top
+			part.mounting_side = BRDPartMountingSide::Top; // SMD part on top
 		else
-			part.type    = 5; // SMD part on bottom
-		part.end_of_pins = 0;
+			part.mounting_side = BRDPartMountingSide::Bottom; // SMD part on bottom
+		part.end_of_pins       = 0;
 		parts.push_back(part);
 	} else {
 		BRDPin pin;
@@ -140,7 +141,8 @@ void ASCFile::update_counts() {
 }
 
 /*
- * buf unused for now, read all files even if one of the supported *.asc was passed
+ * buf unused for now, read all files even if one of the supported *.asc was
+ * passed
  */
 ASCFile::ASCFile(std::vector<char> &buf, const std::string &filename) {
 	char *saved_locale;

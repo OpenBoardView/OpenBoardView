@@ -224,12 +224,12 @@ FZFile::FZFile(std::vector<char> &buf, uint32_t *fzkey) {
 	char *content = FZFile::split(file_buf, buffer_size, content_size, descr, descr_size); // then split it
 
 	/*
-if (!content) {
+  if (!content) {
 	 // Decryption must have failed, so try again now without decrypting the data
 	std::copy(buf.begin(), buf.end(), file_buf);
 	content = FZFile::split(file_buf, buffer_size, content_size, descr, descr_size); // then split it
-}
-*/
+  }
+  */
 
 	ENSURE(content != nullptr);
 	ENSURE(content_size > 0);
@@ -303,11 +303,12 @@ if (!content) {
 				/*char *sname =*/READ_STR();
 				char *smirror = READ_STR();
 				/*char *srotate =*/READ_STR();
+				part.part_type = BRDPartType::SMD;
 				if (!strcmp(smirror, "YES"))
-					part.type = 10; // SMD part on top
+					part.mounting_side = BRDPartMountingSide::Top; // SMD part on top
 				else
-					part.type    = 5; // SMD part on bottom
-				part.end_of_pins = 0;
+					part.mounting_side = BRDPartMountingSide::Bottom; // SMD part on bottom
+				part.end_of_pins       = 0;
 				parts.push_back(part);
 				parts_id[part.name] = parts.size();
 			} break;

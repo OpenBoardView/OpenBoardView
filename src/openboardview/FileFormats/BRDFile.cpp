@@ -156,6 +156,7 @@ BRDFile::BRDFile(std::vector<char> &buf) {
 
 		char *p = line;
 		char *s;
+		unsigned int tmp = 0;
 
 		switch (current_block) {
 			case 2: { // var_data
@@ -174,9 +175,12 @@ BRDFile::BRDFile(std::vector<char> &buf) {
 			case 4: { // Parts
 				ENSURE(parts.size() < num_parts);
 				BRDPart part;
-				part.name        = READ_STR();
-				part.type        = READ_UINT(); // Type and layer, actually.
-				part.end_of_pins = READ_UINT();
+				part.name      = READ_STR();
+				tmp            = READ_UINT(); // Type and layer, actually.
+				part.part_type = (tmp & 0xc) ? BRDPartType::SMD : BRDPartType::ThroughHole;
+				if (tmp == 1 || (4 <= tmp && tmp < 8)) part.mounting_side = BRDPartMountingSide::Top;
+				if (tmp == 2 || (8 <= tmp)) part.mounting_side            = BRDPartMountingSide::Bottom;
+				part.end_of_pins                                          = READ_UINT();
 				ENSURE(part.end_of_pins <= num_pins);
 				parts.push_back(part);
 			} break;

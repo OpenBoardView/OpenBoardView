@@ -90,13 +90,13 @@ BVRFile::BVRFile(std::vector<char> &buf) {
 				BRDPart part;
 				BRDPin pin;
 
-				part.name = READ_STR();
-
-				char *loc = READ_STR();
+				part.name      = READ_STR();
+				part.part_type = BRDPartType::SMD;
+				char *loc      = READ_STR();
 				if (!strcmp(loc, "(T)"))
-					part.type = 10; // SMD part on top
+					part.mounting_side = BRDPartMountingSide::Top; // SMD part on top
 				else
-					part.type = 5; // SMD part on bottom
+					part.mounting_side = BRDPartMountingSide::Bottom; // SMD part on bottom
 
 				// If this is the first time we've seen this part
 				if ((strcmp(ppn, part.name))) {
