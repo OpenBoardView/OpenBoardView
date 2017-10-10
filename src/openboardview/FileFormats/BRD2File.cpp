@@ -105,11 +105,12 @@ BRD2File::BRD2File(std::vector<char> &buf) {
 				part.p2.x        = READ_INT();
 				part.p2.y        = READ_INT();
 				part.end_of_pins = READ_UINT(); // Warning: not end but beginning in this format
+				part.part_type   = BRDPartType::SMD;
 				int side         = READ_UINT();
 				if (side == 1)
-					part.type = 10; // SMD part on top
+					part.mounting_side = BRDPartMountingSide::Top; // SMD part on top
 				else if (side == 2)
-					part.type = 5; // SMD part on bottom
+					part.mounting_side = BRDPartMountingSide::Bottom; // SMD part on bottom
 
 				parts.push_back(part);
 			} break;
@@ -176,7 +177,7 @@ BRD2File::BRD2File(std::vector<char> &buf) {
 		for (decltype(parts)::size_type i = 0; i < parts.size(); i++) {
 			bool isDIP = true;
 
-			if (parts[i].type == 5) { // Part on bottom
+			if (parts[i].mounting_side == BRDPartMountingSide::Bottom) { // Part on bottom
 				parts[i].p1.y = max.y - parts[i].p1.y;
 				parts[i].p2.y = max.y - parts[i].p2.y;
 			}
@@ -190,21 +191,29 @@ BRD2File::BRD2File(std::vector<char> &buf) {
 			while (cpi < pei) {
 				pins[cpi].part                           = i + 1;
 				if (pins[cpi].side != 1) pins[cpi].pos.y = max.y - pins[cpi].pos.y;
-				if ((pins[cpi].side == 1 && parts[i].type == 10) ||
-				    (pins[cpi].side == 2 && parts[i].type == 5)) // Pins on the same side as the part
+				if ((pins[cpi].side == 1 && parts[i].mounting_side == BRDPartMountingSide::Top) ||
+				    (pins[cpi].side == 2 &&
+				     parts[i].mounting_side == BRDPartMountingSide::Bottom)) // Pins on the same side as the part
 					isDIP = false;
 				cpi++;
 			}
 
-			if (isDIP) parts[i].type /= 5; // All pins are through hole so part is DIP
+			if (isDIP) {
+				// All pins are through hole so part is DIP
+				parts[i].part_type     = BRDPartType::ThroughHole;
+				parts[i].mounting_side = BRDPartMountingSide::Both;
+			} else {
+				parts[i].part_type = BRDPartType::SMD;
+			}
 		}
 	}
 
 	for (auto i = 1; i <= 2; i++) { // Add dummy parts for probe points on both sides
 		BRDPart part;
-		part.name        = "...";
-		part.type        = 5 * i; // First part is bottom, last is top.
-		part.end_of_pins = 0;     // Unused
+		part.name = "...";
+		part.mounting_side =
+		    (i == 1 ? BRDPartMountingSide::Bottom : BRDPartMountingSide::Top); // First part is bottom, last is top.
+		part.end_of_pins = 0;                                                  // Unused
 		parts.push_back(part);
 	}
 

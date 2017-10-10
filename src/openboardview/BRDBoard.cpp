@@ -87,20 +87,15 @@ BRDBoard::BRDBoard(const BRDFile *const boardFile)
 			if (is_prefix(kComponentDummyName, comp->name)) comp->component_type = Component::kComponentTypeDummy;
 
 			// check what side the board is on (sorcery?)
-			if (
-					(brd_part.type == 1)
-					||(brd_part.type >= 4 && brd_part.type < 8)) {
+			if (brd_part.mounting_side == BRDPartMountingSide::Top) {
 				comp->board_side = kBoardSideTop;
-			} else if (
-					(brd_part.type == 2)
-					||(brd_part.type >= 8)
-					) {
+			} else if (brd_part.mounting_side == BRDPartMountingSide::Bottom) {
 				comp->board_side = kBoardSideBottom;
 			} else {
 				comp->board_side = kBoardSideBoth;
 			}
 					 
-			comp->mount_type = (brd_part.type & 0xc) ? Component::kMountTypeSMD : Component::kMountTypeDIP;
+			comp->mount_type = (brd_part.part_type == BRDPartType::SMD) ? Component::kMountTypeSMD : Component::kMountTypeDIP;
 
 			components_.push_back(comp);
 		}

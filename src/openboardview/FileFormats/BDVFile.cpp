@@ -89,13 +89,14 @@ BDVFile::BDVFile(std::vector<char> &buf) {
 					p += 4; // Skip "Part" string
 					BRDPart part;
 
-					part.name = READ_STR();
-					char *loc = READ_STR();
+					part.name      = READ_STR();
+					part.part_type = BRDPartType::SMD;
+					char *loc      = READ_STR();
 					if (!strcmp(loc, "(T)"))
-						part.type = 10; // SMD part on top
+						part.mounting_side = BRDPartMountingSide::Top; // SMD part on top
 					else
-						part.type    = 5; // SMD part on bottom
-					part.end_of_pins = 0;
+						part.mounting_side = BRDPartMountingSide::Bottom; // SMD part on bottom
+					part.end_of_pins       = 0;
 					parts.push_back(part);
 				} else {
 					BRDPin pin;

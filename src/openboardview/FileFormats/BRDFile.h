@@ -30,10 +30,14 @@ struct BRDPoint {
 	int y;
 };
 
+enum class BRDPartMountingSide { Both, Bottom, Top };
+enum class BRDPartType { SMD, ThroughHole };
+
 struct BRDPart {
 	const char *name;
 	std::string mfgcode;
-	unsigned int type;
+	BRDPartMountingSide mounting_side;
+	BRDPartType part_type; // SMD or TH
 	unsigned int end_of_pins;
 	BRDPoint p1{0, 0};
 	BRDPoint p2{0, 0};

@@ -24,3 +24,8 @@ imgui.ini
 *.tags
 .idea/
 tags
+
+# Do not track QtCreator imported project files
+OpenBoardView.config
+OpenBoardView.files
+OpenBoardView.includes
