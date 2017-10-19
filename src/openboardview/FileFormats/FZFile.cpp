@@ -282,14 +282,22 @@ FZFile::FZFile(std::vector<char> &buf, uint32_t *fzkey) {
 			line += 2;        // skip "A!"
 			if (!strncmp(line, "REFDES", 6)) {
 				current_block = 1;
-				continue;
 			} else if (!strncmp(line, "NET_NAME", 8)) {
 				current_block = 2;
-				continue;
 			} else if (!strncmp(line, "TESTVIA", 7)) {
 				current_block = 3;
-				continue;
+			} else if (!strncmp(line, "GRAPHIC_DATA_NAME", 17)) {
+				current_block = 4;
+			} else if (!strncmp(line, "CLASS", 5)) {
+				current_block = 5;
+			} else if (!strncmp(line, "LOGOInfo", 8)) {
+				current_block = 6;
+			} else if (!strncmp(line, "UnDrawSym", 9)) {
+				current_block = 7;
+			} else {
+				current_block = -1;
 			}
+			continue;
 		} else if (line[0] != 'S') // Unknown line type
 			continue;              // jump to next line
 		else
@@ -349,6 +357,14 @@ FZFile::FZFile(std::vector<char> &buf, uint32_t *fzkey) {
 					nail.side = 2; // on bottom
 				/*double radius =*/READ_DOUBLE();
 				nails.push_back(nail);
+			} break;
+			case 4: { // Drawing
+			} break;
+			case 5: { // Unknown
+			} break;
+			case 6: { // Logo/Info
+			} break;
+			case 7: { // Unknown
 			} break;
 		}
 	}
