@@ -25,6 +25,7 @@
 #endif
 #include <deque>
 #include <sstream>
+#include <fstream>
 #include <stdio.h>
 #include <string>
 #include <sys/stat.h>
@@ -100,7 +101,7 @@ int parse_parameters(int argc, char **argv, struct globals *g) {
 	 * single param is a valid file, and try load it.
 	 */
 	if (argc == 2) {
-		if (access(argv[1], F_OK) != -1) {
+		if (std::ifstream(argv[1])) {
 			g->input_file = argv[1];
 			return 0;
 		}

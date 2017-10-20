@@ -65,9 +65,16 @@ if(APPLE)
 	set(SDL2_INCLUDE_DIRS "${SDL2_INCLUDE_DIR}")
 	set(SDL2_LIBRARIES "${SDL2_LIBRARY}")
 elseif(WIN32 AND NOT MINGW)
+	execute_process(
+		COMMAND git submodule update --init src/SDL2
+		WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+	)
+	# Build and use only static SDL2 lib with MSVC
+	set(SDL_STATIC ON)
+	set(SDL_SHARED OFF)
+	add_subdirectory(SDL2)
 	set(SDL2_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/SDL2/include")
-	set(SDL2_LIBRARIES "SDL2main" "SDL2")
-	set(SDL2_LIBRARY_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/SDL2/lib/x86")
+	set(SDL2_LIBRARIES "SDL2main" "SDL2-static")
 else()
 	pkg_check_modules(SDL2 REQUIRED sdl2)
 endif()

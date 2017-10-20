@@ -1,6 +1,7 @@
 #ifdef _WIN32
 
 #include "platform.h" // Should be kept first
+#include "utils.h"
 #include "imgui/imgui.h"
 #include "utf8/utf8.h"
 #include "version.h"
@@ -22,7 +23,7 @@
 
 const std::string utf16_to_utf8(const std::wstring &text) {
 // See https://connect.microsoft.com/VisualStudio/feedback/details/1348277/link-error-when-using-std-codecvt-utf8-utf16-char16-t
-#if defined(_MSC_VER) && _MSC_VER <= 1900 // Should be fixed "in the next major version"
+#if defined(_MSC_VER) && _MSC_VER <= 2000 // Should be fixed "in the next major version"
 	return std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t>{}.to_bytes(
 	    reinterpret_cast<const wchar_t *>(text.c_str()));
 #else
@@ -35,7 +36,7 @@ const std::string wchar_to_utf8(const wchar_t *text) {
 	return std::string(utf16_to_utf8(std::wstring(text)));
 }
 
-#if defined(_MSC_VER) && _MSC_VER <= 1900 // Should be fixed "in the next major version"
+#if defined(_MSC_VER) && _MSC_VER <= 2000 // Should be fixed "in the next major version"
 const std::wstring utf8_to_utf16(const std::string &text) {
 	return std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t>{}.from_bytes(text.c_str());
 }
@@ -45,7 +46,7 @@ const std::u16string utf8_to_utf16(const std::string &text) {
 }
 #endif
 
-#if defined(_MSC_VER) && _MSC_VER <= 1900
+#if defined(_MSC_VER) && _MSC_VER <= 2000
 const wchar_t *utf16_to_wchar(const std::wstring &text) {
 #else
 const wchar_t *utf16_to_wchar(const std::u16string &text) {
@@ -157,6 +158,26 @@ const std::string get_user_dir(const UserDir userdir) {
 
 	if (configPath.empty() || (cdret == 0 && GetLastError() != ERROR_ALREADY_EXISTS)) configPath = ".\\"; // Fallback to current dir
 	return configPath;
+}
+
+// Case insensitive lookup of a filename at the given path
+const std::string lookup_file_insensitive(const std::string &path, const std::string &filename) {
+	std::string filefound;
+	auto u16path = utf8_to_utf16(path);
+	auto wpath = utf16_to_wchar(u16path);
+
+	HANDLE hFind;
+	WIN32_FIND_DATA data;
+
+	hFind = FindFirstFile(wpath, &data);
+	if (hFind == INVALID_HANDLE_VALUE) {
+		do {
+			std::string cfile(utf16_to_utf8(data.cFileName));
+			if (compare_string_insensitive(cfile, filename)) filefound = path + cfile;
+		} while (FindNextFile(hFind, &data));
+		FindClose(hFind);
+	}
+	return filefound;
 }
 
 char *strcasestr(const char *str, const char *pattern) {
