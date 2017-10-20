@@ -1156,7 +1156,7 @@ void BoardView::ShowInfoPane(void) {
 
 	if (m_partHighlighted.size()) {
 		ImGui::Separator();
-		ImGui::Text("%d parts selected", m_partHighlighted.size());
+		ImGui::TextUnformatted((std::to_string(m_partHighlighted.size()) + " parts selected").c_str());
 
 		for (auto part : m_partHighlighted) {
 
