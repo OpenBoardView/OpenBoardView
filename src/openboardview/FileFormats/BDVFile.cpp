@@ -45,29 +45,30 @@ BDVFile::BDVFile(std::vector<char> &buf) {
 
 	int current_block = 0;
 
-	char **lines = stringfile(file_buf);
-	ENSURE(lines);
+	std::vector<char *> lines;
+	stringfile(file_buf, lines);
 
-	while (*lines) {
-		char *line = *lines;
-		++lines;
+	std::vector<char *>::iterator line_it = lines.begin();
+	while (line_it != lines.end()) {
+		char *line = *line_it;
+		++line_it;
 
 		while (isspace((uint8_t)*line)) line++;
 		if (!line[0]) continue;
 		if (!strcmp(line, "<<format.asc>>")) {
 			current_block = 1;
-			lines += 8; // Skip 8 unused lines before 1st point. Might not work with
-			            // all files.
+			line_it += 8; // Skip 8 unused lines before 1st point. Might not work with
+			              // all files.
 			continue;
 		}
 		if (!strcmp(line, "<<pins.asc>>")) {
 			current_block = 2;
-			lines += 8; // Skip 8 unused lines before 1st part
+			line_it += 8; // Skip 8 unused lines before 1st part
 			continue;
 		}
 		if (!strcmp(line, "<<nails.asc>>")) {
 			current_block = 3;
-			lines += 7; // Skip 7 unused lines before 1st nail
+			line_it += 7; // Skip 7 unused lines before 1st nail
 			continue;
 		}
 

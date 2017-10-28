@@ -10,15 +10,15 @@
 // Header for recognizing a BRD file
 decltype(BRDFile::signature) constexpr BRDFile::signature;
 
-// from stb.h -- return value must be freed
-char **stringfile(char *buffer) {
-	char **list = nullptr, *s;
+// from stb.h
+void stringfile(char *buffer, std::vector<char*> &lines) {
+	char *s;
 	size_t count, i;
 
 	// two passes through: first time count lines, second time set them
 	for (i = 0; i < 2; ++i) {
 		s                   = buffer;
-		if (i == 1) list[0] = s;
+		if (i == 1) lines[0] = s;
 		count               = 1; // was '1',  but C arrays are 0-indexed
 		while (*s) {
 			if (*s == '\n' || *s == '\r') {
@@ -34,7 +34,7 @@ char **stringfile(char *buffer) {
 				// if the char is valid (first after line break), set up the next item in the line array
 				if (*s) { // it's not over yet
 					if (i == 1) {
-						list[count] = s;
+						lines[count] = s;
 						//					  list[count+1] = NULL;
 						// fprintf(stdout,"%s\n",list[count]);
 					}
@@ -46,12 +46,9 @@ char **stringfile(char *buffer) {
 
 		// Generate the required array to hold all the line starting points
 		if (i == 0) {
-			list = (char **)malloc(sizeof(*list) * (count + 2));
-			if (!list) return NULL;
-			list[count] = 0;
+			lines.resize(count);
 		}
 	}
-	return list;
 }
 
 char *fix_to_utf8(char *s, char **arena, char *arena_end) {
@@ -120,13 +117,10 @@ BRDFile::BRDFile(std::vector<char> &buf) {
 	}
 
 	int current_block = 0;
-	char **lines      = stringfile(file_buf);
-	ENSURE(lines);
+	std::vector<char*> lines;
+	stringfile(file_buf, lines);
 
-	while (*lines) {
-		char *line = *lines;
-		++lines;
-
+	for (char *line : lines) {
 		while (isspace((uint8_t)*line)) line++;
 		if (!line[0]) continue;
 		if (!strcmp(line, "str_length:")) {
