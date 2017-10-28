@@ -93,5 +93,5 @@ class BRDFile {
 	static constexpr std::array<uint8_t, 4> signature = {{0x23, 0xe2, 0x63, 0x28}};
 };
 
-char **stringfile(char *buffer);
+void stringfile(char *buffer, std::vector<char*> &lines);
 char *fix_to_utf8(char *s, char **arena, char *arena_end);

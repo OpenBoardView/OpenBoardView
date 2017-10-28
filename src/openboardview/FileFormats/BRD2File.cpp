@@ -32,13 +32,10 @@ BRD2File::BRD2File(std::vector<char> &buf) {
 
 	int current_block = 0;
 
-	char **lines = stringfile(file_buf);
-	ENSURE(lines)
+	std::vector<char *>  lines;
+	stringfile(file_buf, lines);
 
-	while (*lines) {
-		char *line = *lines;
-		++lines;
-
+	for (char *line : lines) {
 		while (isspace((uint8_t)*line)) line++;
 		if (!line[0]) continue;
 

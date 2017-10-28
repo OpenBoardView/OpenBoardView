@@ -43,12 +43,13 @@ BVRFile::BVRFile(std::vector<char> &buf) {
 
 	int current_block = 0;
 
-	char **lines = stringfile(file_buf);
-	ENSURE(lines);
+	std::vector<char *> lines;
+	stringfile(file_buf, lines);
 
-	while (*lines) {
-		char *line = *lines;
-		++lines;
+	std::vector<char *>::iterator line_it = lines.begin();
+	while (line_it != lines.end()) {
+		char *line = *line_it;
+		++line_it;
 
 		while (isspace((uint8_t)*line)) line++;
 		if (!line[0]) continue;
@@ -56,19 +57,19 @@ BVRFile::BVRFile(std::vector<char> &buf) {
 		if (!strcmp(line, "<<Layout>>")) {
 			//			fprintf(stderr,"HIT LAYOUT\n");
 			current_block = 1;
-			lines += 1; // Skip 1 unused lines before 1st layout
+			line_it += 1; // Skip 1 unused lines before 1st layout
 			continue;
 		}
 		if (!strcmp(line, "<<Pin>>")) {
 			current_block = 2;
 			//			fprintf(stderr,"HIT PIN, block = %d\n", current_block);
-			lines += 1; // Skip 1 unused lines before 1st pin
+			line_it += 1; // Skip 1 unused lines before 1st pin
 			continue;
 		}
 		if (!strcmp(line, "<<Nail>>")) {
 			//			fprintf(stderr,"HIT NAIL\n");
 			current_block = 3;
-			lines += 1; // Skip 1 unused lines before 1st nail
+			line_it += 1; // Skip 1 unused lines before 1st nail
 			continue;
 		}
 

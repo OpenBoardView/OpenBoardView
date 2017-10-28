@@ -246,11 +246,11 @@ FZFile::FZFile(std::vector<char> &buf, uint32_t *fzkey) {
 	int current_block = 0;
 	std::unordered_map<std::string, int> parts_id; // map between part name and part number
 
-	char **lines_content = stringfile(content);
-	ENSURE(lines_content);
+	std::vector<char *> lines_content;
+	stringfile(content, lines_content);
 
-	char **lines_descr = stringfile(descr);
-	ENSURE(lines_descr);
+	std::vector<char *> lines_descr;
+	stringfile(descr, lines_descr);
 
 	// For some reason, some boards have COMMAs as decimal separators. Will wonders ever cease ( I realise this is a regional thing
 	// )?
@@ -258,10 +258,7 @@ FZFile::FZFile(std::vector<char> &buf, uint32_t *fzkey) {
 
 	// Parse the content part (parts, pins, nails)
 
-	while (*lines_content) {
-		char *line = *lines_content;
-		++lines_content;
-
+	for (char *line : lines_content) {
 		//	fprintf(stdout,"%s\n", line);
 
 		while (isspace((uint8_t)*line)) line++;
@@ -370,10 +367,9 @@ FZFile::FZFile(std::vector<char> &buf, uint32_t *fzkey) {
 	}
 
 	// Parse the descr part (parts info)
-	lines_descr += 2; // Discard first 2 lines (board description, currently unused and table columns name)
-	while (*lines_descr) {
-		char *line = *lines_descr;
-		++lines_descr;
+	// Note: Discard first 2 lines (board description, currently unused and table columns name)
+	for (size_t i = 2; i < lines_descr.size(); ++i) {
+		char *line = lines_descr[i];
 
 		while (isspace((uint8_t)*line)) line++;
 		if (!line[0]) continue;
