@@ -65,7 +65,10 @@ std::string lookup_file_insensitive(const std::string &path, const std::string &
 	DIR *dir;
 	struct dirent *dent;
 
-	dir = opendir(path.c_str()); /* any suitable directory name  */
+	if (path.empty())
+		dir = opendir("./"); // open current dir if given path is empty
+	else
+		dir = opendir(path.c_str()); /* any suitable directory name  */
 	if (!dir) return filefound;
 
 	while ((dent = readdir(dir)) != NULL) {
