@@ -241,4 +241,8 @@ const std::string get_user_dir(const UserDir userdir) {
 }
 #endif
 
+int path_stat(const std::string& path, path_stat_t *st) {
+	return stat(path.c_str(), st);
+}
+
 #endif

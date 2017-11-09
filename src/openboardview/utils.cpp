@@ -19,6 +19,12 @@
 // Loads an entire file in to memory
 std::vector<char> file_as_buffer(const std::string &utf8_filename) {
 	std::vector<char> data;
+
+	if (!path_is_regular(utf8_filename)) {
+		std::cerr << "Error opening " << utf8_filename << ": not a regular file " << std::endl;
+		return data;
+	}
+
 	std::ifstream file;
 	file.open(utf8_filename, std::ios::in | std::ios::binary | std::ios::ate);
 
@@ -89,4 +95,20 @@ std::string lookup_file_insensitive(const std::string &path, const std::string &
 std::vector<std::string> split_string(const std::string str) {
 	std::istringstream iss(str);
 	return {std::istream_iterator<std::string>{iss}, std::istream_iterator<std::string>{}};
+}
+
+bool path_is_directory(const std::string &path) {
+	path_stat_t st;
+	if (path_stat(path, &st) != 0) {
+		return false;
+	}
+	return S_ISDIR(st.st_mode);
+}
+
+bool path_is_regular(const std::string &path) {
+	path_stat_t st;
+	if (path_stat(path, &st) != 0) {
+		return false;
+	}
+	return S_ISREG(st.st_mode);
 }
