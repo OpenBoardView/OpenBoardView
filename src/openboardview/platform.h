@@ -62,6 +62,13 @@
 #define SDL_SCANCODE_KP_MINUS VK_SUBTRACT
 #endif // _WIN32 && !ENABLE_SDL2
 
+#ifdef _MSC_VER
+#include <io.h>
+#ifndef F_OK
+#define F_OK 0
+#endif
+#endif // _MSC_VER
+
 // Shows a file dialog (should hang the current thread) and returns the utf8
 // filename picked by the user.
 const std::string show_file_picker();
