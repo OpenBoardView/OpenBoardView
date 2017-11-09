@@ -177,4 +177,20 @@ char *strcasestr(const char *str, const char *pattern) {
 	return NULL;
 }
 
+static int path_wstat(const wchar_t *wpath, path_stat_t *st) {
+#if defined(_MSC_VER) || defined(__MINGW64__)
+	return _wstat64(wpath, st);
+#elif defined(__MINGW32__)
+	return _wstati64(wpath, st);
+#else
+	return _wstat(wpath, st);
+#endif
+}
+
+int path_stat(const std::string &path, path_stat_t *st) {
+	auto u16path = utf8_to_utf16(path);
+	auto wpath = utf16_to_wchar(u16path);
+	return path_wstat(wpath, st);
+}
+
 #endif

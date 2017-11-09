@@ -75,3 +75,26 @@ const std::string get_user_dir(const UserDir userdir);
 #ifdef _WIN32
 char *strcasestr(const char *str, const char *pattern);
 #endif // _WIN32
+
+// File stat queries, cross platform.
+#include <sys/stat.h>
+
+#ifdef _WIN32
+#if defined(_MSC_VER) || defined(__MINGW64__)
+typedef struct _stat64 path_stat_t;
+#elif defined(__MINGW32__)
+typedef struct _stati64 path_stat_t;
+#else
+typedef struct _stat path_stat_t;
+#endif
+#ifndef S_ISDIR
+#define S_ISDIR(x) (((x) & _S_IFDIR) == _S_IFDIR)
+#endif
+#ifndef S_ISREG
+#define S_ISREG(x) (((x) & _S_IFREG) == _S_IFREG)
+#endif
+#else
+typedef struct stat path_stat_t;
+#endif
+
+int path_stat(const std::string& path, path_stat_t *st);
