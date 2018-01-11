@@ -24,7 +24,7 @@
 #include <SDL2/SDL.h>
 #endif
 #include <deque>
-#include <sstream>
+#include <memory>
 #include <stdio.h>
 #include <string>
 #include <sys/stat.h>
@@ -34,16 +34,7 @@
 #endif
 
 // Rendering stuff
-#ifdef ENABLE_GL1
-#include "Renderers/imgui_impl_sdl.h"
-#endif
-#ifdef ENABLE_GL3
-#include "Renderers/imgui_impl_sdl_gl3.h"
-#endif
-#ifdef ENABLE_GLES2
-#include "Renderers/imgui_impl_sdl_gles2.h"
-#endif
-#include <glad/glad.h>
+#include "Renderers/Renderers.h"
 
 enum class Renderer { DEFAULT, OPENGL1, OPENGL3, OPENGLES2 };
 
@@ -71,7 +62,6 @@ struct globals {
 	}
 };
 
-static SDL_GLContext glcontext = NULL;
 static SDL_Window *window      = nullptr;
 
 char help[] =
@@ -206,7 +196,6 @@ int parse_parameters(int argc, char **argv, struct globals *g) {
 }
 
 void cleanupAndExit(int c) {
-	if (glcontext) SDL_GL_DeleteContext(glcontext);
 	if (window) SDL_DestroyWindow(window);
 	SDL_Quit();
 	exit(c);
@@ -263,34 +252,6 @@ int main(int argc, char **argv) {
 			case 3: g.renderer = Renderer::OPENGLES2; break;
 		}
 	}
-// Setup window
-
-#ifdef ENABLE_GL1
-	if (g.renderer == Renderer::OPENGL1) {
-		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 1);
-		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
-	}
-#endif
-#ifdef ENABLE_GL3
-	if (g.renderer == Renderer::OPENGL3) {
-		SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG);
-		SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
-	}
-#endif
-#ifdef ENABLE_GLES2
-	if (g.renderer == Renderer::OPENGLES2) {
-		SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
-		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
-		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
-	}
-#endif
-	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
-	SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
-
-	SDL_GL_LoadLibrary(NULL);
 
 	SDL_DisplayMode current;
 	SDL_GetCurrentDisplayMode(0, &current);
@@ -301,57 +262,54 @@ int main(int argc, char **argv) {
 		cleanupAndExit(1);
 	}
 
-	glcontext = SDL_GL_CreateContext(window);
-	if (glcontext == NULL) {
-		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Failed to initialize OpenGL context: %s\n", SDL_GetError());
-		cleanupAndExit(1);
+// Setup window
+	std::unique_ptr<ImGuiRendererSDL> renderer;
+	auto l = [&](Renderer r) {
+	switch (r) {
+		case Renderer::OPENGL3:
+		//	if (GLVersion.major >= 3 && GLVersion.minor >= 2) {
+				renderer = std::unique_ptr<ImGuiRendererSDL>(new ImGuiRendererSDLGL3(window));
+				break;
+		//	}
+		//	SDL_LogWarn(SDL_LOG_CATEGORY_RENDER, "%s", "Unsupported renderer: OpenGL 3.2");
+		case Renderer::OPENGLES2:
+			if (GLVersion.major >= 2 && GLVersion.minor >= 0) {
+				renderer = std::unique_ptr<ImGuiRendererSDL>(new ImGuiRendererSDLGLES2(window));
+				break;
+			}
+			SDL_LogWarn(SDL_LOG_CATEGORY_RENDER, "%s", "Unsupported renderer: OpenGLES 2.0");
+		case Renderer::OPENGL1:
+		default:
+		//	if (GLVersion.major >= 1 && GLVersion.minor >= 1) {
+				renderer = std::unique_ptr<ImGuiRendererSDL>(new ImGuiRendererSDLGL1(window)); // C++14 has std::make_unique<Paste>
+		//		break;
+		//	}
+		//	SDL_LogWarn(SDL_LOG_CATEGORY_RENDER, "%s", "Unsupported renderer: OpenGL 1.1");
 	}
+	};
 
-	if (!gladLoadGLLoader(SDL_GL_GetProcAddress)) {
-		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "glad failed to load OpenGL\n");
-		cleanupAndExit(1);
+	l(g.renderer);
+
+	if (renderer == nullptr) {
+		SDL_LogError(SDL_LOG_CATEGORY_RENDER, "%s", "No available renderer found. Exiting.");
+//		cleanupAndExit(1);
 	}
+	bool initialized = renderer->init();
+
+	l(Renderer::OPENGL1);
+
+	printf("%d %d\n", GLVersion.major, GLVersion.minor);
 
 	SDL_EventState(SDL_DROPFILE, SDL_ENABLE);
 
-	bool initialized = false;
-// Setup ImGui binding
-#ifdef ENABLE_GL1
-	if (g.renderer == Renderer::OPENGL1) {
-		initialized = ImGui_ImplSdl_Init(window);
-	}
-#endif
-#ifdef ENABLE_GL3
-	if (g.renderer == Renderer::OPENGL3) {
-		initialized = ImGui_ImplSdlGL3_Init(window);
-	}
-#endif
-#ifdef ENABLE_GLES2
-	if (g.renderer == Renderer::OPENGLES2) {
-		initialized = ImGui_ImplSdlGLES2_Init(window);
-	}
-#endif
+	// Setup ImGui binding
+	initialized = renderer->init();
 
 #if defined(ENABLE_GL1) || defined(ENABLE_GL3) || defined(ENABLE_GLES2)
 	if (!initialized) {
 		SDL_LogError(SDL_LOG_CATEGORY_RENDER, "%s", "Selected renderer is not available. Exiting.");
 		cleanupAndExit(1);
 	}
-
-	/* Query OpenGL device information */
-	const GLubyte *strrenderer = glGetString(GL_RENDERER);
-	const GLubyte *vendor      = glGetString(GL_VENDOR);
-	const GLubyte *version     = glGetString(GL_VERSION);
-	const GLubyte *glslVersion = glGetString(GL_SHADING_LANGUAGE_VERSION);
-
-	std::stringstream ss;
-	ss << "\n-------------------------------------------------------------\n";
-	ss << "GL Vendor     : " << vendor;
-	ss << "\nGL GLRenderer : " << strrenderer;
-	ss << "\nGL Version    : " << version;
-	ss << "\nGLSL Version  : " << glslVersion;
-	ss << "\n-------------------------------------------------------------\n";
-	SDL_LogInfo(SDL_LOG_CATEGORY_RENDER, "%s", ss.str().c_str());
 #else
 	SDL_LogError(SDL_LOG_CATEGORY_RENDER, "%s", "No renderer was built in the application. Exiting.");
 	cleanupAndExit(1);
@@ -450,15 +408,7 @@ int main(int argc, char **argv) {
 		SDL_Event event;
 		while (SDL_PollEvent(&event)) {
 			sleepout = 3;
-#ifdef ENABLE_GL1
-			if (g.renderer == Renderer::OPENGL1) ImGui_ImplSdl_ProcessEvent(&event);
-#endif
-#ifdef ENABLE_GL3
-			if (g.renderer == Renderer::OPENGL3) ImGui_ImplSdlGL3_ProcessEvent(&event);
-#endif
-#ifdef ENABLE_GLES2
-			if (g.renderer == Renderer::OPENGLES2) ImGui_ImplSdlGLES2_ProcessEvent(&event);
-#endif
+			renderer->processEvent(event);
 
 			if (event.type == SDL_DROPFILE) {
 				// Validate the file before replacing the current one, not that we
@@ -489,15 +439,8 @@ int main(int argc, char **argv) {
 			continue;
 		} // puts OBV to sleep if nothing is happening.
 
-#ifdef ENABLE_GL1
-		if (g.renderer == Renderer::OPENGL1) ImGui_ImplSdl_NewFrame(window);
-#endif
-#ifdef ENABLE_GL3
-		if (g.renderer == Renderer::OPENGL3) ImGui_ImplSdlGL3_NewFrame(window);
-#endif
-#ifdef ENABLE_GLES2
-		if (g.renderer == Renderer::OPENGLES2) ImGui_ImplSdlGLES2_NewFrame();
-#endif
+		// Prepare frame
+		renderer->initFrame();
 
 		// If we have a board to view being passed from command line, then "inject"
 		// it here.
@@ -522,26 +465,12 @@ int main(int argc, char **argv) {
 			app.history_file_has_changed = 0;
 		}
 
-// Rendering
-#if defined(ENABLE_GL1) || defined(ENABLE_GL3) || defined(ENABLE_GLES2)
-		glViewport(0, 0, static_cast<int>(ImGui::GetIO().DisplaySize.x), static_cast<int>(ImGui::GetIO().DisplaySize.y));
-		glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
-		glClear(GL_COLOR_BUFFER_BIT);
-#endif
-		ImGui::Render();
-		SDL_GL_SwapWindow(window);
+		// Render frame
+		renderer->renderFrame(clear_color);
 	}
 
-// Cleanup
-#ifdef ENABLE_GL1
-	if (g.renderer == Renderer::OPENGL1) ImGui_ImplSdl_Shutdown();
-#endif
-#ifdef ENABLE_GL3
-	if (g.renderer == Renderer::OPENGL3) ImGui_ImplSdlGL3_Shutdown();
-#endif
-#ifdef ENABLE_GLES2
-	if (g.renderer == Renderer::OPENGLES2) ImGui_ImplSdlGLES2_Shutdown();
-#endif
+	// Cleanup
+ 	renderer->shutdown();
 
 	cleanupAndExit(0);
 	return 0;
