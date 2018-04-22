@@ -154,7 +154,7 @@ else()
 		${SDL2_LIBRARIES}
 	)
 endif()
-if(NOT WIN32)
+if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
 	target_link_libraries(${PROJECT_NAME_LOWER}
 		dl
 	)
