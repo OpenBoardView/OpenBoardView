@@ -138,6 +138,7 @@ target_link_libraries(${PROJECT_NAME_LOWER}
 	${COCOA_LIBRARY}
 	${ZLIB_LIBRARIES}
 	${SQLITE3_LIBRARIES}
+	${CMAKE_DL_LIBS}
 )
 
 if(MINGW) # Link statically with SDL2 for Windows
@@ -152,11 +153,6 @@ else()
 	endif()
 	target_link_libraries(${PROJECT_NAME_LOWER}
 		${SDL2_LIBRARIES}
-	)
-endif()
-if(NOT WIN32)
-	target_link_libraries(${PROJECT_NAME_LOWER}
-		dl
 	)
 endif()
 
