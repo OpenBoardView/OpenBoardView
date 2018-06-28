@@ -1,11 +1,13 @@
 # Dependencies
 
 ```
-gradle
-android-sdk 26.0.2
-android-sdk-build-tools r26.0.1
-android-sdk-cmake 3.6.4111459
-android-ndk r15.c
+android-ndk r17.b-1
+android-platform 27_r01-2
+android-sdk 26.1.1-1
+android-sdk-build-tools r27.0.3-1
+android-sdk-cmake 3.6.4111459-2
+android-sdk-platform-tools r28.0.0-1
+gradle 4.8-1
 ```
 
 # Build
