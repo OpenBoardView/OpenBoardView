@@ -18,7 +18,7 @@
 #include "FileFormats/FZFile.h"
 #include "confparse.h"
 #include "resource.h"
-#ifdef defined(_MSC_VER) || defined(__ANDROID__)
+#if defined(_MSC_VER) || defined(__ANDROID__)
 #include <SDL.h>
 #else
 #include <SDL2/SDL.h>
@@ -370,7 +370,7 @@ int main(int argc, char **argv) {
 
 	// Main loop
 	bool done             = false;
-	bool preload_required = false;
+	char *preload_file = nullptr;
 
 	// Set the dpi, if we've not set any parameters it'll be 0 which
 	// will make the ConfigParse load and set the right dpi.
@@ -431,7 +431,7 @@ int main(int argc, char **argv) {
 	if (g.input_file) {
 		struct stat buffer;
 		if ((stat(g.input_file, &buffer) == 0)) {
-			preload_required = true;
+			preload_file = strdup(g.input_file);
 		}
 	}
 
@@ -469,7 +469,7 @@ int main(int argc, char **argv) {
 				// should have to, but always better to be safe
 				struct stat buffer;
 				if (stat(event.drop.file, &buffer) == 0) {
-					app.LoadFile(strdup(event.drop.file));
+					preload_file = strdup(event.drop.file);
 				}
 			}
 
@@ -505,9 +505,9 @@ int main(int argc, char **argv) {
 
 		// If we have a board to view being passed from command line, then "inject"
 		// it here.
-		if (preload_required) {
-			app.LoadFile(strdup(g.input_file));
-			preload_required = false;
+		if (preload_file != nullptr) {
+			app.LoadFile(preload_file);
+			preload_file = nullptr;
 		}
 
 		app.Update();
