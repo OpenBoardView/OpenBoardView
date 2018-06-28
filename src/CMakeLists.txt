@@ -73,6 +73,10 @@ elseif(WIN32 AND NOT MINGW)
 		set(SDL2_LIBRARY_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/SDL2/lib/x86")
 	endif()
 elseif(ANDROID)
+	execute_process(
+		COMMAND git submodule update --init src/SDL2
+		WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+	)
 	add_library(SDL2 SHARED IMPORTED)
 	set(SDL2_LIBRARIES "SDL2")
 	set_target_properties(SDL2 PROPERTIES IMPORTED_LOCATION

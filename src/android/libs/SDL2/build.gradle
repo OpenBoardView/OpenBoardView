@@ -1,17 +1,16 @@
 apply plugin: 'com.android.library'
 
 android {
-    compileSdkVersion 26
-    buildToolsVersion "26.0.1"
+    compileSdkVersion 27
+    buildToolsVersion "27.0.3"
 
     defaultConfig {
         minSdkVersion 10
         targetSdkVersion 12
         versionCode 1
         versionName "1.0"
-
         ndk {
-            abiFilters "armeabi", "armeabi-v7a"
+            abiFilters 'armeabi-v7a'
         }
     }
     externalNativeBuild {
@@ -26,5 +25,5 @@ android {
 }
 
 dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar'])
+    api fileTree(dir: 'libs', include: ['*.jar'])
 }
