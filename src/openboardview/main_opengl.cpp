@@ -67,7 +67,11 @@ struct globals {
 		this->dpi         = 0;
 		this->font_size   = 0.0f;
 		this->debug       = false;
+#ifdef __ANDROID__
+		this->renderer    = Renderer::OPENGLES2;
+#else
 		this->renderer    = Renderer::DEFAULT;
+#endif
 	}
 };
 
