@@ -4,6 +4,11 @@ include $(CLEAR_VARS)
 
 LOCAL_MODULE := main
 
+REVISION=$(shell (git rev-list HEAD --count)) # Count commits
+BRANCH=$(shell (git name-rev --name-only HEAD)) # Get current branch
+REPO=$(shell (git config remote.$(git config branch.${BRANCH}.remote).url|cut -d'/' -f 4)) # Get the user from a Github remote
+OBV_BUILD=R$(REVISION) $(REPO)/$(BRANCH)
+
 SDL_PATH := ../SDL2
 
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/$(SDL_PATH)/include \
@@ -43,7 +48,7 @@ LOCAL_LDLIBS := -llog -lz
 # See https://code.google.com/p/android/issues/detail?id=68779
 LOCAL_LDLIBS += -latomic
 
-LOCAL_CFLAGS += -DImDrawIdx"=unsigned int" -DENABLE_GLES2
+LOCAL_CFLAGS += -DImDrawIdx"=unsigned int" -DENABLE_GLES2 -DENABLE_SDL2 -DOBV_BUILD="\"$(OBV_BUILD)\""
 LOCAL_CPPFLAGS += -fexceptions
 
 include $(BUILD_SHARED_LIBRARY)
