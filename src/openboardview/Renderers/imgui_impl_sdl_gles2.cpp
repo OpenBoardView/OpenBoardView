@@ -9,7 +9,7 @@
 #include "imgui_impl_sdl_gles2.h"
 
 // SDL, glad
-#ifdef _MSC_VER
+#if defined(_MSC_VER) || defined(__ANDROID__)
 #include <SDL.h>
 #else
 #include <SDL2/SDL.h>

@@ -10,8 +10,9 @@
 #include <limits.h>
 #include <memory>
 #include <stdio.h>
+
 #ifdef ENABLE_SDL2
-#ifdef _MSC_VER
+#if defined(_MSC_VER) || defined(__ANDROID__)
 #include <SDL.h>
 #else
 #include <SDL2/SDL.h>
