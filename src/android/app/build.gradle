@@ -1,0 +1,41 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion 26
+    buildToolsVersion "26.0.1"
+
+    defaultConfig {
+        applicationId "org.openboardview.openboardview"
+        minSdkVersion 10
+        targetSdkVersion 12
+        versionCode 1
+        versionName "R7.4-pre1"
+        externalNativeBuild {
+            cmake {
+                cppFlags "-std=c++11"
+                arguments "-DANDROID_STL=c++_static",
+                    "-DENABLE_GL1=OFF",
+                    "-DENABLE_GL3=OFF"
+            }
+        }
+        ndk {
+            abiFilters "armeabi", "armeabi-v7a"
+        }
+    }
+    externalNativeBuild {
+        cmake {
+            path "../../../CMakeLists.txt"
+        }
+    }
+    lintOptions {
+        disable "NewApi"
+    }
+
+}
+
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    // Uncomment this line to build SDL2
+    // Uncomment a line in ../gradle.settings as well
+    compile project(':libs:SDL2')
+}

@@ -1,0 +1,30 @@
+apply plugin: 'com.android.library'
+
+android {
+    compileSdkVersion 26
+    buildToolsVersion "26.0.1"
+
+    defaultConfig {
+        minSdkVersion 10
+        targetSdkVersion 12
+        versionCode 1
+        versionName "1.0"
+
+        ndk {
+            abiFilters "armeabi", "armeabi-v7a"
+        }
+    }
+    externalNativeBuild {
+        ndkBuild {
+            path "../../../SDL2/Android.mk"
+        }
+    }
+
+    lintOptions {
+        disable "NewApi"
+    }
+}
+
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+}

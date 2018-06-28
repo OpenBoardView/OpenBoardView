@@ -19,6 +19,18 @@ public class OBVActivity extends SDLActivity {
 	private static final String TAG = "[OBV]";
 	private static Activity activity;
 
+	@Override
+	protected String[] getLibraries() {
+		return new String[] {
+			"SDL2",
+			// "SDL2_image",
+			// "SDL2_mixer",
+			// "SDL2_net",
+			// "SDL2_ttf",
+			"openboardview"
+		};
+	}
+
 	public static void openFilePicker() {
 		Log.d(TAG, "Opening file picker");
 		Intent fileIntent = new Intent(Intent.ACTION_GET_CONTENT);

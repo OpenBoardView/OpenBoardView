@@ -1,9 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-      package="org.openboardview.openboardview"
-      android:versionCode="1"
-      android:versionName="R7.4-pre1"
-      android:installLocation="auto">
+      package="org.openboardview.openboardview">
 
     <!-- Android 2.3.3 compatibility, build with Android 3.1 SDK -->
     <uses-sdk android:minSdkVersion="10" android:targetSdkVersion="12" />
@@ -16,11 +13,11 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
     <application android:label="@string/app_name"
-                 android:icon="@drawable/ic_launcher"
+                 android:icon="@mipmap/ic_launcher"
                  android:allowBackup="true"
                  android:theme="@android:style/Theme.NoTitleBar.Fullscreen"
                  android:hardwareAccelerated="true">
-        <activity android:name="OBVActivity"
+        <activity android:name="org.openboardview.openboardview.OBVActivity"
                   android:label="@string/app_name"
                   android:configChanges="locale|keyboard|keyboardHidden|uiMode|orientation"
                   android:screenOrientation="landscape">
