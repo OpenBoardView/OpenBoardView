@@ -81,6 +81,8 @@ const std::string get_user_dir(const UserDir userdir);
 
 #ifdef _WIN32
 char *strcasestr(const char *str, const char *pattern);
+#else
+bool create_dirs(const std::string &path);
 #endif // _WIN32
 
 // File stat queries, cross platform.

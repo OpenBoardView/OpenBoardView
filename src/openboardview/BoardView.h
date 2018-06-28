@@ -327,3 +327,5 @@ struct BoardView {
 	void SetLastFileOpenName(const std::string &name);
 	void FlipBoard(int mode = 0);
 };
+
+extern BoardView app;
