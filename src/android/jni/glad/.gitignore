@@ -1,0 +1,3 @@
+# We generate them at build time
+src
+include

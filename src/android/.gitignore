@@ -1,0 +1,21 @@
+# https://github.com/github/gitignore/blob/master/Android.gitignore
+
+# Built application files
+*.apk
+*.ap_
+
+# Files for the ART/Dalvik VM
+*.dex
+
+# Java class files
+*.class
+
+# Generated files
+bin/
+gen/
+libs/
+obj/
+out/
+
+# Local configuration file (sdk path, etc)
+local.properties
