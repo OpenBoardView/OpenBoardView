@@ -472,6 +472,84 @@ int BoardView::LoadFile(const std::string &filename) {
 	return 0;
 }
 
+int BoardView::ReLoadFile(const std::string &filename) {
+	m_lastFileOpenWasInvalid = true;
+	m_validBoard             = false;
+	if (!filename.empty()) {
+		// clean up the previous file.
+		if (m_file && m_board) {
+			for (auto &p : m_board->Components()) {
+				if (p->hull) free(p->hull);
+			}
+			m_pinHighlighted.clear();
+			m_partHighlighted.clear();
+			m_annotations.Close();
+			m_board->Nets().clear();
+			m_board->Pins().clear();
+			m_board->Components().clear();
+			m_board->OutlinePoints().clear();
+			//	delete m_file;
+			// delete m_board;
+		}
+
+		SetLastFileOpenName(filename);
+		std::vector<char> buffer = file_as_buffer(filename);
+		if (!buffer.empty()) {
+			BRDFile *file = nullptr;
+			// Since it is encrypted we cannot use the below logic. Trust the ext.
+			if (check_fileext(filename, ".fz")) { 
+				file = new FZFile(buffer, FZKey);
+			}
+			else if (check_fileext(filename, ".bom") || check_fileext(filename, ".asc"))
+				file = new ASCFile(buffer, filename);
+			else if (check_fileext(filename, ".cst"))
+				file = new CSTFile(buffer);
+			else if (BRDFile::verifyFormat(buffer))
+				file = new BRDFile(buffer);
+			else if (BRD2File::verifyFormat(buffer))
+				file = new BRD2File(buffer);
+			else if (BDVFile::verifyFormat(buffer))
+				file = new BDVFile(buffer);
+			else if (BVRFile::verifyFormat(buffer))
+				file = new BVRFile(buffer);
+
+			if (file && file->valid) {
+				SetFile(file);
+				fhistory.Prepend_save(filename);
+				// used by main to know when to update the window title
+				history_file_has_changed = 1;
+				boardMinMaxDone          = false;
+//				m_rotation               = 0;
+//				m_current_side           = 0;
+				EPCCheck(); // check to see we don't have a flipped board outline
+
+				m_annotations.SetFilename(filename);
+				m_annotations.Load();
+
+				/*
+				 * Set pins to a known lower size, they get resized
+				 * in DrawParts() when the component is analysed
+				 */
+				for (auto &p : m_board->Pins()) {
+					p->diameter = 7;
+				}
+
+//				CenterView();
+				m_lastFileOpenWasInvalid = false;
+				m_validBoard             = true;
+
+			} else {
+				m_validBoard = false;
+				delete file;
+			}
+		}
+	} else {
+		return 1;
+	}
+
+	return 0;
+}
+
 void BoardView::SetFZKey(const char *keytext) {
 
 	if (keytext) {
@@ -1762,6 +1840,14 @@ void BoardView::Update() {
 		io.KeysDown[SDLK_o]             = false;
 	}
 
+	if ((io.KeyCtrl) && ImGui::IsKeyPressed(SDLK_r)) {
+		ReLoadFile(fhistory.history[0]);
+		// the dialog will likely eat our WM_KEYUP message for CTRL and r:
+		io.KeysDown[SDL_SCANCODE_RCTRL] = false;
+		io.KeysDown[SDL_SCANCODE_LCTRL] = false;
+		io.KeysDown[SDLK_r]             = false;
+	}
+
 	if ((io.KeyCtrl) && ImGui::IsKeyPressed(SDLK_q)) {
 		m_wantsQuit = true;
 	}
@@ -1784,6 +1870,12 @@ void BoardView::Update() {
 		if (ImGui::BeginMenu("File")) {
 			if (ImGui::MenuItem("Open", "Ctrl+O")) {
 				open_file = true;
+			}
+
+			if (ImGui::MenuItem("Reload", "Ctrl+R")) {
+				//check if file exists
+				//keep viewport parameters dont reset
+				ReLoadFile(fhistory.history[0]);
 			}
 
 			/// Generate file history - PLD20160618-2028
@@ -2427,8 +2519,8 @@ void BoardView::HandleInput() {
 			CenterView();
 			m_needsRedraw = true;
 
-		} else if (ImGui::IsKeyPressed(KM(SDL_SCANCODE_KP_PERIOD)) || ImGui::IsKeyPressed(SDLK_r) ||
-		           ImGui::IsKeyPressed(SDLK_PERIOD)) {
+		} else if ((ImGui::IsKeyPressed(KM(SDL_SCANCODE_KP_PERIOD)) || ImGui::IsKeyPressed(SDLK_r) ||
+		           ImGui::IsKeyPressed(SDLK_PERIOD)) && !io.KeyCtrl ) {
 			// Rotate board: R and period rotate clockwise; comma rotates
 			// counter-clockwise
 			Rotate(1);
