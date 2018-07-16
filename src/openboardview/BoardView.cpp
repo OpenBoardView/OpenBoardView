@@ -2528,15 +2528,15 @@ void BoardView::HandleInput() {
 		}
 	}
 
-	if ((!io.WantCaptureKeyboard)) {
+	if ((!io.WantCaptureKeyboard) && !io.KeyCtrl) {
 
 		if (ImGui::IsKeyPressed(SDLK_m)) {
 			Mirror();
 			CenterView();
 			m_needsRedraw = true;
 
-		} else if ((ImGui::IsKeyPressed(KM(SDL_SCANCODE_KP_PERIOD)) || ImGui::IsKeyPressed(SDLK_r) ||
-		           ImGui::IsKeyPressed(SDLK_PERIOD)) && !io.KeyCtrl ) {
+		} else if (ImGui::IsKeyPressed(KM(SDL_SCANCODE_KP_PERIOD)) || ImGui::IsKeyPressed(SDLK_r) ||
+		           ImGui::IsKeyPressed(SDLK_PERIOD)) {
 			// Rotate board: R and period rotate clockwise; comma rotates
 			// counter-clockwise
 			Rotate(1);
