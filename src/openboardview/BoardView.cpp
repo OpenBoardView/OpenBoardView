@@ -473,6 +473,16 @@ int BoardView::LoadFile(const std::string &filename) {
 }
 
 int BoardView::ReLoadFile(const std::string &filename) {
+	float m_dx_tmp = m_dx;
+	float m_dy_tmp = m_dy;
+	float m_mx_tmp = m_mx;
+	float m_my_tmp = m_my;
+	float m_scale_tmp = m_scale;
+	float m_scale_floor_tmp = m_scale_floor;
+	float m_lastWidth_tmp = m_lastWidth;
+	float m_lastHeight_tmp = m_lastHeight;
+	
+
 	m_lastFileOpenWasInvalid = true;
 	m_validBoard             = false;
 	if (!filename.empty()) {
@@ -519,8 +529,6 @@ int BoardView::ReLoadFile(const std::string &filename) {
 				// used by main to know when to update the window title
 				history_file_has_changed = 1;
 				boardMinMaxDone          = false;
-//				m_rotation               = 0;
-//				m_current_side           = 0;
 				EPCCheck(); // check to see we don't have a flipped board outline
 
 				m_annotations.SetFilename(filename);
@@ -534,9 +542,17 @@ int BoardView::ReLoadFile(const std::string &filename) {
 					p->diameter = 7;
 				}
 
-//				CenterView();
 				m_lastFileOpenWasInvalid = false;
 				m_validBoard             = true;
+
+				m_dx = m_dx_tmp;
+				m_dy = m_dy_tmp;
+				m_mx = m_mx_tmp;
+				m_my = m_my_tmp;
+				m_scale = m_scale_tmp;
+				m_scale_floor = m_scale_floor_tmp;
+				m_lastWidth = m_lastWidth_tmp;
+				m_lastHeight = m_lastHeight_tmp;
 
 			} else {
 				m_validBoard = false;
