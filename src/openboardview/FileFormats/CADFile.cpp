@@ -10,16 +10,6 @@
 #include <string.h>
 #include <unordered_map>
 
-char *nextfield(char *p) {
-	if (p) {
-		while ((*p != '\t') && (*p != '\0') && (*p != '\r') && (*p != '\n')) {
-			p++;
-		}
-	}
-	if (*p == '\t') p++;
-	return p;
-}
-
 #define OUTLINE_MARGIN 20
 void CADFile::gen_outline() {
 	// Determine board outline
