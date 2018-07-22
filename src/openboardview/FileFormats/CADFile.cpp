@@ -29,6 +29,10 @@ void CADFile::gen_outline() {
 }
 #undef OUTLINE_MARGIN
 
+bool CADFile::verifyFormat(std::vector<char> &buf) {
+	return (find_str_in_buf("P_ADDP", buf) && find_str_in_buf("C_PIN", buf));
+}
+
 CADFile::CADFile(std::vector<char> &buf) {
 	auto buffer_size = buf.size();
 	float multiplier = 1000.0f;
@@ -103,15 +107,16 @@ CADFile::CADFile(std::vector<char> &buf) {
 				if (ptr != NULL)         //
 					{*ptr = '\0';}       //
 				pin.part       = parts_id.at(part);
-				double posx   = READ_DOUBLE();
-				pin.pos.x     = posx * multiplier;
-				double posy   = READ_DOUBLE();
-				pin.pos.y     = posy * multiplier;
-				/*int *Unknown =*/READ_UINT();
-				/*int *Unknown =*/READ_UINT();
-				/*int *Unknown =*/READ_UINT();
-				/*int *Unknown =*/READ_UINT();
+				double posx    = READ_DOUBLE();
+				pin.pos.x      = posx * multiplier;
+				double posy    = READ_DOUBLE();
+				pin.pos.y      = posy * multiplier;
+				/*int *Unknown =*/READ_DOUBLE();
+				/*int *Unknown =*/READ_DOUBLE();
+				/*int *Unknown =*/READ_DOUBLE();
+				/*int *Unknown =*/READ_STR();
 				pin.net        = READ_STR();
+				pins.push_back(pin);
 				pins.push_back(pin);
 			} break;
 
