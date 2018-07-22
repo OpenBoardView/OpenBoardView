@@ -425,7 +425,7 @@ int BoardView::LoadFile(const std::string &filename) {
 				file = new FZFile(buffer, FZKey);
 			} else if (check_fileext(filename, ".bom") || check_fileext(filename, ".asc"))
 				file = new ASCFile(buffer, filename);
-			else if (check_fileext(filename, ".cad"))
+			else if (CADFile::verifyFormat(buffer))
 				file = new CADFile(buffer);
 			else if (check_fileext(filename, ".cst"))
 				file = new CSTFile(buffer);
