@@ -117,7 +117,6 @@ CADFile::CADFile(std::vector<char> &buf) {
 				/*int *Unknown =*/READ_STR();
 				pin.net        = READ_STR();
 				pins.push_back(pin);
-				pins.push_back(pin);
 			} break;
 
 			default: continue;
