@@ -35,7 +35,7 @@ bool CADFile::verifyFormat(std::vector<char> &buf) {
 
 CADFile::CADFile(std::vector<char> &buf) {
 	auto buffer_size = buf.size();
-	float multiplier = 1000.0f;
+	float multiplier = 10000.0f;
 	char *saved_locale;
 	saved_locale  = setlocale(LC_NUMERIC, "C"); // Use '.' as delimiter for strtod
 
@@ -53,6 +53,7 @@ CADFile::CADFile(std::vector<char> &buf) {
 
 	int current_block = 0;
 	std::unordered_map<std::string, int> parts_id; // map between part name and part number
+	char *nailnet; // Net name for VIA
 
 	char **lines = stringfile(file_buf);
 	ENSURE(lines);
@@ -60,7 +61,6 @@ CADFile::CADFile(std::vector<char> &buf) {
 	while (*lines) {
 		char *line = *lines;
 		++lines;
-
 		while (isspace((uint8_t)*line)) line++;
 		if (!line[0]) continue;
 
@@ -68,6 +68,10 @@ CADFile::CADFile(std::vector<char> &buf) {
 				current_block = 1;
 			} else if (!strncmp(line, "C_PIN", 5)) {
 				current_block = 2;
+			} else if (!strncmp(line, "NET ", 4)) {
+				current_block = 3;
+			} else if (!strncmp(line, "N_VIA", 5)) {
+				current_block = 4;
 			} else {
 				current_block = -1;
 				continue;
@@ -87,7 +91,7 @@ CADFile::CADFile(std::vector<char> &buf) {
 				/*char *X       =*/READ_STR();
 				/*char *Y       =*/READ_STR();
 				char *loc       = READ_STR();
-				/*int *Unknown =*/READ_STR();
+				/*int *Unknown  =*/READ_STR();
 				part.part_type  = BRDPartType::SMD;
 				if (!strcmp(loc, "1"))//top 1 bot 2
 					part.mounting_side = BRDPartMountingSide::Top; // SMD part on top
@@ -118,7 +122,23 @@ CADFile::CADFile(std::vector<char> &buf) {
 				pin.net        = READ_STR();
 				pins.push_back(pin);
 			} break;
-
+			case 3: {   // NET
+				/*char *TYPE  =*/READ_STR();
+				nailnet = READ_STR();
+			} break;
+			case 4: { // VIA
+				BRDNail nail;
+				nail.net     = nailnet;
+				/*STR *TYPE  =*/READ_STR();
+				double posx  = READ_DOUBLE();
+				nail.pos.x   = posx * multiplier;
+				double posy  = READ_DOUBLE();
+				nail.pos.y   = posy * multiplier;
+				/*STR        =*/READ_STR();
+				nail.side    = READ_DOUBLE();
+				/*double     =*/READ_DOUBLE();
+				nails.push_back(nail);
+			} break;
 			default: continue;
 		}
 	}
