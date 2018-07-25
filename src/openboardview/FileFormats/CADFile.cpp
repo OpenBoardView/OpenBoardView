@@ -35,7 +35,7 @@ bool CADFile::verifyFormat(std::vector<char> &buf) {
 
 CADFile::CADFile(std::vector<char> &buf) {
 	auto buffer_size = buf.size();
-	float multiplier = 10000.0f;
+	float multiplier = 1000.0f;
 	char *saved_locale;
 	saved_locale  = setlocale(LC_NUMERIC, "C"); // Use '.' as delimiter for strtod
 
