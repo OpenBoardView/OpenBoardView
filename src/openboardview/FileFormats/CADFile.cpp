@@ -30,7 +30,7 @@ void CADFile::gen_outline() {
 #undef OUTLINE_MARGIN
 
 bool CADFile::verifyFormat(std::vector<char> &buf) {
-	return (find_str_in_buf("P_ADDP", buf) && find_str_in_buf("C_PIN", buf));
+	return (find_str_in_buf("###Panel Added", buf) && find_str_in_buf("C_PIN", buf));
 }
 
 CADFile::CADFile(std::vector<char> &buf) {
