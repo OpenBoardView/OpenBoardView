@@ -119,12 +119,22 @@ CADFile::CADFile(std::vector<char> &buf) {
 				/*int *Unknown =*/READ_DOUBLE();
 				/*int *Unknown =*/READ_DOUBLE();
 				/*int *Unknown =*/READ_STR();
-				pin.net        = READ_STR();
+				char *netr     = READ_STR();
+				if (strchr(netr, '/'))
+					memmove(&netr[0],
+					&netr[0 + 1],
+					sizeof(netr) - 0 - 1);
+				pin.net        = netr;
 				pins.push_back(pin);
 			} break;
 			case 3: {   // NET
 				/*char *TYPE  =*/READ_STR();
-				nailnet = READ_STR();
+				char *netr     = READ_STR();
+				if (strchr(netr, '/'))
+					memmove(&netr[0],
+					&netr[0 + 1],
+					sizeof(netr) - 0 - 1);
+				nailnet        = netr;
 			} break;
 			case 4: { // VIA
 				BRDNail nail;
