@@ -260,6 +260,8 @@ int main(int argc, char **argv) {
 		cleanupAndExit(1);
 	}
 
+	// Needs to be done before initializing the renderer or using any of ImGui stuff
+	ImGui::CreateContext();
 	// Setup renderer
 	std::unique_ptr<ImGuiRendererSDL> renderer = Renderers::initBestRenderer(g.renderer, window);
 	if (!renderer) {
@@ -425,6 +427,8 @@ int main(int argc, char **argv) {
 
 	// Cleanup
  	renderer->shutdown();
+
+	ImGui::DestroyContext();
 
 	cleanupAndExit(0);
 	return 0;

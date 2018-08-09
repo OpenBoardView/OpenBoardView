@@ -71,6 +71,9 @@ uint32_t BoardView::byte4swap(uint32_t x) {
 void BoardView::ThemeSetStyle(const char *name) {
 	ImGuiStyle &style = ImGui::GetStyle();
 
+	// non color-related settings
+	style.WindowBorderSize = 1.0f;
+
 	if (strcmp(name, "dark") == 0) {
 		style.Colors[ImGuiCol_Text]          = ImVec4(0.90f, 0.90f, 0.90f, 1.00f);
 		style.Colors[ImGuiCol_TextDisabled]  = ImVec4(0.60f, 0.60f, 0.60f, 1.00f);
@@ -91,7 +94,6 @@ void BoardView::ThemeSetStyle(const char *name) {
 		style.Colors[ImGuiCol_ScrollbarGrab]        = ImVec4(0.40f, 0.40f, 0.80f, 0.30f);
 		style.Colors[ImGuiCol_ScrollbarGrabHovered] = ImVec4(0.40f, 0.40f, 0.80f, 0.40f);
 		style.Colors[ImGuiCol_ScrollbarGrabActive]  = ImVec4(0.80f, 0.50f, 0.50f, 0.40f);
-		style.Colors[ImGuiCol_ComboBg]              = ImVec4(0.20f, 0.20f, 0.20f, 0.99f);
 		style.Colors[ImGuiCol_CheckMark]            = ImVec4(0.90f, 0.90f, 0.90f, 0.50f);
 		style.Colors[ImGuiCol_SliderGrab]           = ImVec4(1.00f, 1.00f, 1.00f, 0.30f);
 		style.Colors[ImGuiCol_SliderGrabActive]     = ImVec4(0.80f, 0.50f, 0.50f, 1.00f);
@@ -107,9 +109,6 @@ void BoardView::ThemeSetStyle(const char *name) {
 		style.Colors[ImGuiCol_ResizeGrip]           = ImVec4(1.00f, 1.00f, 1.00f, 0.30f);
 		style.Colors[ImGuiCol_ResizeGripHovered]    = ImVec4(1.00f, 1.00f, 1.00f, 0.60f);
 		style.Colors[ImGuiCol_ResizeGripActive]     = ImVec4(1.00f, 1.00f, 1.00f, 0.90f);
-		style.Colors[ImGuiCol_CloseButton]          = ImVec4(0.50f, 0.50f, 0.90f, 0.50f);
-		style.Colors[ImGuiCol_CloseButtonHovered]   = ImVec4(0.70f, 0.70f, 0.90f, 0.60f);
-		style.Colors[ImGuiCol_CloseButtonActive]    = ImVec4(0.70f, 0.70f, 0.70f, 1.00f);
 		style.Colors[ImGuiCol_PlotLines]            = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
 		style.Colors[ImGuiCol_PlotLinesHovered]     = ImVec4(0.90f, 0.70f, 0.00f, 1.00f);
 		style.Colors[ImGuiCol_PlotHistogram]        = ImVec4(0.90f, 0.70f, 0.00f, 1.00f);
@@ -181,7 +180,6 @@ void BoardView::ThemeSetStyle(const char *name) {
 		style.Colors[ImGuiCol_ScrollbarGrab]        = ImVec4(0.69f, 0.69f, 0.69f, 0.80f);
 		style.Colors[ImGuiCol_ScrollbarGrabHovered] = ImVec4(0.49f, 0.49f, 0.49f, 0.80f);
 		style.Colors[ImGuiCol_ScrollbarGrabActive]  = ImVec4(0.49f, 0.49f, 0.49f, 1.00f);
-		style.Colors[ImGuiCol_ComboBg]              = ImVec4(0.86f, 0.86f, 0.86f, 0.99f);
 		style.Colors[ImGuiCol_CheckMark]            = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
 		style.Colors[ImGuiCol_SliderGrab]           = ImVec4(0.26f, 0.59f, 0.98f, 0.78f);
 		style.Colors[ImGuiCol_SliderGrabActive]     = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
@@ -197,9 +195,6 @@ void BoardView::ThemeSetStyle(const char *name) {
 		style.Colors[ImGuiCol_ResizeGrip]           = ImVec4(1.00f, 1.00f, 1.00f, 0.00f);
 		style.Colors[ImGuiCol_ResizeGripHovered]    = ImVec4(0.26f, 0.59f, 0.98f, 0.67f);
 		style.Colors[ImGuiCol_ResizeGripActive]     = ImVec4(0.26f, 0.59f, 0.98f, 0.95f);
-		style.Colors[ImGuiCol_CloseButton]          = ImVec4(0.59f, 0.59f, 0.59f, 0.50f);
-		style.Colors[ImGuiCol_CloseButtonHovered]   = ImVec4(0.98f, 0.39f, 0.36f, 1.00f);
-		style.Colors[ImGuiCol_CloseButtonActive]    = ImVec4(0.98f, 0.39f, 0.36f, 1.00f);
 		style.Colors[ImGuiCol_PlotLines]            = ImVec4(0.39f, 0.39f, 0.39f, 1.00f);
 		style.Colors[ImGuiCol_PlotLinesHovered]     = ImVec4(1.00f, 0.43f, 0.35f, 1.00f);
 		style.Colors[ImGuiCol_PlotHistogram]        = ImVec4(0.90f, 0.70f, 0.00f, 1.00f);
@@ -325,7 +320,7 @@ int BoardView::ConfigParse(void) {
 	 * call this.
 	 */
 	slowCPU |= obvconfig.ParseBool("slowCPU", false);
-	style.AntiAliasedShapes = !slowCPU;
+	style.AntiAliasedFill = !slowCPU;
 
 	/*
 	 * Colours in ImGui can be represented as a 4-byte packed uint32_t as ABGR
@@ -532,11 +527,12 @@ void u32tof4(uint32_t c, float *f) {
 }
 void BoardView::ColorPreferencesItem(
     const char *label, int label_width, const char *butlabel, const char *conflabel, int var_width, uint32_t *c) {
+	std::string desc_id = "##" + std::string(label);
 	char buf[20];
 	snprintf(buf, sizeof(buf), "%08X", byte4swap(*c));
 	RA(label, label_width);
 	ImGui::SameLine();
-	ImGui::ColorButton(ImColor(*c));
+	ImGui::ColorButton(desc_id.c_str(), ImColor(*c));
 	ImGui::SameLine();
 	ImGui::PushItemWidth(var_width);
 	if (ImGui::InputText(
@@ -590,7 +586,7 @@ void BoardView::SaveAllColors(void) {
 
 void BoardView::ColorPreferences(void) {
 	bool dummy = true;
-	//	ImGui::PushStyleColor(ImGuiCol_PopupBg, ImColor(0xffe0e0e0));
+	//	ImGui::PushStyleColor(ImGuiCol_PopupBg, 0xffe0e0e0);
 	ImGui::SetNextWindowPosCenter();
 	if (ImGui::BeginPopupModal("Colour Preferences", &dummy, ImGuiWindowFlags_AlwaysAutoResize)) {
 
@@ -722,7 +718,7 @@ void BoardView::ColorPreferences(void) {
 void BoardView::Preferences(void) {
 	bool dummy = true;
 	ImGuiStyle &style = ImGui::GetStyle();
-	//	ImGui::PushStyleColor(ImGuiCol_PopupBg, ImColor(0xffe0e0e0));
+	//	ImGui::PushStyleColor(ImGuiCol_PopupBg, 0xffe0e0e0);
 	ImGui::SetNextWindowPosCenter();
 	if (ImGui::BeginPopupModal("Preferences", &dummy, ImGuiWindowFlags_AlwaysAutoResize)) {
 		int t;
@@ -768,7 +764,7 @@ void BoardView::Preferences(void) {
 		if (ImGui::InputInt("##dpi", &t)) {
 			if ((t > 25) && (t < 600)) obvconfig.WriteInt("dpi", t);
 		}
-		ImGui::PushStyleColor(ImGuiCol_Text, ImColor(0xff4040ff));
+		ImGui::PushStyleColor(ImGuiCol_Text, 0xff4040ff);
 		ImGui::Text("(Program restart is required to properly apply font and DPI changes)");
 		ImGui::PopStyleColor();
 
@@ -1117,7 +1113,7 @@ void BoardView::ShowInfoPane(void) {
 	ImGui::Begin("Info Panel",
 	             NULL,
 	             ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize |
-	                 ImGuiWindowFlags_ShowBorders | ImGuiWindowFlags_NoSavedSettings);
+	                 ImGuiWindowFlags_NoSavedSettings);
 
 	if ((m_dragging_token == 0) && (io.MousePos.x > m_board_surface.x) && (io.MousePos.x < (m_board_surface.x + DPIF(12.0f)))) {
 		ImDrawList *draw = ImGui::GetWindowDrawList();
@@ -1283,7 +1279,7 @@ void BoardView::ShowInfoPane(void) {
 					}
 					m_needsRedraw = true;
 				}
-				ImGui::PushStyleColor(ImGuiCol_Border, ImColor(0xffeeeeee));
+				ImGui::PushStyleColor(ImGuiCol_Border, 0xffeeeeee);
 				ImGui::Separator();
 				ImGui::PopStyleColor();
 			}
@@ -1327,7 +1323,7 @@ void BoardView::ContextMenu(void) {
 	 */
 	ImGui::SetNextWindowPos(ImVec2(DPIF(50), DPIF(50)));
 
-	if (ImGui::BeginPopupModal("Annotations", &dummy, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_ShowBorders)) {
+	if (ImGui::BeginPopupModal("Annotations", &dummy, ImGuiWindowFlags_AlwaysAutoResize)) {
 
 		if (m_showContextMenu) {
 			contextbuf[0]      = 0;
@@ -1630,8 +1626,7 @@ void BoardView::SearchComponent(void) {
 	// ImGui::SetNextWindowPosCenter();
 	if (ImGui::BeginPopupModal("Search for Component / Network",
 	                           &dummy,
-	                           ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings |
-	                               ImGuiWindowFlags_ShowBorders)) {
+	                           ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings)) {
 		//		char cs[128];
 		const char *first_button[] = {m_search[0], m_search[1], m_search[2]};
 
@@ -1715,7 +1710,7 @@ void BoardView::SearchComponent(void) {
 			auto results    = SearchPartsAndNets(m_search[i - 1], 30);           // Perform the search for both nets and parts
 			bool hasResults = !results.first.empty() || !results.second.empty(); // We found some nets or some parts
 
-			if (searching && !hasResults) ImGui::PushStyleColor(ImGuiCol_FrameBg, ImColor(0xFF6666FF));
+			if (searching && !hasResults) ImGui::PushStyleColor(ImGuiCol_FrameBg, 0xFF6666FF);
 			auto ret = ImGui::InputText(searchLabel.c_str(),
 			                            m_search[i - 1],
 			                            128,
@@ -2101,8 +2096,7 @@ void BoardView::Update() {
 	}
 
 	ImGuiWindowFlags flags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
-	                         ImGuiWindowFlags_ShowBorders | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse |
-	                         ImGuiWindowFlags_NoSavedSettings;
+	                         ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings;
 
 	ImGuiWindowFlags draw_surface_flags = flags | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoBringToFrontOnFocus;
 
@@ -2175,7 +2169,7 @@ void BoardView::Update() {
 	ImGui::SetNextWindowSize(m_board_surface);
 
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
-	ImGui::PushStyleColor(ImGuiCol_WindowBg, ImColor(m_colors.backgroundColor));
+	ImGui::PushStyleColor(ImGuiCol_WindowBg, m_colors.backgroundColor);
 
 	ImGui::Begin("surface", nullptr, draw_surface_flags);
 	if (m_validBoard) {
@@ -2933,7 +2927,7 @@ void BoardView::DrawDiamond(ImDrawList *draw, ImVec2 c, double r, uint32_t color
 	dia[2] = ImVec2(c.x, c.y + r);
 	dia[3] = ImVec2(c.x - r, c.y);
 
-	draw->AddPolyline(dia, 4, color, true, 1.0f, true);
+	draw->AddPolyline(dia, 4, color, true, 1.0f);
 }
 
 void BoardView::DrawHex(ImDrawList *draw, ImVec2 c, double r, uint32_t color) {
@@ -2950,7 +2944,7 @@ void BoardView::DrawHex(ImDrawList *draw, ImVec2 c, double r, uint32_t color) {
 	hex[4] = ImVec2(c.x + da, c.y + db);
 	hex[5] = ImVec2(c.x - da, c.y + db);
 
-	draw->AddPolyline(hex, 6, color, true, 1.0f, true);
+	draw->AddPolyline(hex, 6, color, true, 1.0f);
 }
 
 inline void BoardView::DrawOutline(ImDrawList *draw) {
@@ -3750,8 +3744,8 @@ void BoardView::DrawPartTooltips(ImDrawList *draw) {
 				float pd = pin->diameter * m_scale;
 
 				draw->AddCircle(CoordToScreen(pin->position.x, pin->position.y), pd, m_colors.pinHaloColor, 32, pinHaloThickness);
-				ImGui::PushStyleColor(ImGuiCol_Text, ImColor(m_colors.annotationPopupTextColor));
-				ImGui::PushStyleColor(ImGuiCol_PopupBg, ImColor(m_colors.annotationPopupBackgroundColor));
+				ImGui::PushStyleColor(ImGuiCol_Text, m_colors.annotationPopupTextColor);
+				ImGui::PushStyleColor(ImGuiCol_PopupBg, m_colors.annotationPopupBackgroundColor);
 				ImGui::BeginTooltip();
 				ImGui::Text("TP[%s]%s", pin->name.c_str(), pin->net->name.c_str());
 				ImGui::EndTooltip();
@@ -3825,8 +3819,8 @@ void BoardView::DrawPartTooltips(ImDrawList *draw) {
 				                m_colors.pinHaloColor,
 				                32,
 				                pinHaloThickness);
-			ImGui::PushStyleColor(ImGuiCol_Text, ImColor(m_colors.annotationPopupTextColor));
-			ImGui::PushStyleColor(ImGuiCol_PopupBg, ImColor(m_colors.annotationPopupBackgroundColor));
+			ImGui::PushStyleColor(ImGuiCol_Text, m_colors.annotationPopupTextColor);
+			ImGui::PushStyleColor(ImGuiCol_PopupBg, m_colors.annotationPopupBackgroundColor);
 			ImGui::BeginTooltip();
 			if (currentlyHoveredPin) {
 				ImGui::Text("%s\n[%s]%s",
@@ -3848,8 +3842,8 @@ inline void BoardView::DrawPinTooltips(ImDrawList *draw) {
 	draw->ChannelsSetCurrent(kChannelAnnotations);
 
 	if (HighlightedPinIsHovered()) {
-		ImGui::PushStyleColor(ImGuiCol_Text, ImColor(m_colors.annotationPopupTextColor));
-		ImGui::PushStyleColor(ImGuiCol_PopupBg, ImColor(m_colors.annotationPopupBackgroundColor));
+		ImGui::PushStyleColor(ImGuiCol_Text, m_colors.annotationPopupTextColor);
+		ImGui::PushStyleColor(ImGuiCol_PopupBg, m_colors.annotationPopupBackgroundColor);
 		ImGui::BeginTooltip();
 		ImGui::Text("%s[%s]\n%s",
 		            m_pinHighlightedHovered->component->name.c_str(),
@@ -3882,8 +3876,8 @@ inline void BoardView::DrawAnnotations(ImDrawList *draw) {
 				snprintf(buf, sizeof(buf), "%s", ann.note.c_str());
 				buf[50] = '\0';
 
-				ImGui::PushStyleColor(ImGuiCol_Text, ImColor(m_colors.annotationPopupTextColor));
-				ImGui::PushStyleColor(ImGuiCol_PopupBg, ImColor(m_colors.annotationPopupBackgroundColor));
+				ImGui::PushStyleColor(ImGuiCol_Text, m_colors.annotationPopupTextColor);
+				ImGui::PushStyleColor(ImGuiCol_PopupBg, m_colors.annotationPopupBackgroundColor);
 				ImGui::BeginTooltip();
 				ImGui::Text("%c(%0.0f,%0.0f) %s %s%c%s%c\n%s%s",
 				            m_current_side ? 'B' : 'T',
@@ -4000,7 +3994,7 @@ void BoardView::DrawSelectedPins(ImDrawList *draw) {
 	}
 	hpc = VHConvexHull(hull, pl, i);
 	if (hpc > 3) {
-		draw->AddConvexPolyFilled(hull, hpc, ImColor(0x660000ff), false);
+		draw->AddConvexPolyFilled(hull, hpc, 0x660000ff);
 	}
 }
 
