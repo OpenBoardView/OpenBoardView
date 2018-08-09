@@ -36,8 +36,6 @@
 // Rendering stuff
 #include "Renderers/Renderers.h"
 
-enum class Renderer { DEFAULT, OPENGL1, OPENGL3, OPENGLES2 };
-
 struct globals {
 	char *input_file;
 	char *config_file;
@@ -47,7 +45,7 @@ struct globals {
 	int dpi;
 	double font_size;
 	bool debug;
-	Renderer renderer;
+	Renderers::Renderer renderer;
 
 	globals() {
 		this->input_file  = NULL;
@@ -58,7 +56,7 @@ struct globals {
 		this->dpi         = 0;
 		this->font_size   = 0.0f;
 		this->debug       = false;
-		this->renderer    = Renderer::DEFAULT;
+		this->renderer    = Renderers::Renderer::DEFAULT;
 	}
 };
 
@@ -166,12 +164,7 @@ int parse_parameters(int argc, char **argv, struct globals *g) {
 		} else if (strcmp(p, "-r") == 0) {
 			param++;
 			if (param < argc) {
-				switch (atoi(argv[param])) {
-					case 1: g->renderer = Renderer::OPENGL1; break;
-					case 2: g->renderer = Renderer::OPENGL3; break;
-					case 3: g->renderer = Renderer::OPENGLES2; break;
-					default: fprintf(stderr, "Unknown renderer. Using default\n");
-				}
+				g->renderer = Renderers::get(atoi(argv[param]));
 			} else {
 				fprintf(stderr, "Not enough parameters\n");
 			}
@@ -245,14 +238,11 @@ int main(int argc, char **argv) {
 	if (g.width == 0) g.width   = app.obvconfig.ParseInt("windowX", 1100);
 	if (g.height == 0) g.height = app.obvconfig.ParseInt("windowY", 700);
 
-	if (g.renderer == Renderer::DEFAULT) {
-		switch (app.obvconfig.ParseInt("renderer", 2)) {
-			case 1: g.renderer = Renderer::OPENGL1; break;
-			case 2: g.renderer = Renderer::OPENGL3; break;
-			case 3: g.renderer = Renderer::OPENGLES2; break;
-		}
+	if (g.renderer == Renderers::Renderer::DEFAULT) {
+		g.renderer = Renderers::get(app.obvconfig.ParseInt("renderer", static_cast<int>(Renderers::Preferred)));
 	}
 
+	// Setup window
 	SDL_DisplayMode current;
 	SDL_GetCurrentDisplayMode(0, &current);
 	window = SDL_CreateWindow(
@@ -262,58 +252,14 @@ int main(int argc, char **argv) {
 		cleanupAndExit(1);
 	}
 
-// Setup window
-	std::unique_ptr<ImGuiRendererSDL> renderer;
-	auto l = [&](Renderer r) {
-	switch (r) {
-		case Renderer::OPENGL3:
-		//	if (GLVersion.major >= 3 && GLVersion.minor >= 2) {
-				renderer = std::unique_ptr<ImGuiRendererSDL>(new ImGuiRendererSDLGL3(window));
-				break;
-		//	}
-		//	SDL_LogWarn(SDL_LOG_CATEGORY_RENDER, "%s", "Unsupported renderer: OpenGL 3.2");
-		case Renderer::OPENGLES2:
-			if (GLVersion.major >= 2 && GLVersion.minor >= 0) {
-				renderer = std::unique_ptr<ImGuiRendererSDL>(new ImGuiRendererSDLGLES2(window));
-				break;
-			}
-			SDL_LogWarn(SDL_LOG_CATEGORY_RENDER, "%s", "Unsupported renderer: OpenGLES 2.0");
-		case Renderer::OPENGL1:
-		default:
-		//	if (GLVersion.major >= 1 && GLVersion.minor >= 1) {
-				renderer = std::unique_ptr<ImGuiRendererSDL>(new ImGuiRendererSDLGL1(window)); // C++14 has std::make_unique<Paste>
-		//		break;
-		//	}
-		//	SDL_LogWarn(SDL_LOG_CATEGORY_RENDER, "%s", "Unsupported renderer: OpenGL 1.1");
-	}
-	};
-
-	l(g.renderer);
-
-	if (renderer == nullptr) {
-		SDL_LogError(SDL_LOG_CATEGORY_RENDER, "%s", "No available renderer found. Exiting.");
-//		cleanupAndExit(1);
-	}
-	bool initialized = renderer->init();
-
-	l(Renderer::OPENGL1);
-
-	printf("%d %d\n", GLVersion.major, GLVersion.minor);
-
-	SDL_EventState(SDL_DROPFILE, SDL_ENABLE);
-
-	// Setup ImGui binding
-	initialized = renderer->init();
-
-#if defined(ENABLE_GL1) || defined(ENABLE_GL3) || defined(ENABLE_GLES2)
-	if (!initialized) {
-		SDL_LogError(SDL_LOG_CATEGORY_RENDER, "%s", "Selected renderer is not available. Exiting.");
+	// Setup renderer
+	std::unique_ptr<ImGuiRendererSDL> renderer = Renderers::initBestRenderer(g.renderer, window);
+	if (!renderer) {
+		SDL_LogError(SDL_LOG_CATEGORY_RENDER, "%s", "No renderer not available. Exiting.");
 		cleanupAndExit(1);
 	}
-#else
-	SDL_LogError(SDL_LOG_CATEGORY_RENDER, "%s", "No renderer was built in the application. Exiting.");
-	cleanupAndExit(1);
-#endif
+
+	SDL_EventState(SDL_DROPFILE, SDL_ENABLE);
 
 	// SDL disables screen saver by default which doesn't make sense for us.
 	SDL_EnableScreenSaver();

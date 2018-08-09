@@ -2,8 +2,16 @@
 
 #include "imgui_impl_sdl.h"
 
+std::string ImGuiRendererSDLGL1::name() {
+    return "ImGuiRendererSDLGL1";
+}
+
 bool ImGuiRendererSDLGL1::checkGLVersion() {
-	return GLVersion.major >= 1 && GLVersion.minor >= 1;
+	if (GLVersion.major <= 1 && GLVersion.minor < 1) {
+		SDL_LogError(SDL_LOG_CATEGORY_RENDER, "Minimal OpenGL version required is %d.%d. Got %d.%d.", 1, 1, GLVersion.major, GLVersion.minor);
+		return false;
+	}
+	return true;
 }
 
 void ImGuiRendererSDLGL1::setGLVersion() {
@@ -13,8 +21,7 @@ void ImGuiRendererSDLGL1::setGLVersion() {
 }
 
 bool ImGuiRendererSDLGL1::init() {
-	ImGuiRendererSDL::init();
-	return ImGui_ImplSdl_Init(window);
+	return ImGuiRendererSDL::init() && ImGui_ImplSdl_Init(window);
 }
 
 void ImGuiRendererSDLGL1::processEvent(SDL_Event &event) {

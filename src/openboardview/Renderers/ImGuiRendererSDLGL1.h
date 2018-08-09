@@ -6,6 +6,7 @@
 class ImGuiRendererSDLGL1: public ImGuiRendererSDL {
 	using ImGuiRendererSDL::ImGuiRendererSDL;
 public:
+	std::string name();
 	bool checkGLVersion();
 	void setGLVersion();
 	bool init();

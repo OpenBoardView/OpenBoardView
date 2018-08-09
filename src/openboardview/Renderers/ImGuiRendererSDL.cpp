@@ -14,23 +14,29 @@ ImGuiRendererSDL::~ImGuiRendererSDL() {
 	SDL_GL_UnloadLibrary();
 }
 
+std::string ImGuiRendererSDL::name() {
+	return "ImGuiRendererSDL";
+}
+
 void ImGuiRendererSDL::setGLVersion() {
 	SDL_GL_ResetAttributes();
 }
 
 bool ImGuiRendererSDL::init() {
+	SDL_LogInfo(SDL_LOG_CATEGORY_RENDER, "Initializing %s", this->name().c_str());
+
 	this->setGLVersion();
 	SDL_GL_LoadLibrary(nullptr);
 	if (window != nullptr)
 		glcontext = SDL_GL_CreateContext(window);
 
 	if (glcontext == nullptr) {
-		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Failed to initialize OpenGL context: %s\n", SDL_GetError());
+		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "%s: Failed to initialize OpenGL context: %s\n", this->name().c_str(), SDL_GetError());
 		return false;
 	}
 
 	if (!gladLoadGLLoader(SDL_GL_GetProcAddress)) {
-		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "glad failed to load OpenGL\n");
+		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "%s: glad failed to load OpenGL\n", this->name().c_str());
 		return false;
 	}
 
@@ -58,5 +64,5 @@ void ImGuiRendererSDL::renderFrame(const ImVec4 &clear_color) {
 	glClearColor(0,0,0,0);
 	glClear(GL_COLOR_BUFFER_BIT);
 	ImGui::Render();
-	SDL_GL_SwapWindow(window); 
+	SDL_GL_SwapWindow(window);
 }

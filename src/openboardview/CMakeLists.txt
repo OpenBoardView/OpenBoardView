@@ -79,6 +79,7 @@ set(SOURCES
 	FileFormats/FZFile.cpp
 	NetList.cpp
 	PartList.cpp
+	Renderers/Renderers.cpp
 	Renderers/ImGuiRendererSDL.cpp
 	Searcher.cpp
 	SpellCorrector.cpp

@@ -1,6 +1,8 @@
 #ifndef _IMGUIRENDERERSDL_H_
 #define _IMGUIRENDERERSDL_H_
 
+#include <string>
+
 // SDL, glad
 #ifdef _MSC_VER
 #include <SDL.h>
@@ -16,6 +18,7 @@ public:
 	explicit ImGuiRendererSDL(SDL_Window *window);
 	virtual ~ImGuiRendererSDL();
 
+	virtual std::string name();
 	virtual bool checkGLVersion() = 0;
 	virtual bool init();
 	virtual void processEvent(SDL_Event &event) = 0;
