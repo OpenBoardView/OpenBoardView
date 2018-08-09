@@ -10,5 +10,5 @@
 	url = https://github.com/Dav1dde/glad.git
 [submodule "src/imgui"]
 	path = src/imgui
-	url = https://github.com/OpenBoardView/imgui
+	url = https://github.com/ocornut/imgui
 	branch = master
