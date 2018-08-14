@@ -6,6 +6,7 @@
 #include <ctype.h>
 #include <stdint.h>
 #include <string.h>
+#include <unordered_map>
 
 // Header for recognizing a BRD file
 decltype(BRDFile::signature) constexpr BRDFile::signature;
@@ -137,15 +138,15 @@ BRDFile::BRDFile(std::vector<char> &buf) {
 			current_block = 2;
 			continue;
 		}
-		if (!strcmp(line, "Format:")) {
+		if (!strcmp(line, "Format:") || !strcmp(line, "format:")) {
 			current_block = 3;
 			continue;
 		}
-		if (!strcmp(line, "Parts:")) {
+		if (!strcmp(line, "Parts:") || !strcmp(line, "Pins1:")) {
 			current_block = 4;
 			continue;
 		}
-		if (!strcmp(line, "Pins:")) {
+		if (!strcmp(line, "Pins:") || !strcmp(line, "Pins2:")) {
 			current_block = 5;
 			continue;
 		}
@@ -207,5 +208,22 @@ BRDFile::BRDFile(std::vector<char> &buf) {
 			} break;
 		}
 	}
+
+	// Lenovo brd variant, find net from nail
+	std::unordered_map<int, const char *> nailsToNets; // Map between net id and net name
+	for (auto &nail : nails) {
+		nailsToNets[nail.probe] = nail.net;
+	}
+
+	for (auto &pin : pins) {
+		if (!strcmp(pin.net, "")) {
+			try {
+				pin.net = nailsToNets.at(pin.probe);
+			} catch (const std::out_of_range &e) {
+				pin.net = "";
+			}
+		}
+	}
+
 	valid = current_block != 0;
 }

@@ -2914,6 +2914,9 @@ inline void BoardView::DrawOutline(ImDrawList *draw) {
 	Point fp;
 
 	auto &outline = m_board->OutlinePoints();
+	if (outline.size() < 1) { // Nothing to draw
+		return;
+	}
 
 	draw->ChannelsSetCurrent(kChannelPolylines);
 
