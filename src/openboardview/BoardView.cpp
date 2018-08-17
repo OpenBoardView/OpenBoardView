@@ -2812,8 +2812,8 @@ void BoardView::OutlineGenFillDraw(ImDrawList *draw, int ydelta, double thicknes
 	/*
 	 * Go through each scan line
 	 */
-	y = min.y;
-	while (y < max.y) {
+	y = ystart;
+	while (y < yend) {
 
 		scanhits.resize(0);
 		// scan outline segments to see if any intersect with our horizontal scan line
