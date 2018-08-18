@@ -4,6 +4,9 @@ if(POLICY CMP0048)
 	cmake_policy(SET CMP0048 OLD)
 endif()
 
+# Set OSX target version, before calling project() (inside version.cmake)
+set(CMAKE_OSX_DEPLOYMENT_TARGET "10.9" CACHE STRING "Minimum OS X deployment version")
+
 # Include our project variables
 include("version.cmake")
 
