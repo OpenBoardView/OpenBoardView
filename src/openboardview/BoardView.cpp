@@ -1583,9 +1583,7 @@ void BoardView::SearchColumnGenerate(const std::string& title, std::pair<SharedV
 void BoardView::SearchComponent(void) {
 	bool dummy = true;
 
-	ImGui::SetNextWindowPos(ImVec2(-FLT_MAX, DPI(100))); // FIXME This will need changing in the future when ImGui gets proper
-	                                                     // per-axis centering ( see https://github.com/ocornut/imgui/issues/770 )
-	// ImGui::SetNextWindowPosCenter();
+	ImGui::SetNextWindowPos(ImVec2(ImGui::GetIO().DisplaySize.x/2, DPI(100)), 0, ImVec2(0.5f, 0.0f));
 	if (ImGui::BeginPopupModal("Search for Component / Network",
 	                           &dummy,
 	                           ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings)) {
