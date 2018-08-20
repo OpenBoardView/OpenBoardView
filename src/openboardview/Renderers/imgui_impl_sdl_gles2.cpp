@@ -412,7 +412,7 @@ void ImGui_ImplSdlGLES2_NewFrame() {
 
 	// Setup time step
 	Uint32 time         = SDL_GetTicks();
-	double current_time = static_cast<double>(time / 1000);
+	double current_time = time / 1000.0;
 	io.DeltaTime        = g_Time > 0.0 ? (float)(current_time - g_Time) : (float)(1.0f / 60.0f);
 	g_Time              = current_time;
 
