@@ -72,7 +72,7 @@ void BoardView::ThemeSetStyle(const char *name) {
 	ImGuiStyle &style = ImGui::GetStyle();
 
 	// non color-related settings
-	style.WindowBorderSize = 1.0f;
+	style.WindowBorderSize = 0.0f;
 
 	if (strcmp(name, "dark") == 0) {
 		style.Colors[ImGuiCol_Text]          = ImVec4(0.90f, 0.90f, 0.90f, 1.00f);
@@ -1111,6 +1111,7 @@ void BoardView::ShowInfoPane(void) {
 	 */
 	ImGui::SetNextWindowPos(ImVec2(ds.x - m_info_surface.x, m_menu_height));
 	ImGui::SetNextWindowSize(m_info_surface);
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1.0f);
 	ImGui::Begin("Info Panel",
 	             NULL,
 	             ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize |
@@ -1295,6 +1296,7 @@ void BoardView::ShowInfoPane(void) {
 	}
 
 	ImGui::End();
+	ImGui::PopStyleVar();
 }
 
 void BoardView::ContextMenu(void) {
@@ -1323,7 +1325,7 @@ void BoardView::ContextMenu(void) {
 	 * Now it's kept at a fixed point.
 	 */
 	ImGui::SetNextWindowPos(ImVec2(DPIF(50), DPIF(50)));
-
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1.0f);
 	if (ImGui::BeginPopupModal("Annotations", &dummy, ImGuiWindowFlags_AlwaysAutoResize)) {
 
 		if (m_showContextMenu) {
@@ -1547,6 +1549,7 @@ void BoardView::ContextMenu(void) {
 		ImGui::EndPopup();
 		//	m_tooltips_enabled = true;
 	}
+	ImGui::PopStyleVar();
 
 	/** if the dialog was closed by using the (X) icon **/
 	if (!dummy) {
@@ -1623,6 +1626,7 @@ void BoardView::SearchComponent(void) {
 	bool dummy = true;
 
 	ImGui::SetNextWindowPos(ImVec2(ImGui::GetIO().DisplaySize.x/2, DPI(100)), 0, ImVec2(0.5f, 0.0f));
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1.0f);
 	if (ImGui::BeginPopupModal("Search for Component / Network",
 	                           &dummy,
 	                           ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings)) {
@@ -1755,6 +1759,7 @@ void BoardView::SearchComponent(void) {
 
 		ImGui::EndPopup();
 	}
+	ImGui::PopStyleVar();
 	if (!dummy) {
 		m_tooltips_enabled = true;
 	}
@@ -2105,6 +2110,7 @@ void BoardView::Update() {
 	m_status_height = (DPIF(10.0f) + ImGui::GetFontSize());
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(DPIF(4.0f), DPIF(3.0f)));
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1.0f);
 	ImGui::SetNextWindowPos(ImVec2(0, io.DisplaySize.y - m_status_height));
 	ImGui::SetNextWindowSize(ImVec2(io.DisplaySize.x, m_status_height));
 	ImGui::Begin("status", nullptr, flags | ImGuiWindowFlags_NoFocusOnAppearing);
@@ -2147,6 +2153,7 @@ void BoardView::Update() {
 	ImGui::End();
 	ImGui::PopStyleVar();
 	ImGui::PopStyleVar();
+	ImGui::PopStyleVar();
 
 	if (!showInfoPanel) {
 		m_board_surface = ImVec2(io.DisplaySize.x, io.DisplaySize.y - (m_status_height + m_menu_height));
@@ -2168,6 +2175,7 @@ void BoardView::Update() {
 	ImGui::SetNextWindowSize(m_board_surface);
 
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1.0f);
 	ImGui::PushStyleColor(ImGuiCol_WindowBg, m_colors.backgroundColor);
 
 	ImGui::Begin("surface", nullptr, draw_surface_flags);
@@ -2177,6 +2185,7 @@ void BoardView::Update() {
 	}
 	ImGui::End();
 	ImGui::PopStyleColor();
+	ImGui::PopStyleVar();
 
 	// Overlay
 	RenderOverlay();
