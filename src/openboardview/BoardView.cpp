@@ -949,7 +949,8 @@ void BoardView::HelpAbout(void) {
 void BoardView::HelpControls(void) {
 	bool dummy = true;
 	ImGui::SetNextWindowPosCenter();
-	if (ImGui::BeginPopupModal("Controls", &dummy, ImGuiWindowFlags_AlwaysAutoResize)) {
+	ImGui::SetNextWindowSize(ImVec2(DPI(540), 0.0f));
+	if (ImGui::BeginPopupModal("Controls", &dummy)) {
 		if (m_showHelpControls) {
 			m_showHelpControls = false;
 			m_tooltips_enabled = false;
