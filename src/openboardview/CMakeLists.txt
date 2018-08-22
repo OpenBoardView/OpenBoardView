@@ -1,6 +1,6 @@
-option(ENABLE_GL1 "Build OpenGL 1 renderer." ON)
+option(ENABLE_GL1 "Build OpenGL 1 renderer." OFF)
 option(ENABLE_GL3 "Build OpenGL 3 renderer." ON)
-option(ENABLE_GLES2 "Build OpenGL ES 2 renderer." ON)
+option(ENABLE_GLES2 "Build OpenGL ES 2 renderer." OFF)
 
 if(ENABLE_GL1)
 	add_definitions(-DENABLE_GL1)
@@ -82,6 +82,7 @@ set(SOURCES
 	PartList.cpp
 	Renderers/Renderers.cpp
 	Renderers/ImGuiRendererSDL.cpp
+	Renderers/imgui_impl_sdl.cpp
 	Searcher.cpp
 	SpellCorrector.cpp
 	main_opengl.cpp
@@ -95,7 +96,7 @@ if(ENABLE_GL1)
 endif()
 if(ENABLE_GL3)
 	LIST(APPEND SOURCES
-		Renderers/imgui_impl_sdl_gl3.cpp
+		Renderers/imgui_impl_opengl3.cpp
 		Renderers/ImGuiRendererSDLGL3.cpp
 	)
 endif()
