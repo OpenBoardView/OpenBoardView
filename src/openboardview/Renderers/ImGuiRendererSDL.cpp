@@ -3,6 +3,8 @@
 #include <sstream>
 #include <glad/glad.h>
 
+#include "imgui_impl_sdl.h"
+
 ImGuiRendererSDL::ImGuiRendererSDL(SDL_Window *window) : window(window) {
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
@@ -55,14 +57,28 @@ bool ImGuiRendererSDL::init() {
 	ss << "\n-------------------------------------------------------------\n";
 	SDL_LogInfo(SDL_LOG_CATEGORY_RENDER, "%s", ss.str().c_str());
 
+	ImGui_ImplSDL2_InitForOpenGL(window, glcontext);
+
 	return true;
 }
 
+void ImGuiRendererSDL::processEvent(SDL_Event &event) {
+	ImGui_ImplSDL2_ProcessEvent(&event);
+}
+
+void ImGuiRendererSDL::initFrame() {
+	ImGui_ImplSDL2_NewFrame(window);
+}
+
 void ImGuiRendererSDL::renderFrame(const ImVec4 &clear_color) {
+	SDL_GL_MakeCurrent(window, glcontext);
 	glViewport(0, 0, static_cast<int>(ImGui::GetIO().DisplaySize.x), static_cast<int>(ImGui::GetIO().DisplaySize.y));
 	glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
-	glClearColor(0,0,0,0);
 	glClear(GL_COLOR_BUFFER_BIT);
-	ImGui::Render();
+	renderDrawData();
 	SDL_GL_SwapWindow(window);
+}
+
+void ImGuiRendererSDL::shutdown() {
+	ImGui_ImplSDL2_Shutdown();
 }
