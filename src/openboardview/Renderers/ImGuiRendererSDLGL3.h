@@ -14,7 +14,7 @@ public:
 	void renderDrawData();
 	void shutdown();
 private:
-	char *glsl_version = "";
+	std::string glsl_version;
 };
 
 #endif

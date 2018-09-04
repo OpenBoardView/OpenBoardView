@@ -1,6 +1,6 @@
 #include "ImGuiRendererSDLGL1.h"
 
-#include "imgui_impl_sdl.h"
+#include "imgui_impl_opengl2.h"
 
 std::string ImGuiRendererSDLGL1::name() {
     return "ImGuiRendererSDLGL1";
@@ -21,17 +21,19 @@ void ImGuiRendererSDLGL1::setGLVersion() {
 }
 
 bool ImGuiRendererSDLGL1::init() {
-	return ImGuiRendererSDL::init() && ImGui_ImplSdl_Init(window);
-}
-
-void ImGuiRendererSDLGL1::processEvent(SDL_Event &event) {
-	 ImGui_ImplSdl_ProcessEvent(&event);
+	return ImGuiRendererSDL::init() && ImGui_ImplOpenGL2_Init();
 }
 
 void ImGuiRendererSDLGL1::initFrame() {
-	ImGui_ImplSdl_NewFrame(window);
+	ImGui_ImplOpenGL2_NewFrame();
+	ImGuiRendererSDL::initFrame();
+}
+
+void ImGuiRendererSDLGL1::renderDrawData() {
+	ImGui_ImplOpenGL2_RenderDrawData(ImGui::GetDrawData());
 }
 
 void ImGuiRendererSDLGL1::shutdown() {
-	ImGui_ImplSdl_Shutdown();
+	ImGui_ImplOpenGL2_Shutdown();
+	ImGuiRendererSDL::shutdown();
 }
