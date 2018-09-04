@@ -39,7 +39,7 @@ void ImGuiRendererSDLGL3::setGLVersion() {
 }
 
 bool ImGuiRendererSDLGL3::init() {
-	return ImGuiRendererSDL::init() && ImGui_ImplOpenGL3_Init(glsl_version);
+	return ImGuiRendererSDL::init() && ImGui_ImplOpenGL3_Init(glsl_version.c_str());
 }
 
 void ImGuiRendererSDLGL3::initFrame() {

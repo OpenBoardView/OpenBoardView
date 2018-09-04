@@ -1,7 +1,3 @@
-option(ENABLE_GL1 "Build OpenGL 1 renderer." OFF)
-option(ENABLE_GL3 "Build OpenGL 3 renderer." ON)
-option(ENABLE_GLES2 "Build OpenGL ES 2 renderer." OFF)
-
 if(ENABLE_GL1)
 	add_definitions(-DENABLE_GL1)
 endif()
@@ -47,7 +43,7 @@ endif()
 include_directories(
 	${CMAKE_CURRENT_SOURCE_DIR}
 	${CMAKE_CURRENT_SOURCE_DIR}/..
-	${CMAKE_CURRENT_SOURCE_DIR}/../imgui
+	${IMGUI_INCLUDE_DIRS}
 	${SDL2_INCLUDE_DIRS}
 	${GLAD_INCLUDE_DIRS}
 	${GTK_INCLUDE_DIRS}
@@ -82,7 +78,6 @@ set(SOURCES
 	PartList.cpp
 	Renderers/Renderers.cpp
 	Renderers/ImGuiRendererSDL.cpp
-	Renderers/imgui_impl_sdl.cpp
 	Searcher.cpp
 	SpellCorrector.cpp
 	main_opengl.cpp
@@ -90,19 +85,19 @@ set(SOURCES
 
 if(ENABLE_GL1)
 	LIST(APPEND SOURCES
-		Renderers/imgui_impl_sdl.cpp
+		#Renderers/imgui_impl_sdl.cpp
 		Renderers/ImGuiRendererSDLGL1.cpp
 	)
 endif()
 if(ENABLE_GL3)
 	LIST(APPEND SOURCES
-		Renderers/imgui_impl_opengl3.cpp
+		#Renderers/imgui_impl_opengl3.cpp
 		Renderers/ImGuiRendererSDLGL3.cpp
 	)
 endif()
 if(ENABLE_GLES2)
 	LIST(APPEND SOURCES
-		Renderers/imgui_impl_sdl_gles2.cpp
+		#Renderers/imgui_impl_sdl_gles2.cpp
 		Renderers/ImGuiRendererSDLGLES2.cpp
 	)
 endif()
