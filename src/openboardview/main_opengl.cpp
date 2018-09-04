@@ -23,12 +23,14 @@
 #else
 #include <SDL2/SDL.h>
 #endif
+#include <chrono>
 #include <deque>
 #include <memory>
 #include <stdio.h>
 #include <string>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <thread>
 #ifndef _MSC_VER
 #include <unistd.h>
 #endif
@@ -201,7 +203,6 @@ void cleanupAndExit(int c) {
 }
 
 int main(int argc, char **argv) {
-	uint8_t sleepout;
 	std::string configDir;
 	globals g; // because some things we have to store *before* we load the config file in BoardView app.obvconf
 	BoardView app{};
@@ -345,25 +346,10 @@ int main(int argc, char **argv) {
 		}
 	}
 
-	/*
-	 * The sleepout var keeps track of how many iterations of the main loop
-	 * are left, without an event having happened before OBV will start to sleep
-	 * and continue without redrawing the page.
-	 *
-	 * The reason we don't just sleep immediately after a non-event is because
-	 * sometimes there are internal things that still need to be done on the next
-	 * render (such as responding to a mouse click
-	 *
-	 * For now we've got this set to 3 frames which seems to work okay with OBV.
-	 * If you find some things aren't working properly without you having to move
-	 * the mouse or 'waking up' OBV then increase to 5 or more.
-	 */
-	sleepout = 3;
 	while (!done) {
 
 		SDL_Event event;
 		while (SDL_PollEvent(&event)) {
-			sleepout = 3;
 			renderer->processEvent(event);
 
 			if (event.type == SDL_DROPFILE) {
@@ -385,15 +371,6 @@ int main(int argc, char **argv) {
 			clear_color = ImColor(app.m_colors.backgroundColor);
 		}
 
-		if (!(sleepout--)) {
-#ifdef _WIN32
-			Sleep(50);
-#else
-			usleep(50000);
-#endif
-			sleepout = 0;
-			continue;
-		} // puts OBV to sleep if nothing is happening.
 		// Prepare frame
 		renderer->initFrame();
 		ImGui::NewFrame();
@@ -424,6 +401,16 @@ int main(int argc, char **argv) {
 		// Render frame
 		ImGui::Render();
 		renderer->renderFrame(clear_color);
+
+		// vsync disabled, manual FPS limiting
+		if (!SDL_GL_GetSwapInterval()) {
+			static const int FPS = 30;
+			static const std::chrono::duration<std::intmax_t, std::ratio<1, FPS>> frameDuration{1};
+			static auto nextFrame = std::chrono::steady_clock::now() + frameDuration;
+
+			std::this_thread::sleep_until(nextFrame);
+			nextFrame += frameDuration;
+		}
 	}
 
 	// Cleanup
