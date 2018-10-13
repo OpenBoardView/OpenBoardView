@@ -232,6 +232,8 @@ const std::string get_user_dir(const UserDir userdir) {
 			else if (userdir == UserDir::Data)
 				path += "/.local/share";
 		}
+	} else {
+		path += std::string(envVar);
 	}
 	if (!path.empty()) {
 		path += "/" OBV_NAME "/";
