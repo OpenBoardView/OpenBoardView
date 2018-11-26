@@ -199,7 +199,7 @@ target_include_directories(${PROJECT_NAME_LOWER} PRIVATE
 )
 
 target_link_libraries(${PROJECT_NAME_LOWER}
-	imgui
+	${IMGUI_LIBRARIES}
 	SQLite::SQLite3
 	mpc
 	${GLAD_LIBRARIES}
