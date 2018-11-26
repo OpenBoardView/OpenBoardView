@@ -129,7 +129,7 @@ elseif(APPLE)
 endif()
 
 target_link_libraries(${PROJECT_NAME_LOWER}
-	imgui
+	${IMGUI_LIBRARIES}
 	SQLite::SQLite3
 	${GLAD_LIBRARIES}
 	${COCOA_LIBRARY}
