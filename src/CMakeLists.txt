@@ -8,10 +8,14 @@ if(NOT WIN32 OR MINGW)
 endif()
 
 ## utf8.h ##
-execute_process(
-	COMMAND git submodule update --init src/utf8
-	WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-)
+FIND_PATH(UTF8_INCLUDE_DIR utf8.h)
+if(NOT UTF8_INCLUDE_DIR)
+  execute_process(
+    COMMAND git submodule update --init src/utf8
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+    )
+  set(UTF8_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/utf8)
+endif()
 
 ## zlib ##
 find_package(ZLIB)
