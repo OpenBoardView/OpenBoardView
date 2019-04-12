@@ -4,6 +4,11 @@ os:
 - linux
 compiler:
 - clang
+env:
+  global:
+   # The next declaration is the encrypted COVERITY_SCAN_TOKEN, created
+   #   via the "travis encrypt" command using the project repo's public key
+   - secure: "pMMURJ/Twh548jxxJPYqTjiFYLXKmdelIwdbnAn7XXINkmziY1AUaVFvEyB7+f0pnw1/A9Cij6BzdLkbkLMJjhm6NVvOUi9nrnctmbrBAVwQqPZTWdZ00ZHJyB1RI2f2wq4+g1x8o/Nb8KV0zck7eEz1ytfID4amhWfGsdZWuALSWGMR2MTCiw1tsyHCZBdrRn3IApaOG5vc8/hrc8P0iI1hJAI5boH4VrtSsP4q/4xjwEXOZjZQQZuMWg97msCGxHfWpiSlj5JKPemK5c6oXuEkGkLGvOk9yh0RkPib4i7ByRGf5fMq5+XZ8oNGBWV1FYHWlS1Maxcb93r4n1kn+kzMT+zozRgJfjLQLtTKd9TbXEOrGTmzSsy/hsTbjcAgLZU2chcL4/j0rCJqCCd19ukXISc3yLjGa9NRNBYoimQm7mLx/x2XO1icoIskmDUnlDzx27s4eWIuDb9+nd4kuoXWafcnhzCefGHCjYz7egKOSGIMkUs2GBxKDqks1LbA96AovLLxfnvOgOzDoFivyf1Xy3F+ZAGIp7Uubx/ap68TOGqYPZvAxxMWYtGb6z3Hl1LaPpCVCX8dHZMZmWpYh+TF/wMebFCb97NxY8vLo6FduEIN0Qu/ij2EiSvkh16H5mTZwpJVG2pS7ucHl0HgGy/OWz7LzhDj+Ix0tdvskYs="
 matrix:
   include:
   - os: linux
@@ -21,6 +26,8 @@ matrix:
 dist: trusty
 sudo: required
 language: cpp
+before_install:
+  - echo -n | openssl s_client -connect https://scan.coverity.com:443 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | sudo tee -a /etc/ssl/certs/ca-
 addons:
   apt:
     sources:
@@ -28,6 +35,14 @@ addons:
     packages:
     - gcc-6
     - g++-6
+  coverity_scan:
+    project:
+      name: "techedude/OpenBoardView"
+      description: "<Your project description here>"
+    notification_email: sgurevich@yahoo.com
+    build_command_prepend: 
+    build_command:if [ "$CXX" = "g++" ]; then export CXX="g++-6" CC="gcc-6"; fi ./build.sh || exit 1
+    branch_pattern: coverity_scan
 install: |-
   if [ "$TRAVIS_OS_NAME" == "linux" ]
   then
