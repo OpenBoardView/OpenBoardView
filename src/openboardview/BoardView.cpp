@@ -4012,6 +4012,44 @@ void BoardView::SetFile(BRDFile *file) {
 	delete m_file;
 	delete m_board;
 
+	// Some files do not have an outline
+	//		Rather than crashing out just
+	//		generate a bounding box around
+	//		the pins
+	//
+	if ( file->format.size() < 3 ) {
+		auto pins  = file->pins;
+		double minx, maxx, miny, maxy;
+		double margin = 200.0f;
+
+		minx = miny = DBL_MAX;
+		maxx = maxy = DBL_MIN;
+
+		// Determine the extremes of the board pins
+		//
+		for (auto a: pins) {
+			if (a.pos.x > maxx) maxx = a.pos.x;
+			if (a.pos.y > maxy) maxy = a.pos.y;
+			if (a.pos.x < minx) minx = a.pos.x;
+			if (a.pos.y < miny) miny = a.pos.y;
+		}
+
+		// Apply a buffer margin
+		//
+		maxx += margin;
+		maxy += margin;
+		minx -= margin;
+		miny -= margin;
+
+		// Generate a simple quad outline
+		//
+		file->format.push_back({minx, miny});
+		file->format.push_back({maxx, miny});
+		file->format.push_back({maxx, maxy});
+		file->format.push_back({minx, maxy});
+		file->format.push_back({minx, miny});
+	}
+
 	m_file  = file;
 	m_board = new BRDBoard(file);
 	searcher.setParts(m_board->Components());
