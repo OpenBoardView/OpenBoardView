@@ -4012,6 +4012,35 @@ void BoardView::SetFile(BRDFile *file) {
 	delete m_file;
 	delete m_board;
 
+	if ( file->format.size() < 3 ) {
+		auto pins  = file->pins;
+		float minx, maxx, miny, maxy;
+		float margin = 200.0f;
+
+		minx = miny = DBL_MAX;
+		maxx = maxy = DBL_MIN;
+
+		for (auto a: pins) {
+			if (a.pos.x > maxx) maxx = a.pos.x;
+			if (a.pos.y > maxy) maxy = a.pos.y;
+			if (a.pos.x < minx) minx = a.pos.x;
+			if (a.pos.y < miny) miny = a.pos.y;
+		}
+
+		maxx += margin;
+		maxy += margin;
+		minx -= margin;
+		miny -= margin;
+
+		file->format.push_back({minx, miny});
+		file->format.push_back({maxx, miny});
+		file->format.push_back({maxx, maxy});
+		file->format.push_back({minx, maxy});
+		file->format.push_back({minx, miny});
+
+	}
+
+
 	m_file  = file;
 	m_board = new BRDBoard(file);
 	searcher.setParts(m_board->Components());
