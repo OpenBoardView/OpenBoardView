@@ -3058,6 +3058,10 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 		// continue if pin is not visible anyway
 		if (!ComponentIsVisible(pin->component)) continue;
 
+		// Check that the pin is actually visible on this side
+		//  ( testpads in particular would show up on both )
+		if (pin->board_side != m_current_side) continue;
+
 		ImVec2 pos = CoordToScreen(pin->position.x, pin->position.y);
 		{
 			if (!IsVisibleScreen(pos.x, pos.y, psz, io)) continue;
