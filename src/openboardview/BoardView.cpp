@@ -4012,13 +4012,16 @@ void BoardView::SetFile(BRDFile *file) {
 	delete m_file;
 	delete m_board;
 
+	// Check board outline (format) point count.
+	//		If we don't have an outline, generate one	
+	//
 	if ( file->format.size() < 3 ) {
 		auto pins  = file->pins;
 		float minx, maxx, miny, maxy;
-		float margin = 200.0f;
+		float margin = 200.0f; // #define or leave this be? Rather arbritary.
 
-		minx = miny = DBL_MAX;
-		maxx = maxy = DBL_MIN;
+		minx = miny = FLT_MAX;
+		maxx = maxy = FLT_MIN;
 
 		for (auto a: pins) {
 			if (a.pos.x > maxx) maxx = a.pos.x;
@@ -4037,7 +4040,6 @@ void BoardView::SetFile(BRDFile *file) {
 		file->format.push_back({maxx, maxy});
 		file->format.push_back({minx, maxy});
 		file->format.push_back({minx, miny});
-
 	}
 
 
