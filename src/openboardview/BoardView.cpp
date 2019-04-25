@@ -4017,11 +4017,11 @@ void BoardView::SetFile(BRDFile *file) {
 	//
 	if ( file->format.size() < 3 ) {
 		auto pins  = file->pins;
-		float minx, maxx, miny, maxy;
-		float margin = 200.0f; // #define or leave this be? Rather arbritary.
+		int minx, maxx, miny, maxy;
+		int margin = 200; // #define or leave this be? Rather arbritary.
 
-		minx = miny = FLT_MAX;
-		maxx = maxy = FLT_MIN;
+		minx = miny = INT_MAX;
+		maxx = maxy = INT_MIN;
 
 		for (auto a: pins) {
 			if (a.pos.x > maxx) maxx = a.pos.x;
