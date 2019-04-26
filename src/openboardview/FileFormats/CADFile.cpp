@@ -55,12 +55,10 @@ CADFile::CADFile(std::vector<char> &buf) {
 	std::unordered_map<std::string, int> parts_id; // map between part name and part number
 	char *nailnet; // Net name for VIA
 
-	char **lines = stringfile(file_buf);
-	ENSURE(lines);
+    std::vector<char *> lines;
+	stringfile(file_buf, lines);
 
-	while (*lines) {
-		char *line = *lines;
-		++lines;
+	for (char *line : lines) {
 		while (isspace((uint8_t)*line)) line++;
 		if (!line[0]) continue;
 
