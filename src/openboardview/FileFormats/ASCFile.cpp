@@ -12,9 +12,9 @@
 buf) );
 }*/
 
-void ASCFile::parse_format(char *&p, char *&s, char *&arena, char *&arena_end, char **&lines) {
+void ASCFile::parse_format(char *&p, char *&s, char *&arena, char *&arena_end, line_iterator_t &line_it) {
 	if (m_firstformat) {
-		lines += 7; // Skip 7+1 unused lines before 1st point. Might not work with all files.
+		line_it += 7; // Skip 7+1 unused lines before 1st point. Might not work with all files.
 		m_firstformat = false;
 		return; // lines++ in while loop
 	}
@@ -27,9 +27,9 @@ void ASCFile::parse_format(char *&p, char *&s, char *&arena, char *&arena_end, c
 	format.push_back(point);
 }
 
-void ASCFile::parse_pin(char *&p, char *&s, char *&arena, char *&arena_end, char **&lines) {
+void ASCFile::parse_pin(char *&p, char *&s, char *&arena, char *&arena_end, line_iterator_t &line_it) {
 	if (m_firstpin) {
-		lines += 7; // Skip 7+1 unused lines before 1st part
+		line_it += 7; // Skip 7+1 unused lines before 1st part
 		m_firstpin = false;
 		return;
 	}
@@ -64,9 +64,9 @@ void ASCFile::parse_pin(char *&p, char *&s, char *&arena, char *&arena_end, char
 	}
 }
 
-void ASCFile::parse_nail(char *&p, char *&s, char *&arena, char *&arena_end, char **&lines) {
+void ASCFile::parse_nail(char *&p, char *&s, char *&arena, char *&arena_end, line_iterator_t &line_it) {
 	if (m_firstnail) {
-		lines += 6; // Skip 6+1 unused lines before 1st nail
+		line_it += 6; // Skip 6+1 unused lines before 1st nail
 		m_firstnail = false;
 		return;
 	}
@@ -95,7 +95,7 @@ void ASCFile::parse_nail(char *&p, char *&s, char *&arena, char *&arena_end, cha
  * pins.asc, parts.asc (not supported), nets.asc (not supported), nails.asc, format.asc
  * *.bom files not supported either
  */
-bool ASCFile::read_asc(const std::string &filename, void (ASCFile::*parser)(char *&, char *&, char *&, char *&, char **&)) {
+bool ASCFile::read_asc(const std::string &filename, void (ASCFile::*parser)(char *&, char *&, char *&, char *&, line_iterator_t&)) {
 	if (filename.empty()) return false;
 	std::vector<char> buf = file_as_buffer(filename);
 	if (buf.empty()) return false;
@@ -112,12 +112,13 @@ bool ASCFile::read_asc(const std::string &filename, void (ASCFile::*parser)(char
 	char *arena_end = file_buf + file_buf_size - 1;
 	*arena_end      = 0;
 
-	char **lines = stringfile(file_buf);
-	ENSURE(lines);
+	std::vector<char *> lines;
+	stringfile(file_buf, lines);
 
-	while (*lines) {
-		char *line = *lines;
-		++lines;
+	std::vector<char *>::iterator line_it = lines.begin();
+	while (line_it != lines.end()) {
+		char *line = *line_it;
+		++line_it;
 
 		while (isspace((uint8_t)*line)) line++;
 		if (!line[0]) continue;
@@ -125,7 +126,7 @@ bool ASCFile::read_asc(const std::string &filename, void (ASCFile::*parser)(char
 		char *p = line;
 		char *s = nullptr;
 
-		(this->*parser)(p, s, arena, arena_end, lines);
+		(this->*parser)(p, s, arena, arena_end, line_it);
 	}
 	return true;
 }

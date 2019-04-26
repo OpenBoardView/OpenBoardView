@@ -80,6 +80,8 @@ set(SOURCES
 	FileFormats/FZFile.cpp
 	NetList.cpp
 	PartList.cpp
+	Renderers/Renderers.cpp
+	Renderers/ImGuiRendererSDL.cpp
 	Searcher.cpp
 	SpellCorrector.cpp
 	main_opengl.cpp
@@ -88,16 +90,19 @@ set(SOURCES
 if(ENABLE_GL1)
 	LIST(APPEND SOURCES
 		Renderers/imgui_impl_sdl.cpp
+		Renderers/ImGuiRendererSDLGL1.cpp
 	)
 endif()
 if(ENABLE_GL3)
 	LIST(APPEND SOURCES
 		Renderers/imgui_impl_sdl_gl3.cpp
+		Renderers/ImGuiRendererSDLGL3.cpp
 	)
 endif()
 if(ENABLE_GLES2)
 	LIST(APPEND SOURCES
 		Renderers/imgui_impl_sdl_gles2.cpp
+		Renderers/ImGuiRendererSDLGLES2.cpp
 	)
 endif()
 
