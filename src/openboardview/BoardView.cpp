@@ -25,6 +25,7 @@
 #include "FileFormats/BRD2File.h"
 #include "FileFormats/BRDFile.h"
 #include "FileFormats/BVRFile.h"
+#include "FileFormats/CADFile.h"
 #include "FileFormats/CSTFile.h"
 #include "FileFormats/FZFile.h"
 #include "annotations.h"
@@ -424,6 +425,8 @@ int BoardView::LoadFile(const std::string &filename) {
 				file = new FZFile(buffer, FZKey);
 			} else if (check_fileext(filename, ".bom") || check_fileext(filename, ".asc"))
 				file = new ASCFile(buffer, filename);
+			else if (CADFile::verifyFormat(buffer))
+				file = new CADFile(buffer);
 			else if (check_fileext(filename, ".cst"))
 				file = new CSTFile(buffer);
 			else if (BRDFile::verifyFormat(buffer))
@@ -2914,6 +2917,9 @@ inline void BoardView::DrawOutline(ImDrawList *draw) {
 	Point fp;
 
 	auto &outline = m_board->OutlinePoints();
+	if (outline.size() < 1) { // Nothing to draw
+		return;
+	}
 
 	draw->ChannelsSetCurrent(kChannelPolylines);
 
@@ -3057,6 +3063,10 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 
 		// continue if pin is not visible anyway
 		if (!ComponentIsVisible(pin->component)) continue;
+
+		// Check that the pin is actually visible on this side
+		//  ( testpads in particular would show up on both )
+		if (pin->board_side != m_current_side) continue;
 
 		ImVec2 pos = CoordToScreen(pin->position.x, pin->position.y);
 		{
@@ -4012,21 +4022,17 @@ void BoardView::SetFile(BRDFile *file) {
 	delete m_file;
 	delete m_board;
 
-	// Some files do not have an outline
-	//		Rather than crashing out just
-	//		generate a bounding box around
-	//		the pins
+	// Check board outline (format) point count.
+	//		If we don't have an outline, generate one	
 	//
 	if ( file->format.size() < 3 ) {
 		auto pins  = file->pins;
-		double minx, maxx, miny, maxy;
-		double margin = 200.0f;
+		int minx, maxx, miny, maxy;
+		int margin = 200; // #define or leave this be? Rather arbritary.
 
-		minx = miny = DBL_MAX;
-		maxx = maxy = DBL_MIN;
+		minx = miny = INT_MAX;
+		maxx = maxy = INT_MIN;
 
-		// Determine the extremes of the board pins
-		//
 		for (auto a: pins) {
 			if (a.pos.x > maxx) maxx = a.pos.x;
 			if (a.pos.y > maxy) maxy = a.pos.y;
@@ -4034,15 +4040,11 @@ void BoardView::SetFile(BRDFile *file) {
 			if (a.pos.y < miny) miny = a.pos.y;
 		}
 
-		// Apply a buffer margin
-		//
 		maxx += margin;
 		maxy += margin;
 		minx -= margin;
 		miny -= margin;
 
-		// Generate a simple quad outline
-		//
 		file->format.push_back({minx, miny});
 		file->format.push_back({maxx, miny});
 		file->format.push_back({maxx, maxy});
