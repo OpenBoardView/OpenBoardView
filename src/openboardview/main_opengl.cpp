@@ -111,7 +111,6 @@ int parse_parameters(int argc, char **argv, struct globals *g) {
 			exit(0);
 		}
 
-		// Configuration file (alternative)
 		if (strcmp(p, "-c") == 0) {
 			param++;
 			if ((param < argc)&&(argv[param][0] != '-')) {
@@ -181,13 +180,6 @@ int parse_parameters(int argc, char **argv, struct globals *g) {
 		} else if (strcmp(p, "-d") == 0) {
 			g->debug = true;
 
-			/*
-			 * for extended parameters, nothing yet required
-			 *
-			 *
-		  } else if (strncmp(p,"--", 2) == 0) {
-
-			 */
 		} else {
 			fprintf(stderr, "Unknown parameter '%s'\n\n%s %s", p, argv[0], help);
 			exit(1);
