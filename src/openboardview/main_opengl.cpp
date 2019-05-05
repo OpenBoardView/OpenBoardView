@@ -114,59 +114,65 @@ int parse_parameters(int argc, char **argv, struct globals *g) {
 		// Configuration file (alternative)
 		if (strcmp(p, "-c") == 0) {
 			param++;
-			if (param < argc) {
+			if ((param < argc)&&(argv[param][0] != '-')) {
 				g->config_file = argv[param];
 			} else {
-				fprintf(stderr, "Not enough paramters\n");
+				fprintf(stderr, "Not enough paramters for -c <config>\n\n%s %s", argv[0], help );
 				exit(1);
 			}
 
 		} else if (strcmp(p, "-i") == 0) {
 			param++;
-			if (param < argc) {
+			if ((param < argc)&&(argv[param][0] != '-')) {
 				g->input_file = argv[param];
 			} else {
-				fprintf(stderr, "Not enough parameters\n");
+				fprintf(stderr, "Not enough paramters for -i <input file>\n\n%s %s", argv[0], help );
+				exit(1);
 			}
 
 		} else if (strcmp(p, "-x") == 0) {
 			param++;
-			if (param < argc) {
+			if ((param < argc)&&(argv[param][0] != '-')) {
 				g->width = strtol(argv[param], NULL, 10);
 			} else {
-				fprintf(stderr, "Not enough parameters\n");
+				fprintf(stderr, "Not enough paramters for -x <window width>\n\n%s %s", argv[0], help );
+				exit(1);
 			}
 
 		} else if (strcmp(p, "-y") == 0) {
 			param++;
-			if (param < argc) {
+			if ((param < argc)&&(argv[param][0] != '-')) {
 				g->height = strtol(argv[param], NULL, 10);
 			} else {
-				fprintf(stderr, "Not enough parameters\n");
+				fprintf(stderr, "Not enough paramters for -y <window height>\n\n%s %s", argv[0], help );
+				exit(1);
 			}
 
 		} else if (strcmp(p, "-z") == 0) {
 			param++;
-			if (param < argc) {
+			if ((param < argc)&&(argv[param][0] != '-')) {
 				g->font_size = strtof(argv[param], NULL);
 			} else {
-				fprintf(stderr, "Not enough parameters\n");
+				fprintf(stderr, "Not enough paramters for -z <font size>\n\n%s %s", argv[0], help );
+				exit(1);
 			}
 
 		} else if (strcmp(p, "-p") == 0) {
 			param++;
-			if (param < argc) {
+			if ((param < argc)&&(argv[param][0] != '-')) {
 				g->dpi = strtof(argv[param], NULL);
 			} else {
-				fprintf(stderr, "Not enough parameters\n");
+				fprintf(stderr, "Not enough paramters for -p <dpi>\n\n%s %s", argv[0], help );
+				exit(1);
 			}
 
 		} else if (strcmp(p, "-r") == 0) {
 			param++;
-			if (param < argc) {
+			if ((param < argc)&&(argv[param][0] != '-')) {
 				g->renderer = Renderers::get(atoi(argv[param]));
 			} else {
-				fprintf(stderr, "Not enough parameters\n");
+				fprintf(stderr, "Not enough paramters for -r <render engine>\n\n%s %s", argv[0], help );
+				exit(1);
 			}
 
 		} else if (strcmp(p, "-l") == 0) {
@@ -182,6 +188,9 @@ int parse_parameters(int argc, char **argv, struct globals *g) {
 		  } else if (strncmp(p,"--", 2) == 0) {
 
 			 */
+		} else {
+			fprintf(stderr, "Unknown parameter '%s'\n\n%s %s", p, argv[0], help);
+			exit(1);
 		}
 	}
 
