@@ -13,11 +13,7 @@
 #include <stdint.h>
 #include <winnls.h>
 #ifdef ENABLE_SDL2
-#ifdef _MSC_VER
 #include <SDL.h>
-#else
-#include <SDL2/SDL.h>
-#endif
 #endif
 
 const std::string utf16_to_utf8(const std::wstring &text) {

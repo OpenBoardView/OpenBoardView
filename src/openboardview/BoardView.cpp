@@ -11,11 +11,7 @@
 #include <memory>
 #include <stdio.h>
 #ifdef ENABLE_SDL2
-#ifdef _MSC_VER
 #include <SDL.h>
-#else
-#include <SDL2/SDL.h>
-#endif
 #endif
 
 #include "BRDBoard.h"
