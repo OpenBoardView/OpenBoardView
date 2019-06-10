@@ -1,7 +1,7 @@
 ## COMMON ##
 option(ENABLE_GL1 "Build OpenGL 1 renderer." ON)
 option(ENABLE_GL3 "Build OpenGL 3 renderer." ON)
-option(ENABLE_GLES2 "Build OpenGL ES 2 renderer." OFF)
+option(ENABLE_GLES2 "Configure OpenGL 3 renderer to be OpenGL ES 2.0 compatible." OFF)
 
 if(NOT APPLE AND NOT WIN32 OR MINGW)
 	find_package(PkgConfig REQUIRED)
@@ -49,7 +49,7 @@ execute_process(
 	WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
 )
 set(GLAD_PROFILE "compatibility" CACHE STRING "GL Profile" FORCE) # Using OpenGL Compatibility profile (for enabling use of fixed-function pipeline)
-set(GLAD_API "gl=3.2,gles2=2.0" CACHE STRING "GL versions" FORCE) # Build for OpenGL 3.2 and OpenGLES 2
+set(GLAD_API "gl=3.0,gles2=2.0" CACHE STRING "GL versions" FORCE) # Build for OpenGL 3.0 and OpenGLES 2
 set(GLAD_EXTENSIONS "GL_EXT_texture_compression_s3tc,GL_OES_element_index_uint" CACHE STRING "Gl exts" FORCE) # S3TC used to load texture for pins — delete when removing support. The other is used by GLES2.
 set(GLAD_NO_LOADER ON CACHE BOOL "Disable loader" FORCE) # We're using SDL2 loader
 add_subdirectory(glad)
@@ -82,6 +82,10 @@ execute_process(
 )
 add_definitions("-DImDrawIdx=unsigned int") # short is not enough for us
 add_definitions("-DIMGUI_IMPL_OPENGL_LOADER_GLAD") # We use glad
+# Configure GL3 renderer to be GLES2 compatible if GLES2 is enabled
+if(ENABLE_GLES2)
+    add_definitions("-DIMGUI_IMPL_OPENGL_ES2")
+endif()
 
 # workaround for OpenGL include for OpenGL2, need to be glad rather than gl itself
 file(READ "${CMAKE_CURRENT_SOURCE_DIR}/imgui/examples/imgui_impl_opengl2.cpp" input)
@@ -109,11 +113,6 @@ endif()
 if(ENABLE_GL3)
 	LIST(APPEND SOURCES
 		imgui/examples/imgui_impl_opengl3.cpp
-	)
-endif()
-if(ENABLE_GLES2)
-	LIST(APPEND SOURCES
-		openboardview/Renderers/imgui_impl_opengles2.cpp
 	)
 endif()
 

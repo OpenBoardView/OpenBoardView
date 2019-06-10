@@ -31,10 +31,6 @@ namespace Renderers {
 			case Renderer::OPENGL3:
 				return std::unique_ptr<ImGuiRendererSDL>(new ImGuiRendererSDLGL3(window));
 #endif
-#ifdef ENABLE_GLES2
-			case Renderer::OPENGLES2:
-				return std::unique_ptr<ImGuiRendererSDL>(new ImGuiRendererSDLGLES2(window));
-#endif
 			case Renderer::DEFAULT: // skip this one
 				return std::unique_ptr<ImGuiRendererSDL>{};
 			default:

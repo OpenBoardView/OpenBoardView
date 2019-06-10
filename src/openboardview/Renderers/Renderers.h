@@ -3,7 +3,6 @@
 
 #include "ImGuiRendererSDLGL3.h"
 #include "ImGuiRendererSDLGL1.h"
-#include "ImGuiRendererSDLGLES2.h"
 
 #include <memory>
 
@@ -11,7 +10,6 @@ namespace Renderers {
 	enum class Renderer {
 		OPENGL1 = 1, // Backward compatibility, adapt operator++ definition if changing this
 		OPENGL3,
-		OPENGLES2,
 		DEFAULT // Boundary check, needs to stay at the end
 	};
 
