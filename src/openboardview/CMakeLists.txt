@@ -85,20 +85,12 @@ set(SOURCES
 
 if(ENABLE_GL1)
 	LIST(APPEND SOURCES
-		#Renderers/imgui_impl_sdl.cpp
 		Renderers/ImGuiRendererSDLGL1.cpp
 	)
 endif()
 if(ENABLE_GL3)
 	LIST(APPEND SOURCES
-		#Renderers/imgui_impl_opengl3.cpp
 		Renderers/ImGuiRendererSDLGL3.cpp
-	)
-endif()
-if(ENABLE_GLES2)
-	LIST(APPEND SOURCES
-		#Renderers/imgui_impl_sdl_gles2.cpp
-		Renderers/ImGuiRendererSDLGLES2.cpp
 	)
 endif()
 
