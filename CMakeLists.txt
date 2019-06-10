@@ -3,6 +3,10 @@ cmake_minimum_required(VERSION 2.8.9)
 if(POLICY CMP0048)
 	cmake_policy(SET CMP0048 OLD)
 endif()
+# Targets with semicolon are imported targets
+if(POLICY CMP0028)
+	cmake_policy(SET CMP0028 NEW)
+endif()
 
 # Set OSX target version, before calling project() (inside version.cmake)
 set(CMAKE_OSX_DEPLOYMENT_TARGET "10.9" CACHE STRING "Minimum OS X deployment version")

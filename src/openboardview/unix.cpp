@@ -3,7 +3,7 @@
 #include "platform.h"
 #include "imgui/imgui.h"
 #include "version.h"
-#include <SDL2/SDL.h>
+#include <SDL.h>
 #include <assert.h>
 #include <stdint.h>
 #include <sys/stat.h>

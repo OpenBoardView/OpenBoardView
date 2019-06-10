@@ -11,11 +11,7 @@
 #include <memory>
 #include <stdio.h>
 #ifdef ENABLE_SDL2
-#ifdef _MSC_VER
 #include <SDL.h>
-#else
-#include <SDL2/SDL.h>
-#endif
 #endif
 
 #include "BRDBoard.h"
@@ -4018,7 +4014,7 @@ void BoardView::SetFile(BRDFile *file) {
 	delete m_board;
 
 	// Check board outline (format) point count.
-	//		If we don't have an outline, generate one	
+	//		If we don't have an outline, generate one
 	//
 	if ( file->format.size() < 3 ) {
 		auto pins  = file->pins;
