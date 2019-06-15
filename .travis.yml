@@ -12,6 +12,9 @@ matrix:
   - os: linux
     compiler: gcc
     env: DEPLOY=yes DEPLOY_RPM=yes
+  - os: linux
+    compiler: gcc
+    env: DEPLOY=yes DEPLOY_APPIMAGE=yes
   - os: osx
     compiler: clang
     env: DEPLOY=yes
@@ -71,6 +74,9 @@ before_deploy: |-
   elif [ "$DEPLOY_RPM" == "yes" ]
   then
     export DEPLOY_FILES=$(ls OpenBoardView-*.rpm)
+  elif [ "$DEPLOY_APPIMAGE" == "yes" ]
+  then
+    export DEPLOY_FILES=$(ls OpenBoardView-*.AppImage*)
   fi
 deploy:
   provider: releases
