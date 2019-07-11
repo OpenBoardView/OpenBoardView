@@ -1224,32 +1224,33 @@ void BoardView::ShowInfoPane(void) {
 			int pc          = part->pins.size();
 			if (pc > 20) pc = 20;
 			listSize        = ImVec2(m_info_surface.x - DPIF(50), pc * ImGui::GetFontSize() * 1.45);
-			ImGui::ListBoxHeader(str.c_str(), listSize); //, ImVec2(m_board_surface.x/3 -5, m_board_surface.y/2));
-			for (auto pin : part->pins) {
-				char ss[1024];
-				snprintf(ss, sizeof(ss), "%4s  %s", pin->number.c_str(), pin->net->name.c_str());
-				if (ImGui::Selectable(ss, (pin == m_pinSelected))) {
-					ClearAllHighlights();
+			if (ImGui::ListBoxHeader(str.c_str(), listSize)) { //, ImVec2(m_board_surface.x/3 -5, m_board_surface.y/2));
+				for (auto pin : part->pins) {
+					char ss[1024];
+					snprintf(ss, sizeof(ss), "%4s  %s", pin->number.c_str(), pin->net->name.c_str());
+					if (ImGui::Selectable(ss, (pin == m_pinSelected))) {
+						ClearAllHighlights();
 
-					if ((pin->type == Pin::kPinTypeNotConnected) || (pin->type == Pin::kPinTypeUnkown) || (pin->net->is_ground)) {
-						m_partHighlighted.push_back(pin->component);
-						// do nothing for now
-						//
-					} else {
-						m_pinSelected = pin;
-						for (auto p : m_partHighlighted) {
-							pin->component->visualmode = pin->component->CVMNormal;
-						};
-						m_partHighlighted.push_back(pin->component);
-						CenterZoomNet(pin->net->name);
+						if ((pin->type == Pin::kPinTypeNotConnected) || (pin->type == Pin::kPinTypeUnkown) || (pin->net->is_ground)) {
+							m_partHighlighted.push_back(pin->component);
+							// do nothing for now
+							//
+						} else {
+							m_pinSelected = pin;
+							for (auto p : m_partHighlighted) {
+								pin->component->visualmode = pin->component->CVMNormal;
+							};
+							m_partHighlighted.push_back(pin->component);
+							CenterZoomNet(pin->net->name);
+						}
+						m_needsRedraw = true;
 					}
-					m_needsRedraw = true;
+					ImGui::PushStyleColor(ImGuiCol_Border, 0xffeeeeee);
+					ImGui::Separator();
+					ImGui::PopStyleColor();
 				}
-				ImGui::PushStyleColor(ImGuiCol_Border, 0xffeeeeee);
-				ImGui::Separator();
-				ImGui::PopStyleColor();
+				ImGui::ListBoxFooter();
 			}
-			ImGui::ListBoxFooter();
 			ImGui::PopItemWidth();
 
 		} // for each part in the list
@@ -1553,31 +1554,32 @@ template<class T> void BoardView::ShowSearchResults(std::vector<T> results, char
 }
 
 void BoardView::SearchColumnGenerate(const std::string& title, std::pair<SharedVector<Component>, SharedVector<Net>> results, char *search, int limit) {
-	ImGui::ListBoxHeader(title.c_str());
+	if (ImGui::ListBoxHeader(title.c_str())) {
 
-	if (m_searchComponents) {
-		if (results.first.empty() && (!m_searchNets || results.second.empty())) { // show suggestions only if there is no result at all
-			auto s = scparts.suggest(search);
-			if (s.size() > 0) {
-				ImGui::Text("Did you mean...");
-				ShowSearchResults(s, search, limit, &BoardView::FindComponent);
-			}
-		} else
-			ShowSearchResults(results.first, search, limit, &BoardView::FindComponent);
+		if (m_searchComponents) {
+			if (results.first.empty() && (!m_searchNets || results.second.empty())) { // show suggestions only if there is no result at all
+				auto s = scparts.suggest(search);
+				if (s.size() > 0) {
+					ImGui::Text("Did you mean...");
+					ShowSearchResults(s, search, limit, &BoardView::FindComponent);
+				}
+			} else
+				ShowSearchResults(results.first, search, limit, &BoardView::FindComponent);
+		}
+
+		if (m_searchNets) {
+			if (results.second.empty() && (!m_searchComponents || results.first.empty())) {
+				auto s = scnets.suggest(search);
+				if (s.size() > 0) {
+					ImGui::Text("Did you mean...");
+					ShowSearchResults(s, search, limit, &BoardView::FindNet);
+				}
+			} else
+				ShowSearchResults(results.second, search, limit, &BoardView::FindNet);
+		}
+
+		ImGui::ListBoxFooter();
 	}
-
-	if (m_searchNets) {
-		if (results.second.empty() && (!m_searchComponents || results.first.empty())) {
-			auto s = scnets.suggest(search);
-			if (s.size() > 0) {
-				ImGui::Text("Did you mean...");
-				ShowSearchResults(s, search, limit, &BoardView::FindNet);
-			}
-		} else
-			ShowSearchResults(results.second, search, limit, &BoardView::FindNet);
-	}
-
-	ImGui::ListBoxFooter();
 }
 
 void BoardView::SearchComponent(void) {
