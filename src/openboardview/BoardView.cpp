@@ -384,6 +384,8 @@ int BoardView::ConfigParse(void) {
 	 */
 	SetFZKey(obvconfig.ParseStr("FZKey", ""));
 
+	keybindings.readFromConfig(obvconfig);
+
 	return 0;
 }
 
@@ -691,7 +693,7 @@ void BoardView::ColorPreferences(void) {
 
 		ImGui::Separator();
 
-		if (ImGui::Button("Done") || ImGui::IsKeyPressed(SDL_SCANCODE_ESCAPE)) {
+		if (ImGui::Button("Done") || keybindings.isPressed("CloseDialog")) {
 			m_tooltips_enabled = true;
 			ImGui::CloseCurrentPopup();
 		}
@@ -901,7 +903,7 @@ void BoardView::Preferences(void) {
 
 		ImGui::Separator();
 
-		if (ImGui::Button("Done") || ImGui::IsKeyPressed(SDL_SCANCODE_ESCAPE)) {
+		if (ImGui::Button("Done") || keybindings.isPressed("CloseDialog")) {
 			ImGui::CloseCurrentPopup();
 			m_tooltips_enabled = true;
 		}
@@ -925,7 +927,7 @@ void BoardView::HelpAbout(void) {
 		ImGui::Text("%s %s", OBV_NAME, OBV_VERSION);
 		ImGui::Text("Build %s %s", OBV_BUILD, __TIMESTAMP__);
 		ImGui::Text(OBV_URL);
-		if (ImGui::Button("Close") || ImGui::IsKeyPressed(SDL_SCANCODE_ESCAPE)) {
+		if (ImGui::Button("Close") || keybindings.isPressed("CloseDialog")) {
 			m_tooltips_enabled = true;
 			ImGui::CloseCurrentPopup();
 		}
@@ -954,7 +956,7 @@ void BoardView::HelpControls(void) {
 		ImGui::Text("KEYBOARD CONTROLS");
 		ImGui::SameLine();
 
-		if (ImGui::Button("Close") || ImGui::IsKeyPressed(SDL_SCANCODE_ESCAPE)) {
+		if (ImGui::Button("Close") || keybindings.isPressed("CloseDialog")) {
 			m_tooltips_enabled = true;
 			ImGui::CloseCurrentPopup();
 		}
@@ -1408,7 +1410,7 @@ void BoardView::ContextMenu(void) {
 						                          NULL,
 						                          contextbuf);
 
-						if (ImGui::Button("Update##1") || (ImGui::IsKeyPressed(SDL_SCANCODE_RETURN) && io.KeyShift)) {
+						if (ImGui::Button("Update##1") || keybindings.isPressed("Validate")) {
 							m_annotationedit_retain = false;
 							m_annotations.Update(m_annotations.annotations[m_annotation_clicked_id].id, contextbuf);
 							m_annotations.GenerateList();
@@ -1468,7 +1470,7 @@ void BoardView::ContextMenu(void) {
 					                          NULL,
 					                          contextbufnew);
 
-					if (ImGui::Button("Apply##1") || (ImGui::IsKeyPressed(SDL_SCANCODE_RETURN) && io.KeyShift)) {
+					if (ImGui::Button("Apply##1") || keybindings.isPressed("Validate")) {
 						m_tooltips_enabled     = true;
 						m_annotationnew_retain = false;
 						if (debug) fprintf(stderr, "DATA:'%s'\n\n", contextbufnew);
@@ -1504,7 +1506,7 @@ void BoardView::ContextMenu(void) {
 		}
 
 		ImGui::SameLine();
-		if (ImGui::Button("Cancel##2") || ImGui::IsKeyPressed(SDL_SCANCODE_ESCAPE)) {
+		if (ImGui::Button("Cancel##2") || keybindings.isPressed("CloseDialog")) {
 			m_annotationnew_retain  = false;
 			m_annotationedit_retain = false;
 			m_tooltips_enabled      = true;
@@ -1620,7 +1622,7 @@ void BoardView::SearchComponent(void) {
 		} // reset button
 
 		ImGui::SameLine();
-		if (ImGui::Button("Exit") || ImGui::IsKeyPressed(SDL_SCANCODE_ESCAPE)) {
+		if (ImGui::Button("Exit") || keybindings.isPressed("CloseDialog")) {
 			FindComponent("");
 			for (int i = 0; i < 3; i++)
 				m_search[i][0]  = '\0';
@@ -1702,7 +1704,7 @@ void BoardView::SearchComponent(void) {
 		ImGui::Separator();
 
 		// Enter and Esc close the search:
-		if (ImGui::IsKeyPressed(SDL_SCANCODE_RETURN)) {
+		if (keybindings.isPressed("Accept")) {
 			// SearchCompound(first_button);
 			// SearchCompoundNoClear(first_button2);
 			// SearchCompoundNoClear(first_button3);
@@ -1754,7 +1756,7 @@ void BoardView::Update() {
 	 * ** FIXME
 	 * This should be handled in the keyboard section, not here
 	 */
-	if ((io.KeyCtrl) && ImGui::IsKeyPressed(SDL_SCANCODE_O)) {
+	if (keybindings.isPressed("Open")) {
 		open_file = true;
 		// the dialog will likely eat our WM_KEYUP message for CTRL and O:
 		io.KeysDown[SDL_SCANCODE_RCTRL] = false;
@@ -1762,7 +1764,7 @@ void BoardView::Update() {
 		io.KeysDown[SDL_SCANCODE_O]     = false;
 	}
 
-	if ((io.KeyCtrl) && ImGui::IsKeyPressed(SDL_SCANCODE_Q)) {
+	if (keybindings.isPressed("Quit")) {
 		m_wantsQuit = true;
 	}
 
@@ -2418,83 +2420,72 @@ void BoardView::HandleInput() {
 
 	if ((!io.WantCaptureKeyboard)) {
 
-		if (ImGui::IsKeyPressed(SDL_SCANCODE_M)) {
+		if (keybindings.isPressed("Mirror")) {
 			Mirror();
 			CenterView();
 			m_needsRedraw = true;
 
-		} else if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_PERIOD) || ImGui::IsKeyPressed(SDL_SCANCODE_R) ||
-		           ImGui::IsKeyPressed(SDL_SCANCODE_PERIOD)) {
+		} else if (keybindings.isPressed("RotateCW")) {
 			// Rotate board: R and period rotate clockwise; comma rotates
 			// counter-clockwise
 			Rotate(1);
 
-		} else if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_0) || ImGui::IsKeyPressed(SDL_SCANCODE_COMMA)) {
+		} else if (keybindings.isPressed("RotateCCW")) {
 			Rotate(-1);
 
-		} else if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_PLUS) || ImGui::IsKeyPressed(SDL_SCANCODE_EQUALS)) {
+		} else if (keybindings.isPressed("ZoomIn")) {
 			Zoom(m_board_surface.x / 2, m_board_surface.y / 2, zoomFactor);
 
-		} else if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_MINUS) || ImGui::IsKeyPressed(SDL_SCANCODE_MINUS)) {
+		} else if (keybindings.isPressed("ZoomOut")) {
 			Zoom(m_board_surface.x / 2, m_board_surface.y / 2, -zoomFactor);
 
-		} else if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_2) || ImGui::IsKeyPressed(SDL_SCANCODE_S)) {
+		} else if (keybindings.isPressed("PanDown")) {
 			Pan(DIR_DOWN, panFactor);
 
-		} else if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_8) || ImGui::IsKeyPressed(SDL_SCANCODE_W)) {
+		} else if (keybindings.isPressed("PanUp")) {
 			Pan(DIR_UP, panFactor);
 
-		} else if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_4) || ImGui::IsKeyPressed(SDL_SCANCODE_A)) {
+		} else if (keybindings.isPressed("PanLeft")) {
 			Pan(DIR_LEFT, panFactor);
 
-		} else if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_6) || ImGui::IsKeyPressed(SDL_SCANCODE_D)) {
+		} else if (keybindings.isPressed("PanRight")) {
 			Pan(DIR_RIGHT, panFactor);
 
-		} else if (ImGui::IsKeyPressed(SDL_SCANCODE_KP_5) || ImGui::IsKeyPressed(SDL_SCANCODE_X)) {
+		} else if (keybindings.isPressed("Center")) {
 			// Center and reset zoom
 			CenterView();
 
-		} else if (ImGui::IsKeyPressed(SDL_SCANCODE_C)) {
-			if (io.KeyCtrl) {
-				// quit OFBV
-				m_wantsQuit = true;
-			}
+		} else if (keybindings.isPressed("Quit")) {
+			// quit OFBV
+			m_wantsQuit = true;
 
-		} else if (ImGui::IsKeyPressed(SDL_SCANCODE_I)) {
+		} else if (keybindings.isPressed("InfoPanel")) {
 			showInfoPanel = !showInfoPanel;
 			obvconfig.WriteBool("showInfoPanel", showInfoPanel ? true : false);
 
-		} else if (ImGui::IsKeyPressed(SDL_SCANCODE_L)) {
+		} else if (keybindings.isPressed("NetList")) {
 			// Show Net List
 			m_showNetList = m_showNetList ? false : true;
 
-		} else if (ImGui::IsKeyPressed(SDL_SCANCODE_K)) {
+		} else if (keybindings.isPressed("PartList")) {
 			// Show Part List
 			m_showPartList = m_showPartList ? false : true;
 
-		} else if (ImGui::IsKeyPressed(SDL_SCANCODE_SPACE)) {
+		} else if (keybindings.isPressed("Flip")) {
 			// Flip board:
 			FlipBoard();
 
-		} else if (ImGui::IsKeyPressed(SDL_SCANCODE_P)) {
+		} else if (keybindings.isPressed("TogglePins")) {
 			showPins ^= 1;
 			m_needsRedraw = true;
 
-		} else if (ImGui::IsKeyPressed(SDL_SCANCODE_F)) {
-			if (io.KeyCtrl) {
-				if (m_validBoard) {
-					m_showSearch  = true;
-					m_needsRedraw = true;
-				}
-			}
-
-		} else if (ImGui::IsKeyPressed(SDL_SCANCODE_SLASH)) {
+		} else if (keybindings.isPressed("Search")) {
 			if (m_validBoard) {
 				m_showSearch  = true;
 				m_needsRedraw = true;
 			}
 
-		} else if (ImGui::IsKeyPressed(SDL_SCANCODE_ESCAPE)) {
+		} else if (keybindings.isPressed("Clear")) {
 			ClearAllHighlights();
 
 		} else {

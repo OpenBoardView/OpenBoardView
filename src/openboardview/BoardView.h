@@ -7,6 +7,7 @@
 #include "imgui/imgui.h"
 #include "Searcher.h"
 #include "SpellCorrector.h"
+#include "UI/Keyboard/KeyBindings.h"
 #include <stdint.h>
 #include <vector>
 
@@ -120,6 +121,7 @@ struct BoardView {
 	Searcher searcher;
 	SpellCorrector scnets;
 	SpellCorrector scparts;
+	KeyBindings keybindings;
 	bool debug                   = false;
 	int history_file_has_changed = 0;
 	int dpi                      = 0;
