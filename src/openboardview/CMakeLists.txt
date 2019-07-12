@@ -76,6 +76,10 @@ set(SOURCES
 	Renderers/ImGuiRendererSDL.cpp
 	Searcher.cpp
 	SpellCorrector.cpp
+	UI/Keyboard/KeyBinding.cpp
+	UI/Keyboard/KeyBindings.cpp
+	UI/Keyboard/KeyModifier.cpp
+	UI/Keyboard/KeyModifiers.cpp
 	main_opengl.cpp
 )
 
