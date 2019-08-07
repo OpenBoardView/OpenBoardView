@@ -25,7 +25,39 @@ imgui.ini
 .idea/
 tags
 
-# Do not track QtCreator imported project files
+# Do not track QtCreator imported or any other project files
 OpenBoardView.config
 OpenBoardView.files
 OpenBoardView.includes
+*.creator
+*.creator.*
+.qmake.stash
+*.pro
+*.pro.*
+
+# Dolphin hidden files marker
+.directory
+
+*.a
+
+# https://github.com/github/gitignore/blob/master/CMake.gitignore
+CMakeLists.txt.user
+CMakeCache.txt
+CMakeFiles
+CMakeScripts
+Testing
+Makefile
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+CTestTestfile.cmake
+_deps
+
+debug_build
+CPackConfig.cmake
+CPackSourceConfig.cmake
+
+include/version.h
+asset/openboardview.appdata.xml
+asset/openboardview.desktop
+share
