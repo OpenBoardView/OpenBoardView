@@ -51,11 +51,11 @@ CADFile::CADFile(std::vector<char> &buf) {
 	char *arena_end = file_buf + file_buf_size - 1;
 	*arena_end      = 0;
 
-	int current_block = 0;
+	enum Block current_block = Invalid;
 	std::unordered_map<std::string, int> parts_id; // map between part name and part number
 	char *nailnet; // Net name for VIA
 
-    std::vector<char *> lines;
+	std::vector<char *> lines;
 	stringfile(file_buf, lines);
 
 	for (char *line : lines) {
@@ -63,22 +63,22 @@ CADFile::CADFile(std::vector<char> &buf) {
 		if (!line[0]) continue;
 
 			if (!strncmp(line, "COMP", 4)) {
-				current_block = 1;
+				current_block = Parts;
 			} else if (!strncmp(line, "C_PIN", 5)) {
-				current_block = 2;
+				current_block = Pins;
 			} else if (!strncmp(line, "NET ", 4)) {
-				current_block = 3;
+				current_block = Nets;
 			} else if (!strncmp(line, "N_VIA", 5)) {
-				current_block = 4;
+				current_block = Vias;
 			} else {
-				current_block = -1;
+				current_block = Invalid;
 				continue;
 			}
 		char *p = line;
 		char *s;
 
 		switch (current_block) {
-			case 1: { // Parts
+			case Parts: {
 				BRDPart part;
 				BRDPin pin;
 				/*char *TYPE    =*/READ_STR();
@@ -99,8 +99,7 @@ CADFile::CADFile(std::vector<char> &buf) {
 				parts.push_back(part);
 				parts_id[part.name] = parts.size();
 			} break;
-            
-			case 2: { // Pins
+			case Pins: {
 				BRDPin pin;
 				/*char *TYPE  =*/READ_STR();
 				char *part    = READ_STR();
@@ -125,7 +124,7 @@ CADFile::CADFile(std::vector<char> &buf) {
 				pin.net        = netr;
 				pins.push_back(pin);
 			} break;
-			case 3: {   // NET
+			case Nets: {
 				/*char *TYPE  =*/READ_STR();
 				char *netr     = READ_STR();
 				if (strchr(netr, '/'))
@@ -134,7 +133,7 @@ CADFile::CADFile(std::vector<char> &buf) {
 					sizeof(netr) - 0 - 1);
 				nailnet        = netr;
 			} break;
-			case 4: { // VIA
+			case Vias: {
 				BRDNail nail;
 				nail.net     = nailnet;
 				/*STR *TYPE  =*/READ_STR();
