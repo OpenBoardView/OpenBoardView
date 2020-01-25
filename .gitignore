@@ -58,6 +58,4 @@ CPackConfig.cmake
 CPackSourceConfig.cmake
 
 include/version.h
-asset/openboardview.appdata.xml
-asset/openboardview.desktop
 share
