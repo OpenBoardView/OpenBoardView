@@ -121,7 +121,7 @@ elseif(UNIX)
 	set(CPACK_GENERATOR DEB RPM CACHE STRING "List of generators to build packages with")
 	set(CPACK_DEBIAN_PACKAGE_DEPENDS "zlib1g, libgtk-3-0, sqlite3, libsdl2-2.0-0, libfontconfig1")
 	set(CPACK_DEBIAN_PACKAGE_SECTION "Electronics")
-	set(CPACK_DEBIAN_PACKAGE_VERSION "1${PROJECT_VERSION}")
+	set(CPACK_DEBIAN_PACKAGE_RELEASE 1)
 	set(CPACK_RPM_PACKAGE_GROUP "Applications/Engineering")
 	set(CPACK_RPM_PACKAGE_REQUIRES "gtk3") # Probably not working
 	set(CPACK_RPM_PACKAGE_LICENSE "${PROJECT_LICENSE}")
