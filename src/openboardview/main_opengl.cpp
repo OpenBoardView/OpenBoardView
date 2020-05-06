@@ -102,12 +102,12 @@ int parse_parameters(int argc, char **argv, struct globals *g) {
 		char *p = argv[param];
 
 		if (strcmp(p, "-h") == 0) {
-			fprintf(stdout, "%s %s", argv[0], help);
+			SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "%s %s", argv[0], help);
 			exit(0);
 		}
 
 		if (strcmp(p, "-V") == 0) {
-			fprintf(stdout, "OFBV-BUILD: %s %s\n", OBV_BUILD, __TIMESTAMP__);
+			SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "OFBV-BUILD: %s %s\n", OBV_BUILD, __TIMESTAMP__);
 			exit(0);
 		}
 
@@ -116,7 +116,7 @@ int parse_parameters(int argc, char **argv, struct globals *g) {
 			if ((param < argc)&&(argv[param][0] != '-')) {
 				g->config_file = argv[param];
 			} else {
-				fprintf(stderr, "Not enough paramters for -c <config>\n\n%s %s", argv[0], help );
+				SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Not enough paramters for -c <config>\n\n%s %s", argv[0], help );
 				exit(1);
 			}
 
@@ -125,7 +125,7 @@ int parse_parameters(int argc, char **argv, struct globals *g) {
 			if ((param < argc)&&(argv[param][0] != '-')) {
 				g->input_file = argv[param];
 			} else {
-				fprintf(stderr, "Not enough paramters for -i <input file>\n\n%s %s", argv[0], help );
+				SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Not enough paramters for -i <input file>\n\n%s %s", argv[0], help );
 				exit(1);
 			}
 
@@ -134,7 +134,7 @@ int parse_parameters(int argc, char **argv, struct globals *g) {
 			if ((param < argc)&&(argv[param][0] != '-')) {
 				g->width = strtol(argv[param], NULL, 10);
 			} else {
-				fprintf(stderr, "Not enough paramters for -x <window width>\n\n%s %s", argv[0], help );
+				SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Not enough paramters for -x <window width>\n\n%s %s", argv[0], help );
 				exit(1);
 			}
 
@@ -143,7 +143,7 @@ int parse_parameters(int argc, char **argv, struct globals *g) {
 			if ((param < argc)&&(argv[param][0] != '-')) {
 				g->height = strtol(argv[param], NULL, 10);
 			} else {
-				fprintf(stderr, "Not enough paramters for -y <window height>\n\n%s %s", argv[0], help );
+				SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Not enough paramters for -y <window height>\n\n%s %s", argv[0], help );
 				exit(1);
 			}
 
@@ -152,7 +152,7 @@ int parse_parameters(int argc, char **argv, struct globals *g) {
 			if ((param < argc)&&(argv[param][0] != '-')) {
 				g->font_size = strtof(argv[param], NULL);
 			} else {
-				fprintf(stderr, "Not enough paramters for -z <font size>\n\n%s %s", argv[0], help );
+				SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Not enough paramters for -z <font size>\n\n%s %s", argv[0], help );
 				exit(1);
 			}
 
@@ -161,7 +161,7 @@ int parse_parameters(int argc, char **argv, struct globals *g) {
 			if ((param < argc)&&(argv[param][0] != '-')) {
 				g->dpi = strtof(argv[param], NULL);
 			} else {
-				fprintf(stderr, "Not enough paramters for -p <dpi>\n\n%s %s", argv[0], help );
+				SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Not enough paramters for -p <dpi>\n\n%s %s", argv[0], help );
 				exit(1);
 			}
 
@@ -170,7 +170,7 @@ int parse_parameters(int argc, char **argv, struct globals *g) {
 			if ((param < argc)&&(argv[param][0] != '-')) {
 				g->renderer = Renderers::get(atoi(argv[param]));
 			} else {
-				fprintf(stderr, "Not enough paramters for -r <render engine>\n\n%s %s", argv[0], help );
+				SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Not enough paramters for -r <render engine>\n\n%s %s", argv[0], help );
 				exit(1);
 			}
 
@@ -181,7 +181,7 @@ int parse_parameters(int argc, char **argv, struct globals *g) {
 			g->debug = true;
 
 		} else {
-			fprintf(stderr, "Unknown parameter '%s'\n\n%s %s", p, argv[0], help);
+			SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Unknown parameter '%s'\n\n%s %s", p, argv[0], help);
 			exit(1);
 		}
 	}
@@ -201,6 +201,9 @@ int main(int argc, char **argv) {
 	globals g; // because some things we have to store *before* we load the config file in BoardView app.obvconf
 	BoardView app{};
 
+	// Log all messages
+	SDL_LogSetAllPriority(SDL_LOG_PRIORITY_VERBOSE);
+
 	/*
 	 * Parse the parameters first up, store the results in the global struct.
 	 *
@@ -214,10 +217,9 @@ int main(int argc, char **argv) {
 
 	// Setup SDL
 	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) != 0) {
-		printf("Error: %s\n", SDL_GetError());
+		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Error: %s\n", SDL_GetError());
 		return -1;
 	}
-	SDL_LogSetAllPriority(SDL_LOG_PRIORITY_VERBOSE);
 
 	// Load the configuration file
 	configDir = get_user_dir(UserDir::Config);
