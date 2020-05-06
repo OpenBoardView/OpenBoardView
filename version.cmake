@@ -2,7 +2,7 @@
 
 project(OpenBoardView)
 string(TOLOWER ${PROJECT_NAME} PROJECT_NAME_LOWER)
-set(PROJECT_VERSION "7.4")
+set(PROJECT_VERSION "8.0")
 set(PROJECT_DESCRIPTION "Viewer for PCB layouts")
 set(PROJECT_URL "http://openboardview.org")
 set(PROJECT_LICENSE "MIT")
