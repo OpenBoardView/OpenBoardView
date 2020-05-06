@@ -101,6 +101,11 @@ int parse_parameters(int argc, char **argv, struct globals *g) {
 	for (param = 1; param < argc; param++) {
 		char *p = argv[param];
 
+		// macOS quirk: Ignore psn_* parameter passed by launchd
+		if (strncmp(p, "-psn_", 5) == 0) {
+			continue;
+		}
+
 		if (strcmp(p, "-h") == 0) {
 			SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "%s %s", argv[0], help);
 			exit(0);
