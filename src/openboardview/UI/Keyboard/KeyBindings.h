@@ -11,16 +11,17 @@
 #include "confparse.h"
 
 class KeyBindings {
-private:
+public:
 	std::unordered_map<std::string, std::vector<KeyBinding>> keybindings;
 	KeyModifiers keyModifiers;
-public:
+
+	static const char bindingSeparator = '|';
+	static const char modifierSeparator = '~';
+
 	KeyBindings();
 
 	bool isPressed(const std::string &name) const;
 
-//	void add(const std::string &name);
-//	void clear(const std::string &name);
 	void reset();
 
 	void readFromConfig(Confparse &obvconfig);

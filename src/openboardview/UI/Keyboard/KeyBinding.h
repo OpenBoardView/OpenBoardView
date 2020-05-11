@@ -11,15 +11,18 @@
 
 class KeyBinding {
 private:
-	SDL_Keycode keycode;
-	std::vector<KeyModifier> modifiers;
+	SDL_Keycode keycode = SDLK_UNKNOWN;
 public:
+	std::vector<KeyModifier> modifiers;
+
+	KeyBinding();
 	KeyBinding(const SDL_Keycode keycode);
 	KeyBinding(const SDL_Keycode keycode, std::vector<KeyModifier> modifiers);
 
 	bool isPressed() const;
 	SDL_Keycode getKeycode() const;
 	std::vector<KeyModifier> getModifiers() const;
+	std::string to_string() const;
 };
 
 #endif

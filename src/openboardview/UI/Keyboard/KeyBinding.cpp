@@ -5,6 +5,9 @@
 
 #include "imgui/imgui.h"
 
+KeyBinding::KeyBinding() {
+}
+
 KeyBinding::KeyBinding(const SDL_Keycode keycode) : KeyBinding(keycode, {}) {
 }
 
@@ -22,4 +25,15 @@ SDL_Keycode KeyBinding::getKeycode() const {
 
 std::vector<KeyModifier> KeyBinding::getModifiers() const {
 	return modifiers;
+}
+
+std::string KeyBinding::to_string() const {
+	std::string keys = SDL_GetKeyName(this->getKeycode());
+
+	auto modifiers = this->getModifiers();
+	for (auto im = modifiers.rbegin(); im != modifiers.rend(); ++im ) {
+		keys = im->name + "+" + keys;
+	}
+
+	return keys;
 }
