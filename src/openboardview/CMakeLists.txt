@@ -80,6 +80,7 @@ set(SOURCES
 	UI/Keyboard/KeyBindings.cpp
 	UI/Keyboard/KeyModifier.cpp
 	UI/Keyboard/KeyModifiers.cpp
+	GUI/Preferences/Keyboard.cpp
 	main_opengl.cpp
 )
 

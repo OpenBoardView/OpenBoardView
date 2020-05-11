@@ -8,6 +8,7 @@
 #include "history.h"
 #include "imgui/imgui.h"
 #include "UI/Keyboard/KeyBindings.h"
+#include "GUI/Preferences/Keyboard.h"
 #include <stdint.h>
 #include <vector>
 
@@ -123,6 +124,7 @@ struct BoardView {
 	SpellCorrector scnets;
 	SpellCorrector scparts;
 	KeyBindings keybindings;
+	Preferences::Keyboard keyboardPreferences{keybindings, obvconfig};
 	bool debug                   = false;
 	int history_file_has_changed = 0;
 	int dpi                      = 0;
