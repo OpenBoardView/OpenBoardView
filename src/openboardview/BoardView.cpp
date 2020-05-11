@@ -110,6 +110,8 @@ void BoardView::ThemeSetStyle(const char *name) {
 		style.Colors[ImGuiCol_PlotHistogramHovered] = ImVec4(1.00f, 0.60f, 0.00f, 1.00f);
 		style.Colors[ImGuiCol_TextSelectedBg]       = ImVec4(0.00f, 0.00f, 1.00f, 0.35f);
 		style.Colors[ImGuiCol_ModalWindowDarkening] = ImVec4(0.20f, 0.20f, 0.20f, 0.35f);
+		style.Colors[ImGuiCol_TableRowBg]           = ImVec4(0.05f, 0.05f, 0.10f, 0.90f);
+		style.Colors[ImGuiCol_TableRowBgAlt]        = ImVec4(0.10f, 0.10f, 0.20f, 0.90f);
 
 		m_colors.backgroundColor          = byte4swap(0x000000ff);
 		m_colors.boardFillColor           = byte4swap(0x2a2a2aff);
@@ -195,6 +197,8 @@ void BoardView::ThemeSetStyle(const char *name) {
 		style.Colors[ImGuiCol_PlotHistogramHovered] = ImVec4(1.00f, 0.60f, 0.00f, 1.00f);
 		style.Colors[ImGuiCol_TextSelectedBg]       = ImVec4(0.26f, 0.59f, 0.98f, 0.35f);
 		style.Colors[ImGuiCol_ModalWindowDarkening] = ImVec4(0.20f, 0.20f, 0.20f, 0.35f);
+		style.Colors[ImGuiCol_TableRowBg]           = ImVec4(0.94f, 0.94f, 0.94f, 1.00f);
+		style.Colors[ImGuiCol_TableRowBgAlt]        = ImVec4(0.82f, 0.82f, 0.82f, 1.00f);
 
 		m_colors.backgroundColor          = byte4swap(0xffffffff);
 		m_colors.boardFillColor           = byte4swap(0xddddddff);
@@ -1817,6 +1821,8 @@ void BoardView::Update() {
 				m_showColorPreferences = true;
 			}
 
+			keyboardPreferences.menuItem();
+
 			ImGui::Separator();
 
 			if (ImGui::MenuItem("Quit")) {
@@ -2009,6 +2015,8 @@ void BoardView::Update() {
 		if (m_showPreferences) {
 			ImGui::OpenPopup("Preferences");
 		}
+
+		keyboardPreferences.render();
 
 		if (m_showSearch && m_file) {
 			ImGui::OpenPopup("Search for Component / Network");
