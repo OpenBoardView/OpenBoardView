@@ -57,11 +57,11 @@ void KeyBindings::readFromConfig(Confparse &obvconfig) {
 		if (confline == nullptr)
 			continue;
 
-		// Multiple bindings for a single function are combined with '|'
+		// Multiple bindings for a single function are combined with bindingSeparator '|'
 		std::vector<KeyBinding> bindings;
-		for (auto &kbs : split_string(confline, '|')) {
-			//Modifiers combined with '~' to key, key always specified last
-			auto keys = split_string(kbs, '~');
+		for (auto &kbs : split_string(confline, bindingSeparator)) {
+			//Modifiers combined with modifierSeparator '~' to key, key always specified last
+			auto keys = split_string(kbs, modifierSeparator);
 			if (keys.empty())
 				continue;
 			std::vector<std::string> modifiers(keys.begin(), keys.end()-1);
@@ -89,11 +89,11 @@ void KeyBindings::writeToConfig(Confparse &obvconfig) {
 			// Prepend modifiers so that key is always last, reverse to keep in same order
 			auto modifiers = kbs.getModifiers();
 			for (auto im = modifiers.rbegin(); im != modifiers.rend(); ++im ) {
-				binding = im->name + "~" + binding;
+				binding = im->name + modifierSeparator + binding;
 			}
 
 			if (!line.empty())
-				line += "|";
+				line += bindingSeparator;
 			line += binding;
 		}
 		obvconfig.WriteStr(("KeyBinding" + keybinding.first).c_str(), line.c_str());
