@@ -5,6 +5,8 @@
 #include <iostream>
 
 namespace Renderers {
+	std::unique_ptr<ImGuiRendererSDL> current;
+
 	Renderer &operator++(Renderer& r) {
 		return r = (r == Renderer::DEFAULT) ? static_cast<Renderer>(1 /*first renderer in Renderer enum class*/) : static_cast<Renderer>(static_cast<int>(r)+1);
 	}
@@ -35,19 +37,20 @@ namespace Renderers {
 		}
 	}
 
-	std::unique_ptr<ImGuiRendererSDL> initBestRenderer(Renderer preferred, SDL_Window *window) {
-		Renderer current = preferred;
+	bool initBestRenderer(Renderer preferred, SDL_Window *window) {
+		Renderer tryrenderer = preferred;
 		std::unique_ptr<ImGuiRendererSDL> rendererInstance;
 		bool initialized = false;
 		do {
-			rendererInstance = newInstance(current, window);
+			rendererInstance = newInstance(tryrenderer, window);
 			initialized = rendererInstance && rendererInstance->init() && rendererInstance->checkGLVersion(); // initialize and check if we got the correct OpenGL context version
-		} while (++current != preferred && !initialized); // stop if we looped over or if it initalized successfully
+		} while (++tryrenderer != preferred && !initialized); // stop if we looped over or if it initalized successfully
 
-		if (current == preferred && !initialized) { // we looped over and it didn't initialize
+		if (tryrenderer == preferred && !initialized) { // we looped over and it didn't initialize
 			rendererInstance.reset();
+		} else {
+			current = std::move(rendererInstance);
 		}
-
-		return rendererInstance;
+		return initialized;
 	}
 }
