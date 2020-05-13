@@ -2055,7 +2055,7 @@ void BoardView::Update() {
 			filename        = preset_filename;
 			preset_filename = NULL;
 		} else {
-			filename = show_file_picker();
+			filename = show_file_picker(true);
 
 			ImGuiIO &io           = ImGui::GetIO();
 			io.MouseDown[0]       = false;
