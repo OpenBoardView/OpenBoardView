@@ -225,7 +225,7 @@ int Confparse::SaveDefault(const std::string &utf8_filename) {
 	}
 }
 
-int Confparse::Load(const std::string &utf8_filename) {
+int Confparse::Load(const std::string &utf8_filename, bool save_default) {
 	std::ifstream file;
 	file.open(utf8_filename, std::ios::in | std::ios::binary | std::ios::ate);
 	if (!file.is_open()) {
@@ -234,7 +234,15 @@ int Confparse::Load(const std::string &utf8_filename) {
 		buffer_size = 0;
 		conf        = NULL;
 		if (nested) return 1; // to prevent infinite recursion, we test the nested flag
-		return (SaveDefault(utf8_filename));
+		if (save_default) { // Create file with default OBV configuration
+			return (SaveDefault(utf8_filename));
+		} else { // Create empty file
+			std::ofstream file;
+			file.open(utf8_filename, std::ios::out | std::ios::binary | std::ios::ate);
+			nested = true;
+			file.close();
+			Load(utf8_filename);
+		}
 	}
 
 	filename = utf8_filename;
@@ -250,7 +258,7 @@ int Confparse::Load(const std::string &utf8_filename) {
 	file.close();
 
 	if (file.gcount() != sz) {
-		std::cerr << "Did not read the right number of bytes from configuration file" << std::endl;
+		std::cerr << "Did not read the right number of bytes from configuration file " << file.gcount() << " != " << sz << std::endl;
 		return 1;
 	}
 	//	assert(file.gcount() == sz);

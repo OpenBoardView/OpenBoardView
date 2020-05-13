@@ -12,7 +12,7 @@ struct Confparse {
 	bool nested = false;
 
 	~Confparse(void);
-	int Load(const std::string &utf8_filename);
+	int Load(const std::string &utf8_filename, bool save_default = false);
 	int SaveDefault(const std::string &utf8_filename);
 	char *Parse(const char *key);
 	const char *ParseStr(const char *key, const char *defaultv);
