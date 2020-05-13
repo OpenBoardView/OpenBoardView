@@ -87,6 +87,7 @@ set(SOURCES
 	imgui/imgui.cpp
 	imgui/imgui_draw.cpp
 	imgui/imgui_widgets.cpp
+	imgui/misc/cpp/imgui_stdlib.cpp
 	imgui/examples/imgui_impl_sdl.cpp)
 
 
