@@ -447,6 +447,8 @@ int BoardView::LoadFile(const std::string &filename) {
 				m_annotations.SetFilename(filename);
 				m_annotations.Load();
 
+				backgroundImage.loadFromConfig(filename + ".conf");
+
 				/*
 				 * Set pins to a known lower size, they get resized
 				 * in DrawParts() when the component is analysed
@@ -1822,6 +1824,7 @@ void BoardView::Update() {
 			}
 
 			keyboardPreferences.menuItem();
+			backgroundImagePreferences.menuItem();
 
 			ImGui::Separator();
 
@@ -2017,6 +2020,7 @@ void BoardView::Update() {
 		}
 
 		keyboardPreferences.render();
+		backgroundImagePreferences.render();
 
 		if (m_showSearch && m_file) {
 			ImGui::OpenPopup("Search for Component / Network");
@@ -2150,6 +2154,10 @@ void BoardView::Update() {
 	ImGui::Begin("surface", nullptr, draw_surface_flags);
 	if (m_validBoard) {
 		HandleInput();
+		backgroundImage.render(*ImGui::GetWindowDrawList(),
+			CoordToScreen(backgroundImage.x0(), backgroundImage.y0()),
+			CoordToScreen(backgroundImage.x1(), backgroundImage.y1()),
+			m_rotation);
 		DrawBoard();
 	}
 	ImGui::End();

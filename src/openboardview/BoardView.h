@@ -9,6 +9,8 @@
 #include "SpellCorrector.h"
 #include "UI/Keyboard/KeyBindings.h"
 #include "GUI/Preferences/Keyboard.h"
+#include "GUI/BackgroundImage.h"
+#include "GUI/Preferences/BackgroundImage.h"
 #include <stdint.h>
 #include <vector>
 
@@ -116,6 +118,7 @@ enum FlipModes { flipModeVP = 0, flipModeMP = 1, NUM_FLIP_MODES };
 struct BoardView {
 	BRDFile *m_file;
 	Board *m_board;
+	BackgroundImage backgroundImage{m_current_side};
 
 	Confparse obvconfig;
 	FHistory fhistory;
@@ -124,6 +127,7 @@ struct BoardView {
 	SpellCorrector scparts;
 	KeyBindings keybindings;
 	Preferences::Keyboard keyboardPreferences{keybindings, obvconfig};
+	Preferences::BackgroundImage backgroundImagePreferences{keybindings, backgroundImage};
 	bool debug                   = false;
 	int history_file_has_changed = 0;
 	int dpi                      = 0;
