@@ -18,8 +18,11 @@ namespace Renderers {
 	Renderer &operator++(Renderer& r);
 
 	Renderer get(int n);
+
+	extern std::unique_ptr<ImGuiRendererSDL> current;
+
 	std::unique_ptr<ImGuiRendererSDL> newInstance(Renderer r, SDL_Window *window);
-	std::unique_ptr<ImGuiRendererSDL> initBestRenderer(Renderer preferred, SDL_Window *window);
+	bool initBestRenderer(Renderer preferred, SDL_Window *window);
 }
 
 #endif
