@@ -57,6 +57,8 @@ add_subdirectory(glad)
 ## SDL2 ##
 find_package(SDL2 REQUIRED CONFIG)
 add_definitions(-DENABLE_SDL2)
+## SDL2_image
+pkg_check_modules(SDL2_IMAGE REQUIRED SDL2_image)
 
 ## imgui ##
 # note: in the future there may be integrated CMake support into imgui

@@ -2,6 +2,7 @@
 
 #include <sstream>
 #include <glad/glad.h>
+#include <SDL_image.h>
 
 #include "imgui_impl_sdl.h"
 
@@ -85,4 +86,35 @@ void ImGuiRendererSDL::renderFrame(const ImVec4 &clear_color) {
 
 void ImGuiRendererSDL::shutdown() {
 	ImGui_ImplSDL2_Shutdown();
+}
+
+bool ImGuiRendererSDL::loadTextureFromFile(const std::string &filename, GLuint* out_texture, int* out_width, int* out_height)
+{
+    // Load from file
+	SDL_Surface* surface = IMG_Load(filename.c_str());
+
+    if (surface == nullptr)
+        return false;
+
+	auto mode = surface->format->BytesPerPixel == 4 ? GL_RGBA : GL_RGB;
+
+    // Create a OpenGL texture identifier
+    GLuint image_texture;
+    glGenTextures(1, &image_texture);
+    glBindTexture(GL_TEXTURE_2D, image_texture);
+
+    // Setup filtering parameters for display
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    // Upload pixels into texture
+    glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+    glTexImage2D(GL_TEXTURE_2D, 0, mode, surface->w, surface->h, 0, mode, GL_UNSIGNED_BYTE, surface->pixels);
+	SDL_FreeSurface(surface);
+
+    *out_texture = image_texture;
+    *out_width = surface->w;
+    *out_height = surface->h;
+
+    return true;
 }
