@@ -71,7 +71,7 @@
 
 // Shows a file dialog (should hang the current thread) and returns the utf8
 // filename picked by the user.
-const std::string show_file_picker();
+const std::string show_file_picker(bool filterBoards = false);
 
 const std::string get_font_path(const std::string &name);
 const std::vector<char> load_font(const std::string &name);

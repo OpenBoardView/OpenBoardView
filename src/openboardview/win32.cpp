@@ -51,7 +51,7 @@ const wchar_t *utf16_to_wchar(const std::u16string &text) {
 
 // Mostly from https://msdn.microsoft.com/en-us/library/windows/desktop/ff485843(v=vs.85).aspx
 // Windows Vista minimum
-const std::string show_file_picker() {
+const std::string show_file_picker(bool filterBoards) {
 	std::string file_path;
 	IFileOpenDialog *pFileOpen;
 
