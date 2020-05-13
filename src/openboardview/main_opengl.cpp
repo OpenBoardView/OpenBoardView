@@ -226,7 +226,7 @@ int main(int argc, char **argv) {
 
 	// Load the configuration file
 	configDir = get_user_dir(UserDir::Config);
-	if (!configDir.empty()) app.obvconfig.Load(configDir + "obv.conf");
+	if (!configDir.empty()) app.obvconfig.Load(configDir + "obv.conf", true);
 
 	// Load file history
 	std::string dataDir = get_user_dir(UserDir::Data);
@@ -236,7 +236,7 @@ int main(int argc, char **argv) {
 	}
 
 	// If we've chosen to override the normally found config.
-	if (g.config_file) app.obvconfig.Load(g.config_file);
+	if (g.config_file) app.obvconfig.Load(g.config_file, true);
 
 	// Apply the slowCPU flag if required.
 	app.slowCPU = g.slowCPU;
