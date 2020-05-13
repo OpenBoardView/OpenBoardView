@@ -40,6 +40,10 @@ find_package(PkgConfig REQUIRED)
 	endif(APPLE)
 endif()
 
+link_directories(
+	${SDL2_IMAGE_LIBRARY_DIRS}
+)
+
 include_directories(
 	${CMAKE_CURRENT_SOURCE_DIR}
 	${CMAKE_CURRENT_SOURCE_DIR}/..
@@ -50,6 +54,7 @@ include_directories(
 	${ZLIB_INCLUDE_DIRS}
 	${SQLITE3_INCLUDE_DIRS}
 	${FONTCONFIG_INCLUDE_DIRS}
+	${SDL2_IMAGE_INCLUDE_DIRS}
 )
 
 
@@ -133,6 +138,7 @@ target_link_libraries(${PROJECT_NAME_LOWER}
 	${COCOA_LIBRARY}
 	${ZLIB_LIBRARIES}
 	${SQLITE3_LIBRARIES}
+	${SDL2_IMAGE_LIBRARIES}
 	${CMAKE_DL_LIBS}
 )
 
