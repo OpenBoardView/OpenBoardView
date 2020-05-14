@@ -1,5 +1,5 @@
-#include "Searcher.h"
 #include "platform.h"
+#include "Searcher.h"
 
 void Searcher::setNets(SharedVector<Net> nets) {
 	this->m_nets = nets;

@@ -23,7 +23,7 @@ void BackgroundImage::loadFromConfig(const std::string &filename) {
 	if (topImageFilename == nullptr) { //No image in config, clear current image
 		topImage = {};
 	} else {
-		topImage = Image{configDir/topImageFilename};
+		topImage = Image{(configDir/topImageFilename).string()};
 		topImage.offsetX = confparse.ParseInt("TopImageOffsetX", 0);
 		topImage.offsetY = confparse.ParseInt("TopImageOffsetY", 0);
 		topImage.scalingX = confparse.ParseDouble("TopImageScalingX", 1.0);
@@ -37,7 +37,7 @@ void BackgroundImage::loadFromConfig(const std::string &filename) {
 	if (bottomImageFilename == nullptr) { //No image in config, clear current image
 		bottomImage = {};
 	} else {
-		bottomImage = Image{configDir/bottomImageFilename};
+		bottomImage = Image{(configDir/bottomImageFilename).string()};
 		bottomImage.offsetX = confparse.ParseInt("BottomImageOffsetX", 0);
 		bottomImage.offsetY = confparse.ParseInt("BottomImageOffsetY", 0);
 		bottomImage.scalingX = confparse.ParseDouble("BottomImageScalingX", 1.0);
