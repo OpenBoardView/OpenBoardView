@@ -149,8 +149,16 @@ if(NOT APPLE AND NOT MINGW)
 		${FONTCONFIG_LIBRARIES}
 	)
 endif()
+if(MINGW)
+target_link_libraries(${PROJECT_NAME_LOWER}
+	SDL2::SDL2-static
+)
+else()
 target_link_libraries(${PROJECT_NAME_LOWER}
 	SDL2::SDL2
+)
+endif()
+target_link_libraries(${PROJECT_NAME_LOWER}
 	SDL2::SDL2main
 )
 

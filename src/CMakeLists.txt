@@ -108,9 +108,15 @@ add_library(imgui STATIC ${SOURCES})
 target_link_libraries(imgui
 	${GLAD_LIBRARIES}
 )
+if(MINGW)
+target_link_libraries(imgui
+	SDL2::SDL2-static
+)
+else()
 target_link_libraries(imgui
 	SDL2::SDL2
 )
+endif()
 
 set(IMGUI_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/imgui ${CMAKE_CURRENT_SOURCE_DIR}/imgui/examples)
 
