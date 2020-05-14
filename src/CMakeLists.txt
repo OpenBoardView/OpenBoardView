@@ -3,7 +3,7 @@ option(ENABLE_GL1 "Build OpenGL 1 renderer." ON)
 option(ENABLE_GL3 "Build OpenGL 3 renderer." ON)
 option(ENABLE_GLES2 "Configure OpenGL 3 renderer to be OpenGL ES 2.0 compatible." OFF)
 
-if(NOT APPLE AND NOT WIN32 OR MINGW)
+if(NOT WIN32 OR MINGW)
 	find_package(PkgConfig REQUIRED)
 endif()
 
