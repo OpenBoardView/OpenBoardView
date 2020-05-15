@@ -8,7 +8,6 @@
 #include "Renderers/Renderers.h"
 
 Image::Image(const std::string &file) : file(file) {
-	reload();
 }
 
 Image::~Image() {
