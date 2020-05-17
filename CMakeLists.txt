@@ -8,8 +8,8 @@ if(POLICY CMP0028)
 	cmake_policy(SET CMP0028 NEW)
 endif()
 
-# Set OSX target version, before calling project() (inside version.cmake)
-set(CMAKE_OSX_DEPLOYMENT_TARGET "10.9" CACHE STRING "Minimum OS X deployment version")
+# Set OSX target version, before calling project() (inside version.cmake). FORCE is needed when project() is called within an included file
+set(CMAKE_OSX_DEPLOYMENT_TARGET "10.9" CACHE STRING "Minimum OS X deployment version" FORCE)
 
 # Include our project variables
 include("version.cmake")
