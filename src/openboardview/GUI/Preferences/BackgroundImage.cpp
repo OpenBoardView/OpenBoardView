@@ -42,8 +42,9 @@ void BackgroundImage::imageSettings(const std::string &name, Image &image) {
 		auto path = show_file_picker();
 		if (!path.empty()) {
 			image = {path};
-			if (!image.reload()) {
-				erroredFiles.push_back(image.file);
+			std::string error = image.reload();
+			if (!error.empty()) {
+				erroredFiles.push_back(error);
 			}
 		}
 	}
@@ -83,11 +84,13 @@ void BackgroundImage::render() {
 		if (ImGui::Button("Save")) {
 			shown = false;
 			backgroundImage.writeToConfig(backgroundImage.configFilename);
-			if (!backgroundImage.topImage.reload()) {
-				erroredFiles.push_back(backgroundImage.topImage.file);
+			std::string error = backgroundImage.topImage.reload();
+			if (!error.empty()) {
+				erroredFiles.push_back(error);
 			}
-			if (!backgroundImage.bottomImage.reload()) {
-				erroredFiles.push_back(backgroundImage.bottomImage.file);
+			error = backgroundImage.bottomImage.reload();
+			if (!error.empty()) {
+				erroredFiles.push_back(error);
 			}
 		}
 		ImGui::SameLine();

@@ -80,10 +80,14 @@ void BackgroundImage::writeToConfig(const std::string &filename) {
 	confparse.WriteFloat("BottomImageTransparency", bottomImage.transparency);
 }
 
-bool BackgroundImage::reload() {
-	auto ret = topImage.reload();
-	ret &= bottomImage.reload();
-	return ret;
+std::string BackgroundImage::reload() {
+	error = topImage.reload();
+	if (!error.empty()) {
+		error += "\n";
+	}
+	error += bottomImage.reload();
+
+	return error;
 }
 
 const Image &BackgroundImage::selectedImage() const {
@@ -96,7 +100,20 @@ const Image &BackgroundImage::selectedImage() const {
 	}
 }
 
-void BackgroundImage::render(ImDrawList &draw, const ImVec2 &p_min, const ImVec2 &p_max, int rotation) const {
+void BackgroundImage::render(ImDrawList &draw, const ImVec2 &p_min, const ImVec2 &p_max, int rotation) {
+	if (ImGui::BeginPopupModal("Error while loading background image")) {
+		ImGui::Text("There was an error while opening background image file(s)");
+		ImGui::Text("%s", error.c_str());
+		if (ImGui::Button("OK")) {
+			ImGui::CloseCurrentPopup();
+			error.clear(); // clear errors once popup is closed
+		}
+		ImGui::EndPopup();
+	}
+	if (!error.empty()) {
+		ImGui::OpenPopup("Error while loading background image"); // Open error popup if there was an error
+	}
+
 	selectedImage().render(draw, p_min, p_max, rotation);
 }
 

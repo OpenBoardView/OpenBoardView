@@ -35,7 +35,7 @@ public:
 	Image(const std::string &file);
 	~Image();
 
-	bool reload();
+	std::string reload();
 	void render(ImDrawList &draw, const ImVec2 &p_min, const ImVec2 &p_max, int rotation) const;
 
 	float x0() const;
