@@ -4,6 +4,7 @@
 #include "utils.h"
 #include <assert.h>
 #include <ctype.h>
+#include <stdexcept>
 #include <stdint.h>
 #include <string.h>
 #include <unordered_map>
