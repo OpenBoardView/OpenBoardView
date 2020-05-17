@@ -135,6 +135,7 @@ target_link_libraries(${PROJECT_NAME_LOWER}
 	${COCOA_LIBRARY}
 	${ZLIB_LIBRARIES}
 	${SQLITE3_LIBRARIES}
+	ghc_filesystem
 	${CMAKE_DL_LIBS}
 )
 

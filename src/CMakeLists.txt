@@ -121,6 +121,13 @@ set(IMGUI_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/imgui ${CMAKE_CURRENT_SOURCE_
 
 #install(TARGETS imgui DESTINATION ${INSTALL_ARCHIVE_DIR}) # No need to install a static lib
 
+## filesystem ##
+execute_process(
+	COMMAND git submodule update --init src/filesystem
+	WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+)
+add_subdirectory(filesystem)
+
 ## stb ##
 execute_process(
 	COMMAND git submodule update --init src/stb

@@ -3,7 +3,9 @@
 #include "imgui/imgui.h"
 #include "confparse.h"
 
-#include <filesystem>
+#include <ghc/filesystem.hpp>
+
+using namespace ghc;
 
 BackgroundImage::BackgroundImage(const Side &side) : side(&side) {
 }
@@ -14,7 +16,7 @@ BackgroundImage::BackgroundImage(const int &side) : side(reinterpret_cast<const 
 void BackgroundImage::loadFromConfig(const std::string &filename) {
 	configFilename = filename; // save filename for latter use with writeToConfig
 
-	auto configDir = std::filesystem::path{filename}.parent_path();
+	auto configDir = filesystem::path{filename}.parent_path();
 
 	auto confparse = Confparse{};
 	confparse.Load(filename);
@@ -57,9 +59,9 @@ void BackgroundImage::writeToConfig(const std::string &filename) {
 	auto confparse = Confparse{};
 	confparse.Load(filename);
 
-	auto configDir = std::filesystem::path{filename}.parent_path();
+	auto configDir = filesystem::path{filename}.parent_path();
 
-	auto topImagePath = std::filesystem::relative(topImage.file, configDir);
+	auto topImagePath = filesystem::relative(topImage.file, configDir);
 	confparse.WriteStr("TopImageFile", topImagePath.generic_string().c_str());
 	confparse.WriteInt("TopImageOffsetX", topImage.offsetX);
 	confparse.WriteInt("TopImageOffsetY", topImage.offsetY);
@@ -69,7 +71,7 @@ void BackgroundImage::writeToConfig(const std::string &filename) {
 	confparse.WriteBool("TopImageMirrorY", topImage.mirrorY);
 	confparse.WriteFloat("TopImageTransparency", topImage.transparency);
 
-	auto bottomImagePath = std::filesystem::relative(bottomImage.file, configDir);
+	auto bottomImagePath = filesystem::relative(bottomImage.file, configDir);
 	confparse.WriteStr("BottomImageFile", bottomImagePath.generic_string().c_str());
 	confparse.WriteInt("BottomImageOffsetX", bottomImage.offsetX);
 	confparse.WriteInt("BottomImageOffsetY", bottomImage.offsetY);

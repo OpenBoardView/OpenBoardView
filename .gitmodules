@@ -15,3 +15,6 @@
 [submodule "src/stb"]
 	path = src/stb
 	url = https://github.com/nothings/stb.git
+[submodule "src/filesystem"]
+	path = src/filesystem
+	url = https://github.com/gulrak/filesystem.git
