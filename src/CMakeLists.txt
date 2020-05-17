@@ -57,8 +57,6 @@ add_subdirectory(glad)
 ## SDL2 ##
 find_package(SDL2 REQUIRED CONFIG)
 add_definitions(-DENABLE_SDL2)
-## SDL2_image
-pkg_check_modules(SDL2_IMAGE REQUIRED SDL2_image)
 
 ## imgui ##
 # note: in the future there may be integrated CMake support into imgui
@@ -122,6 +120,13 @@ set(IMGUI_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/imgui ${CMAKE_CURRENT_SOURCE_
 
 
 #install(TARGETS imgui DESTINATION ${INSTALL_ARCHIVE_DIR}) # No need to install a static lib
+
+## stb ##
+execute_process(
+	COMMAND git submodule update --init src/stb
+	WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/stb)
 
 ## OpenBoardView ##
 add_subdirectory(openboardview)

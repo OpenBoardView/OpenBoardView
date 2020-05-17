@@ -32,14 +32,16 @@ private:
 
 	const Side *side = &defaultSide; // Try to keep this pointer always valid, linked to the BoardView::m_current_side attribute
 	const Image &selectedImage() const;
+
+	std::string error{};
 public:
 	BackgroundImage(const Side &side);
 	BackgroundImage(const int &side);
 
 	void loadFromConfig(const std::string &filename);
 	void writeToConfig(const std::string &filename);
-	bool reload();
-	void render(ImDrawList &draw, const ImVec2 &p_min, const ImVec2 &p_max, int rotation) const;
+	std::string reload();
+	void render(ImDrawList &draw, const ImVec2 &p_min, const ImVec2 &p_max, int rotation);
 
 	float x0() const;
 	float y0() const;

@@ -38,7 +38,7 @@ replacement for the "Test_Link" software and "Landrex".
 
 For Ubuntu developers, you'll need the following packages at a minimum;
 
-	$ apt-get install git build-essential cmake libsdl2-dev libsdl2-image-dev libgtk-3-dev
+	$ apt-get install git build-essential cmake libsdl2-dev libgtk-3-dev
 
 #### Fedora
 
@@ -46,7 +46,7 @@ For Fedora, you will need the following packages at a minimum;
 
 	$ dnf groupinstall "Development Tools"
 
-	$ dnf install SDL2-devel SDL2_image-devel gtk3-devel fontconfig-devel
+	$ dnf install SDL2-devel gtk3-devel fontconfig-devel
 
 ### Installation
 

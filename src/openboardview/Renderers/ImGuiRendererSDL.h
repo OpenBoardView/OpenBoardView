@@ -22,7 +22,9 @@ public:
 	virtual void renderFrame(const ImVec4 &clear_color);
 	virtual void renderDrawData() = 0;
 	virtual void shutdown();
-	virtual bool loadTextureFromFile(const std::string &filename, GLuint* out_texture, int* out_width, int* out_height);
+
+	// Returned string is error message, empty if successful
+	virtual std::string loadTextureFromFile(const std::string &filename, GLuint* out_texture, int* out_width, int* out_height);
 protected:
 	SDL_Window *window = nullptr;
 	virtual void setGLVersion();

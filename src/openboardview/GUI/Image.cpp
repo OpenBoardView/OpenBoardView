@@ -14,7 +14,7 @@ Image::~Image() {
 	glDeleteTextures(1, &texture);
 }
 
-bool Image::reload() {
+std::string Image::reload() {
 	glDeleteTextures(1, &texture);
 	return Renderers::current->loadTextureFromFile(file, &texture, &width, &height);
 }
