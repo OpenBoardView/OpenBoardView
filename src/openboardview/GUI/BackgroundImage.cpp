@@ -7,6 +7,10 @@
 
 using namespace ghc;
 
+#if __cplusplus < 201703L
+constexpr const BackgroundImage::Side BackgroundImage::defaultSide; // c++ <17 need definition in .cpp
+#endif
+
 BackgroundImage::BackgroundImage(const Side &side) : side(&side) {
 }
 
