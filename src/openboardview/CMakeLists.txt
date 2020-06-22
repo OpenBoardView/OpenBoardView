@@ -147,6 +147,10 @@ target_link_libraries(${PROJECT_NAME_LOWER}
 	${CMAKE_DL_LIBS}
 )
 
+if(NOT WIN32)
+       target_link_libraries(${PROJECT_NAME_LOWER} X11)
+endif()
+
 if(MINGW) # Link statically with SDL2 for Windows
 	target_link_libraries(${PROJECT_NAME_LOWER}
 		${SDL2_STATIC_LIBRARIES}

@@ -31,6 +31,8 @@
 #include <sys/types.h>
 #ifndef _MSC_VER
 #include <unistd.h>
+#include <X11/Xlib.h>
+#include <X11/Xutil.h>
 #endif
 
 // Rendering stuff
@@ -42,6 +44,8 @@ struct globals {
 	bool slowCPU;
 	int width;
 	int height;
+        int start_x;
+        int start_y;
 	int dpi;
 	double font_size;
 	bool debug;
@@ -53,6 +57,8 @@ struct globals {
 		this->slowCPU     = false;
 		this->width       = 0;
 		this->height      = 0;
+		this->start_x     = SDL_WINDOWPOS_CENTERED;
+		this->start_y     = SDL_WINDOWPOS_CENTERED;
 		this->dpi         = 0;
 		this->font_size   = 0.0f;
 		this->debug       = false;
@@ -76,6 +82,7 @@ char help[] =
 	-p <dpi> : Set the dpi\n\
 	-r <renderer> : Set the renderer [ OPENGL1 = 1; OPENGL3 = 2; OPENGLES2 = 3 ]\n\
 	-d : Debug mode\n\
+	-g <geometry> : X11 style geometry string, e.g. 1600x1080+0+0\n\
 ";
 
 int parse_parameters(int argc, char **argv, struct globals *g) {
@@ -185,6 +192,27 @@ int parse_parameters(int argc, char **argv, struct globals *g) {
 		} else if (strcmp(p, "-d") == 0) {
 			g->debug = true;
 
+#ifndef _MSC_VER
+		} else if (strcmp(p, "-g") == 0) {
+			param++;
+			if ((param < argc)) {
+			  int start_x = g->start_x;
+			  int start_y = g->start_y;
+			  unsigned int height = g->height;
+			  unsigned int width = g->width;
+			  int rc = XParseGeometry(argv[param], &start_x, &start_y, &width, &height);
+			  if (rc) {
+			    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Setting geometry: x:%d y:%d w:%u h:%u\n\n", start_x, start_y, width, height );
+			    if (rc & XValue) g->start_x = start_x;
+			    if (rc & YValue) g->start_y = start_y;
+			    if (rc & WidthValue) g->width = (int)width;
+			    if (rc & HeightValue) g->height = (int)height;
+			  }
+			} else {
+				SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Not enough paramters for -g <geometry>\n\n%s %s", argv[0], help );
+				exit(1);
+			}
+#endif // _MSC_VER
 		} else {
 			SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Unknown parameter '%s'\n\n%s %s", p, argv[0], help);
 			exit(1);
@@ -253,8 +281,7 @@ int main(int argc, char **argv) {
 	// Setup window
 	SDL_DisplayMode current;
 	SDL_GetCurrentDisplayMode(0, &current);
-	window = SDL_CreateWindow(
-	    OBV_NAME, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, g.width, g.height, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
+	window = SDL_CreateWindow(OBV_NAME, g.start_x, g.start_y, g.width, g.height, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
 	if (window == NULL) {
 		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Failed to create the sdlWindow: %s\n", SDL_GetError());
 		cleanupAndExit(1);
@@ -424,7 +451,7 @@ int main(int argc, char **argv) {
 	}
 
 	// Cleanup
- 	renderer->shutdown();
+	renderer->shutdown();
 
 	cleanupAndExit(0);
 	return 0;
