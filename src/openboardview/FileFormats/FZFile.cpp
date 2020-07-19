@@ -349,9 +349,9 @@ FZFile::FZFile(std::vector<char> &buf, uint32_t *fzkey) {
 				nail.pos.y  = posy * multiplier;
 				char *loc   = READ_STR();
 				if (!strcmp(loc, "T"))
-					nail.side = 1; // on top
+					nail.side = BRDPartMountingSide::Top;
 				else
-					nail.side = 2; // on bottom
+					nail.side = BRDPartMountingSide::Bottom;
 				/*double radius =*/READ_DOUBLE();
 				nails.push_back(nail);
 			} break;

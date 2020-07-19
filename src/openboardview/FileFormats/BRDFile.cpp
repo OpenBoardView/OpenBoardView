@@ -197,7 +197,7 @@ BRDFile::BRDFile(std::vector<char> &buf) {
 				nail.probe = READ_UINT();
 				nail.pos.x = READ_INT();
 				nail.pos.y = READ_INT();
-				nail.side  = READ_UINT();
+				nail.side  = READ_UINT() == 1 ? BRDPartMountingSide::Top : BRDPartMountingSide::Bottom;
 				nail.net   = READ_STR();
 				nails.push_back(nail);
 			} break;

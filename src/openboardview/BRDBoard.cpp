@@ -61,7 +61,7 @@ BRDBoard::BRDBoard(const BRDFile *const boardFile)
 			net->is_ground = (net->name == "GND");
 			net->number    = brd_nail.probe;
 
-			if (brd_nail.side == 1) {
+			if (brd_nail.side == BRDPartMountingSide::Top) {
 				net->board_side = kBoardSideTop;
 			} else {
 				net->board_side = kBoardSideBottom;
