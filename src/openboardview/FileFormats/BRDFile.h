@@ -13,7 +13,7 @@
 		ENSURE(value >= 0);                      \
 		return static_cast<unsigned int>(value); \
 	}
-#define READ_DOUBLE() strtod(p, &p);
+#define READ_DOUBLE() strtod(p, &p)
 #define READ_STR                                     \
 	[&]() {                                          \
 		while ((*p) && (isspace((uint8_t)*p))) ++p;  \
@@ -61,7 +61,7 @@ struct BRDPin {
 struct BRDNail {
 	unsigned int probe;
 	BRDPoint pos;
-	unsigned int side;
+	BRDPartMountingSide side;
 	const char *net;
 };
 
