@@ -70,7 +70,7 @@ before_deploy: |-
     export DEPLOY_FILES=bin/openboardview.exe
   elif [ "$DEPLOY_DEB" == "yes" ]
   then
-    export DEPLOY_FILES=$(ls OpenBoardView-*.deb)
+    export DEPLOY_FILES=$(ls openboardview_*.deb)
   elif [ "$DEPLOY_RPM" == "yes" ]
   then
     export DEPLOY_FILES=$(ls OpenBoardView-*.rpm)

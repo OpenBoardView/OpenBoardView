@@ -21,7 +21,7 @@ elseif(UNIX)
 	install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME_LOWER}.desktop"
 	        DESTINATION "share/applications")
 	install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME_LOWER}.appdata.xml"
-	        DESTINATION "share/appdata")
+	        DESTINATION "share/metainfo")
 
 	install(FILES "icon.svg"
 	        DESTINATION "share/icons/hicolor/scalable/apps"
