@@ -20,6 +20,7 @@
 
 #include "BRDBoard.h"
 #include "Board.h"
+#include "FileFormats/ADFile.h"
 #include "FileFormats/ASCFile.h"
 #include "FileFormats/BDVFile.h"
 #include "FileFormats/BRD2File.h"
@@ -425,6 +426,8 @@ int BoardView::LoadFile(const std::string &filename) {
 				file = new FZFile(buffer, FZKey);
 			} else if (check_fileext(filename, ".bom") || check_fileext(filename, ".asc"))
 				file = new ASCFile(buffer, filename);
+			else if (ADFile::verifyFormat(buffer))
+				file = new ADFile(buffer);
 			else if (CADFile::verifyFormat(buffer))
 				file = new CADFile(buffer);
 			else if (check_fileext(filename, ".cst"))
