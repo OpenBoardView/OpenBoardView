@@ -14,7 +14,7 @@
 #endif
 
 #define NORMALISING_MARGIN 10
-#define FFSCALE 1000   // we convert thou to millithou
+#define FFSCALE 1000
 
 #define READ_INT() strtol(p, &p, 10);
 // Warning: read as int then cast to uint if positive
@@ -74,7 +74,6 @@ char *read_item(char *p) {
 }
 
 static void rotate_cw(double *x, double *y, double ox, double oy, double theta) {
-	// rotate point(px, py) clockwise around point(ox, oy) by angle theta
 	theta *= 0.01745329251;
 	double px = *x;
 	double py = *y;
@@ -98,8 +97,8 @@ void ADFile::outline_order_segments( std::vector<BRDPoint> &format ) {
 	source.erase(source.begin()+1);
 	source.erase(source.begin());
 
-		auto p = ordered.back(); // get the last item on the ordered list
-		bool hit = false;
+	auto p = ordered.back();
+	bool hit = false;
 
 	while (source.size() > 1) {
 
@@ -111,20 +110,19 @@ void ADFile::outline_order_segments( std::vector<BRDPoint> &format ) {
 			auto r = source.at(i+1);
 
 			if (q.x == p.x && q.y == p.y) {
-				ordered.push_back(r); // we only need to push back the end point of the segment
+				ordered.push_back(r); 
 				source.erase(source.begin() +i+1);
 				source.erase(source.begin() +i);
 				hit = true;
 				break;
 			}
 			if (r.x == p.x && r.y == p.y) {
-				ordered.push_back(q); // we only need to push back the end point of the segment
+				ordered.push_back(q);
 				source.erase(source.begin() +i+1);
 				source.erase(source.begin() +i);
 				hit = true;
 				break;
 			} // if we have a match 
-
 		} // for each possible segment in the list
 
 		if ( hit == false ) {
@@ -135,8 +133,6 @@ void ADFile::outline_order_segments( std::vector<BRDPoint> &format ) {
 				source.erase(source.begin());
 			}
 		}
-
-
 	} // while there's at least 2  items left
 
 	ordered.push_back(ordered.at(0)); // close the loop
@@ -198,7 +194,6 @@ ADFile::ADFile(std::vector<char> &buf) {
 			current_block = BLOCK_PADS;
 		}
 
-
 		char *p = line;
 
 		switch (current_block) {
@@ -220,57 +215,47 @@ ADFile::ADFile(std::vector<char> &buf) {
 											 part_id++;
 										 }
 
-										  p = strstr(line, "X1=");
-										  if (p) {
-											  p+= 3 ;
-											  x1 = READ_DOUBLE();
-											  p = strstr(p, "Y1=");
-											  if (p) {
-												  p+= 3;
-												  y1 = READ_DOUBLE();
-												  p = strstr(p, "X2=");
-												  if (p) {
-													  p+= 3 ;
-													  x2 = READ_DOUBLE();
-													  p = strstr(p, "Y2=");
-													  if (p) {
-														  p+= 3;
-														  y2 = READ_DOUBLE();
+										 p = strstr(line, "X1=");
+										 if (p) {
+											 p+= 3 ;
+											 x1 = READ_DOUBLE();
+											 p = strstr(p, "Y1=");
+											 if (p) {
+												 p+= 3;
+												 y1 = READ_DOUBLE();
+												 p = strstr(p, "X2=");
+												 if (p) {
+													 p+= 3 ;
+													 x2 = READ_DOUBLE();
+													 p = strstr(p, "Y2=");
+													 if (p) {
+														 p+= 3;
+														 y2 = READ_DOUBLE();
 
-														  if ((strcmp(layer,"KEEPOUT")==0)) {
-															  // usually the board outline is kept here... usually
-															  //
-															  //fprintf(stdout,"%s:%d: BRD Outline ( %f %f -> %f %f )\n", FL,x1, y1, x2, y2 );
-															  if (format.size() == 0) format_first = BRDPoint({x1, y1});
+														 if ((strcmp(layer,"KEEPOUT")==0)) {
+															 // usually the board outline is kept here... usually
+															 //
+															 if (format.size() == 0) format_first = BRDPoint({x1, y1});
 
-															  format.push_back(BRDPoint({x1, y1}));
-															  format.push_back(BRDPoint({x2, y2}));
-															  format_last = BRDPoint({x2, y2});
+															 format.push_back(BRDPoint({x1, y1}));
+															 format.push_back(BRDPoint({x2, y2}));
+															 format_last = BRDPoint({x2, y2});
 
-														  } else if (strstr(layer,"OVERLAY")) {
-															  for (auto &a_part: ad_parts) {
-																  if (a_part.part_id == part_id) {
-//																	  fprintf(stdout,"%s:%d: %s ( %f %f -> %f %f )\n", FL, a_part.name, x1, y1, x2, y2 );
-//																	  a_part.outline.push_back(BRDPoint({x1, y1}));
-//																	  a_part.outline.push_back(BRDPoint({x2, y2}));
-//																	  a_part.outline_type = BRDOutlineType::Segments;
-																	  break;
-																  }
-															  }
-														  } else if ((strncmp(layer,"MECHANICAL", 10)==0)) {
+														 } else if (strstr(layer,"OVERLAY")) {
+															 for (auto &a_part: ad_parts) {
+																 if (a_part.part_id == part_id) {
+																	 break;
+																 }
+															 }
+														 } else if ((strncmp(layer,"MECHANICAL", 10)==0)) {
 
-//																  overlay.push_back(BRDPoint({x1, y1}));
-//																  overlay.push_back(BRDPoint({x2, y2}));
-//
-														  } else {
-//																  overlay.push_back(BRDPoint({x1, y1}));
-//																  overlay.push_back(BRDPoint({x2, y2}));
-																  break;
-														  }
-														  }
-												  }
-											  }
-										  }
+														 } else {
+															 break;
+														 }
+													 }
+												 }
+											 }
+										 }
 
 
 									 }
@@ -513,7 +498,7 @@ ADFile::ADFile(std::vector<char> &buf) {
 
 		for (auto ad_pad : ad_pads) {
 			BRDPin pin;
-			
+
 
 			if (ad_pad.net_id == 0) {
 				ad_pad.net_id = ad_nets.size(); // this pad wasn't assigned a net. assign it to NC net.
@@ -547,6 +532,10 @@ ADFile::ADFile(std::vector<char> &buf) {
 	}
 
 	std::sort(pins.begin(), pins.end(), customLess);
+
+	// AD files use segments for board outline
+	// we want points.
+	//
 	outline_order_segments( format );
 
 	num_parts  = parts.size();

@@ -1,8 +1,6 @@
 #include "BRDFile.h"
 #pragma once
 
-//#include "FFCore.h"
-
 struct AD_BRDNet {
 	unsigned int id;
 	char *name;
@@ -14,13 +12,9 @@ struct AD_BRDPart {
 	char *layer;
 
 	unsigned int part_id;
-//PLD	BRDPartType part_type = BRDPartType::SMD;
 	double x;
 	double y;
 	double orientation;
-
-//	std::vector<BRDPoint> outline;
-//	BRDOutlineType outline_type = BRDOutlineType::none;
 };
 
 struct AD_BRDPad {
@@ -35,10 +29,8 @@ struct AD_BRDPad {
 	double x_size, y_size;
 	double rotation = 0.0;
 	int type; // SMD = 0, TH = 1
-//	std::vector<BRDPoint> outline;
-//	BRDOutlineType outline_type = BRDOutlineType::none;
 	char *unique_id;
-		char *layer;
+	char *layer;
 };
 
 struct ADFile : public BRDFile {
