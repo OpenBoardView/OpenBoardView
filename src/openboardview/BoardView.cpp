@@ -3217,13 +3217,15 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 			//		}
 
 			if (show_text) {
-				const char *pin_number = pin->number.c_str();
+				//const char *pin_number = pin->number.c_str();
 
-				ImVec2 text_size = ImGui::CalcTextSize(pin_number);
+				//ImVec2 text_size = ImGui::CalcTextSize(pin_number);
+				ImVec2 text_size = ImGui::CalcTextSize(pin->name.c_str());
 				ImVec2 pos_adj   = ImVec2(pos.x - text_size.x * 0.5f, pos.y - text_size.y * 0.5f);
 
 				draw->ChannelsSetCurrent(kChannelText);
-				draw->AddText(pos_adj, text_color, pin_number);
+				//draw->AddText(pos_adj, text_color, pin_number);
+				draw->AddText(pos_adj, text_color, pin->name.c_str());
 				draw->ChannelsSetCurrent(kChannelPins);
 			}
 		}

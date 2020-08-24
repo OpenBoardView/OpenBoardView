@@ -130,6 +130,8 @@ struct Pin : BoardElement {
 	// Pin number / Nail count.
 	string number;
 
+	string name; // for BGA pads will be AZ82 etc
+
 	// Position according to board file. (probably in inches)
 	Point position;
 
