@@ -13,49 +13,12 @@
 #define FL __FILE__,__LINE__
 #endif
 
-#define NORMALISING_MARGIN 10
-#define FFSCALE 1000
-
-#define READ_INT() strtol(p, &p, 10);
-// Warning: read as int then cast to uint if positive
-#define READ_UINT                                \
-	[&]() {                                      \
-		int value = strtol(p, &p, 10);           \
-		ENSURE(value >= 0);                      \
-		return static_cast<unsigned int>(value); \
-	}
-#define READ_DOUBLE() strtod(p, &p);
-#define READ_STR                                     \
-	[&]() {                                          \
-		while ((*p) && (isspace((uint8_t)*p))) ++p;  \
-		s = p;                                       \
-		while ((*p) && (!isspace((uint8_t)*p))) ++p; \
-		*p = 0;                                      \
-		p++;                                         \
-		return fix_to_utf8(s, &arena, arena_end);    \
-	}
-
-
-#define BLOCK_NONE			0
-#define BLOCK_OUTLINE		1
-#define BLOCK_NETS			2
-#define BLOCK_COMPONENTS	3
-#define BLOCK_PADS			4
-#define BLOCK_TRACKS			5
-
-#ifndef FL
-#define FL __FILE__,__LINE__
-#endif 
-
-#define READ_ITEM                                                   \
-	[&]() {                                                         \
-		while ((*p) && (isspace((uint8_t)*p))) ++p;                 \
-		s = p;                                                      \
-		while ((*p) && (!isspace((uint8_t)*p)) && (*p != '|')) ++p; \
-		*p = 0;                                                     \
-		p++;                                                        \
-		return fix_to_utf8(s, &arena, arena_end);                   \
-	}
+#define ADFILE_BLOCK_NONE			0
+#define ADFILE_BLOCK_OUTLINE		1
+#define ADFILE_BLOCK_NETS			2
+#define ADFILE_BLOCK_COMPONENTS	3
+#define ADFILE_BLOCK_PADS			4
+#define ADFILE_BLOCK_TRACKS		5
 
 char *arena;
 char *arena_end;
@@ -72,15 +35,6 @@ char *read_item(char *p) {
 	*p = '|';
 	return fix_to_utf8(r, &arena, arena_end);                   
 }
-
-static void rotate_cw(double *x, double *y, double ox, double oy, double theta) {
-	theta *= 0.01745329251;
-	double px = *x;
-	double py = *y;
-	*x = cos(theta) * (px - ox) - sin(theta) * (py - oy) + ox;
-	*y = sin(theta) * (px - ox) + cos(theta) * (py - oy) + oy;
-}
-
 
 bool ADFile::verifyFormat(std::vector<char> &buf) {
 	bool isBinary = find_str_in_buf("Binary", buf);
@@ -140,8 +94,6 @@ void ADFile::outline_order_segments( std::vector<BRDPoint> &format ) {
 	if (ordered.size() > 2) {
 		format.clear();
 		format = ordered;
-		for (auto p: format) {
-		}
 	}
 }
 
@@ -173,297 +125,304 @@ ADFile::ADFile(std::vector<char> &buf) {
 	std::vector<char *>::iterator line_it = lines.begin();
 	while (line_it != lines.end()) {
 		char *line = *line_it;
+		char *p;
 		++line_it;
 
 		while (isspace((uint8_t)*line)) line++;
 		if (!line[0]) continue;
 
 		if (strstr(line, "RECORD=Track")) {
-			current_block = BLOCK_TRACKS;
+			current_block = ADFILE_BLOCK_TRACKS;
 		}
 
 		if (strstr(line, "RECORD=Net")) {
-			current_block = BLOCK_NETS;
+			current_block = ADFILE_BLOCK_NETS;
 		}
 
 		if (strstr(line, "RECORD=Component")) {
-			current_block = BLOCK_COMPONENTS;
+			current_block = ADFILE_BLOCK_COMPONENTS;
 		}
 
 		if (strstr(line, "RECORD=Pad")) {
-			current_block = BLOCK_PADS;
+			current_block = ADFILE_BLOCK_PADS;
 		}
 
-		char *p = line;
+		p = line;
 
 		switch (current_block) {
-			case BLOCK_TRACKS: {
-										 int part_id;
-										 double x1, y1, x2, y2;
-										 char *layer;
+			case ADFILE_BLOCK_TRACKS: {
+												  int part_id;
+												  double x1, y1, x2, y2;
+												  char *layer;
 
-										 p = strstr(line, "|LAYER=");
-										 if (p) {
-											 p+= 7;
-											 layer = read_item(p);
-										 }
+												  p = strstr(line, "|LAYER=");
+												  if (p) {
+													  p+= 7;
+													  layer = read_item(p);
+												  }
 
-										 p = strstr(line, "|COMPONENT=");
-										 if (p) {
-											 p += sizeof("|COMPONENT=") -1;
-											 part_id = READ_INT();
-											 part_id++;
-										 }
+												  p = strstr(line, "|COMPONENT=");
+												  if (p) {
+													  p += sizeof("|COMPONENT=") -1;
+													  part_id = READ_INT();
+													  part_id++;
+												  }
 
-										 p = strstr(line, "X1=");
-										 if (p) {
-											 p+= 3 ;
-											 x1 = READ_DOUBLE();
-											 p = strstr(p, "Y1=");
-											 if (p) {
-												 p+= 3;
-												 y1 = READ_DOUBLE();
-												 p = strstr(p, "X2=");
-												 if (p) {
-													 p+= 3 ;
-													 x2 = READ_DOUBLE();
-													 p = strstr(p, "Y2=");
-													 if (p) {
-														 p+= 3;
-														 y2 = READ_DOUBLE();
-
-														 if ((strcmp(layer,"KEEPOUT")==0)) {
-															 // usually the board outline is kept here... usually
-															 //
-															 if (format.size() == 0) format_first = BRDPoint({x1, y1});
-
-															 format.push_back(BRDPoint({x1, y1}));
-															 format.push_back(BRDPoint({x2, y2}));
-															 format_last = BRDPoint({x2, y2});
-
-														 } else if (strstr(layer,"OVERLAY")) {
-															 for (auto &a_part: ad_parts) {
-																 if (a_part.part_id == part_id) {
-																	 break;
-																 }
-															 }
-														 } else if ((strncmp(layer,"MECHANICAL", 10)==0)) {
-
-														 } else {
-															 break;
-														 }
-													 }
-												 }
-											 }
-										 }
-
-
-									 }
-									 current_block = BLOCK_NONE;
-									 break;
-
-
-
-			case BLOCK_OUTLINE: { // Format
-										  BRDPoint point;
-										  if (!strstr(p,"LAYER=KEEPOUT")) break;
-										  p = strstr(p, "X1=");
-										  if (p) {
-											  p+= 3 ;
-											  point.x = READ_DOUBLE();
-											  p = strstr(p, "Y1=");
-											  if (p) {
-												  p+= 3;
-												  point.y = READ_DOUBLE();
-												  format.push_back(point);
-												  p = strstr(p, "X2=");
+												  p = strstr(line, "X1=");
 												  if (p) {
 													  p+= 3 ;
-													  point.x = READ_DOUBLE();
-													  p = strstr(p, "Y2=");
+													  x1 = READ_DOUBLE();
+													  p = strstr(p, "Y1=");
 													  if (p) {
 														  p+= 3;
-														  point.y = READ_DOUBLE();
-														  format.push_back(point);
-													  }
-												  }
-											  }
-										  }
+														  y1 = READ_DOUBLE();
+														  p = strstr(p, "X2=");
+														  if (p) {
+															  p+= 3 ;
+															  x2 = READ_DOUBLE();
+															  p = strstr(p, "Y2=");
+															  if (p) {
+																  p+= 3;
+																  y2 = READ_DOUBLE();
+
+																  if ((strcmp(layer,"KEEPOUT")==0)) {
+																	  // Keepout
+																	  //
+																	  // usually the board outline is kept here... usually
+																	  //
+																	  if (format.size() == 0) format_first = BRDPoint({x1, y1});
+
+																	  format.push_back(BRDPoint({x1, y1}));
+																	  format.push_back(BRDPoint({x2, y2}));
+																	  format_last = BRDPoint({x2, y2});
+
+																  } else if (strstr(layer,"OVERLAY")) {
+																	  // Overlay
+																	  //
+																	  for (auto &a_part: ad_parts) {
+																		  if (a_part.part_id == part_id) {
+																			  break;
+																		  }
+																	  }
+																  } else if ((strncmp(layer,"MECHANICAL", 10)==0)) {
+																	  // Mechanical
+																	  //
+																  } else {
+																	  // Failsafe/default
+																	  //
+																	  break;
+																  }
+															  } // if Y2= present
+														  } // if X2= present
+													  } // if Y1= present
+												  } // if X1= present
+											  } // ADFILE_BLOCK_TRACKS
+											  current_block = ADFILE_BLOCK_NONE;
+											  break;
 
 
-									  } break;
 
-			case BLOCK_NETS: {
-									  AD_BRDNet net;
-									  p = strstr(p, "|ID=");
-									  if (p) p += 4;
-									  net.id = READ_INT();
-									  net.id++;
-									  net_count++;
-									  p = strstr(p, "|NAME=");
-									  if (p) p += 6;
-									  net.name = read_item(p);
-									  ad_nets.push_back(net);
-									  current_block = BLOCK_NONE;
+			case ADFILE_BLOCK_OUTLINE: { 
+													BRDPoint point;
+													if (!strstr(p,"LAYER=KEEPOUT")) break;
+													p = strstr(p, "X1=");
+													if (p) {
+														p+= 3 ;
+														point.x = READ_DOUBLE();
+														p = strstr(p, "Y1=");
+														if (p) {
+															p+= 3;
+															point.y = READ_DOUBLE();
+															format.push_back(point);
+															p = strstr(p, "X2=");
+															if (p) {
+																p+= 3 ;
+																point.x = READ_DOUBLE();
+																p = strstr(p, "Y2=");
+																if (p) {
+																	p+= 3;
+																	point.y = READ_DOUBLE();
+																	format.push_back(point);
+																}
+															}
+														}
+													}
+												} // ADFILE_BLOCK_OUTLINE 
+												break;
 
-								  } break;
+			case ADFILE_BLOCK_NETS: {
+												AD_BRDNet net;
+												p = strstr(p, "|ID=");
+												if (p) p += 4;
+												net.id = READ_INT();
+												net.id++;
+												net_count++;
+												p = strstr(p, "|NAME=");
+												if (p) p += 6;
+												net.name = read_item(p);
+												ad_nets.push_back(net);
+												current_block = ADFILE_BLOCK_NONE;
 
-			case BLOCK_COMPONENTS: {
-											  AD_BRDPart part;
-											  p = strstr(p, "|ID=");
-											  if (p) {
-												  p += 4;
-												  part.part_id = READ_INT();					
-											  } else {
-												  current_block = BLOCK_NONE;
-												  break;
-											  }
-											  part.part_id++; 
-											  p = strstr(p, "|LAYER=");
-											  if (p) p += 7;
-											  part.layer = read_item(p);
-											  p = strstr(p, "|X=");
-											  if (p) p += 3;
-											  part.x = READ_DOUBLE();
-											  p = strstr(p, "|Y=");
-											  if (p) p += 3;
-											  part.y = READ_DOUBLE();
-											  p = strstr(p, "|ROTATION=");
-											  if (p) p += 10;
-											  part.orientation = READ_DOUBLE();
-											  p = strstr(p, "|SOURCEDESIGNATOR=");
-											  if (p) {
-												  p += 18;
-												  part.name = read_item(p);
-											  } else {
-												  char tn[1024];
-												  snprintf(tn,sizeof(tn),"UNKNOWN-%d", part.part_id);
-												  part.name = strdup(tn); // going to lose memory here // MEMORYLEAK
-											  }
-											  if(p) p = strstr(p, "|SOURCEDESCRIPTION=");
-											  if (p) {
-												  char *t;
-												  p += 19;
-												  t = read_item(p);
-												  part.description = t;
-											  }
+											} // ADFILE_BLOCK_NETS
+											break;
 
-											  ad_parts.push_back(part);
-											  current_block = BLOCK_NONE;
+			case ADFILE_BLOCK_COMPONENTS: {
+														AD_BRDPart part;
+														p = strstr(p, "|ID=");
+														if (p) {
+															p += 4;
+															part.part_id = READ_INT();					
+														} else {
+															current_block = ADFILE_BLOCK_NONE;
+															break;
+														}
+														part.part_id++; 
+														p = strstr(p, "|LAYER=");
+														if (p) p += 7;
+														part.layer = read_item(p);
+														p = strstr(p, "|X=");
+														if (p) p += 3;
+														part.x = READ_DOUBLE();
+														p = strstr(p, "|Y=");
+														if (p) p += 3;
+														part.y = READ_DOUBLE();
+														p = strstr(p, "|ROTATION=");
+														if (p) p += 10;
+														part.orientation = READ_DOUBLE();
+														p = strstr(p, "|SOURCEDESIGNATOR=");
+														if (p) {
+															p += 18;
+															part.name = read_item(p);
+														} else {
+															char tn[1024];
+															snprintf(tn,sizeof(tn),"UNKNOWN-%d", part.part_id);
+															part.name = strdup(tn); // going to lose memory here // MEMORYLEAK
+														}
+														if(p) p = strstr(p, "|SOURCEDESCRIPTION=");
+														if (p) {
+															char *t;
+															p += 19;
+															t = read_item(p);
+															part.description = t;
+														}
 
-										  } break;
+														ad_parts.push_back(part);
+														current_block = ADFILE_BLOCK_NONE;
 
-			case BLOCK_PADS: {
-									  AD_BRDPad pad;
-									  bool got_net = false;
+													} // ADFILE_BLOCK_COMPONENTS
+													break;
 
-									  p = strstr(line, "|NET=");
-									  if (p) {
-										  p += 5;
-										  pad.net_id = READ_INT();
-										  pad.net_id++;
-										  got_net = true;
-									  }
+			case ADFILE_BLOCK_PADS: {
+												AD_BRDPad pad;
+												bool got_net = false;
 
-									  p = strstr(line, "|NAME=");
-									  if (p) {
-										  p += 6;
-										  pad.snum = read_item(p);
-										  *p = '|';
-									  }
+												p = strstr(line, "|NET=");
+												if (p) {
+													p += 5;
+													pad.net_id = READ_INT();
+													pad.net_id++;
+													got_net = true;
+												}
 
+												p = strstr(line, "|NAME=");
+												if (p) {
+													p += 6;
+													pad.snum = read_item(p);
+													*p = '|';
+												}
 
-									  p = strstr(line, "|COMPONENT=");
-									  if (p) {
-										  p += 11;
-										  pad.part_id = READ_INT();
-										  pad.part_id++;
-										  if (!got_net) pad.net_id = 0;
-									  } else {
-										  current_block = BLOCK_NONE;
-										  break;
-									  }
+												p = strstr(line, "|COMPONENT=");
+												if (p) {
+													p += 11;
+													pad.part_id = READ_INT();
+													pad.part_id++;
+													if (!got_net) pad.net_id = 0;
+												} else {
+													current_block = ADFILE_BLOCK_NONE;
+													break;
+												}
 
-									  p = strstr(line, "|X=");
-									  if (p) {
-										  p += 3;
-										  pad.x = READ_DOUBLE();
-									  } else {
-										  current_block = BLOCK_NONE;
-										  break;
-									  }
+												p = strstr(line, "|X=");
+												if (p) {
+													p += 3;
+													pad.x = READ_DOUBLE();
+												} else {
+													current_block = ADFILE_BLOCK_NONE;
+													break;
+												}
 
-									  p = strstr(line, "|Y=");
-									  if (p) {
-										  p += 3;
-										  pad.y = READ_DOUBLE();
-									  } else {
-										  current_block = BLOCK_NONE;
-										  break;
-									  }
+												p = strstr(line, "|Y=");
+												if (p) {
+													p += 3;
+													pad.y = READ_DOUBLE();
+												} else {
+													current_block = ADFILE_BLOCK_NONE;
+													break;
+												}
 
-									  p = strstr(line, "|ROTATION=");
-									  if (p) {
-										  char *q;
-										  p += sizeof("|ROTATION=") -1;
-										  q = strchr(p,'|');
-										  *q = '\0';
-										  pad.rotation = strtod(p, &p);
-										  *q = '|';
-									  } 
+												p = strstr(line, "|ROTATION=");
+												if (p) {
+													char *q;
+													p += sizeof("|ROTATION=") -1;
+													q = strchr(p,'|');
+													*q = '\0';
+													pad.rotation = strtod(p, &p);
+													*q = '|';
+												} 
 
-									  p = strstr(line, "|XSIZE=");
-									  if (p) {
-										  p += 7;
-										  pad.x_size = READ_DOUBLE();
-									  } 
+												p = strstr(line, "|XSIZE=");
+												if (p) {
+													p += 7;
+													pad.x_size = READ_DOUBLE();
+												} 
 
-									  p = strstr(line, "|YSIZE=");
-									  if (p) {
-										  p += 7;
-										  pad.y_size = READ_DOUBLE();
-									  } 
+												p = strstr(line, "|YSIZE=");
+												if (p) {
+													p += 7;
+													pad.y_size = READ_DOUBLE();
+												} 
 
-									  p = strstr(line, "|INDEXFORSAVE=");
-									  if (p) {
-										  p += sizeof("|INDEXFORSAVE=") -1;
-										  pad.id = READ_INT();
-									  }
+												p = strstr(line, "|INDEXFORSAVE=");
+												if (p) {
+													p += sizeof("|INDEXFORSAVE=") -1;
+													pad.id = READ_INT();
+												}
 
-									  p = strstr(line, "|UNIQUEID=");
-									  if (p) {
-										  p += sizeof("|UNIQUEID=") -1;
-										  pad.unique_id = read_item(p);
-										  *p = '|';
-									  }
+												p = strstr(line, "|UNIQUEID=");
+												if (p) {
+													p += sizeof("|UNIQUEID=") -1;
+													pad.unique_id = read_item(p);
+													*p = '|';
+												}
 
-									  p = strstr(line, "|LAYER=");
-									  if (p) {
-										  p += sizeof("|LAYER=") -1;
-										  pad.layer = read_item(p);
-										  if (strcmp(pad.layer,"MULTILAYER")==0) {
-											  pad.type = 1;
-										  }
-									  }
+												p = strstr(line, "|LAYER=");
+												if (p) {
+													p += sizeof("|LAYER=") -1;
+													pad.layer = read_item(p);
+													if (strcmp(pad.layer,"MULTILAYER")==0) {
+														pad.type = 1;
+													}
+												}
 
-									  if (pad.x_size > 0.0 && pad.y_size > 0.0) {
-										  double hwx, hwy;
+												if (pad.x_size > 0.0 && pad.y_size > 0.0) {
+													double hwx, hwy;
 
-										  hwx = pad.x_size/2;
-										  hwy = pad.y_size/2;
+													hwx = pad.x_size/2;
+													hwy = pad.y_size/2;
 
-										  pad.radius = (pad.x_size < pad.y_size)  ? pad.x_size:pad.y_size;
-										  pad.radius /= 2;
-									  }
+													pad.radius = (pad.x_size < pad.y_size)  ? pad.x_size:pad.y_size;
+													pad.radius /= 2;
+												}
 
-									  ad_pads.push_back(pad);
-									  current_block = BLOCK_NONE;
+												ad_pads.push_back(pad);
+												current_block = ADFILE_BLOCK_NONE;
 
-								  } break;
+											}  // ADFILE_BLOCK_PADS
+											break;
 
 			default: continue;
-		}
-	}
+		} // switch (current block)
+	} // while more lines to process
 
 	// Altium doesn't include a NC net. so append one to the netlist.
 	//
@@ -472,7 +431,6 @@ ADFile::ADFile(std::vector<char> &buf) {
 	net.id++;
 	net.name = "NC";
 	ad_nets.push_back(net);
-
 
 	double x_partorigin = 0;
 	double y_partorigin = 0;
@@ -499,7 +457,6 @@ ADFile::ADFile(std::vector<char> &buf) {
 		for (auto ad_pad : ad_pads) {
 			BRDPin pin;
 
-
 			if (ad_pad.net_id == 0) {
 				ad_pad.net_id = ad_nets.size(); // this pad wasn't assigned a net. assign it to NC net.
 			}
@@ -508,7 +465,6 @@ ADFile::ADFile(std::vector<char> &buf) {
 				pin.part  = ad_part.part_id;
 				pin.pos.x = ad_pad.x;
 				pin.pos.y = ad_pad.y;
-
 
 				for (auto ad_net : ad_nets) {
 					if (ad_pad.net_id == ad_net.id) {
