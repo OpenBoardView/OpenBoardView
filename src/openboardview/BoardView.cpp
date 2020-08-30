@@ -20,6 +20,7 @@
 
 #include "BRDBoard.h"
 #include "Board.h"
+#include "FileFormats/ADFile.h"
 #include "FileFormats/ASCFile.h"
 #include "FileFormats/BDVFile.h"
 #include "FileFormats/BRD2File.h"
@@ -425,6 +426,8 @@ int BoardView::LoadFile(const std::string &filename) {
 				file = new FZFile(buffer, FZKey);
 			} else if (check_fileext(filename, ".bom") || check_fileext(filename, ".asc"))
 				file = new ASCFile(buffer, filename);
+			else if (ADFile::verifyFormat(buffer))
+				file = new ADFile(buffer);
 			else if (CADFile::verifyFormat(buffer))
 				file = new CADFile(buffer);
 			else if (check_fileext(filename, ".cst"))
@@ -1233,7 +1236,7 @@ void BoardView::ShowInfoPane(void) {
 			ImGui::ListBoxHeader(str.c_str(), listSize); //, ImVec2(m_board_surface.x/3 -5, m_board_surface.y/2));
 			for (auto pin : part->pins) {
 				char ss[1024];
-				snprintf(ss, sizeof(ss), "%4s  %s", pin->number.c_str(), pin->net->name.c_str());
+				snprintf(ss, sizeof(ss), "%4s  %s", pin->name.c_str(), pin->net->name.c_str());
 				if (ImGui::Selectable(ss, (pin == m_pinSelected))) {
 					ClearAllHighlights();
 
@@ -3214,13 +3217,15 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 			//		}
 
 			if (show_text) {
-				const char *pin_number = pin->number.c_str();
+				//const char *pin_number = pin->number.c_str();
 
-				ImVec2 text_size = ImGui::CalcTextSize(pin_number);
+				//ImVec2 text_size = ImGui::CalcTextSize(pin_number);
+				ImVec2 text_size = ImGui::CalcTextSize(pin->name.c_str());
 				ImVec2 pos_adj   = ImVec2(pos.x - text_size.x * 0.5f, pos.y - text_size.y * 0.5f);
 
 				draw->ChannelsSetCurrent(kChannelText);
-				draw->AddText(pos_adj, text_color, pin_number);
+				//draw->AddText(pos_adj, text_color, pin_number);
+				draw->AddText(pos_adj, text_color, pin->name.c_str());
 				draw->ChannelsSetCurrent(kChannelPins);
 			}
 		}
@@ -3700,7 +3705,7 @@ void BoardView::DrawPartTooltips(ImDrawList *draw) {
 				ImGui::PushStyleColor(ImGuiCol_Text, ImColor(m_colors.annotationPopupTextColor));
 				ImGui::PushStyleColor(ImGuiCol_PopupBg, ImColor(m_colors.annotationPopupBackgroundColor));
 				ImGui::BeginTooltip();
-				ImGui::Text("TP[%s]%s", pin->number.c_str(), pin->net->name.c_str());
+				ImGui::Text("TP[%s]%s", pin->name.c_str(), pin->net->name.c_str());
 				ImGui::EndTooltip();
 				ImGui::PopStyleColor(2);
 				break;
@@ -3778,7 +3783,7 @@ void BoardView::DrawPartTooltips(ImDrawList *draw) {
 			if (currentlyHoveredPin) {
 				ImGui::Text("%s\n[%s]%s",
 				            currentlyHoveredPart->name.c_str(),
-				            (currentlyHoveredPin ? currentlyHoveredPin->number.c_str() : " "),
+				            (currentlyHoveredPin ? currentlyHoveredPin->name.c_str() : " "),
 				            (currentlyHoveredPin ? currentlyHoveredPin->net->name.c_str() : " "));
 			} else {
 				ImGui::Text("%s", currentlyHoveredPart->name.c_str());

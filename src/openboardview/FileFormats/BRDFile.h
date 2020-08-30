@@ -51,6 +51,7 @@ struct BRDPin {
 	const char *net;
 	double radius    = 0.5f;
 	const char *snum = nullptr;
+	const char *name = nullptr;
 
 	bool operator<(const BRDPin &p) const // For sorting the vector
 	{
