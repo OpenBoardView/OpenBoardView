@@ -3,13 +3,13 @@
 
 struct AD_BRDNet {
 	unsigned int id;
-	char *name;
+	const char *name;
 };
 
 struct AD_BRDPart {
-	char *name;
-	char *description;
-	char *layer;
+	const char *name;
+	const char *description;
+	const char *layer;
 
 	unsigned int part_id;
 	double x;
@@ -21,7 +21,7 @@ struct AD_BRDPad {
 	int id;
 	unsigned int net_id;
 	unsigned int part_id;
-	char *snum = nullptr;
+	const char *snum = nullptr;
 	double x;
 	double y;
 	double drill  = 0.0;
@@ -29,8 +29,8 @@ struct AD_BRDPad {
 	double x_size, y_size;
 	double rotation = 0.0;
 	int type; // SMD = 0, TH = 1
-	char *unique_id;
-	char *layer;
+	const char *unique_id;
+	const char *layer;
 };
 
 struct ADFile : public BRDFile {

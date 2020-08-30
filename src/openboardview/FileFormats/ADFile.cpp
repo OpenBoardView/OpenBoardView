@@ -59,7 +59,7 @@ void ADFile::outline_order_segments(std::vector<BRDPoint> &format) {
 		p   = ordered.back();
 		hit = false;
 
-		for (int i = 0; i < source.size(); i += 2) {
+		for (size_t i = 0; i < source.size(); i += 2) {
 			auto q = source.at(i);
 			auto r = source.at(i + 1);
 
@@ -151,8 +151,8 @@ ADFile::ADFile(std::vector<char> &buf) {
 
 		switch (current_block) {
 			case ADFILE_BLOCK_TRACKS: {
-				int part_id;
-				double x1, y1, x2, y2;
+				unsigned int part_id;
+				int x1, y1, x2, y2;
 				char *layer;
 
 				p = strstr(line, "|LAYER=");
@@ -164,7 +164,7 @@ ADFile::ADFile(std::vector<char> &buf) {
 				p = strstr(line, "|COMPONENT=");
 				if (p) {
 					p += sizeof("|COMPONENT=") - 1;
-					part_id = READ_INT();
+					part_id = READ_UINT();
 					part_id++;
 				}
 
@@ -403,11 +403,6 @@ ADFile::ADFile(std::vector<char> &buf) {
 				}
 
 				if (pad.x_size > 0.0 && pad.y_size > 0.0) {
-					double hwx, hwy;
-
-					hwx = pad.x_size / 2;
-					hwy = pad.y_size / 2;
-
 					pad.radius = (pad.x_size < pad.y_size) ? pad.x_size : pad.y_size;
 					pad.radius /= 2;
 				}
@@ -430,14 +425,8 @@ ADFile::ADFile(std::vector<char> &buf) {
 	net.name = "NC";
 	ad_nets.push_back(net);
 
-	double x_partorigin = 0;
-	double y_partorigin = 0;
-
 	for (auto &ad_part : ad_parts) {
-
 		BRDPart part;
-		x_partorigin = ad_part.x;
-		y_partorigin = ad_part.y;
 
 		if (strlen(ad_part.name) < 1) {
 			ad_part.name = "UNKNOWN";
