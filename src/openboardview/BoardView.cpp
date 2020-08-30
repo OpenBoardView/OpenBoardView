@@ -1342,7 +1342,7 @@ void BoardView::ContextMenu(void) {
 			 */
 
 			if (selection != nullptr) {
-				pin   = selection->number;
+				pin   = selection->name;
 				partn = selection->component->name;
 				net   = selection->net->name;
 			} else {
@@ -2081,7 +2081,7 @@ void BoardView::Update() {
 		auto pin = m_pinSelected;
 		ImGui::Text("Part: %s   Pin: %s   Net: %s   Probe: %d   (%s.)",
 		            pin->component->name.c_str(),
-		            pin->number.c_str(),
+		            pin->name.c_str(),
 		            pin->net->name.c_str(),
 		            pin->net->number,
 		            pin->component->mount_type_str().c_str());
@@ -3217,14 +3217,10 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 			//		}
 
 			if (show_text) {
-				//const char *pin_number = pin->number.c_str();
-
-				//ImVec2 text_size = ImGui::CalcTextSize(pin_number);
 				ImVec2 text_size = ImGui::CalcTextSize(pin->name.c_str());
 				ImVec2 pos_adj   = ImVec2(pos.x - text_size.x * 0.5f, pos.y - text_size.y * 0.5f);
 
 				draw->ChannelsSetCurrent(kChannelText);
-				//draw->AddText(pos_adj, text_color, pin_number);
 				draw->AddText(pos_adj, text_color, pin->name.c_str());
 				draw->ChannelsSetCurrent(kChannelPins);
 			}
@@ -3805,7 +3801,7 @@ inline void BoardView::DrawPinTooltips(ImDrawList *draw) {
 		ImGui::BeginTooltip();
 		ImGui::Text("%s[%s]\n%s",
 		            m_pinHighlightedHovered->component->name.c_str(),
-		            m_pinHighlightedHovered->number.c_str(),
+		            m_pinHighlightedHovered->name.c_str(),
 		            m_pinHighlightedHovered->net->name.c_str());
 		ImGui::EndTooltip();
 		ImGui::PopStyleColor(2);
