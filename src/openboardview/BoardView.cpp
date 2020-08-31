@@ -133,6 +133,7 @@ void BoardView::ThemeSetStyle(const char *name) {
 		m_colors.pinNotConnectedColor     = byte4swap(0xaaaaaaff);
 		m_colors.pinTestPadColor          = byte4swap(0x888888ff);
 		m_colors.pinTestPadFillColor      = byte4swap(0x6c5b1fff);
+		m_colors.pinA1PadColor				 = byte4swap(0xdd0000ff);
 
 		m_colors.pinSelectedColor     = byte4swap(0x00ff00ff);
 		m_colors.pinSelectedFillColor = byte4swap(0x8888ffff);
@@ -222,6 +223,7 @@ void BoardView::ThemeSetStyle(const char *name) {
 		m_colors.pinNotConnectedColor     = byte4swap(0xaaaaaaff);
 		m_colors.pinTestPadColor          = byte4swap(0x888888ff);
 		m_colors.pinTestPadFillColor      = byte4swap(0xd6c68dff);
+		m_colors.pinA1PadColor				 = byte4swap(0xdd0000ff);
 
 		m_colors.pinSelectedColor     = byte4swap(0x00000000);
 		m_colors.pinSelectedFillColor = byte4swap(0x8888ffff);
@@ -356,6 +358,7 @@ int BoardView::ConfigParse(void) {
 	m_colors.pinNotConnectedColor = byte4swap(obvconfig.ParseHex("pinNotConnectedColor", byte4swap(m_colors.pinNotConnectedColor)));
 	m_colors.pinTestPadColor      = byte4swap(obvconfig.ParseHex("pinTestPadColor", byte4swap(m_colors.pinTestPadColor)));
 	m_colors.pinTestPadFillColor  = byte4swap(obvconfig.ParseHex("pinTestPadFillColor", byte4swap(m_colors.pinTestPadFillColor)));
+	m_colors.pinA1PadColor			= byte4swap(obvconfig.ParseHex("pinA1PadColor", byte4swap(m_colors.pinA1PadColor)));
 
 	m_colors.pinSelectedTextColor = byte4swap(obvconfig.ParseHex("pinSelectedTextColor", byte4swap(m_colors.pinSelectedTextColor)));
 	m_colors.pinSelectedFillColor = byte4swap(obvconfig.ParseHex("pinSelectedFillColor", byte4swap(m_colors.pinSelectedFillColor)));
@@ -564,6 +567,7 @@ void BoardView::SaveAllColors(void) {
 	obvconfig.WriteHex("pinNotConnectedColor", byte4swap(m_colors.pinNotConnectedColor));
 	obvconfig.WriteHex("pinTestPadColor", byte4swap(m_colors.pinTestPadColor));
 	obvconfig.WriteHex("pinTestPadFillColor", byte4swap(m_colors.pinTestPadFillColor));
+	obvconfig.WriteHex("pinA1PadColor", byte4swap(m_colors.pinA1PadColor));
 	obvconfig.WriteHex("pinSelectedColor", byte4swap(m_colors.pinSelectedColor));
 	obvconfig.WriteHex("pinSelectedTextColor", byte4swap(m_colors.pinSelectedTextColor));
 	obvconfig.WriteHex("pinSelectedFillColor", byte4swap(m_colors.pinSelectedFillColor));
@@ -658,6 +662,7 @@ void BoardView::ColorPreferences(void) {
 		ColorPreferencesItem("NC", DPI(200), "##PinNC", "pinNotConnectedColor", DPI(150), &m_colors.pinNotConnectedColor);
 		ColorPreferencesItem("Test pad", DPI(200), "##PinTP", "pinTestPadColor", DPI(150), &m_colors.pinTestPadColor);
 		ColorPreferencesItem("Test pad fill", DPI(200), "##PinTPF", "pinTestPadFillColor", DPI(150), &m_colors.pinTestPadFillColor);
+		ColorPreferencesItem("A1/1 Pad", DPI(200), "##PinA1", "pinA1PadColor", DPI(150), &m_colors.pinA1PadColor);
 
 		ColorPreferencesItem("Selected", DPI(200), "##PinSelectedColor", "pinSelectedColor", DPI(150), &m_colors.pinSelectedColor);
 		ColorPreferencesItem(
@@ -3156,6 +3161,26 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 				fill_pin                    = true;
 				threshold                   = 0;
 			}
+
+
+			 // Check for BGA pin '1'
+			 // 
+			if (pin->name == "A1") {
+				color = fill_color = m_colors.pinA1PadColor;
+				fill_pin = m_colors.pinA1PadColor;
+				draw_ring = false;
+			}
+
+			if ((pin->number == "1")) {
+				if (!strchr("CRTDcrtd.",  pin->component->name.front())) {
+					if (pin->component->pins.size() > 3) {
+						color = fill_color = m_colors.pinA1PadColor;
+						fill_pin = m_colors.pinA1PadColor;
+						draw_ring = false;
+					}
+				}
+			}
+
 
 			// don't show text if it doesn't make sense
 			if (pin->component->pins.size() <= 1) show_text  = false;

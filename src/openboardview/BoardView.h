@@ -69,6 +69,7 @@ struct ColorScheme {
 	uint32_t pinNotConnectedColor = 0xffff0000;
 	uint32_t pinTestPadColor      = 0xff888888;
 	uint32_t pinTestPadFillColor  = 0xff8dc6d6;
+	uint32_t pinA1PadColor			= 0xffdd0000;
 
 	uint32_t pinSelectedColor     = 0x00000000;
 	uint32_t pinSelectedFillColor = 0xffff8888;
