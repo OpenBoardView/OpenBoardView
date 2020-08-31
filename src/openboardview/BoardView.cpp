@@ -133,7 +133,7 @@ void BoardView::ThemeSetStyle(const char *name) {
 		m_colors.pinNotConnectedColor     = byte4swap(0xaaaaaaff);
 		m_colors.pinTestPadColor          = byte4swap(0x888888ff);
 		m_colors.pinTestPadFillColor      = byte4swap(0x6c5b1fff);
-		m_colors.pinA1PadColor				 = byte4swap(0xdd0000ff);
+		m_colors.pinA1PadColor            = byte4swap(0xdd0000ff);
 
 		m_colors.pinSelectedColor     = byte4swap(0x00ff00ff);
 		m_colors.pinSelectedFillColor = byte4swap(0x8888ffff);
@@ -223,7 +223,7 @@ void BoardView::ThemeSetStyle(const char *name) {
 		m_colors.pinNotConnectedColor     = byte4swap(0xaaaaaaff);
 		m_colors.pinTestPadColor          = byte4swap(0x888888ff);
 		m_colors.pinTestPadFillColor      = byte4swap(0xd6c68dff);
-		m_colors.pinA1PadColor				 = byte4swap(0xdd0000ff);
+		m_colors.pinA1PadColor            = byte4swap(0xdd0000ff);
 
 		m_colors.pinSelectedColor     = byte4swap(0x00000000);
 		m_colors.pinSelectedFillColor = byte4swap(0x8888ffff);
@@ -269,10 +269,10 @@ int BoardView::ConfigParse(void) {
 
 	// Special test here, in case we've already set the dpi from external
 	// such as command line.
-	if (!dpi) dpi      = obvconfig.ParseInt("dpi", 100);
-	if (dpi < 50) dpi  = 50;
+	if (!dpi) dpi = obvconfig.ParseInt("dpi", 100);
+	if (dpi < 50) dpi = 50;
 	if (dpi > 400) dpi = 400;
-	dpiscale           = dpi / 100.0f;
+	dpiscale = dpi / 100.0f;
 
 	pinHalo          = obvconfig.ParseBool("pinHalo", true);
 	pinHaloDiameter  = obvconfig.ParseDouble("pinHaloDiameter", 1.25);
@@ -358,7 +358,7 @@ int BoardView::ConfigParse(void) {
 	m_colors.pinNotConnectedColor = byte4swap(obvconfig.ParseHex("pinNotConnectedColor", byte4swap(m_colors.pinNotConnectedColor)));
 	m_colors.pinTestPadColor      = byte4swap(obvconfig.ParseHex("pinTestPadColor", byte4swap(m_colors.pinTestPadColor)));
 	m_colors.pinTestPadFillColor  = byte4swap(obvconfig.ParseHex("pinTestPadFillColor", byte4swap(m_colors.pinTestPadFillColor)));
-	m_colors.pinA1PadColor			= byte4swap(obvconfig.ParseHex("pinA1PadColor", byte4swap(m_colors.pinA1PadColor)));
+	m_colors.pinA1PadColor        = byte4swap(obvconfig.ParseHex("pinA1PadColor", byte4swap(m_colors.pinA1PadColor)));
 
 	m_colors.pinSelectedTextColor = byte4swap(obvconfig.ParseHex("pinSelectedTextColor", byte4swap(m_colors.pinSelectedTextColor)));
 	m_colors.pinSelectedFillColor = byte4swap(obvconfig.ParseHex("pinSelectedFillColor", byte4swap(m_colors.pinSelectedFillColor)));
@@ -1235,9 +1235,9 @@ void BoardView::ShowInfoPane(void) {
 			ImGui::PushItemWidth(-1);
 			std::string str = std::string("##") + part->name;
 			ImVec2 listSize;
-			int pc          = part->pins.size();
+			int pc = part->pins.size();
 			if (pc > 20) pc = 20;
-			listSize        = ImVec2(m_info_surface.x - DPIF(50), pc * ImGui::GetFontSize() * 1.45);
+			listSize = ImVec2(m_info_surface.x - DPIF(50), pc * ImGui::GetFontSize() * 1.45);
 			ImGui::ListBoxHeader(str.c_str(), listSize); //, ImVec2(m_board_surface.x/3 -5, m_board_surface.y/2));
 			for (auto pin : part->pins) {
 				char ss[1024];
@@ -1548,11 +1548,13 @@ const char *getcname(const std::string &name) {
 	return name.c_str();
 }
 
-template<class T> const char *getcname(const T &t) {
+template <class T>
+const char *getcname(const T &t) {
 	return t->name.c_str();
 }
 
-template<class T> void BoardView::ShowSearchResults(std::vector<T> results, char *search, int &limit, void (BoardView::*onSelect)(const char *)) {
+template <class T>
+void BoardView::ShowSearchResults(std::vector<T> results, char *search, int &limit, void (BoardView::*onSelect)(const char *)) {
 	for (auto &r : results) {
 		const char *cname = getcname(r);
 		if (ImGui::Selectable(cname, false)) {
@@ -1564,11 +1566,15 @@ template<class T> void BoardView::ShowSearchResults(std::vector<T> results, char
 	}
 }
 
-void BoardView::SearchColumnGenerate(const std::string& title, std::pair<SharedVector<Component>, SharedVector<Net>> results, char *search, int limit) {
+void BoardView::SearchColumnGenerate(const std::string &title,
+                                     std::pair<SharedVector<Component>, SharedVector<Net>> results,
+                                     char *search,
+                                     int limit) {
 	ImGui::ListBoxHeader(title.c_str());
 
 	if (m_searchComponents) {
-		if (results.first.empty() && (!m_searchNets || results.second.empty())) { // show suggestions only if there is no result at all
+		if (results.first.empty() &&
+		    (!m_searchNets || results.second.empty())) { // show suggestions only if there is no result at all
 			auto s = scparts.suggest(search);
 			if (s.size() > 0) {
 				ImGui::Text("Did you mean...");
@@ -1603,7 +1609,7 @@ void BoardView::SearchComponent(void) {
 	                           ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings |
 	                               ImGuiWindowFlags_ShowBorders)) {
 		//		char cs[128];
-		const char *first_button[] = { m_search[0], m_search[1], m_search[2] };
+		const char *first_button[] = {m_search[0], m_search[1], m_search[2]};
 
 		if (m_showSearch) {
 			m_showSearch       = false;
@@ -1627,15 +1633,13 @@ void BoardView::SearchComponent(void) {
 		ImGui::SameLine();
 		if (ImGui::Button("Reset")) {
 			FindComponent("");
-			for (int i = 0; i < 3; i++)
-				m_search[i][0]  = '\0';
+			for (int i = 0; i < 3; i++) m_search[i][0] = '\0';
 		} // reset button
 
 		ImGui::SameLine();
 		if (ImGui::Button("Exit") || ImGui::IsKeyPressed(SDLK_ESCAPE)) {
 			FindComponent("");
-			for (int i = 0; i < 3; i++)
-				m_search[i][0]  = '\0';
+			for (int i = 0; i < 3; i++) m_search[i][0] = '\0';
 			m_tooltips_enabled = true;
 			ImGui::CloseCurrentPopup();
 		} // exit button
@@ -1676,22 +1680,25 @@ void BoardView::SearchComponent(void) {
 		ImGui::Columns(3);
 
 		for (int i = 1; i <= 3; i++) {
-			std::string istr = std::to_string(i);
-			std::string title = "Item #" + istr;
+			std::string istr        = std::to_string(i);
+			std::string title       = "Item #" + istr;
 			std::string searchLabel = "##search" + istr;
 			ImGui::Text("%s", title.c_str());
 
 			ImGui::PushItemWidth(-1);
 
-			bool searching = m_search[i-1][0] != '\0'; // Text typed in the search box
-			auto results = SearchPartsAndNets(m_search[i-1], 30); // Perform the search for both nets and parts
+			bool searching  = m_search[i - 1][0] != '\0';                        // Text typed in the search box
+			auto results    = SearchPartsAndNets(m_search[i - 1], 30);           // Perform the search for both nets and parts
 			bool hasResults = !results.first.empty() || !results.second.empty(); // We found some nets or some parts
 
 			if (searching && !hasResults) ImGui::PushStyleColor(ImGuiCol_FrameBg, ImColor(0xFF6666FF));
-			auto ret = ImGui::InputText(searchLabel.c_str(), m_search[i-1], 128, ImGuiInputTextFlags_CharsNoBlank|(m_search[0]?ImGuiInputTextFlags_AutoSelectAll:0));
+			auto ret = ImGui::InputText(searchLabel.c_str(),
+			                            m_search[i - 1],
+			                            128,
+			                            ImGuiInputTextFlags_CharsNoBlank | (m_search[0] ? ImGuiInputTextFlags_AutoSelectAll : 0));
 			if (searching && !hasResults) ImGui::PopStyleColor();
 
-			if (ret) SearchCompound(m_search[i-1]);
+			if (ret) SearchCompound(m_search[i - 1]);
 
 			ImGui::PopItemWidth();
 
@@ -1700,10 +1707,12 @@ void BoardView::SearchComponent(void) {
 			} // set keyboard focus
 
 			ImGui::PushItemWidth(-1);
-			if (searching) SearchColumnGenerate("##SC" + istr, results, m_search[i-1], 30);
+			if (searching) SearchColumnGenerate("##SC" + istr, results, m_search[i - 1], 30);
 			ImGui::PopItemWidth();
-			if (i == 1) ImGui::PushItemWidth(DPI(500));
-			else if (i == 2) ImGui::PopItemWidth();
+			if (i == 1)
+				ImGui::PushItemWidth(DPI(500));
+			else if (i == 2)
+				ImGui::PopItemWidth();
 
 			ImGui::NextColumn();
 		}
@@ -1737,11 +1746,11 @@ void BoardView::ClearAllHighlights(void) {
 	m_pinSelected = nullptr;
 	FindNet("");
 	FindComponent("");
-	m_search[0][0]                                              = '\0';
-	m_search[1][0]                                             = '\0';
-	m_search[2][0]                                             = '\0';
-	m_needsRedraw                                            = true;
-	m_tooltips_enabled                                       = true;
+	m_search[0][0]     = '\0';
+	m_search[1][0]     = '\0';
+	m_search[2][0]     = '\0';
+	m_needsRedraw      = true;
+	m_tooltips_enabled = true;
 	if (m_board != NULL) {
 		for (auto part : m_board->Components()) part->visualmode = part->CVMNormal;
 	}
@@ -2264,7 +2273,7 @@ void BoardView::HandleInput() {
 					if (showAnnotations) {
 						// Build context menu here, for annotations and inspection
 						//
-						ImVec2 spos                                        = ImGui::GetMousePos();
+						ImVec2 spos = ImGui::GetMousePos();
 						if (AnnotationIsHovered()) m_annotation_clicked_id = m_annotation_last_hovered;
 
 						m_annotationedit_retain = false;
@@ -2570,7 +2579,7 @@ void BoardView::CenterZoomNet(string netname) {
 
 	for (auto &pin : m_board->Pins()) {
 		if (pin->net->name == netname) {
-			auto p                 = pin->position;
+			auto p = pin->position;
 			if (p.x < min.x) min.x = p.x;
 			if (p.y < min.y) min.y = p.y;
 			if (p.x > max.x) max.x = p.x;
@@ -2595,7 +2604,7 @@ void BoardView::CenterZoomNet(string netname) {
 	float sx = dx > 0 ? view.x / dx : FLT_MAX;
 	float sy = dy > 0 ? view.y / dy : FLT_MAX;
 
-	m_scale                         = sx < sy ? sx : sy;
+	m_scale = sx < sy ? sx : sy;
 	if (m_scale == FLT_MAX) m_scale = m_scale_floor;
 	m_scale /= partZoomScaleOutFactor;
 	if (m_scale < m_scale_floor) m_scale = m_scale_floor;
@@ -2632,7 +2641,7 @@ void BoardView::CenterZoomSearchResults(void) {
 	max.x = max.y = FLT_MIN;
 
 	for (auto &pp : m_pinHighlighted) {
-		auto &p                = pp->position;
+		auto &p = pp->position;
 		if (p.x < min.x) min.x = p.x;
 		if (p.y < min.y) min.y = p.y;
 		if (p.x > max.x) max.x = p.x;
@@ -2642,7 +2651,7 @@ void BoardView::CenterZoomSearchResults(void) {
 
 	for (auto &pp : m_partHighlighted) {
 		for (auto &pn : pp->pins) {
-			auto &p                = pn->position;
+			auto &p = pn->position;
 			if (p.x < min.x) min.x = p.x;
 			if (p.y < min.y) min.y = p.y;
 			if (p.x > max.x) max.x = p.x;
@@ -2662,7 +2671,7 @@ void BoardView::CenterZoomSearchResults(void) {
 	float sx = dx > 0 ? view.x / dx : FLT_MAX;
 	float sy = dy > 0 ? view.y / dy : FLT_MAX;
 
-	m_scale                         = sx < sy ? sx : sy;
+	m_scale = sx < sy ? sx : sy;
 	if (m_scale == FLT_MAX) m_scale = m_scale_floor;
 	m_scale /= partZoomScaleOutFactor;
 	if (m_scale < m_scale_floor) m_scale = m_scale_floor;
@@ -2814,7 +2823,7 @@ void BoardView::OutlineGenFillDraw(ImDrawList *draw, int ydelta, double thicknes
 	}
 
 	if (ystart < min.y) ystart = min.y;
-	if (yend > max.y) yend     = max.y;
+	if (yend > max.y) yend = max.y;
 
 	//	vdelta = (ystart - yend) / steps;
 
@@ -3091,9 +3100,9 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 			 */
 			if (contains(pin, m_pinHighlighted)) {
 				if (psz < fontSize / 2) psz = fontSize / 2;
-				text_color                  = m_colors.pinSelectedTextColor;
-				fill_color                  = m_colors.pinSelectedFillColor;
-				color                       = m_colors.pinSelectedColor;
+				text_color = m_colors.pinSelectedTextColor;
+				fill_color = m_colors.pinSelectedFillColor;
+				color      = m_colors.pinSelectedColor;
 				// text_color = color = m_colors.pinSameNetColor;
 				fill_pin  = true;
 				show_text = true;
@@ -3140,50 +3149,48 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 			// pin is on the same net as selected pin: highlight > rest
 			if (m_pinSelected && pin->net == m_pinSelected->net) {
 				if (psz < fontSize / 2) psz = fontSize / 2;
-				color                       = m_colors.pinSameNetColor;
-				text_color                  = m_colors.pinSameNetTextColor;
-				fill_color                  = m_colors.pinSameNetFillColor;
-				draw_ring                   = false;
-				fill_pin                    = true;
-				show_text                   = true; // is this something we want? Maybe an optional thing?
-				threshold                   = 0;
+				color      = m_colors.pinSameNetColor;
+				text_color = m_colors.pinSameNetTextColor;
+				fill_color = m_colors.pinSameNetFillColor;
+				draw_ring  = false;
+				fill_pin   = true;
+				show_text  = true; // is this something we want? Maybe an optional thing?
+				threshold  = 0;
 			}
 
 			// pin selected overwrites everything
 			// if (p_pin == m_pinSelected) {
 			if (pin == m_pinSelected) {
 				if (psz < fontSize / 2) psz = fontSize / 2;
-				color                       = m_colors.pinSelectedColor;
-				text_color                  = m_colors.pinSelectedTextColor;
-				fill_color                  = m_colors.pinSelectedFillColor;
-				draw_ring                   = false;
-				show_text                   = true;
-				fill_pin                    = true;
-				threshold                   = 0;
+				color      = m_colors.pinSelectedColor;
+				text_color = m_colors.pinSelectedTextColor;
+				fill_color = m_colors.pinSelectedFillColor;
+				draw_ring  = false;
+				show_text  = true;
+				fill_pin   = true;
+				threshold  = 0;
 			}
 
-
-			 // Check for BGA pin '1'
-			 // 
+			// Check for BGA pin '1'
+			//
 			if (pin->name == "A1") {
 				color = fill_color = m_colors.pinA1PadColor;
-				fill_pin = m_colors.pinA1PadColor;
-				draw_ring = false;
+				fill_pin           = m_colors.pinA1PadColor;
+				draw_ring          = false;
 			}
 
 			if ((pin->number == "1")) {
-				if (!strchr("CRTDcrtd.",  pin->component->name.front())) {
+				if (!strchr("CRTDcrtd.", pin->component->name.front())) {
 					if (pin->component->pins.size() > 3) {
 						color = fill_color = m_colors.pinA1PadColor;
-						fill_pin = m_colors.pinA1PadColor;
-						draw_ring = false;
+						fill_pin           = m_colors.pinA1PadColor;
+						draw_ring          = false;
 					}
 				}
 			}
 
-
 			// don't show text if it doesn't make sense
-			if (pin->component->pins.size() <= 1) show_text  = false;
+			if (pin->component->pins.size() <= 1) show_text = false;
 			if (pin->type == Pin::kPinTypeTestPad) show_text = false;
 		}
 
@@ -3194,10 +3201,10 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 
 			// for the round pin representations, choose how many circle segments need
 			// based on the pin size
-			segments                    = round(psz);
+			segments = round(psz);
 			if (segments > 32) segments = 32;
-			if (segments < 8) segments  = 8;
-			float h                     = psz / 2 + 0.5f;
+			if (segments < 8) segments = 8;
+			float h = psz / 2 + 0.5f;
 
 			/*
 			 * if we're going to be showing the text of a pin, then we really
@@ -3648,8 +3655,8 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 			 */
 			if (part->component_type == part->kComponentTypeCapacitor) {
 				if (part->expanse > 90) {
-					int segments                = trunc(part->expanse);
-					if (segments < 8) segments  = 8;
+					int segments = trunc(part->expanse);
+					if (segments < 8) segments = 8;
 					if (segments > 36) segments = 36;
 					draw->AddCircle(CoordToScreen(part->centerpoint.x, part->centerpoint.y),
 					                (part->expanse / 3) * m_scale,
@@ -3673,7 +3680,7 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 				float top_y = a.y;
 
 				if (c.y < top_y) top_y = c.y;
-				ImVec2 pos             = ImVec2((a.x + c.x) * 0.5f, top_y);
+				ImVec2 pos = ImVec2((a.x + c.x) * 0.5f, top_y);
 
 				pos.y -= text_size.y * 2;
 				if (mcode.size()) pos.y -= text_size.y;
@@ -3710,9 +3717,9 @@ void BoardView::DrawPartTooltips(ImDrawList *draw) {
 	if (!m_tooltips_enabled) return;
 	if (spos.x > m_board_surface.x) return;
 	/*
- * I am loathing that I have to add this, but basically check every pin on the board so we can
- * determine if we're hovering over a testpad
- */
+	 * I am loathing that I have to add this, but basically check every pin on the board so we can
+	 * determine if we're hovering over a testpad
+	 */
 	for (auto &pin : m_board->Pins()) {
 
 		if (pin->type == Pin::kPinTypeTestPad) {
@@ -4049,17 +4056,17 @@ void BoardView::SetFile(BRDFile *file) {
 	delete m_board;
 
 	// Check board outline (format) point count.
-	//		If we don't have an outline, generate one	
+	//		If we don't have an outline, generate one
 	//
-	if ( file->format.size() < 3 ) {
-		auto pins  = file->pins;
+	if (file->format.size() < 3) {
+		auto pins = file->pins;
 		int minx, maxx, miny, maxy;
 		int margin = 200; // #define or leave this be? Rather arbritary.
 
 		minx = miny = INT_MAX;
 		maxx = maxy = INT_MIN;
 
-		for (auto a: pins) {
+		for (auto a : pins) {
 			if (a.pos.x > maxx) maxx = a.pos.x;
 			if (a.pos.y > maxy) maxy = a.pos.y;
 			if (a.pos.x < minx) minx = a.pos.x;
@@ -4302,8 +4309,7 @@ void BoardView::FindNetNoClear(const char *name) {
 	auto results = searcher.nets(name);
 
 	for (auto &net : results) {
-		for (auto &pin : net->pins)
-			m_pinHighlighted.push_back(pin);
+		for (auto &pin : net->pins) m_pinHighlighted.push_back(pin);
 	}
 }
 
@@ -4341,7 +4347,8 @@ void BoardView::SearchCompoundNoClear(const char *item) {
 	if (debug) fprintf(stderr, "Searching for '%s'\n", item);
 	if (m_searchComponents) FindComponentNoClear(item);
 	if (m_searchNets) FindNetNoClear(item);
-	if (!m_partHighlighted.empty() && !m_pinHighlighted.empty() && !AnyItemVisible()) FlipBoard(1); // passing 1 to override flipBoard parameter
+	if (!m_partHighlighted.empty() && !m_pinHighlighted.empty() && !AnyItemVisible())
+		FlipBoard(1); // passing 1 to override flipBoard parameter
 }
 
 void BoardView::SearchCompound(const char *item) {
