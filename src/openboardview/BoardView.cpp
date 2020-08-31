@@ -279,6 +279,8 @@ int BoardView::ConfigParse(void) {
 	pinHaloThickness = obvconfig.ParseDouble("pinHaloThickness", 2.0);
 	pinSelectMasks   = obvconfig.ParseBool("pinSelectMasks", true);
 
+	pinA1threshold	  = obvconfig.ParseInt("pinA1threshold", 3);
+
 	showFPS                   = obvconfig.ParseBool("showFPS", false);
 	showInfoPanel             = obvconfig.ParseBool("showInfoPanel", true);
 	infoPanelSelectPartsOnNet = obvconfig.ParseBool("infoPanelSelectPartsOnNet", true);
@@ -831,6 +833,13 @@ void BoardView::Preferences(void) {
 			obvconfig.WriteInt("annotationBoxOffset", annotationBoxOffset);
 		}
 		ImGui::Separator();
+
+		RA("Pin-1/A1 count threshold", DPI(200));
+		ImGui::SameLine();
+		if (ImGui::InputInt("##pinA1threshold", &pinA1threshold)) {
+			if (pinA1threshold < 1) pinA1threshold = 1;
+			obvconfig.WriteInt("pinA1threshold", pinA1threshold);
+		}
 
 		if (ImGui::Checkbox("Pin select masks", &pinSelectMasks)) {
 			obvconfig.WriteBool("pinSelectMasks", pinSelectMasks);
@@ -3180,12 +3189,10 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 			}
 
 			if ((pin->number == "1")) {
-				if (!strchr("CRTDcrtd.", pin->component->name.front())) {
-					if (pin->component->pins.size() > 3) {
-						color = fill_color = m_colors.pinA1PadColor;
-						fill_pin           = m_colors.pinA1PadColor;
-						draw_ring          = false;
-					}
+				if (pin->component->pins.size() >= pinA1threshold) {
+					color = fill_color = m_colors.pinA1PadColor;
+					fill_pin           = m_colors.pinA1PadColor;
+					draw_ring          = false;
 				}
 			}
 
