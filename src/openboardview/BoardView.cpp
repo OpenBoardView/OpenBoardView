@@ -3189,7 +3189,7 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 			}
 
 			if ((pin->number == "1")) {
-				if (pin->component->pins.size() >= pinA1threshold) {
+				if (pin->component->pins.size() >= static_cast<unsigned int>(pinA1threshold)) { // pinA1threshold is never negative
 					color = fill_color = m_colors.pinA1PadColor;
 					fill_pin           = m_colors.pinA1PadColor;
 					draw_ring          = false;
