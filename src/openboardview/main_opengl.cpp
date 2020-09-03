@@ -369,7 +369,7 @@ int main(int argc, char **argv) {
 				// should have to, but always better to be safe
 				struct stat buffer;
 				if (stat(event.drop.file, &buffer) == 0) {
-					app.LoadFile(strdup(event.drop.file));
+					app.LoadFile(strdup(event.drop.file),0);
 				}
 			}
 
@@ -399,7 +399,7 @@ int main(int argc, char **argv) {
 		// If we have a board to view being passed from command line, then "inject"
 		// it here.
 		if (preload_required) {
-			app.LoadFile(strdup(g.input_file));
+			app.LoadFile(strdup(g.input_file),0);
 			preload_required = false;
 		}
 

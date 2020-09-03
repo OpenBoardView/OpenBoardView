@@ -402,7 +402,16 @@ int BoardView::ConfigParse(void) {
 	return 0;
 }
 
-int BoardView::LoadFile(const std::string &filename) {
+int BoardView::LoadFile(const std::string &filename, bool preserve) {
+	float m_dx_tmp = m_dx;
+	float m_dy_tmp = m_dy;
+	float m_mx_tmp = m_mx;
+	float m_my_tmp = m_my;
+	float m_scale_tmp = m_scale;
+	float m_scale_floor_tmp = m_scale_floor;
+	float m_lastWidth_tmp = m_lastWidth;
+	float m_lastHeight_tmp = m_lastHeight;
+
 	m_lastFileOpenWasInvalid = true;
 	m_validBoard             = false;
 	if (!filename.empty()) {
@@ -426,10 +435,11 @@ int BoardView::LoadFile(const std::string &filename) {
 		std::vector<char> buffer = file_as_buffer(filename);
 		if (!buffer.empty()) {
 			BRDFile *file = nullptr;
-
-			if (check_fileext(filename, ".fz")) { // Since it is encrypted we cannot use the below logic. Trust the ext.
+			// Since it is encrypted we cannot use the below logic. Trust the ext.
+			if (check_fileext(filename, ".fz")) {
 				file = new FZFile(buffer, FZKey);
-			} else if (check_fileext(filename, ".bom") || check_fileext(filename, ".asc"))
+			}
+			else if (check_fileext(filename, ".bom") || check_fileext(filename, ".asc"))
 				file = new ASCFile(buffer, filename);
 			else if (ADFile::verifyFormat(buffer))
 				file = new ADFile(buffer);
@@ -449,11 +459,12 @@ int BoardView::LoadFile(const std::string &filename) {
 			if (file && file->valid) {
 				SetFile(file);
 				fhistory.Prepend_save(filename);
-				history_file_has_changed = 1; // used by main to know when to update the window title
+ 				// used by main to know when to update the window title
+				history_file_has_changed = 1;
 				boardMinMaxDone          = false;
-				m_rotation               = 0;
-				m_current_side           = 0;
-				EPCCheck(); // check to see we don't have a flipped board outline
+
+				// check to see we don't have a flipped board outline
+				EPCCheck(); 
 
 				m_annotations.SetFilename(filename);
 				m_annotations.Load();
@@ -463,11 +474,25 @@ int BoardView::LoadFile(const std::string &filename) {
 				 * in DrawParts() when the component is analysed
 				 */
 				for (auto &p : m_board->Pins()) {
-					//					auto p      = pin.get();
+					//auto p      = pin.get();
 					p->diameter = 7;
 				}
 
-				CenterView();
+				if(!preserve){
+					m_rotation               = 0;
+					m_current_side           = 0;
+					CenterView();
+				}
+				else{
+					m_dx = m_dx_tmp;
+					m_dy = m_dy_tmp;
+					m_mx = m_mx_tmp;
+					m_my = m_my_tmp;
+					m_scale = m_scale_tmp;
+					m_scale_floor = m_scale_floor_tmp;
+					m_lastWidth = m_lastWidth_tmp;
+					m_lastHeight = m_lastHeight_tmp;
+				}
 				m_lastFileOpenWasInvalid = false;
 				m_validBoard             = true;
 
@@ -1791,6 +1816,14 @@ void BoardView::Update() {
 		io.KeysDown[SDLK_o]             = false;
 	}
 
+	if ((io.KeyCtrl) && ImGui::IsKeyPressed(SDLK_r)) {
+		LoadFile(fhistory.history[0],1);
+		// the dialog will likely eat our WM_KEYUP message for CTRL and r:
+		io.KeysDown[SDL_SCANCODE_RCTRL] = false;
+		io.KeysDown[SDL_SCANCODE_LCTRL] = false;
+		io.KeysDown[SDLK_r]             = false;
+	}
+
 	if ((io.KeyCtrl) && ImGui::IsKeyPressed(SDLK_q)) {
 		m_wantsQuit = true;
 	}
@@ -1813,6 +1846,12 @@ void BoardView::Update() {
 		if (ImGui::BeginMenu("File")) {
 			if (ImGui::MenuItem("Open", "Ctrl+O")) {
 				open_file = true;
+			}
+
+			if (ImGui::MenuItem("Reload", "Ctrl+R")) {
+				//check if file exists
+				//keep viewport parameters dont reset
+				LoadFile(fhistory.history[0],1);
 			}
 
 			/// Generate file history - PLD20160618-2028
@@ -2081,7 +2120,7 @@ void BoardView::Update() {
 		}
 
 		if (!filename.empty()) {
-			LoadFile(filename);
+			LoadFile(filename, 0);
 		}
 	}
 
@@ -2449,7 +2488,7 @@ void BoardView::HandleInput() {
 		}
 	}
 
-	if ((!io.WantCaptureKeyboard)) {
+	if ((!io.WantCaptureKeyboard) && !io.KeyCtrl) {
 
 		if (ImGui::IsKeyPressed(SDLK_m)) {
 			Mirror();
