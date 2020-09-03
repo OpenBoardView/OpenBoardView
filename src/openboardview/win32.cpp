@@ -22,7 +22,7 @@
 
 const std::string utf16_to_utf8(const std::wstring &text) {
 // See https://connect.microsoft.com/VisualStudio/feedback/details/1348277/link-error-when-using-std-codecvt-utf8-utf16-char16-t
-#if defined(_MSC_VER) && _MSC_VER <= 1911 // Should be fixed "in the next major version"
+#if defined(_MSC_VER) && _MSC_VER <= 1916 // Should be fixed "in the next major version"
 	return std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t>{}.to_bytes(
 	    reinterpret_cast<const wchar_t *>(text.c_str()));
 #else
@@ -35,7 +35,7 @@ const std::string wchar_to_utf8(const wchar_t *text) {
 	return std::string(utf16_to_utf8(std::wstring(text)));
 }
 
-#if defined(_MSC_VER) && _MSC_VER <= 1911 // Should be fixed "in the next major version"
+#if defined(_MSC_VER) && _MSC_VER <= 1916 // Should be fixed "in the next major version"
 const std::wstring utf8_to_utf16(const std::string &text) {
 	return std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t>{}.from_bytes(text.c_str());
 }
@@ -45,7 +45,7 @@ const std::u16string utf8_to_utf16(const std::string &text) {
 }
 #endif
 
-#if defined(_MSC_VER) && _MSC_VER <= 1911
+#if defined(_MSC_VER) && _MSC_VER <= 1916
 const wchar_t *utf16_to_wchar(const std::wstring &text) {
 #else
 const wchar_t *utf16_to_wchar(const std::u16string &text) {
