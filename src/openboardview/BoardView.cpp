@@ -204,7 +204,7 @@ void BoardView::ThemeSetStyle(const char *name) {
 		m_colors.boardFillColor           = byte4swap(0xddddddff);
 		m_colors.partHullColor            = byte4swap(0x80808080);
 		m_colors.partOutlineColor         = byte4swap(0x444444ff);
-		m_colors.partFillColor            = byte4swap(0xffffffbb);
+		m_colors.partFillColor            = byte4swap(0xffffff77);
 		m_colors.partHighlightedColor     = byte4swap(0xff0000ff);
 		m_colors.partHighlightedFillColor = byte4swap(0xf0f0f0ff);
 		m_colors.partTextColor            = byte4swap(0xff3030ff);
