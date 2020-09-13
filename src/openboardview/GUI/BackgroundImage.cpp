@@ -106,6 +106,9 @@ const Image &BackgroundImage::selectedImage() const {
 }
 
 void BackgroundImage::render(ImDrawList &draw, const ImVec2 &p_min, const ImVec2 &p_max, int rotation) {
+	if (!enabled)
+		return;
+
 	if (ImGui::BeginPopupModal("Error while loading background image")) {
 		ImGui::Text("There was an error while opening background image file(s)");
 		ImGui::Text("%s", error.c_str());
