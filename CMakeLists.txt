@@ -1,7 +1,7 @@
-cmake_minimum_required(VERSION 2.8.9)
-# Disable 3.0 VERSION setting, we will set it manually since we support 2.8
+cmake_minimum_required(VERSION 3.0)
+# We now use project() VERSION parameter
 if(POLICY CMP0048)
-	cmake_policy(SET CMP0048 OLD)
+	cmake_policy(SET CMP0048 NEW)
 endif()
 # Targets with semicolon are imported targets
 if(POLICY CMP0028)
@@ -10,6 +10,12 @@ endif()
 
 # Set OSX target version, before calling project() (inside version.cmake). FORCE is needed when project() is called within an included file
 set(CMAKE_OSX_DEPLOYMENT_TARGET "10.9" CACHE STRING "Minimum OS X deployment version" FORCE)
+
+# According to CMake doc, project() must be called in the top-level file, not in an included file
+# Also since CMake 3.0 version should be defined using project() too
+# VERSION must be up to 4 groups of digits separated by a period.
+# major.90 are alpha releases
+project(OpenBoardView VERSION 8.90.2)
 
 # Include our project variables
 include("version.cmake")
@@ -85,7 +91,7 @@ if(NOT MSVC)
 	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wextra")
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wextra -Werror=format-security")
 endif()
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+set(CMAKE_CXX_STANDARD 11)
 
 # Inject variables into version.h
 configure_file("${PROJECT_SOURCE_DIR}/src/openboardview/version.in.h"
