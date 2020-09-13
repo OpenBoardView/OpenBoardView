@@ -142,10 +142,19 @@ BRDBoard::BRDBoard(const BRDFile *const boardFile)
 				part_idx = brd_pin.part;
 				pin_idx  = 1;
 			}
-			if (brd_pin.snum)
+			if (brd_pin.snum) {
 				pin->number = brd_pin.snum;
-			else
+			} else {
 				pin->number = std::to_string(pin_idx);
+			}
+
+			// Lets us see BGA pad names finally
+			//
+			if (brd_pin.name) {
+				pin->name = std::string(brd_pin.name);
+			} else {
+				pin->name = pin->number;
+			}
 
 			// copy position
 			pin->position = Point(brd_pin.pos.x, brd_pin.pos.y);

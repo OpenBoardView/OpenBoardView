@@ -109,7 +109,7 @@ BVRFile::BVRFile(std::vector<char> &buf) {
 				pin.part = parts.size(); // the part this pin is associated with, is the last part on the vector
 
 				/*int id =*/READ_INT(); // uint
-				/*char *name =*/READ_STR();
+				pin.name = READ_STR();
 				double posx = READ_DOUBLE();
 				pin.pos.x   = trunc(posx * 1000);
 				double posy = READ_DOUBLE();

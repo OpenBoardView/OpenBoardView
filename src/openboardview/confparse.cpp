@@ -66,7 +66,7 @@ partZoomScaleOutFactor = 3.0\r\n\
 # Flip board modes\r\n\
 #  0: flip whole board in view port, shift-flip to flip around mouse ptr\r\n\
 #  1: flip around mouse ptr, shift-flip to flip view port\r\n\
-flipMode = 1\r\n\
+flipMode = 0\r\n\
 \r\n\
 showAnnotations = true\r\n\
 annotationBoxSize = 20\r\n\

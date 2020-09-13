@@ -1,12 +1,12 @@
 #pragma once
 
 #include "Board.h"
+#include "Searcher.h"
+#include "SpellCorrector.h"
 #include "annotations.h"
 #include "confparse.h"
 #include "history.h"
 #include "imgui/imgui.h"
-#include "Searcher.h"
-#include "SpellCorrector.h"
 #include "UI/Keyboard/KeyBindings.h"
 #include "GUI/Preferences/Keyboard.h"
 #include "GUI/BackgroundImage.h"
@@ -73,6 +73,7 @@ struct ColorScheme {
 	uint32_t pinNotConnectedColor = 0xffff0000;
 	uint32_t pinTestPadColor      = 0xff888888;
 	uint32_t pinTestPadFillColor  = 0xff8dc6d6;
+	uint32_t pinA1PadColor        = 0xffdd0000;
 
 	uint32_t pinSelectedColor     = 0x00000000;
 	uint32_t pinSelectedFillColor = 0xffff8888;
@@ -144,6 +145,7 @@ struct BoardView {
 	int annotationBoxSize   = 10;
 
 	int netWebThickness = 2;
+	int pinA1threshold = 3; // pincount of package to show 1/A1 pin
 
 	float pinSizeThresholdLow = 0.0f;
 	bool pinShapeSquare       = false;
@@ -180,8 +182,12 @@ struct BoardView {
 	void SetFZKey(const char *keytext);
 	void HelpAbout(void);
 	void HelpControls(void);
-	template<class T> void ShowSearchResults(std::vector<T> results, char *search, int &limit, void (BoardView::*onSelect)(const char *));
-	void SearchColumnGenerate(const std::string& title, std::pair<SharedVector<Component>, SharedVector<Net>> results, char *search, int limit);
+	template <class T>
+	void ShowSearchResults(std::vector<T> results, char *search, int &limit, void (BoardView::*onSelect)(const char *));
+	void SearchColumnGenerate(const std::string &title,
+	                          std::pair<SharedVector<Component>, SharedVector<Net>> results,
+	                          char *search,
+	                          int limit);
 	void Preferences(void);
 	void SaveAllColors(void);
 	void ColorPreferencesItem(
@@ -331,7 +337,6 @@ struct BoardView {
 	void SearchCompound(const char *item);
 	void SearchCompoundNoClear(const char *item);
 	std::pair<SharedVector<Component>, SharedVector<Net>> SearchPartsAndNets(const char *search, int limit);
-
 
 	void SetLastFileOpenName(const std::string &name);
 	void FlipBoard(int mode = 0);

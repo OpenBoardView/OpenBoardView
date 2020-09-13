@@ -108,6 +108,7 @@ const std::string show_file_picker(bool filterBoards) {
 	gtk_file_filter_add_pattern(filter, "*.[bB][vV][rR]");
 	gtk_file_filter_add_pattern(filter, "*.[cC][aA][dD]");
 	gtk_file_filter_add_pattern(filter, "*.[cC][sS][tT]");
+	gtk_file_filter_add_pattern(filter, "*.[pP][cC][bB][dD][oO][cC]");
 	gtk_file_filter_add_pattern(filter, "*.[fF][zZ]");
 
 	gtk_file_filter_set_name(filter_everything, "All");
