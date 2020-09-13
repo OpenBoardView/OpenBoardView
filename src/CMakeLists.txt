@@ -122,11 +122,31 @@ set(IMGUI_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/imgui ${CMAKE_CURRENT_SOURCE_
 #install(TARGETS imgui DESTINATION ${INSTALL_ARCHIVE_DIR}) # No need to install a static lib
 
 ## filesystem ##
-execute_process(
-	COMMAND git submodule update --init src/filesystem
-	WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-)
-add_subdirectory(filesystem)
+message(CHECK_START "Checking for std::filesystem")
+## GCC 9 and Clang 9 include filesystem in the standard library 
+if((CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU") AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 9.0)
+	message(CHECK_PASS "available")
+	set(CMAKE_CXX_STANDARD 17)
+	set(FILESYSTEM_LIBRARIES)
+# Clang 8 requires explicit linking with lc++fs
+elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 8.0)
+	message(CHECK_PASS "available")
+	set(CMAKE_CXX_STANDARD 17)
+	set(FILESYSTEM_LIBRARIES lc++fs)
+# GCC 8 requires explicit linking with stdc++fs
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 8.0)
+	message(CHECK_PASS "available")
+	set(CMAKE_CXX_STANDARD 17)
+	set(FILESYSTEM_LIBRARIES stdc++fs)
+else() # Other compiler/version are unsupported, use external lib
+	message(CHECK_FAIL "not available, using ghc::filesystem")
+	execute_process(
+		COMMAND git submodule update --init src/filesystem
+		WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+	)
+	add_subdirectory(filesystem)
+	set(FILESYSTEM_LIBRARIES ghc_filesystem)
+endif()
 
 ## stb ##
 execute_process(

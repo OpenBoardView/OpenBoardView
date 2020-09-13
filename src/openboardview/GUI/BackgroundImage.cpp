@@ -1,11 +1,10 @@
+#include "platform.h"
+
 #include "BackgroundImage.h"
 
 #include "imgui/imgui.h"
 #include "confparse.h"
 
-#include <ghc/filesystem.hpp>
-
-using namespace ghc;
 
 #if __cplusplus < 201703L
 constexpr const BackgroundImage::Side BackgroundImage::defaultSide; // c++ <17 need definition in .cpp

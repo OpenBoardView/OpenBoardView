@@ -135,7 +135,7 @@ target_link_libraries(${PROJECT_NAME_LOWER}
 	${GLAD_LIBRARIES}
 	${COCOA_LIBRARY}
 	${ZLIB_LIBRARIES}
-	ghc_filesystem
+	${FILESYSTEM_LIBRARIES}
 	${CMAKE_DL_LIBS}
 )
 
