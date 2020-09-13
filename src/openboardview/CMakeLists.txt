@@ -48,7 +48,6 @@ include_directories(
 	${GTK_INCLUDE_DIRS}
 	${OPENGL_INCLUDE_DIR}
 	${ZLIB_INCLUDE_DIRS}
-	${SQLITE3_INCLUDE_DIRS}
 	${FONTCONFIG_INCLUDE_DIRS}
 )
 
@@ -132,10 +131,10 @@ endif()
 
 target_link_libraries(${PROJECT_NAME_LOWER}
 	imgui
+	SQLite::SQLite3
 	${GLAD_LIBRARIES}
 	${COCOA_LIBRARY}
 	${ZLIB_LIBRARIES}
-	${SQLITE3_LIBRARIES}
 	ghc_filesystem
 	${CMAKE_DL_LIBS}
 )
