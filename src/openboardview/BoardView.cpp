@@ -279,6 +279,7 @@ int BoardView::ConfigParse(void) {
 
 	m_info_surface.x          = obvconfig.ParseInt("infoPanelWidth", 350);
 	showPins                  = obvconfig.ParseBool("showPins", true);
+	showPosition              = obvconfig.ParseBool("showPosition", true);
 	showNetWeb                = obvconfig.ParseBool("showNetWeb", true);
 	showAnnotations           = obvconfig.ParseBool("showAnnotations", true);
 	backgroundImage.enabled   = obvconfig.ParseBool("showBackgroundImage", true);
@@ -1876,7 +1877,7 @@ void BoardView::Update() {
 			}
 
 			if (ImGui::Checkbox("Show Position", &showPosition)) {
-				obvconfig.WriteBool("showNetWeb", showPosition);
+				obvconfig.WriteBool("showPosition", showPosition);
 				m_needsRedraw = true;
 			}
 
