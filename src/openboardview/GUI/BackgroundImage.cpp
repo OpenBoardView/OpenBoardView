@@ -59,12 +59,17 @@ void BackgroundImage::writeToConfig(const std::string &filename) {
 	if (filename.empty()) // No destination file to save to
 		return;
 
+	std::error_code ec;
 	auto confparse = Confparse{};
 	confparse.Load(filename);
 
 	auto configDir = filesystem::path{filename}.parent_path();
 
-	auto topImagePath = filesystem::relative(topImage.file, configDir);
+	auto topImagePath = filesystem::relative(topImage.file, configDir, ec);
+	if (ec) {
+		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Error writing top image path: %d - %s", ec.value(), ec.message().c_str());
+		return;
+	}
 	confparse.WriteStr("TopImageFile", topImagePath.generic_string().c_str());
 	confparse.WriteInt("TopImageOffsetX", topImage.offsetX);
 	confparse.WriteInt("TopImageOffsetY", topImage.offsetY);
@@ -74,7 +79,11 @@ void BackgroundImage::writeToConfig(const std::string &filename) {
 	confparse.WriteBool("TopImageMirrorY", topImage.mirrorY);
 	confparse.WriteFloat("TopImageTransparency", topImage.transparency);
 
-	auto bottomImagePath = filesystem::relative(bottomImage.file, configDir);
+	auto bottomImagePath = filesystem::relative(bottomImage.file, configDir, ec);
+	if (ec) {
+		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Error writing bottom image path: %d - %s", ec.value(), ec.message().c_str());
+		return;
+	}
 	confparse.WriteStr("BottomImageFile", bottomImagePath.generic_string().c_str());
 	confparse.WriteInt("BottomImageOffsetX", bottomImage.offsetX);
 	confparse.WriteInt("BottomImageOffsetY", bottomImage.offsetY);
