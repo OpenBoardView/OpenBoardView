@@ -116,7 +116,7 @@ pinSameNetTextColor		= 0x111111ff\r\n\
 \r\n\
 pinHaloColor			= 0x22FF2288\r\n\
 \r\n\
-pinNetWebColor = 0xff000044\r\n\
+pinNetWebColor = 0xff0000aa\r\n\
 pinNetWebOSColor = 0x0000ff33\r\n\
 \r\n\
 annotationPopupTextColor = 0x000000ff\r\n\
