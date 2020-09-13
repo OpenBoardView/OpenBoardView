@@ -145,6 +145,7 @@ struct BoardView {
 	int annotationBoxSize   = 10;
 
 	int pinA1threshold = 3; // pincount of package to show 1/A1 pin
+	int netWebThickness = 2;
 
 	float pinSizeThresholdLow = 0.0f;
 	bool pinShapeSquare       = false;
