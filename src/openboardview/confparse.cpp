@@ -99,7 +99,7 @@ partTextBackgroundColor			= 0xffff00ff\r\n\
 # moderately high to do them all \r\n\
 #\r\n\
 boardOutlineColor			= 0x444444ff\r\n\
-pinDefaultColor				= 0x8888ccff\r\n\
+pinDefaultColor				= 0x22aa33ff\r\n\
 pinDefaultTextColor			= 0x666688ff\r\n\
 pinGroundColor				= 0x2222aaff\r\n\
 pinNotConnectedColor		= 0xaaaaaaff\r\n\

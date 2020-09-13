@@ -212,7 +212,7 @@ void BoardView::ThemeSetStyle(const char *name) {
 		m_colors.partTextColor            = byte4swap(0xff3030ff);
 		m_colors.partTextBackgroundColor  = byte4swap(0xffff00ff);
 		m_colors.boardOutlineColor        = byte4swap(0x444444ff);
-		m_colors.pinDefaultColor          = byte4swap(0x8888ffff);
+		m_colors.pinDefaultColor          = byte4swap(0x22aa33ff);
 		m_colors.pinDefaultTextColor      = byte4swap(0x666688ff);
 		m_colors.pinGroundColor           = byte4swap(0x2222aaff);
 		m_colors.pinNotConnectedColor     = byte4swap(0xaaaaaaff);
