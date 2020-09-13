@@ -143,6 +143,8 @@ struct BoardView {
 	int annotationBoxOffset = 10;
 	int annotationBoxSize   = 10;
 
+	int netWebThickness = 2;
+
 	float pinSizeThresholdLow = 0.0f;
 	bool pinShapeSquare       = false;
 	bool pinShapeCircle       = true;

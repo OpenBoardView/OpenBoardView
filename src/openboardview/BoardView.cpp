@@ -302,6 +302,8 @@ int BoardView::ConfigParse(void) {
 	annotationBoxOffset = obvconfig.ParseInt("annotationBoxOffset", 8);
 	annotationBoxOffset = DPI(annotationBoxOffset);
 
+	netWebThickness = obvconfig.ParseInt("netWebThickness", 2);
+
 	/*
 	 * Some machines (Atom etc) don't have enough CPU/GPU
 	 * grunt to cope with the large number of AA'd circles
@@ -823,6 +825,11 @@ void BoardView::Preferences(void) {
 		ImGui::SameLine();
 		if (ImGui::InputInt("##annotationBoxOffset", &annotationBoxOffset)) {
 			obvconfig.WriteInt("annotationBoxOffset", annotationBoxOffset);
+		}
+		RA("Net web thickness", DPI(200));
+		ImGui::SameLine();
+		if (ImGui::InputInt("##netWebThickness", &netWebThickness)) {
+			obvconfig.WriteInt("netWebThickness", netWebThickness);
 		}
 		ImGui::Separator();
 
@@ -2987,7 +2994,7 @@ void BoardView::DrawNetWeb(ImDrawList *draw) {
 			draw->AddLine(CoordToScreen(m_pinSelected->position.x, m_pinSelected->position.y),
 			              CoordToScreen(p->position.x, p->position.y),
 			              ImColor(col),
-			              1);
+			              netWebThickness);
 		}
 	}
 
