@@ -304,7 +304,6 @@ struct BoardView {
 	void DrawPins(ImDrawList *draw);
 	void DrawParts(ImDrawList *draw);
 	void DrawBoard();
-	void DrawSelectedWeb(ImDrawList *draw);
 	void DrawNetWeb(ImDrawList *draw);
 	void SetFile(BRDFile *file);
 	int LoadFile(const std::string &filename);
