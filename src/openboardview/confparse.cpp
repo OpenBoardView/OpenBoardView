@@ -34,6 +34,7 @@ fontSize = 20\r\n\
 showInfoPanel = true\r\n\
 infoPanelWidth = 300\r\n\
 showPins = true\r\n\
+showPosition = true\r\n\
 showNetWeb = true\r\n\
 pinSelectMasks = true\r\n\
 pinSizeThresholdLow = 0\r\n\
