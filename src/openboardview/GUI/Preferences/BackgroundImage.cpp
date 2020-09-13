@@ -41,7 +41,7 @@ void BackgroundImage::imageSettings(const std::string &name, Image &image) {
 	if (ImGui::Button(("Browse##" + name).c_str())) {
 		auto path = show_file_picker();
 		if (!path.empty()) {
-			image = {path};
+			image.file = path;
 			std::string error = image.reload();
 			if (!error.empty()) {
 				erroredFiles.push_back(error);
