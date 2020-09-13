@@ -43,6 +43,8 @@ public:
 	std::string reload();
 	void render(ImDrawList &draw, const ImVec2 &p_min, const ImVec2 &p_max, int rotation);
 
+	bool enabled = true;
+
 	float x0() const;
 	float y0() const;
 	float x1() const;

@@ -287,6 +287,7 @@ int BoardView::ConfigParse(void) {
 	showPosition              = obvconfig.ParseBool("showPosition", true);
 	showNetWeb                = obvconfig.ParseBool("showNetWeb", true);
 	showAnnotations           = obvconfig.ParseBool("showAnnotations", true);
+	backgroundImage.enabled   = obvconfig.ParseBool("showBackgroundImage", true);
 	fillParts                 = obvconfig.ParseBool("fillParts", true);
 	m_centerZoomSearchResults = obvconfig.ParseBool("centerZoomSearchResults", true);
 	flipMode                  = obvconfig.ParseInt("flipMode", 0);
@@ -1939,6 +1940,11 @@ void BoardView::Update() {
 				m_needsRedraw = true;
 			}
 
+			if (ImGui::Checkbox("Background image", &backgroundImage.enabled)) {
+				obvconfig.WriteBool("showBackgroundImage", backgroundImage.enabled);
+				m_needsRedraw = true;
+			}
+
 			ImGui::Separator();
 
 			if (ImGui::MenuItem("Info Panel", keybindings.getKeyNames("InfoPanel").c_str())) {
@@ -1984,6 +1990,12 @@ void BoardView::Update() {
 				obvconfig.WriteBool("showPins", showPins);
 				m_needsRedraw = true;
 			}
+		}
+
+		ImGui::SameLine();
+		if (ImGui::Checkbox("Image", &backgroundImage.enabled)) {
+			obvconfig.WriteBool("showBackgroundImage", backgroundImage.enabled);
+			m_needsRedraw = true;
 		}
 
 		ImGui::SameLine();

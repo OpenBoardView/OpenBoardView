@@ -36,6 +36,7 @@ infoPanelWidth = 300\r\n\
 showPins = true\r\n\
 showPosition = true\r\n\
 showNetWeb = true\r\n\
+showBackgroundImage = true\r\n\
 pinSelectMasks = true\r\n\
 pinSizeThresholdLow = 0\r\n\
 pinShapeCircle = true\r\n\
