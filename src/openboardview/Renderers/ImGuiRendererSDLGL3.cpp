@@ -7,11 +7,7 @@ std::string ImGuiRendererSDLGL3::name() {
 }
 
 bool ImGuiRendererSDLGL3::checkGLVersion() {
-#if __APPLE__
-	if (GLVersion.major <= 3 && GLVersion.minor < 2) {
-#else
-	if (GLVersion.major <= 3 && GLVersion.minor < 0) {
-#endif
+	if (GLVersion.major < 3 || (GLVersion.major == 3 && GLVersion.minor < 2)) {
 		SDL_LogError(SDL_LOG_CATEGORY_RENDER, "Minimal OpenGL version required is %d.%d. Got %d.%d.", 3, 2, GLVersion.major, GLVersion.minor);
 		return false;
 	}
