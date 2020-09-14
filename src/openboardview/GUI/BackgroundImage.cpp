@@ -19,6 +19,9 @@ BackgroundImage::BackgroundImage(const int &side) : side(reinterpret_cast<const 
 void BackgroundImage::loadFromConfig(const std::string &filename) {
 	configFilename = filename; // save filename for latter use with writeToConfig
 
+	if (!filesystem::exists(filename)) // Config file doesn't exist, do not attempt to read or write it and load images
+		return;
+
 	auto configDir = filesystem::path{filename}.parent_path();
 
 	auto confparse = Confparse{};
