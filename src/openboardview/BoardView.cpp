@@ -1830,7 +1830,7 @@ void BoardView::Update() {
 		ContextMenu();
 
 		if (ImGui::BeginMenu("File")) {
-			if (ImGui::MenuItem("Open", "Ctrl+O")) {
+			if (ImGui::MenuItem("Open", keybindings.getKeyNames("Open").c_str())) {
 				open_file = true;
 			}
 
@@ -1847,7 +1847,7 @@ void BoardView::Update() {
 			}
 			ImGui::Separator();
 
-			if (ImGui::MenuItem("Part/Net Search", "Ctrl+F, /")) {
+			if (ImGui::MenuItem("Part/Net Search", keybindings.getKeyNames("Search").c_str())) {
 				if (m_validBoard) m_showSearch = true;
 			}
 
@@ -1865,34 +1865,34 @@ void BoardView::Update() {
 
 			ImGui::Separator();
 
-			if (ImGui::MenuItem("Quit")) {
+			if (ImGui::MenuItem("Quit", keybindings.getKeyNames("Quit").c_str())) {
 				m_wantsQuit = true;
 			}
 			ImGui::EndMenu();
 		}
 		if (ImGui::BeginMenu("View")) {
-			if (ImGui::MenuItem("Flip board", "<Space>")) {
+			if (ImGui::MenuItem("Flip board", keybindings.getKeyNames("Flip").c_str())) {
 				FlipBoard();
 			}
-			if (ImGui::MenuItem("Rotate CW", ".")) {
+			if (ImGui::MenuItem("Rotate CW", keybindings.getKeyNames("RotateCW").c_str())) {
 				Rotate(1);
 			}
-			if (ImGui::MenuItem("Rotate CCW", ",")) {
+			if (ImGui::MenuItem("Rotate CCW", keybindings.getKeyNames("RotateCCW").c_str())) {
 				Rotate(-1);
 			}
-			if (ImGui::MenuItem("Reset View", "x NP-5")) { // actually want this to be numpad 5
+			if (ImGui::MenuItem("Reset View", keybindings.getKeyNames("Center").c_str())) {
 				CenterView();
 			}
-			if (ImGui::MenuItem("Mirror Board", "m")) {
+			if (ImGui::MenuItem("Mirror Board", keybindings.getKeyNames("Mirror").c_str())) {
 				Mirror();
 			}
 
-			if (ImGui::MenuItem("Toggle Pin Display", "p")) {
+			if (ImGui::MenuItem("Toggle Pin Display", keybindings.getKeyNames("TogglePins").c_str())) {
 				showPins ^= 1;
 				m_needsRedraw = true;
 			}
 
-			if (ImGui::MenuItem("Show Info Panel", "i")) {
+			if (ImGui::MenuItem("Show Info Panel", keybindings.getKeyNames("InfoPanel").c_str())) {
 				showInfoPanel ^= 1;
 				obvconfig.WriteBool("showInfoPanel", showInfoPanel ? true : false);
 				m_needsRedraw = true;
@@ -1931,13 +1931,13 @@ void BoardView::Update() {
 
 			ImGui::Separator();
 
-			if (ImGui::MenuItem("Info Pane", "i")) {
+			if (ImGui::MenuItem("Info Panel", keybindings.getKeyNames("InfoPanel").c_str())) {
 				showInfoPanel = !showInfoPanel;
 			}
-			if (ImGui::MenuItem("Net List", "l")) {
+			if (ImGui::MenuItem("Net List", keybindings.getKeyNames("NetList").c_str())) {
 				m_showNetList = !m_showNetList;
 			}
-			if (ImGui::MenuItem("Part List", "k")) {
+			if (ImGui::MenuItem("Part List", keybindings.getKeyNames("PartList").c_str())) {
 				m_showPartList = !m_showPartList;
 			}
 

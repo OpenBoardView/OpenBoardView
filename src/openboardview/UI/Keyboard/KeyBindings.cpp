@@ -99,3 +99,16 @@ void KeyBindings::writeToConfig(Confparse &obvconfig) {
 		obvconfig.WriteStr(("KeyBinding" + keybinding.first).c_str(), line.c_str());
 	}
 }
+
+std::string KeyBindings::getKeyNames(const std::string &bindname) const {
+	std::string str{};
+	auto kb = keybindings.find(bindname);
+	if (kb != keybindings.end()) {
+		for (const auto &kbs : kb->second) {
+			if (!str.empty())
+				str += " ";
+			str += "<" + kbs.to_string() + ">";
+		}
+	}
+	return str;
+}

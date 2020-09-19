@@ -26,6 +26,8 @@ public:
 
 	void readFromConfig(Confparse &obvconfig);
 	void writeToConfig(Confparse &obvconfig);
+
+	std::string getKeyNames(const std::string &bindname) const;
 };
 
 #endif
