@@ -324,11 +324,7 @@ int BoardView::ConfigParse(void) {
 	 * call this.
 	 */
 	slowCPU |= obvconfig.ParseBool("slowCPU", false);
-	if (slowCPU == true) {
-		style.AntiAliasedShapes = false;
-		boardFill               = false;
-		fillParts               = false;
-	}
+	style.AntiAliasedShapes = !slowCPU;
 
 	/*
 	 * Colours in ImGui can be represented as a 4-byte packed uint32_t as ABGR
@@ -724,6 +720,7 @@ void BoardView::ColorPreferences(void) {
 
 void BoardView::Preferences(void) {
 	bool dummy = true;
+	ImGuiStyle &style = ImGui::GetStyle();
 	//	ImGui::PushStyleColor(ImGuiCol_PopupBg, ImColor(0xffe0e0e0));
 	ImGui::SetNextWindowPosCenter();
 	if (ImGui::BeginPopupModal("Preferences", &dummy, ImGuiWindowFlags_AlwaysAutoResize)) {
@@ -881,6 +878,7 @@ void BoardView::Preferences(void) {
 
 		if (ImGui::Checkbox("slowCPU", &slowCPU)) {
 			obvconfig.WriteBool("slowCPU", slowCPU);
+			style.AntiAliasedShapes = !slowCPU;
 		}
 
 		ImGui::SameLine();
@@ -2798,7 +2796,7 @@ void BoardView::OutlineGenFillDraw(ImDrawList *draw, int ydelta, double thicknes
 	double vdelta;
 	double y, ystart, yend;
 
-	if (!boardFill) return;
+	if (!boardFill || slowCPU) return;
 	if (!m_file) return;
 
 	scanhits.reserve(20);
@@ -3068,8 +3066,6 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 
 	if (slowCPU) {
 		threshold      = 2.0f;
-		pinShapeSquare = true;
-		pinShapeCircle = false;
 	}
 	if (pinSizeThresholdLow > threshold) threshold = pinSizeThresholdLow;
 
@@ -3231,7 +3227,7 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 					break;
 				default:
 					if ((psz > 3) && (psz > threshold)) {
-						if (pinShapeSquare) {
+						if (pinShapeSquare || slowCPU) {
 							if (fill_pin)
 								draw->AddRectFilled(ImVec2(pos.x - h, pos.y - h), ImVec2(pos.x + h, pos.y + h), fill_color);
 							if (draw_ring) draw->AddRect(ImVec2(pos.x - h, pos.y - h), ImVec2(pos.x + h, pos.y + h), color);
@@ -3637,10 +3633,10 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 			d = ImVec2(CoordToScreen(part->outline[3].x, part->outline[3].y));
 
 			// if (fillParts) draw->AddQuadFilled(a, b, c, d, color & 0xffeeeeee);
-			if (fillParts) draw->AddQuadFilled(a, b, c, d, m_colors.partFillColor);
+			if (fillParts && !slowCPU) draw->AddQuadFilled(a, b, c, d, m_colors.partFillColor);
 			draw->AddQuad(a, b, c, d, color);
 			if (PartIsHighlighted(part)) {
-				if (fillParts) draw->AddQuadFilled(a, b, c, d, m_colors.partHighlightedFillColor);
+				if (fillParts && !slowCPU) draw->AddQuadFilled(a, b, c, d, m_colors.partHighlightedFillColor);
 				draw->AddQuad(a, b, c, d, m_colors.partHighlightedColor);
 			}
 
