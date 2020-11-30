@@ -1893,7 +1893,7 @@ void BoardView::Update() {
 			}
 
 			if (ImGui::Checkbox("Annotations", &showAnnotations)) {
-				obvconfig.WriteBool("annotations", showAnnotations);
+				obvconfig.WriteBool("showAnnotations", showAnnotations);
 				m_needsRedraw = true;
 			}
 
