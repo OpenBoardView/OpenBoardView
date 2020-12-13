@@ -1242,12 +1242,10 @@ void BoardView::ShowInfoPane(void) {
 				if (ImGui::SmallButton(name_and_id)) {
 					// std::string speed is no concern here, since button action is not in UI rendering loop
 					std::string to_copy = part->name;
-					if (part->mfgcode.size())
-					{
+					if (part->mfgcode.size()) {
 						to_copy += " " + part->mfgcode;
 					}
-					for (auto pin : part->pins)
-					{
+					for (const auto &pin : part->pins) {
 						to_copy += "\n" + pin->name + " " + pin->net->name;
 					}
 					ImGui::SetClipboardText(to_copy.c_str());
