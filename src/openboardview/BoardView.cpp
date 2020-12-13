@@ -323,7 +323,8 @@ int BoardView::ConfigParse(void) {
 	 * call this.
 	 */
 	slowCPU |= obvconfig.ParseBool("slowCPU", false);
-	style.AntiAliasedFill = !slowCPU;
+	style.AntiAliasedLines = !slowCPU;
+	style.AntiAliasedFill  = !slowCPU;
 
 	/*
 	 * Colours in ImGui can be represented as a 4-byte packed uint32_t as ABGR
@@ -889,7 +890,8 @@ void BoardView::Preferences(void) {
 
 		if (ImGui::Checkbox("slowCPU", &slowCPU)) {
 			obvconfig.WriteBool("slowCPU", slowCPU);
-			style.AntiAliasedShapes = !slowCPU;
+			style.AntiAliasedLines = !slowCPU;
+			style.AntiAliasedFill  = !slowCPU;
 		}
 
 		ImGui::SameLine();
