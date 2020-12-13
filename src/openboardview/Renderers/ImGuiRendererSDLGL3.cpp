@@ -1,6 +1,6 @@
 #include "ImGuiRendererSDLGL3.h"
 
-#include "imgui_impl_opengl3.h"
+#include "backends/imgui_impl_opengl3.h"
 
 std::string ImGuiRendererSDLGL3::name() {
     return "ImGuiRendererSDLGL3";

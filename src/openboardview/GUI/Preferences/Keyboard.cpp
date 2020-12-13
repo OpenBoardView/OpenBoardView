@@ -30,7 +30,7 @@ void Keyboard::render() {
 		auto colcount = 1 + (maxbindings != keybindings.keybindings.end() ? maxbindings->second.size() : 0) + 1;
 
 		if (ImGui::BeginTable("KeyBindings", colcount,
-			ImGuiTableFlags_SizingPolicyFixedX // size according to content
+			ImGuiTableFlags_ColumnsWidthFixed // size according to content
 			| ImGuiTableFlags_RowBg // alternating background colors
 			| ImGuiTableFlags_BordersH
 			| ImGuiTableFlags_BordersV)) {

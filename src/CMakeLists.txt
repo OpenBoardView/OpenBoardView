@@ -74,10 +74,10 @@ if(ENABLE_GLES2)
 endif()
 
 # workaround for OpenGL include for OpenGL2, need to be glad rather than gl itself
-file(READ "${CMAKE_CURRENT_SOURCE_DIR}/imgui/examples/imgui_impl_opengl2.cpp" input)
+file(READ "${CMAKE_CURRENT_SOURCE_DIR}/imgui/backends/imgui_impl_opengl2.cpp" input)
 string(REPLACE "OpenGL/gl.h" "glad/glad.h" input "${input}")
 string(REPLACE "GL/gl.h" "glad/glad.h" input "${input}")
-file(WRITE "${CMAKE_CURRENT_SOURCE_DIR}/imgui/examples/imgui_impl_opengl2.cpp" "${input}")
+file(WRITE "${CMAKE_CURRENT_SOURCE_DIR}/imgui/backends/imgui_impl_opengl2.cpp" "${input}")
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/imgui
 	${GLAD_INCLUDE_DIRS}
@@ -86,19 +86,20 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/imgui
 set(SOURCES
 	imgui/imgui.cpp
 	imgui/imgui_draw.cpp
+	imgui/imgui_tables.cpp
 	imgui/imgui_widgets.cpp
 	imgui/misc/cpp/imgui_stdlib.cpp
-	imgui/examples/imgui_impl_sdl.cpp)
+	imgui/backends/imgui_impl_sdl.cpp)
 
 
 if(ENABLE_GL1)
 	LIST(APPEND SOURCES
-		imgui/examples/imgui_impl_opengl2.cpp
+		imgui/backends/imgui_impl_opengl2.cpp
 	)
 endif()
 if(ENABLE_GL3)
 	LIST(APPEND SOURCES
-		imgui/examples/imgui_impl_opengl3.cpp
+		imgui/backends/imgui_impl_opengl3.cpp
 	)
 endif()
 

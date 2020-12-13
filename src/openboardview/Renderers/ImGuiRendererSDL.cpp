@@ -5,7 +5,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
-#include "imgui_impl_sdl.h"
+#include "backends/imgui_impl_sdl.h"
 
 ImGuiRendererSDL::ImGuiRendererSDL(SDL_Window *window) : window(window) {
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);

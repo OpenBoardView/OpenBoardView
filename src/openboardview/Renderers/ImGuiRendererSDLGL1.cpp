@@ -1,6 +1,6 @@
 #include "ImGuiRendererSDLGL1.h"
 
-#include "imgui_impl_opengl2.h"
+#include "backends/imgui_impl_opengl2.h"
 
 std::string ImGuiRendererSDLGL1::name() {
     return "ImGuiRendererSDLGL1";
