@@ -8,6 +8,18 @@
 
 #include "utils.h"
 
+const std::unordered_map<std::string, std::string> KeyBindings::serializeName = {
+	{"|", "Pipe"},
+	{"~", "Tilde"},
+	{"=", "Equals"}
+};
+
+const std::unordered_map<std::string, std::string> KeyBindings::deserializeName = {
+	{"Pipe", "|"},
+	{"Tilde", "~"},
+	{"Equals", "="}
+};
+
 KeyBindings::KeyBindings() {
 	reset();
 }
@@ -71,7 +83,14 @@ void KeyBindings::readFromConfig(Confparse &obvconfig) {
 			std::transform(modifiers.begin(), modifiers.end(), std::back_inserter(vkeyModifiers), [this](const std::string &modifier){return keyModifiers.fromName(modifier);});
 
 			std::string key = keys.back();
+			// Replace some serialization-compatible keys with the SDL-compatible name
+			auto deserializedNameIt = deserializeName.find(key);
+			if (deserializedNameIt != deserializeName.end()) {
+				key = deserializedNameIt->second;
+			}
+
 			auto sdlKey = SDL_GetKeyFromName(key.c_str());
+
 			bindings.push_back({sdlKey, vkeyModifiers});
 		}
 		keybinding.second = bindings;
@@ -85,6 +104,12 @@ void KeyBindings::writeToConfig(Confparse &obvconfig) {
 		std::string line;
 		for (auto &kbs : keybinding.second) {
 			std::string binding = SDL_GetKeyName(kbs.getKeycode());
+
+			// Replace some keys with a serialization-compatible variant
+			auto serializedNameIt = serializeName.find(binding);
+			if (serializedNameIt != serializeName.end()) {
+				binding = serializedNameIt->second;
+			}
 
 			// Prepend modifiers so that key is always last, reverse to keep in same order
 			auto modifiers = kbs.getModifiers();
