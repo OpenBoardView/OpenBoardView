@@ -15,7 +15,7 @@ set(CMAKE_OSX_DEPLOYMENT_TARGET "10.9" CACHE STRING "Minimum OS X deployment ver
 # Also since CMake 3.0 version should be defined using project() too
 # VERSION must be up to 4 groups of digits separated by a period.
 # major.90 are alpha releases
-project(OpenBoardView VERSION 8.90.3)
+project(OpenBoardView VERSION 8.95.0)
 
 # Include our project variables
 include("version.cmake")
