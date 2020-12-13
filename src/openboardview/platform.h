@@ -69,9 +69,22 @@
 #endif
 #endif // _MSC_VER
 
+// Filesystem fallback to ghc::filesystem if std::filesystem not available
+#if __cplusplus >= 201703L && defined(__has_include)
+#if __has_include(<filesystem>)
+#define GHC_USE_STD_FS
+#include <filesystem>
+namespace filesystem = std::filesystem;
+#endif
+#endif
+#ifndef GHC_USE_STD_FS
+#include <ghc/filesystem.hpp>
+namespace filesystem = ghc::filesystem;
+#endif
+
 // Shows a file dialog (should hang the current thread) and returns the utf8
 // filename picked by the user.
-const std::string show_file_picker();
+const std::string show_file_picker(bool filterBoards = false);
 
 const std::string get_font_path(const std::string &name);
 const std::vector<char> load_font(const std::string &name);

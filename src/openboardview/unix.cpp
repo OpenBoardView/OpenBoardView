@@ -93,7 +93,7 @@ bool load() {
 #define gtk_window_new GTK::gtk_window_new
 #define g_type_check_instance_cast GTK::g_type_check_instance_cast
 
-const std::string show_file_picker() {
+const std::string show_file_picker(bool filterBoards) {
 	std::string path;
 	if (!GTK::load()) return path;
 
@@ -127,7 +127,9 @@ const std::string show_file_picker() {
 	                                     GTK_RESPONSE_ACCEPT,
 	                                     NULL);
 
-	gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(dialog), filter);
+	if (filterBoards) {
+		gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(dialog), filter);
+	}
 	gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(dialog), filter_everything);
 
 	if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_ACCEPT) {
@@ -147,7 +149,7 @@ const std::string show_file_picker() {
 	return path;
 }
 #elif !defined(__APPLE__)
-const std::string show_file_picker() { // dummy function when not building for OS X and GTK not available
+const std::string show_file_picker(bool filterBoards) { // dummy function when not building for OS X and GTK not available
 	SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Cannot show open file dialog: not built in.");
 	return std::string();
 }

@@ -48,7 +48,6 @@ include_directories(
 	${GTK_INCLUDE_DIRS}
 	${OPENGL_INCLUDE_DIR}
 	${ZLIB_INCLUDE_DIRS}
-	${SQLITE3_INCLUDE_DIRS}
 	${FONTCONFIG_INCLUDE_DIRS}
 )
 
@@ -80,6 +79,9 @@ set(SOURCES
 	UI/Keyboard/KeyBindings.cpp
 	UI/Keyboard/KeyModifier.cpp
 	UI/Keyboard/KeyModifiers.cpp
+	GUI/BackgroundImage.cpp
+	GUI/Image.cpp
+	GUI/Preferences/BackgroundImage.cpp
 	GUI/Preferences/Keyboard.cpp
 	main_opengl.cpp
 )
@@ -129,10 +131,11 @@ endif()
 
 target_link_libraries(${PROJECT_NAME_LOWER}
 	imgui
+	SQLite::SQLite3
 	${GLAD_LIBRARIES}
 	${COCOA_LIBRARY}
 	${ZLIB_LIBRARIES}
-	${SQLITE3_LIBRARIES}
+	${FILESYSTEM_LIBRARIES}
 	${CMAKE_DL_LIBS}
 )
 
@@ -141,8 +144,16 @@ if(NOT APPLE AND NOT MINGW)
 		${FONTCONFIG_LIBRARIES}
 	)
 endif()
+if(MINGW)
+target_link_libraries(${PROJECT_NAME_LOWER}
+	SDL2::SDL2-static
+)
+else()
 target_link_libraries(${PROJECT_NAME_LOWER}
 	SDL2::SDL2
+)
+endif()
+target_link_libraries(${PROJECT_NAME_LOWER}
 	SDL2::SDL2main
 )
 

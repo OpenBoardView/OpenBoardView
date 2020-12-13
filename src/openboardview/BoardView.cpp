@@ -206,13 +206,13 @@ void BoardView::ThemeSetStyle(const char *name) {
 		m_colors.boardFillColor           = byte4swap(0xddddddff);
 		m_colors.partHullColor            = byte4swap(0x80808080);
 		m_colors.partOutlineColor         = byte4swap(0x444444ff);
-		m_colors.partFillColor            = byte4swap(0xffffffbb);
+		m_colors.partFillColor            = byte4swap(0xffffff77);
 		m_colors.partHighlightedColor     = byte4swap(0xff0000ff);
 		m_colors.partHighlightedFillColor = byte4swap(0xf0f0f0ff);
 		m_colors.partTextColor            = byte4swap(0xff3030ff);
 		m_colors.partTextBackgroundColor  = byte4swap(0xffff00ff);
 		m_colors.boardOutlineColor        = byte4swap(0x444444ff);
-		m_colors.pinDefaultColor          = byte4swap(0x8888ffff);
+		m_colors.pinDefaultColor          = byte4swap(0x22aa33ff);
 		m_colors.pinDefaultTextColor      = byte4swap(0x666688ff);
 		m_colors.pinGroundColor           = byte4swap(0x2222aaff);
 		m_colors.pinNotConnectedColor     = byte4swap(0xaaaaaaff);
@@ -229,7 +229,7 @@ void BoardView::ThemeSetStyle(const char *name) {
 		m_colors.pinSameNetTextColor = byte4swap(0x111111ff);
 
 		m_colors.pinHaloColor     = byte4swap(0x22FF2288);
-		m_colors.pinNetWebColor   = byte4swap(0xff000044);
+		m_colors.pinNetWebColor   = byte4swap(0xff0000aa);
 		m_colors.pinNetWebOSColor = byte4swap(0x0000ff33);
 
 		m_colors.annotationPartAliasColor       = byte4swap(0xffff00ff);
@@ -287,6 +287,7 @@ int BoardView::ConfigParse(void) {
 	showPosition              = obvconfig.ParseBool("showPosition", true);
 	showNetWeb                = obvconfig.ParseBool("showNetWeb", true);
 	showAnnotations           = obvconfig.ParseBool("showAnnotations", true);
+	backgroundImage.enabled   = obvconfig.ParseBool("showBackgroundImage", true);
 	fillParts                 = obvconfig.ParseBool("fillParts", true);
 	m_centerZoomSearchResults = obvconfig.ParseBool("centerZoomSearchResults", true);
 	flipMode                  = obvconfig.ParseInt("flipMode", 0);
@@ -307,6 +308,8 @@ int BoardView::ConfigParse(void) {
 
 	annotationBoxOffset = obvconfig.ParseInt("annotationBoxOffset", 8);
 	annotationBoxOffset = DPI(annotationBoxOffset);
+
+	netWebThickness = obvconfig.ParseInt("netWebThickness", 2);
 
 	/*
 	 * Some machines (Atom etc) don't have enough CPU/GPU
@@ -451,6 +454,8 @@ int BoardView::LoadFile(const std::string &filename) {
 
 				m_annotations.SetFilename(filename);
 				m_annotations.Load();
+
+				backgroundImage.loadFromConfig(filename + ".conf");
 
 				/*
 				 * Set pins to a known lower size, they get resized
@@ -829,6 +834,11 @@ void BoardView::Preferences(void) {
 		ImGui::SameLine();
 		if (ImGui::InputInt("##annotationBoxOffset", &annotationBoxOffset)) {
 			obvconfig.WriteInt("annotationBoxOffset", annotationBoxOffset);
+		}
+		RA("Net web thickness", DPI(200));
+		ImGui::SameLine();
+		if (ImGui::InputInt("##netWebThickness", &netWebThickness)) {
+			obvconfig.WriteInt("netWebThickness", netWebThickness);
 		}
 		ImGui::Separator();
 
@@ -1862,6 +1872,7 @@ void BoardView::Update() {
 			}
 
 			keyboardPreferences.menuItem();
+			backgroundImagePreferences.menuItem();
 
 			ImGui::Separator();
 
@@ -1929,6 +1940,11 @@ void BoardView::Update() {
 				m_needsRedraw = true;
 			}
 
+			if (ImGui::Checkbox("Background image", &backgroundImage.enabled)) {
+				obvconfig.WriteBool("showBackgroundImage", backgroundImage.enabled);
+				m_needsRedraw = true;
+			}
+
 			ImGui::Separator();
 
 			if (ImGui::MenuItem("Info Panel", keybindings.getKeyNames("InfoPanel").c_str())) {
@@ -1974,6 +1990,12 @@ void BoardView::Update() {
 				obvconfig.WriteBool("showPins", showPins);
 				m_needsRedraw = true;
 			}
+		}
+
+		ImGui::SameLine();
+		if (ImGui::Checkbox("Image", &backgroundImage.enabled)) {
+			obvconfig.WriteBool("showBackgroundImage", backgroundImage.enabled);
+			m_needsRedraw = true;
 		}
 
 		ImGui::SameLine();
@@ -2057,6 +2079,7 @@ void BoardView::Update() {
 		}
 
 		keyboardPreferences.render();
+		backgroundImagePreferences.render();
 
 		if (m_showSearch && m_file) {
 			ImGui::OpenPopup("Search for Component / Network");
@@ -2095,7 +2118,7 @@ void BoardView::Update() {
 			filename        = preset_filename;
 			preset_filename = NULL;
 		} else {
-			filename = show_file_picker();
+			filename = show_file_picker(true);
 
 			ImGuiIO &io           = ImGui::GetIO();
 			io.MouseDown[0]       = false;
@@ -2111,7 +2134,7 @@ void BoardView::Update() {
 	ImGuiWindowFlags flags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
 	                         ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings;
 
-	ImGuiWindowFlags draw_surface_flags = flags | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoBringToFrontOnFocus;
+	ImGuiWindowFlags draw_surface_flags = flags | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoScrollWithMouse;
 
 	/*
 	 * Status footer
@@ -2190,6 +2213,10 @@ void BoardView::Update() {
 	ImGui::Begin("surface", nullptr, draw_surface_flags);
 	if (m_validBoard) {
 		HandleInput();
+		backgroundImage.render(*ImGui::GetWindowDrawList(),
+			CoordToScreen(backgroundImage.x0(), backgroundImage.y0()),
+			CoordToScreen(backgroundImage.x1(), backgroundImage.y1()),
+			m_rotation);
 		DrawBoard();
 	}
 	ImGui::End();
@@ -2996,32 +3023,6 @@ inline void BoardView::DrawOutline(ImDrawList *draw) {
 	} // for
 }
 
-void BoardView::DrawSelectedWeb(ImDrawList *draw) {
-	if (!showNetWeb) return;
-
-	bool first = true;
-	Point fp;
-	/*
-	 * Some nets we don't bother showing, because they're not relevant or
-	 * produce too many results (such as ground!)
-	 */
-	for (auto &p : m_pinHighlighted) {
-		if (first) {
-			fp    = p->position;
-			first = false;
-		}
-		uint32_t col = m_colors.pinNetWebColor;
-		if (!ComponentIsVisible(p->component)) {
-			col = m_colors.pinNetWebOSColor;
-			draw->AddCircle(CoordToScreen(p->position.x, p->position.y), p->diameter * m_scale, col, 16);
-		}
-
-		draw->AddLine(CoordToScreen(fp.x, fp.y), CoordToScreen(p->position.x, p->position.y), ImColor(col), 1);
-	}
-
-	return;
-}
-
 void BoardView::DrawNetWeb(ImDrawList *draw) {
 	if (!showNetWeb) return;
 
@@ -3045,7 +3046,7 @@ void BoardView::DrawNetWeb(ImDrawList *draw) {
 			draw->AddLine(CoordToScreen(m_pinSelected->position.x, m_pinSelected->position.y),
 			              CoordToScreen(p->position.x, p->position.y),
 			              ImColor(col),
-			              1);
+			              netWebThickness);
 		}
 	}
 
@@ -3082,7 +3083,6 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 	draw->ChannelsSetCurrent(kChannelPins);
 
 	if (m_pinSelected) DrawNetWeb(draw);
-	//	if (m_pinHighlighted.size()) DrawSelectedWeb(draw);
 
 	for (auto &pin : m_board->Pins()) {
 		float psz           = pin->diameter * m_scale;

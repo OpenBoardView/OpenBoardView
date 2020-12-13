@@ -7,7 +7,7 @@ std::string ImGuiRendererSDLGL1::name() {
 }
 
 bool ImGuiRendererSDLGL1::checkGLVersion() {
-	if (GLVersion.major <= 1 && GLVersion.minor < 1) {
+	if (GLVersion.major < 1 || (GLVersion.major == 1 && GLVersion.minor < 1)) {
 		SDL_LogError(SDL_LOG_CATEGORY_RENDER, "Minimal OpenGL version required is %d.%d. Got %d.%d.", 1, 1, GLVersion.major, GLVersion.minor);
 		return false;
 	}

@@ -226,7 +226,7 @@ int main(int argc, char **argv) {
 
 	// Load the configuration file
 	configDir = get_user_dir(UserDir::Config);
-	if (!configDir.empty()) app.obvconfig.Load(configDir + "obv.conf");
+	if (!configDir.empty()) app.obvconfig.Load(configDir + "obv.conf", true);
 
 	// Load file history
 	std::string dataDir = get_user_dir(UserDir::Data);
@@ -236,7 +236,7 @@ int main(int argc, char **argv) {
 	}
 
 	// If we've chosen to override the normally found config.
-	if (g.config_file) app.obvconfig.Load(g.config_file);
+	if (g.config_file) app.obvconfig.Load(g.config_file, true);
 
 	// Apply the slowCPU flag if required.
 	app.slowCPU = g.slowCPU;
@@ -261,8 +261,8 @@ int main(int argc, char **argv) {
 	// Needs to be done before initializing the renderer or using any of ImGui stuff
 	ImGui::CreateContext();
 	// Setup renderer
-	std::unique_ptr<ImGuiRendererSDL> renderer = Renderers::initBestRenderer(g.renderer, window);
-	if (!renderer) {
+	bool initialized = Renderers::initBestRenderer(g.renderer, window);
+	if (!initialized) {
 		SDL_LogError(SDL_LOG_CATEGORY_RENDER, "%s", "No renderer not available. Exiting.");
 		cleanupAndExit(1);
 	}
@@ -362,7 +362,7 @@ int main(int argc, char **argv) {
 		SDL_Event event;
 		while (SDL_PollEvent(&event)) {
 			sleepout = 30;
-			renderer->processEvent(event);
+			Renderers::current->processEvent(event);
 
 			if (event.type == SDL_DROPFILE) {
 				// Validate the file before replacing the current one, not that we
@@ -393,7 +393,7 @@ int main(int argc, char **argv) {
 			continue;
 		} // puts OBV to sleep if nothing is happening.
 		// Prepare frame
-		renderer->initFrame();
+		Renderers::current->initFrame();
 		ImGui::NewFrame();
 
 		// If we have a board to view being passed from command line, then "inject"
@@ -421,7 +421,7 @@ int main(int argc, char **argv) {
 
 		// Render frame
 		ImGui::Render();
-		renderer->renderFrame(clear_color);
+		Renderers::current->renderFrame(clear_color);
 
 		// vsync disabled, manual FPS limiting
 		if (!SDL_GL_GetSwapInterval()) {
@@ -435,7 +435,7 @@ int main(int argc, char **argv) {
 	}
 
 	// Cleanup
- 	renderer->shutdown();
+	Renderers::current->shutdown();
 
 	ImGui::DestroyContext();
 

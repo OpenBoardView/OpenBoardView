@@ -36,6 +36,7 @@ infoPanelWidth = 300\r\n\
 showPins = true\r\n\
 showPosition = true\r\n\
 showNetWeb = true\r\n\
+showBackgroundImage = true\r\n\
 pinSelectMasks = true\r\n\
 pinSizeThresholdLow = 0\r\n\
 pinShapeCircle = true\r\n\
@@ -70,6 +71,8 @@ flipMode = 0\r\n\
 showAnnotations = true\r\n\
 annotationBoxSize = 20\r\n\
 annotationBoxOffset = 8\r\n\
+\r\n\
+netWebThickness = 2\r\n\
 #\r\n\
 # \"XRayBlue\" Theme by Inflex (20160724)\r\n\
 # Colors, format is 0xRRGGBBAA\r\n\
@@ -82,7 +85,7 @@ backgroundColor		= 0xffffffff\r\n\
 boardFillColor	= 0xddddddff\r\n\
 partOutlineColor = 0x444444ff\r\n\
 partHullColor			= 0x80808080\r\n\
-partFillColor = 0xffffffbb\r\n\
+partFillColor = 0xffffff77\r\n\
 partHighlightedFillColor = 0xf4f0f0ff\r\n\
 partHighlightedColor = 0xff0000ee\r\n\
 partTextColor			= 0xff3030ff\r\n\
@@ -97,7 +100,7 @@ partTextBackgroundColor			= 0xffff00ff\r\n\
 # moderately high to do them all \r\n\
 #\r\n\
 boardOutlineColor			= 0x444444ff\r\n\
-pinDefaultColor				= 0x8888ccff\r\n\
+pinDefaultColor				= 0x22aa33ff\r\n\
 pinDefaultTextColor			= 0x666688ff\r\n\
 pinGroundColor				= 0x2222aaff\r\n\
 pinNotConnectedColor		= 0xaaaaaaff\r\n\
@@ -114,7 +117,7 @@ pinSameNetTextColor		= 0x111111ff\r\n\
 \r\n\
 pinHaloColor			= 0x22FF2288\r\n\
 \r\n\
-pinNetWebColor = 0xff000044\r\n\
+pinNetWebColor = 0xff0000aa\r\n\
 pinNetWebOSColor = 0x0000ff33\r\n\
 \r\n\
 annotationPopupTextColor = 0x000000ff\r\n\
@@ -225,7 +228,7 @@ int Confparse::SaveDefault(const std::string &utf8_filename) {
 	}
 }
 
-int Confparse::Load(const std::string &utf8_filename) {
+int Confparse::Load(const std::string &utf8_filename, bool save_default) {
 	std::ifstream file;
 	file.open(utf8_filename, std::ios::in | std::ios::binary | std::ios::ate);
 	if (!file.is_open()) {
@@ -234,7 +237,15 @@ int Confparse::Load(const std::string &utf8_filename) {
 		buffer_size = 0;
 		conf        = NULL;
 		if (nested) return 1; // to prevent infinite recursion, we test the nested flag
-		return (SaveDefault(utf8_filename));
+		if (save_default) { // Create file with default OBV configuration
+			return (SaveDefault(utf8_filename));
+		} else { // Create empty file
+			std::ofstream file;
+			file.open(utf8_filename, std::ios::out | std::ios::binary | std::ios::ate);
+			nested = true;
+			file.close();
+			Load(utf8_filename);
+		}
 	}
 
 	filename = utf8_filename;
@@ -250,7 +261,7 @@ int Confparse::Load(const std::string &utf8_filename) {
 	file.close();
 
 	if (file.gcount() != sz) {
-		std::cerr << "Did not read the right number of bytes from configuration file" << std::endl;
+		std::cerr << "Did not read the right number of bytes from configuration file " << file.gcount() << " != " << sz << std::endl;
 		return 1;
 	}
 	//	assert(file.gcount() == sz);

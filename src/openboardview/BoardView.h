@@ -9,6 +9,8 @@
 #include "imgui/imgui.h"
 #include "UI/Keyboard/KeyBindings.h"
 #include "GUI/Preferences/Keyboard.h"
+#include "GUI/BackgroundImage.h"
+#include "GUI/Preferences/BackgroundImage.h"
 #include <stdint.h>
 #include <vector>
 
@@ -117,6 +119,7 @@ enum FlipModes { flipModeVP = 0, flipModeMP = 1, NUM_FLIP_MODES };
 struct BoardView {
 	BRDFile *m_file;
 	Board *m_board;
+	BackgroundImage backgroundImage{m_current_side};
 
 	Confparse obvconfig;
 	FHistory fhistory;
@@ -125,6 +128,7 @@ struct BoardView {
 	SpellCorrector scparts;
 	KeyBindings keybindings;
 	Preferences::Keyboard keyboardPreferences{keybindings, obvconfig};
+	Preferences::BackgroundImage backgroundImagePreferences{keybindings, backgroundImage};
 	bool debug                   = false;
 	int history_file_has_changed = 0;
 	int dpi                      = 0;
@@ -141,6 +145,7 @@ struct BoardView {
 	int annotationBoxSize   = 10;
 
 	int pinA1threshold = 3; // pincount of package to show 1/A1 pin
+	int netWebThickness = 2;
 
 	float pinSizeThresholdLow = 0.0f;
 	bool pinShapeSquare       = false;
@@ -300,7 +305,6 @@ struct BoardView {
 	void DrawPins(ImDrawList *draw);
 	void DrawParts(ImDrawList *draw);
 	void DrawBoard();
-	void DrawSelectedWeb(ImDrawList *draw);
 	void DrawNetWeb(ImDrawList *draw);
 	void SetFile(BRDFile *file);
 	int LoadFile(const std::string &filename);

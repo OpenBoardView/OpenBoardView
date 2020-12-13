@@ -1,37 +1,68 @@
-# Copyright (C) 2007-2009 LuaDist.
-# Created by Peter Kapec <kapecp@gmail.com>
-# Redistribution and use of this file is allowed according to the terms of the MIT license.
-# For details see the COPYRIGHT file distributed with LuaDist.
-#	Note:
-#		Searching headers and libraries is very simple and is NOT as powerful as scripts
-#		distributed with CMake, because LuaDist defines directories to search for.
-#		Everyone is encouraged to contact the author with improvements. Maybe this file
-#		becomes part of CMake distribution sometimes.
+# Distributed under the OSI-approved BSD 3-Clause License.  See accompanying
+# file Copyright.txt or https://cmake.org/licensing for details.
 
-# - Find sqlite3
-# Find the native SQLITE3 headers and libraries.
-#
-# SQLITE3_INCLUDE_DIRS	- where to find sqlite3.h, etc.
-# SQLITE3_LIBRARIES	- List of libraries when using sqlite.
-# SQLITE3_FOUND	- True if sqlite found.
+#[=======================================================================[.rst:
+FindSQLite3
+-----------
 
-# Look for the header file.
-FIND_PATH(SQLITE3_INCLUDE_DIR NAMES sqlite3.h)
+.. versionadded:: 3.14
 
-# Look for the library.
-FIND_LIBRARY(SQLITE3_LIBRARY NAMES sqlite3)
+Find the SQLite libraries, v3
 
-# Handle the QUIETLY and REQUIRED arguments and set SQLITE3_FOUND to TRUE if all listed variables are TRUE.
-INCLUDE(FindPackageHandleStandardArgs)
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(SQLITE3 DEFAULT_MSG SQLITE3_LIBRARY SQLITE3_INCLUDE_DIR)
+IMPORTED targets
+^^^^^^^^^^^^^^^^
 
-# Copy the results to the output variables.
-IF(SQLITE3_FOUND)
-	SET(SQLITE3_LIBRARIES ${SQLITE3_LIBRARY})
-	SET(SQLITE3_INCLUDE_DIRS ${SQLITE3_INCLUDE_DIR})
-ELSE(SQLITE3_FOUND)
-	SET(SQLITE3_LIBRARIES)
-	SET(SQLITE3_INCLUDE_DIRS)
-ENDIF(SQLITE3_FOUND)
+This module defines the following :prop_tgt:`IMPORTED` target:
 
-MARK_AS_ADVANCED(SQLITE3_INCLUDE_DIRS SQLITE3_LIBRARIES)
+``SQLite::SQLite3``
+
+Result variables
+^^^^^^^^^^^^^^^^
+
+This module will set the following variables if found:
+
+``SQLite3_INCLUDE_DIRS``
+  where to find sqlite3.h, etc.
+``SQLite3_LIBRARIES``
+  the libraries to link against to use SQLite3.
+``SQLite3_VERSION``
+  version of the SQLite3 library found
+``SQLite3_FOUND``
+  TRUE if found
+
+#]=======================================================================]
+
+# Look for the necessary header
+find_path(SQLite3_INCLUDE_DIR NAMES sqlite3.h)
+mark_as_advanced(SQLite3_INCLUDE_DIR)
+
+# Look for the necessary library
+find_library(SQLite3_LIBRARY NAMES sqlite3 sqlite)
+mark_as_advanced(SQLite3_LIBRARY)
+
+# Extract version information from the header file
+if(SQLite3_INCLUDE_DIR)
+    file(STRINGS ${SQLite3_INCLUDE_DIR}/sqlite3.h _ver_line
+         REGEX "^#define SQLITE_VERSION  *\"[0-9]+\\.[0-9]+\\.[0-9]+\""
+         LIMIT_COUNT 1)
+    string(REGEX MATCH "[0-9]+\\.[0-9]+\\.[0-9]+"
+           SQLite3_VERSION "${_ver_line}")
+    unset(_ver_line)
+endif()
+
+include(FindPackageHandleStandardArgs)
+find_package_handle_standard_args(SQLite3
+    REQUIRED_VARS SQLite3_INCLUDE_DIR SQLite3_LIBRARY
+    VERSION_VAR SQLite3_VERSION)
+
+# Create the imported target
+if(SQLite3_FOUND)
+    set(SQLite3_INCLUDE_DIRS ${SQLite3_INCLUDE_DIR})
+    set(SQLite3_LIBRARIES ${SQLite3_LIBRARY})
+    if(NOT TARGET SQLite::SQLite3)
+        add_library(SQLite::SQLite3 UNKNOWN IMPORTED)
+        set_target_properties(SQLite::SQLite3 PROPERTIES
+            IMPORTED_LOCATION             "${SQLite3_LIBRARY}"
+            INTERFACE_INCLUDE_DIRECTORIES "${SQLite3_INCLUDE_DIR}")
+    endif()
+endif()
