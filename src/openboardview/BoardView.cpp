@@ -11,11 +11,7 @@
 #include <memory>
 #include <stdio.h>
 #ifdef ENABLE_SDL2
-#ifdef _MSC_VER
 #include <SDL.h>
-#else
-#include <SDL2/SDL.h>
-#endif
 #endif
 
 #include "BRDBoard.h"
@@ -71,11 +67,14 @@ uint32_t BoardView::byte4swap(uint32_t x) {
 void BoardView::ThemeSetStyle(const char *name) {
 	ImGuiStyle &style = ImGui::GetStyle();
 
+	// non color-related settings
+	style.WindowBorderSize = 0.0f;
+
 	if (strcmp(name, "dark") == 0) {
 		style.Colors[ImGuiCol_Text]          = ImVec4(0.90f, 0.90f, 0.90f, 1.00f);
 		style.Colors[ImGuiCol_TextDisabled]  = ImVec4(0.60f, 0.60f, 0.60f, 1.00f);
 		style.Colors[ImGuiCol_WindowBg]      = ImVec4(0.00f, 0.00f, 0.00f, 0.70f);
-		style.Colors[ImGuiCol_ChildWindowBg] = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
+		style.Colors[ImGuiCol_ChildBg]       = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
 		style.Colors[ImGuiCol_PopupBg]       = ImVec4(0.05f, 0.05f, 0.10f, 0.90f);
 		style.Colors[ImGuiCol_Border]        = ImVec4(0.70f, 0.70f, 0.70f, 0.65f);
 		style.Colors[ImGuiCol_BorderShadow]  = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
@@ -91,7 +90,6 @@ void BoardView::ThemeSetStyle(const char *name) {
 		style.Colors[ImGuiCol_ScrollbarGrab]        = ImVec4(0.40f, 0.40f, 0.80f, 0.30f);
 		style.Colors[ImGuiCol_ScrollbarGrabHovered] = ImVec4(0.40f, 0.40f, 0.80f, 0.40f);
 		style.Colors[ImGuiCol_ScrollbarGrabActive]  = ImVec4(0.80f, 0.50f, 0.50f, 0.40f);
-		style.Colors[ImGuiCol_ComboBg]              = ImVec4(0.20f, 0.20f, 0.20f, 0.99f);
 		style.Colors[ImGuiCol_CheckMark]            = ImVec4(0.90f, 0.90f, 0.90f, 0.50f);
 		style.Colors[ImGuiCol_SliderGrab]           = ImVec4(1.00f, 1.00f, 1.00f, 0.30f);
 		style.Colors[ImGuiCol_SliderGrabActive]     = ImVec4(0.80f, 0.50f, 0.50f, 1.00f);
@@ -101,21 +99,20 @@ void BoardView::ThemeSetStyle(const char *name) {
 		style.Colors[ImGuiCol_Header]               = ImVec4(0.40f, 0.40f, 0.90f, 0.45f);
 		style.Colors[ImGuiCol_HeaderHovered]        = ImVec4(0.45f, 0.45f, 0.90f, 0.80f);
 		style.Colors[ImGuiCol_HeaderActive]         = ImVec4(0.53f, 0.53f, 0.87f, 0.80f);
-		style.Colors[ImGuiCol_Column]               = ImVec4(0.50f, 0.50f, 0.50f, 1.00f);
-		style.Colors[ImGuiCol_ColumnHovered]        = ImVec4(0.70f, 0.60f, 0.60f, 1.00f);
-		style.Colors[ImGuiCol_ColumnActive]         = ImVec4(0.90f, 0.70f, 0.70f, 1.00f);
+		style.Colors[ImGuiCol_Separator]            = ImVec4(0.50f, 0.50f, 0.50f, 1.00f);
+		style.Colors[ImGuiCol_SeparatorHovered]     = ImVec4(0.70f, 0.60f, 0.60f, 1.00f);
+		style.Colors[ImGuiCol_SeparatorActive]      = ImVec4(0.90f, 0.70f, 0.70f, 1.00f);
 		style.Colors[ImGuiCol_ResizeGrip]           = ImVec4(1.00f, 1.00f, 1.00f, 0.30f);
 		style.Colors[ImGuiCol_ResizeGripHovered]    = ImVec4(1.00f, 1.00f, 1.00f, 0.60f);
 		style.Colors[ImGuiCol_ResizeGripActive]     = ImVec4(1.00f, 1.00f, 1.00f, 0.90f);
-		style.Colors[ImGuiCol_CloseButton]          = ImVec4(0.50f, 0.50f, 0.90f, 0.50f);
-		style.Colors[ImGuiCol_CloseButtonHovered]   = ImVec4(0.70f, 0.70f, 0.90f, 0.60f);
-		style.Colors[ImGuiCol_CloseButtonActive]    = ImVec4(0.70f, 0.70f, 0.70f, 1.00f);
 		style.Colors[ImGuiCol_PlotLines]            = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
 		style.Colors[ImGuiCol_PlotLinesHovered]     = ImVec4(0.90f, 0.70f, 0.00f, 1.00f);
 		style.Colors[ImGuiCol_PlotHistogram]        = ImVec4(0.90f, 0.70f, 0.00f, 1.00f);
 		style.Colors[ImGuiCol_PlotHistogramHovered] = ImVec4(1.00f, 0.60f, 0.00f, 1.00f);
 		style.Colors[ImGuiCol_TextSelectedBg]       = ImVec4(0.00f, 0.00f, 1.00f, 0.35f);
 		style.Colors[ImGuiCol_ModalWindowDarkening] = ImVec4(0.20f, 0.20f, 0.20f, 0.35f);
+		style.Colors[ImGuiCol_TableRowBg]           = ImVec4(0.05f, 0.05f, 0.10f, 0.90f);
+		style.Colors[ImGuiCol_TableRowBgAlt]        = ImVec4(0.10f, 0.10f, 0.20f, 0.90f);
 
 		m_colors.backgroundColor          = byte4swap(0x000000ff);
 		m_colors.boardFillColor           = byte4swap(0x2a2a2aff);
@@ -167,7 +164,7 @@ void BoardView::ThemeSetStyle(const char *name) {
 		style.Colors[ImGuiCol_TextDisabled]         = ImVec4(0.60f, 0.60f, 0.60f, 1.00f);
 		style.Colors[ImGuiCol_PopupBg]              = ImVec4(0.94f, 0.94f, 0.94f, 1.00f);
 		style.Colors[ImGuiCol_WindowBg]             = ImVec4(0.94f, 0.94f, 0.94f, 1.00f);
-		style.Colors[ImGuiCol_ChildWindowBg]        = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
+		style.Colors[ImGuiCol_ChildBg]              = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
 		style.Colors[ImGuiCol_Border]               = ImVec4(0.00f, 0.00f, 0.00f, 0.39f);
 		style.Colors[ImGuiCol_BorderShadow]         = ImVec4(1.00f, 1.00f, 1.00f, 0.10f);
 		style.Colors[ImGuiCol_FrameBg]              = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
@@ -181,7 +178,6 @@ void BoardView::ThemeSetStyle(const char *name) {
 		style.Colors[ImGuiCol_ScrollbarGrab]        = ImVec4(0.69f, 0.69f, 0.69f, 0.80f);
 		style.Colors[ImGuiCol_ScrollbarGrabHovered] = ImVec4(0.49f, 0.49f, 0.49f, 0.80f);
 		style.Colors[ImGuiCol_ScrollbarGrabActive]  = ImVec4(0.49f, 0.49f, 0.49f, 1.00f);
-		style.Colors[ImGuiCol_ComboBg]              = ImVec4(0.86f, 0.86f, 0.86f, 0.99f);
 		style.Colors[ImGuiCol_CheckMark]            = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
 		style.Colors[ImGuiCol_SliderGrab]           = ImVec4(0.26f, 0.59f, 0.98f, 0.78f);
 		style.Colors[ImGuiCol_SliderGrabActive]     = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
@@ -191,21 +187,20 @@ void BoardView::ThemeSetStyle(const char *name) {
 		style.Colors[ImGuiCol_Header]               = ImVec4(0.26f, 0.59f, 0.98f, 0.31f);
 		style.Colors[ImGuiCol_HeaderHovered]        = ImVec4(0.26f, 0.59f, 0.98f, 0.80f);
 		style.Colors[ImGuiCol_HeaderActive]         = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
-		style.Colors[ImGuiCol_Column]               = ImVec4(0.39f, 0.39f, 0.39f, 1.00f);
-		style.Colors[ImGuiCol_ColumnHovered]        = ImVec4(0.26f, 0.59f, 0.98f, 0.78f);
-		style.Colors[ImGuiCol_ColumnActive]         = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
+		style.Colors[ImGuiCol_Separator]            = ImVec4(0.39f, 0.39f, 0.39f, 1.00f);
+		style.Colors[ImGuiCol_SeparatorHovered]     = ImVec4(0.26f, 0.59f, 0.98f, 0.78f);
+		style.Colors[ImGuiCol_SeparatorActive]      = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
 		style.Colors[ImGuiCol_ResizeGrip]           = ImVec4(1.00f, 1.00f, 1.00f, 0.00f);
 		style.Colors[ImGuiCol_ResizeGripHovered]    = ImVec4(0.26f, 0.59f, 0.98f, 0.67f);
 		style.Colors[ImGuiCol_ResizeGripActive]     = ImVec4(0.26f, 0.59f, 0.98f, 0.95f);
-		style.Colors[ImGuiCol_CloseButton]          = ImVec4(0.59f, 0.59f, 0.59f, 0.50f);
-		style.Colors[ImGuiCol_CloseButtonHovered]   = ImVec4(0.98f, 0.39f, 0.36f, 1.00f);
-		style.Colors[ImGuiCol_CloseButtonActive]    = ImVec4(0.98f, 0.39f, 0.36f, 1.00f);
 		style.Colors[ImGuiCol_PlotLines]            = ImVec4(0.39f, 0.39f, 0.39f, 1.00f);
 		style.Colors[ImGuiCol_PlotLinesHovered]     = ImVec4(1.00f, 0.43f, 0.35f, 1.00f);
 		style.Colors[ImGuiCol_PlotHistogram]        = ImVec4(0.90f, 0.70f, 0.00f, 1.00f);
 		style.Colors[ImGuiCol_PlotHistogramHovered] = ImVec4(1.00f, 0.60f, 0.00f, 1.00f);
 		style.Colors[ImGuiCol_TextSelectedBg]       = ImVec4(0.26f, 0.59f, 0.98f, 0.35f);
 		style.Colors[ImGuiCol_ModalWindowDarkening] = ImVec4(0.20f, 0.20f, 0.20f, 0.35f);
+		style.Colors[ImGuiCol_TableRowBg]           = ImVec4(0.94f, 0.94f, 0.94f, 1.00f);
+		style.Colors[ImGuiCol_TableRowBgAlt]        = ImVec4(0.82f, 0.82f, 0.82f, 1.00f);
 
 		m_colors.backgroundColor          = byte4swap(0xffffffff);
 		m_colors.boardFillColor           = byte4swap(0xddddddff);
@@ -325,7 +320,7 @@ int BoardView::ConfigParse(void) {
 	 * call this.
 	 */
 	slowCPU |= obvconfig.ParseBool("slowCPU", false);
-	style.AntiAliasedShapes = !slowCPU;
+	style.AntiAliasedFill = !slowCPU;
 
 	/*
 	 * Colours in ImGui can be represented as a 4-byte packed uint32_t as ABGR
@@ -395,6 +390,8 @@ int BoardView::ConfigParse(void) {
 	 *
 	 */
 	SetFZKey(obvconfig.ParseStr("FZKey", ""));
+
+	keybindings.readFromConfig(obvconfig);
 
 	return 0;
 }
@@ -532,11 +529,12 @@ void u32tof4(uint32_t c, float *f) {
 }
 void BoardView::ColorPreferencesItem(
     const char *label, int label_width, const char *butlabel, const char *conflabel, int var_width, uint32_t *c) {
+	std::string desc_id = "##" + std::string(label);
 	char buf[20];
 	snprintf(buf, sizeof(buf), "%08X", byte4swap(*c));
 	RA(label, label_width);
 	ImGui::SameLine();
-	ImGui::ColorButton(ImColor(*c));
+	ImGui::ColorButton(desc_id.c_str(), ImColor(*c));
 	ImGui::SameLine();
 	ImGui::PushItemWidth(var_width);
 	if (ImGui::InputText(
@@ -590,8 +588,9 @@ void BoardView::SaveAllColors(void) {
 
 void BoardView::ColorPreferences(void) {
 	bool dummy = true;
-	//	ImGui::PushStyleColor(ImGuiCol_PopupBg, ImColor(0xffe0e0e0));
-	ImGui::SetNextWindowPosCenter();
+	//	ImGui::PushStyleColor(ImGuiCol_PopupBg, 0xffe0e0e0);
+	ImGuiIO& io = ImGui::GetIO();
+	ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x * 0.5f, io.DisplaySize.y * 0.5f), 0, ImVec2(0.5f, 0.5f));;
 	if (ImGui::BeginPopupModal("Colour Preferences", &dummy, ImGuiWindowFlags_AlwaysAutoResize)) {
 
 		if (m_showColorPreferences) {
@@ -706,7 +705,7 @@ void BoardView::ColorPreferences(void) {
 
 		ImGui::Separator();
 
-		if (ImGui::Button("Done") || ImGui::IsKeyPressed(SDLK_ESCAPE)) {
+		if (ImGui::Button("Done") || keybindings.isPressed("CloseDialog")) {
 			m_tooltips_enabled = true;
 			ImGui::CloseCurrentPopup();
 		}
@@ -722,8 +721,9 @@ void BoardView::ColorPreferences(void) {
 void BoardView::Preferences(void) {
 	bool dummy = true;
 	ImGuiStyle &style = ImGui::GetStyle();
-	//	ImGui::PushStyleColor(ImGuiCol_PopupBg, ImColor(0xffe0e0e0));
-	ImGui::SetNextWindowPosCenter();
+	//	ImGui::PushStyleColor(ImGuiCol_PopupBg, 0xffe0e0e0);
+	ImGuiIO& io = ImGui::GetIO();
+	ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x * 0.5f, io.DisplaySize.y * 0.5f), 0, ImVec2(0.5f, 0.5f));
 	if (ImGui::BeginPopupModal("Preferences", &dummy, ImGuiWindowFlags_AlwaysAutoResize)) {
 		int t;
 		if (m_showPreferences) {
@@ -768,7 +768,7 @@ void BoardView::Preferences(void) {
 		if (ImGui::InputInt("##dpi", &t)) {
 			if ((t > 25) && (t < 600)) obvconfig.WriteInt("dpi", t);
 		}
-		ImGui::PushStyleColor(ImGuiCol_Text, ImColor(0xff4040ff));
+		ImGui::PushStyleColor(ImGuiCol_Text, 0xff4040ff);
 		ImGui::Text("(Program restart is required to properly apply font and DPI changes)");
 		ImGui::PopStyleColor();
 
@@ -925,7 +925,7 @@ void BoardView::Preferences(void) {
 
 		ImGui::Separator();
 
-		if (ImGui::Button("Done") || ImGui::IsKeyPressed(SDLK_ESCAPE)) {
+		if (ImGui::Button("Done") || keybindings.isPressed("CloseDialog")) {
 			ImGui::CloseCurrentPopup();
 			m_tooltips_enabled = true;
 		}
@@ -940,7 +940,8 @@ void BoardView::Preferences(void) {
 
 void BoardView::HelpAbout(void) {
 	bool dummy = true;
-	ImGui::SetNextWindowPosCenter();
+	ImGuiIO& io = ImGui::GetIO();
+	ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x * 0.5f, io.DisplaySize.y * 0.5f), 0, ImVec2(0.5f, 0.5f));
 	if (ImGui::BeginPopupModal("About", &dummy, ImGuiWindowFlags_AlwaysAutoResize)) {
 		if (m_showHelpAbout) {
 			m_showHelpAbout    = false;
@@ -949,7 +950,7 @@ void BoardView::HelpAbout(void) {
 		ImGui::Text("%s %s", OBV_NAME, OBV_VERSION);
 		ImGui::Text("Build %s %s", OBV_BUILD, __TIMESTAMP__);
 		ImGui::Text(OBV_URL);
-		if (ImGui::Button("Close") || ImGui::IsKeyPressed(SDLK_ESCAPE)) {
+		if (ImGui::Button("Close") || keybindings.isPressed("CloseDialog")) {
 			m_tooltips_enabled = true;
 			ImGui::CloseCurrentPopup();
 		}
@@ -968,8 +969,10 @@ void BoardView::HelpAbout(void) {
 
 void BoardView::HelpControls(void) {
 	bool dummy = true;
-	ImGui::SetNextWindowPosCenter();
-	if (ImGui::BeginPopupModal("Controls", &dummy, ImGuiWindowFlags_AlwaysAutoResize)) {
+	ImGuiIO& io = ImGui::GetIO();
+	ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x * 0.5f, io.DisplaySize.y * 0.5f), 0, ImVec2(0.5f, 0.5f));
+	ImGui::SetNextWindowSize(ImVec2(DPI(540), 0.0f));
+	if (ImGui::BeginPopupModal("Controls", &dummy)) {
 		if (m_showHelpControls) {
 			m_showHelpControls = false;
 			m_tooltips_enabled = false;
@@ -977,7 +980,7 @@ void BoardView::HelpControls(void) {
 		ImGui::Text("KEYBOARD CONTROLS");
 		ImGui::SameLine();
 
-		if (ImGui::Button("Close") || ImGui::IsKeyPressed(SDLK_ESCAPE)) {
+		if (ImGui::Button("Close") || keybindings.isPressed("CloseDialog")) {
 			m_tooltips_enabled = true;
 			ImGui::CloseCurrentPopup();
 		}
@@ -1114,10 +1117,11 @@ void BoardView::ShowInfoPane(void) {
 	 */
 	ImGui::SetNextWindowPos(ImVec2(ds.x - m_info_surface.x, m_menu_height));
 	ImGui::SetNextWindowSize(m_info_surface);
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1.0f);
 	ImGui::Begin("Info Panel",
 	             NULL,
 	             ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize |
-	                 ImGuiWindowFlags_ShowBorders | ImGuiWindowFlags_NoSavedSettings);
+	                 ImGuiWindowFlags_NoSavedSettings);
 
 	if ((m_dragging_token == 0) && (io.MousePos.x > m_board_surface.x) && (io.MousePos.x < (m_board_surface.x + DPIF(12.0f)))) {
 		ImDrawList *draw = ImGui::GetWindowDrawList();
@@ -1262,32 +1266,33 @@ void BoardView::ShowInfoPane(void) {
 			int pc = part->pins.size();
 			if (pc > 20) pc = 20;
 			listSize = ImVec2(m_info_surface.x - DPIF(50), pc * ImGui::GetFontSize() * 1.45);
-			ImGui::ListBoxHeader(str.c_str(), listSize); //, ImVec2(m_board_surface.x/3 -5, m_board_surface.y/2));
-			for (auto pin : part->pins) {
-				char ss[1024];
-				snprintf(ss, sizeof(ss), "%4s  %s", pin->name.c_str(), pin->net->name.c_str());
-				if (ImGui::Selectable(ss, (pin == m_pinSelected))) {
-					ClearAllHighlights();
+			if (ImGui::ListBoxHeader(str.c_str(), listSize)) { //, ImVec2(m_board_surface.x/3 -5, m_board_surface.y/2));
+				for (auto pin : part->pins) {
+					char ss[1024];
+					snprintf(ss, sizeof(ss), "%4s  %s", pin->name.c_str(), pin->net->name.c_str());
+					if (ImGui::Selectable(ss, (pin == m_pinSelected))) {
+						ClearAllHighlights();
 
-					if ((pin->type == Pin::kPinTypeNotConnected) || (pin->type == Pin::kPinTypeUnkown) || (pin->net->is_ground)) {
-						m_partHighlighted.push_back(pin->component);
-						// do nothing for now
-						//
-					} else {
-						m_pinSelected = pin;
-						for (auto p : m_partHighlighted) {
-							pin->component->visualmode = pin->component->CVMNormal;
-						};
-						m_partHighlighted.push_back(pin->component);
-						CenterZoomNet(pin->net->name);
+						if ((pin->type == Pin::kPinTypeNotConnected) || (pin->type == Pin::kPinTypeUnkown) || (pin->net->is_ground)) {
+							m_partHighlighted.push_back(pin->component);
+							// do nothing for now
+							//
+						} else {
+							m_pinSelected = pin;
+							for (auto p : m_partHighlighted) {
+								pin->component->visualmode = pin->component->CVMNormal;
+							};
+							m_partHighlighted.push_back(pin->component);
+							CenterZoomNet(pin->net->name);
+						}
+						m_needsRedraw = true;
 					}
-					m_needsRedraw = true;
+					ImGui::PushStyleColor(ImGuiCol_Border, 0xffeeeeee);
+					ImGui::Separator();
+					ImGui::PopStyleColor();
 				}
-				ImGui::PushStyleColor(ImGuiCol_Border, ImColor(0xffeeeeee));
-				ImGui::Separator();
-				ImGui::PopStyleColor();
+				ImGui::ListBoxFooter();
 			}
-			ImGui::ListBoxFooter();
 			ImGui::PopItemWidth();
 
 		} // for each part in the list
@@ -1298,6 +1303,7 @@ void BoardView::ShowInfoPane(void) {
 	}
 
 	ImGui::End();
+	ImGui::PopStyleVar();
 }
 
 void BoardView::ContextMenu(void) {
@@ -1306,8 +1312,6 @@ void BoardView::ContextMenu(void) {
 	static char contextbufnew[10240] = "";
 	static std::string pin, partn, net;
 	double tx, ty;
-
-	ImGuiIO &io = ImGui::GetIO();
 
 	ImVec2 pos = ScreenToCoord(m_showContextMenuPos.x, m_showContextMenuPos.y);
 
@@ -1326,8 +1330,8 @@ void BoardView::ContextMenu(void) {
 	 * Now it's kept at a fixed point.
 	 */
 	ImGui::SetNextWindowPos(ImVec2(DPIF(50), DPIF(50)));
-
-	if (ImGui::BeginPopupModal("Annotations", &dummy, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_ShowBorders)) {
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1.0f);
+	if (ImGui::BeginPopupModal("Annotations", &dummy, ImGuiWindowFlags_AlwaysAutoResize)) {
 
 		if (m_showContextMenu) {
 			contextbuf[0]      = 0;
@@ -1444,7 +1448,7 @@ void BoardView::ContextMenu(void) {
 						                          NULL,
 						                          contextbuf);
 
-						if (ImGui::Button("Update##1") || (ImGui::IsKeyPressed(SDLK_RETURN) && io.KeyShift)) {
+						if (ImGui::Button("Update##1") || keybindings.isPressed("Validate")) {
 							m_annotationedit_retain = false;
 							m_annotations.Update(m_annotations.annotations[m_annotation_clicked_id].id, contextbuf);
 							m_annotations.GenerateList();
@@ -1504,7 +1508,7 @@ void BoardView::ContextMenu(void) {
 					                          NULL,
 					                          contextbufnew);
 
-					if (ImGui::Button("Apply##1") || (ImGui::IsKeyPressed(SDLK_RETURN) && io.KeyShift)) {
+					if (ImGui::Button("Apply##1") || keybindings.isPressed("Validate")) {
 						m_tooltips_enabled     = true;
 						m_annotationnew_retain = false;
 						if (debug) fprintf(stderr, "DATA:'%s'\n\n", contextbufnew);
@@ -1540,7 +1544,7 @@ void BoardView::ContextMenu(void) {
 		}
 
 		ImGui::SameLine();
-		if (ImGui::Button("Cancel##2") || ImGui::IsKeyPressed(SDLK_ESCAPE)) {
+		if (ImGui::Button("Cancel##2") || keybindings.isPressed("CloseDialog")) {
 			m_annotationnew_retain  = false;
 			m_annotationedit_retain = false;
 			m_tooltips_enabled      = true;
@@ -1550,6 +1554,7 @@ void BoardView::ContextMenu(void) {
 		ImGui::EndPopup();
 		//	m_tooltips_enabled = true;
 	}
+	ImGui::PopStyleVar();
 
 	/** if the dialog was closed by using the (X) icon **/
 	if (!dummy) {
@@ -1594,44 +1599,42 @@ void BoardView::SearchColumnGenerate(const std::string &title,
                                      std::pair<SharedVector<Component>, SharedVector<Net>> results,
                                      char *search,
                                      int limit) {
-	ImGui::ListBoxHeader(title.c_str());
+	if (ImGui::ListBoxHeader(title.c_str())) {
 
-	if (m_searchComponents) {
-		if (results.first.empty() &&
-		    (!m_searchNets || results.second.empty())) { // show suggestions only if there is no result at all
-			auto s = scparts.suggest(search);
-			if (s.size() > 0) {
-				ImGui::Text("Did you mean...");
-				ShowSearchResults(s, search, limit, &BoardView::FindComponent);
-			}
-		} else
-			ShowSearchResults(results.first, search, limit, &BoardView::FindComponent);
+		if (m_searchComponents) {
+			if (results.first.empty() && (!m_searchNets || results.second.empty())) { // show suggestions only if there is no result at all
+				auto s = scparts.suggest(search);
+				if (s.size() > 0) {
+					ImGui::Text("Did you mean...");
+					ShowSearchResults(s, search, limit, &BoardView::FindComponent);
+				}
+			} else
+				ShowSearchResults(results.first, search, limit, &BoardView::FindComponent);
+		}
+
+		if (m_searchNets) {
+			if (results.second.empty() && (!m_searchComponents || results.first.empty())) {
+				auto s = scnets.suggest(search);
+				if (s.size() > 0) {
+					ImGui::Text("Did you mean...");
+					ShowSearchResults(s, search, limit, &BoardView::FindNet);
+				}
+			} else
+				ShowSearchResults(results.second, search, limit, &BoardView::FindNet);
+		}
+
+		ImGui::ListBoxFooter();
 	}
-
-	if (m_searchNets) {
-		if (results.second.empty() && (!m_searchComponents || results.first.empty())) {
-			auto s = scnets.suggest(search);
-			if (s.size() > 0) {
-				ImGui::Text("Did you mean...");
-				ShowSearchResults(s, search, limit, &BoardView::FindNet);
-			}
-		} else
-			ShowSearchResults(results.second, search, limit, &BoardView::FindNet);
-	}
-
-	ImGui::ListBoxFooter();
 }
 
 void BoardView::SearchComponent(void) {
 	bool dummy = true;
 
-	ImGui::SetNextWindowPos(ImVec2(-FLT_MAX, DPI(100))); // FIXME This will need changing in the future when ImGui gets proper
-	                                                     // per-axis centering ( see https://github.com/ocornut/imgui/issues/770 )
-	// ImGui::SetNextWindowPosCenter();
+	ImGui::SetNextWindowPos(ImVec2(ImGui::GetIO().DisplaySize.x/2, DPI(100)), 0, ImVec2(0.5f, 0.0f));
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1.0f);
 	if (ImGui::BeginPopupModal("Search for Component / Network",
 	                           &dummy,
-	                           ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings |
-	                               ImGuiWindowFlags_ShowBorders)) {
+	                           ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings)) {
 		//		char cs[128];
 		const char *first_button[] = {m_search[0], m_search[1], m_search[2]};
 
@@ -1661,7 +1664,7 @@ void BoardView::SearchComponent(void) {
 		} // reset button
 
 		ImGui::SameLine();
-		if (ImGui::Button("Exit") || ImGui::IsKeyPressed(SDLK_ESCAPE)) {
+		if (ImGui::Button("Exit") || keybindings.isPressed("CloseDialog")) {
 			FindComponent("");
 			for (int i = 0; i < 3; i++) m_search[i][0] = '\0';
 			m_tooltips_enabled = true;
@@ -1715,7 +1718,7 @@ void BoardView::SearchComponent(void) {
 			auto results    = SearchPartsAndNets(m_search[i - 1], 30);           // Perform the search for both nets and parts
 			bool hasResults = !results.first.empty() || !results.second.empty(); // We found some nets or some parts
 
-			if (searching && !hasResults) ImGui::PushStyleColor(ImGuiCol_FrameBg, ImColor(0xFF6666FF));
+			if (searching && !hasResults) ImGui::PushStyleColor(ImGuiCol_FrameBg, 0xFF6666FF);
 			auto ret = ImGui::InputText(searchLabel.c_str(),
 			                            m_search[i - 1],
 			                            128,
@@ -1726,7 +1729,7 @@ void BoardView::SearchComponent(void) {
 
 			ImGui::PopItemWidth();
 
-			if (i == 1 && ImGui::IsRootWindowOrAnyChildFocused() && !ImGui::IsAnyItemActive() && !ImGui::IsMouseClicked(0)) {
+			if (i == 1 && ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows) && !ImGui::IsAnyItemActive() && !ImGui::IsMouseClicked(0)) {
 				ImGui::SetKeyboardFocusHere(-1);
 			} // set keyboard focus
 
@@ -1747,7 +1750,7 @@ void BoardView::SearchComponent(void) {
 		ImGui::Separator();
 
 		// Enter and Esc close the search:
-		if (ImGui::IsKeyPressed(SDLK_RETURN)) {
+		if (keybindings.isPressed("Accept")) {
 			// SearchCompound(first_button);
 			// SearchCompoundNoClear(first_button2);
 			// SearchCompoundNoClear(first_button3);
@@ -1761,6 +1764,7 @@ void BoardView::SearchComponent(void) {
 
 		ImGui::EndPopup();
 	}
+	ImGui::PopStyleVar();
 	if (!dummy) {
 		m_tooltips_enabled = true;
 	}
@@ -1798,15 +1802,15 @@ void BoardView::Update() {
 	 * ** FIXME
 	 * This should be handled in the keyboard section, not here
 	 */
-	if ((io.KeyCtrl) && ImGui::IsKeyPressed(SDLK_o)) {
+	if (keybindings.isPressed("Open")) {
 		open_file = true;
 		// the dialog will likely eat our WM_KEYUP message for CTRL and O:
 		io.KeysDown[SDL_SCANCODE_RCTRL] = false;
 		io.KeysDown[SDL_SCANCODE_LCTRL] = false;
-		io.KeysDown[SDLK_o]             = false;
+		io.KeysDown[SDL_SCANCODE_O]     = false;
 	}
 
-	if ((io.KeyCtrl) && ImGui::IsKeyPressed(SDLK_q)) {
+	if (keybindings.isPressed("Quit")) {
 		m_wantsQuit = true;
 	}
 
@@ -1826,7 +1830,7 @@ void BoardView::Update() {
 		ContextMenu();
 
 		if (ImGui::BeginMenu("File")) {
-			if (ImGui::MenuItem("Open", "Ctrl+O")) {
+			if (ImGui::MenuItem("Open", keybindings.getKeyNames("Open").c_str())) {
 				open_file = true;
 			}
 
@@ -1843,7 +1847,7 @@ void BoardView::Update() {
 			}
 			ImGui::Separator();
 
-			if (ImGui::MenuItem("Part/Net Search", "Ctrl+F, /")) {
+			if (ImGui::MenuItem("Part/Net Search", keybindings.getKeyNames("Search").c_str())) {
 				if (m_validBoard) m_showSearch = true;
 			}
 
@@ -1857,36 +1861,38 @@ void BoardView::Update() {
 				m_showColorPreferences = true;
 			}
 
+			keyboardPreferences.menuItem();
+
 			ImGui::Separator();
 
-			if (ImGui::MenuItem("Quit")) {
+			if (ImGui::MenuItem("Quit", keybindings.getKeyNames("Quit").c_str())) {
 				m_wantsQuit = true;
 			}
 			ImGui::EndMenu();
 		}
 		if (ImGui::BeginMenu("View")) {
-			if (ImGui::MenuItem("Flip board", "<Space>")) {
+			if (ImGui::MenuItem("Flip board", keybindings.getKeyNames("Flip").c_str())) {
 				FlipBoard();
 			}
-			if (ImGui::MenuItem("Rotate CW", ".")) {
+			if (ImGui::MenuItem("Rotate CW", keybindings.getKeyNames("RotateCW").c_str())) {
 				Rotate(1);
 			}
-			if (ImGui::MenuItem("Rotate CCW", ",")) {
+			if (ImGui::MenuItem("Rotate CCW", keybindings.getKeyNames("RotateCCW").c_str())) {
 				Rotate(-1);
 			}
-			if (ImGui::MenuItem("Reset View", "x NP-5")) { // actually want this to be numpad 5
+			if (ImGui::MenuItem("Reset View", keybindings.getKeyNames("Center").c_str())) {
 				CenterView();
 			}
-			if (ImGui::MenuItem("Mirror Board", "m")) {
+			if (ImGui::MenuItem("Mirror Board", keybindings.getKeyNames("Mirror").c_str())) {
 				Mirror();
 			}
 
-			if (ImGui::MenuItem("Toggle Pin Display", "p")) {
+			if (ImGui::MenuItem("Toggle Pin Display", keybindings.getKeyNames("TogglePins").c_str())) {
 				showPins ^= 1;
 				m_needsRedraw = true;
 			}
 
-			if (ImGui::MenuItem("Show Info Panel", "i")) {
+			if (ImGui::MenuItem("Show Info Panel", keybindings.getKeyNames("InfoPanel").c_str())) {
 				showInfoPanel ^= 1;
 				obvconfig.WriteBool("showInfoPanel", showInfoPanel ? true : false);
 				m_needsRedraw = true;
@@ -1925,13 +1931,13 @@ void BoardView::Update() {
 
 			ImGui::Separator();
 
-			if (ImGui::MenuItem("Info Pane", "i")) {
+			if (ImGui::MenuItem("Info Panel", keybindings.getKeyNames("InfoPanel").c_str())) {
 				showInfoPanel = !showInfoPanel;
 			}
-			if (ImGui::MenuItem("Net List", "l")) {
+			if (ImGui::MenuItem("Net List", keybindings.getKeyNames("NetList").c_str())) {
 				m_showNetList = !m_showNetList;
 			}
-			if (ImGui::MenuItem("Part List", "k")) {
+			if (ImGui::MenuItem("Part List", keybindings.getKeyNames("PartList").c_str())) {
 				m_showPartList = !m_showPartList;
 			}
 
@@ -2050,6 +2056,8 @@ void BoardView::Update() {
 			ImGui::OpenPopup("Preferences");
 		}
 
+		keyboardPreferences.render();
+
 		if (m_showSearch && m_file) {
 			ImGui::OpenPopup("Search for Component / Network");
 		}
@@ -2101,8 +2109,7 @@ void BoardView::Update() {
 	}
 
 	ImGuiWindowFlags flags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
-	                         ImGuiWindowFlags_ShowBorders | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse |
-	                         ImGuiWindowFlags_NoSavedSettings;
+	                         ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings;
 
 	ImGuiWindowFlags draw_surface_flags = flags | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoBringToFrontOnFocus;
 
@@ -2112,6 +2119,7 @@ void BoardView::Update() {
 	m_status_height = (DPIF(10.0f) + ImGui::GetFontSize());
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(DPIF(4.0f), DPIF(3.0f)));
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1.0f);
 	ImGui::SetNextWindowPos(ImVec2(0, io.DisplaySize.y - m_status_height));
 	ImGui::SetNextWindowSize(ImVec2(io.DisplaySize.x, m_status_height));
 	ImGui::Begin("status", nullptr, flags | ImGuiWindowFlags_NoFocusOnAppearing);
@@ -2154,6 +2162,7 @@ void BoardView::Update() {
 	ImGui::End();
 	ImGui::PopStyleVar();
 	ImGui::PopStyleVar();
+	ImGui::PopStyleVar();
 
 	if (!showInfoPanel) {
 		m_board_surface = ImVec2(io.DisplaySize.x, io.DisplaySize.y - (m_status_height + m_menu_height));
@@ -2175,7 +2184,8 @@ void BoardView::Update() {
 	ImGui::SetNextWindowSize(m_board_surface);
 
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
-	ImGui::PushStyleColor(ImGuiCol_WindowBg, ImColor(m_colors.backgroundColor));
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1.0f);
+	ImGui::PushStyleColor(ImGuiCol_WindowBg, m_colors.backgroundColor);
 
 	ImGui::Begin("surface", nullptr, draw_surface_flags);
 	if (m_validBoard) {
@@ -2184,6 +2194,7 @@ void BoardView::Update() {
 	}
 	ImGui::End();
 	ImGui::PopStyleColor();
+	ImGui::PopStyleVar();
 
 	// Overlay
 	RenderOverlay();
@@ -2258,13 +2269,6 @@ void BoardView::Pan(int direction, int amount) {
  * for menus is handled within the menu generation itself.
  */
 void BoardView::HandleInput() {
-
-#ifdef _WIN32
-#define KM(x) (x)
-#else
-#define KM(x) (((x)&0xFF) | 0x100)
-#endif
-
 	if (!m_board || (!m_file)) return;
 
 	const ImGuiIO &io = ImGui::GetIO();
@@ -2288,7 +2292,7 @@ void BoardView::HandleInput() {
 				m_draggingLastFrame = true;
 				m_needsRedraw       = true;
 			}
-		} else {
+		} else if (m_dragging_token >= 0) {
 			m_dragging_token = 0;
 
 			if (m_lastFileOpenWasInvalid == false) {
@@ -2466,83 +2470,72 @@ void BoardView::HandleInput() {
 
 	if ((!io.WantCaptureKeyboard)) {
 
-		if (ImGui::IsKeyPressed(SDLK_m)) {
+		if (keybindings.isPressed("Mirror")) {
 			Mirror();
 			CenterView();
 			m_needsRedraw = true;
 
-		} else if (ImGui::IsKeyPressed(KM(SDL_SCANCODE_KP_PERIOD)) || ImGui::IsKeyPressed(SDLK_r) ||
-		           ImGui::IsKeyPressed(SDLK_PERIOD)) {
+		} else if (keybindings.isPressed("RotateCW")) {
 			// Rotate board: R and period rotate clockwise; comma rotates
 			// counter-clockwise
 			Rotate(1);
 
-		} else if (ImGui::IsKeyPressed(KM(SDL_SCANCODE_KP_0)) || ImGui::IsKeyPressed(SDLK_COMMA)) {
+		} else if (keybindings.isPressed("RotateCCW")) {
 			Rotate(-1);
 
-		} else if (ImGui::IsKeyPressed(KM(SDL_SCANCODE_KP_PLUS)) || ImGui::IsKeyPressed(SDLK_EQUALS)) {
+		} else if (keybindings.isPressed("ZoomIn")) {
 			Zoom(m_board_surface.x / 2, m_board_surface.y / 2, zoomFactor);
 
-		} else if (ImGui::IsKeyPressed(KM(SDL_SCANCODE_KP_MINUS)) || ImGui::IsKeyPressed(SDLK_MINUS)) {
+		} else if (keybindings.isPressed("ZoomOut")) {
 			Zoom(m_board_surface.x / 2, m_board_surface.y / 2, -zoomFactor);
 
-		} else if (ImGui::IsKeyPressed(KM(SDL_SCANCODE_KP_2)) || ImGui::IsKeyPressed(SDLK_s)) {
+		} else if (keybindings.isPressed("PanDown")) {
 			Pan(DIR_DOWN, panFactor);
 
-		} else if (ImGui::IsKeyPressed(KM(SDL_SCANCODE_KP_8)) || ImGui::IsKeyPressed(SDLK_w)) {
+		} else if (keybindings.isPressed("PanUp")) {
 			Pan(DIR_UP, panFactor);
 
-		} else if (ImGui::IsKeyPressed(KM(SDL_SCANCODE_KP_4)) || ImGui::IsKeyPressed(SDLK_a)) {
+		} else if (keybindings.isPressed("PanLeft")) {
 			Pan(DIR_LEFT, panFactor);
 
-		} else if (ImGui::IsKeyPressed(KM(SDL_SCANCODE_KP_6)) || ImGui::IsKeyPressed(SDLK_d)) {
+		} else if (keybindings.isPressed("PanRight")) {
 			Pan(DIR_RIGHT, panFactor);
 
-		} else if (ImGui::IsKeyPressed(KM(SDL_SCANCODE_KP_5)) || ImGui::IsKeyPressed(SDLK_x)) {
+		} else if (keybindings.isPressed("Center")) {
 			// Center and reset zoom
 			CenterView();
 
-		} else if (ImGui::IsKeyPressed(SDLK_c)) {
-			if (io.KeyCtrl) {
-				// quit OFBV
-				m_wantsQuit = true;
-			}
+		} else if (keybindings.isPressed("Quit")) {
+			// quit OFBV
+			m_wantsQuit = true;
 
-		} else if (ImGui::IsKeyPressed(SDLK_i)) {
+		} else if (keybindings.isPressed("InfoPanel")) {
 			showInfoPanel = !showInfoPanel;
 			obvconfig.WriteBool("showInfoPanel", showInfoPanel ? true : false);
 
-		} else if (ImGui::IsKeyPressed(SDLK_l)) {
+		} else if (keybindings.isPressed("NetList")) {
 			// Show Net List
 			m_showNetList = m_showNetList ? false : true;
 
-		} else if (ImGui::IsKeyPressed(SDLK_k)) {
+		} else if (keybindings.isPressed("PartList")) {
 			// Show Part List
 			m_showPartList = m_showPartList ? false : true;
 
-		} else if (ImGui::IsKeyPressed(SDLK_SPACE)) {
+		} else if (keybindings.isPressed("Flip")) {
 			// Flip board:
 			FlipBoard();
 
-		} else if (ImGui::IsKeyPressed(SDLK_p)) {
+		} else if (keybindings.isPressed("TogglePins")) {
 			showPins ^= 1;
 			m_needsRedraw = true;
 
-		} else if (ImGui::IsKeyPressed(SDLK_f)) {
-			if (io.KeyCtrl) {
-				if (m_validBoard) {
-					m_showSearch  = true;
-					m_needsRedraw = true;
-				}
-			}
-
-		} else if (ImGui::IsKeyPressed(SDLK_SLASH)) {
+		} else if (keybindings.isPressed("Search")) {
 			if (m_validBoard) {
 				m_showSearch  = true;
 				m_needsRedraw = true;
 			}
 
-		} else if (ImGui::IsKeyPressed(SDLK_ESCAPE)) {
+		} else if (keybindings.isPressed("Clear")) {
 			ClearAllHighlights();
 
 		} else {
@@ -2933,7 +2926,7 @@ void BoardView::DrawDiamond(ImDrawList *draw, ImVec2 c, double r, uint32_t color
 	dia[2] = ImVec2(c.x, c.y + r);
 	dia[3] = ImVec2(c.x - r, c.y);
 
-	draw->AddPolyline(dia, 4, color, true, 1.0f, true);
+	draw->AddPolyline(dia, 4, color, true, 1.0f);
 }
 
 void BoardView::DrawHex(ImDrawList *draw, ImVec2 c, double r, uint32_t color) {
@@ -2950,7 +2943,7 @@ void BoardView::DrawHex(ImDrawList *draw, ImVec2 c, double r, uint32_t color) {
 	hex[4] = ImVec2(c.x + da, c.y + db);
 	hex[5] = ImVec2(c.x - da, c.y + db);
 
-	draw->AddPolyline(hex, 6, color, true, 1.0f, true);
+	draw->AddPolyline(hex, 6, color, true, 1.0f);
 }
 
 inline void BoardView::DrawOutline(ImDrawList *draw) {
@@ -3750,8 +3743,8 @@ void BoardView::DrawPartTooltips(ImDrawList *draw) {
 				float pd = pin->diameter * m_scale;
 
 				draw->AddCircle(CoordToScreen(pin->position.x, pin->position.y), pd, m_colors.pinHaloColor, 32, pinHaloThickness);
-				ImGui::PushStyleColor(ImGuiCol_Text, ImColor(m_colors.annotationPopupTextColor));
-				ImGui::PushStyleColor(ImGuiCol_PopupBg, ImColor(m_colors.annotationPopupBackgroundColor));
+				ImGui::PushStyleColor(ImGuiCol_Text, m_colors.annotationPopupTextColor);
+				ImGui::PushStyleColor(ImGuiCol_PopupBg, m_colors.annotationPopupBackgroundColor);
 				ImGui::BeginTooltip();
 				ImGui::Text("TP[%s]%s", pin->name.c_str(), pin->net->name.c_str());
 				ImGui::EndTooltip();
@@ -3825,8 +3818,8 @@ void BoardView::DrawPartTooltips(ImDrawList *draw) {
 				                m_colors.pinHaloColor,
 				                32,
 				                pinHaloThickness);
-			ImGui::PushStyleColor(ImGuiCol_Text, ImColor(m_colors.annotationPopupTextColor));
-			ImGui::PushStyleColor(ImGuiCol_PopupBg, ImColor(m_colors.annotationPopupBackgroundColor));
+			ImGui::PushStyleColor(ImGuiCol_Text, m_colors.annotationPopupTextColor);
+			ImGui::PushStyleColor(ImGuiCol_PopupBg, m_colors.annotationPopupBackgroundColor);
 			ImGui::BeginTooltip();
 			if (currentlyHoveredPin) {
 				ImGui::Text("%s\n[%s]%s",
@@ -3848,8 +3841,8 @@ inline void BoardView::DrawPinTooltips(ImDrawList *draw) {
 	draw->ChannelsSetCurrent(kChannelAnnotations);
 
 	if (HighlightedPinIsHovered()) {
-		ImGui::PushStyleColor(ImGuiCol_Text, ImColor(m_colors.annotationPopupTextColor));
-		ImGui::PushStyleColor(ImGuiCol_PopupBg, ImColor(m_colors.annotationPopupBackgroundColor));
+		ImGui::PushStyleColor(ImGuiCol_Text, m_colors.annotationPopupTextColor);
+		ImGui::PushStyleColor(ImGuiCol_PopupBg, m_colors.annotationPopupBackgroundColor);
 		ImGui::BeginTooltip();
 		ImGui::Text("%s[%s]\n%s",
 		            m_pinHighlightedHovered->component->name.c_str(),
@@ -3882,8 +3875,8 @@ inline void BoardView::DrawAnnotations(ImDrawList *draw) {
 				snprintf(buf, sizeof(buf), "%s", ann.note.c_str());
 				buf[50] = '\0';
 
-				ImGui::PushStyleColor(ImGuiCol_Text, ImColor(m_colors.annotationPopupTextColor));
-				ImGui::PushStyleColor(ImGuiCol_PopupBg, ImColor(m_colors.annotationPopupBackgroundColor));
+				ImGui::PushStyleColor(ImGuiCol_Text, m_colors.annotationPopupTextColor);
+				ImGui::PushStyleColor(ImGuiCol_PopupBg, m_colors.annotationPopupBackgroundColor);
 				ImGui::BeginTooltip();
 				ImGui::Text("%c(%0.0f,%0.0f) %s %s%c%s%c\n%s%s",
 				            m_current_side ? 'B' : 'T',
@@ -4000,7 +3993,7 @@ void BoardView::DrawSelectedPins(ImDrawList *draw) {
 	}
 	hpc = VHConvexHull(hull, pl, i);
 	if (hpc > 3) {
-		draw->AddConvexPolyFilled(hull, hpc, ImColor(0x660000ff), false);
+		draw->AddConvexPolyFilled(hull, hpc, 0x660000ff);
 	}
 }
 

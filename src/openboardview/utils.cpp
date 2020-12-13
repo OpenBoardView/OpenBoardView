@@ -97,6 +97,17 @@ std::vector<std::string> split_string(const std::string str) {
 	return {std::istream_iterator<std::string>{iss}, std::istream_iterator<std::string>{}};
 }
 
+// Split a string in a vector with given delimiter
+std::vector<std::string> split_string(const std::string &str, char delimeter) {
+	std::istringstream iss(str);
+	std::string item;
+	std::vector<std::string> strs;
+	while (std::getline(iss, item, delimeter)) {
+		strs.push_back(item);
+	}
+	return strs;
+}
+
 bool path_is_directory(const std::string &path) {
 	path_stat_t st;
 	if (path_stat(path, &st) != 0) {

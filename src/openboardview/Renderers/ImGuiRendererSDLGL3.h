@@ -10,9 +10,11 @@ public:
 	bool checkGLVersion();
 	void setGLVersion();
 	bool init();
-	void processEvent(SDL_Event &event);
 	void initFrame();
+	void renderDrawData();
 	void shutdown();
+private:
+	std::string glsl_version;
 };
 
 #endif

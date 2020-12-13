@@ -1,10 +1,6 @@
 #include "Renderers.h"
 
-#ifdef _MSC_VER
 #include <SDL.h>
-#else
-#include <SDL2/SDL.h>
-#endif
 
 #include <iostream>
 
@@ -30,10 +26,6 @@ namespace Renderers {
 #ifdef ENABLE_GL3
 			case Renderer::OPENGL3:
 				return std::unique_ptr<ImGuiRendererSDL>(new ImGuiRendererSDLGL3(window));
-#endif
-#ifdef ENABLE_GLES2
-			case Renderer::OPENGLES2:
-				return std::unique_ptr<ImGuiRendererSDL>(new ImGuiRendererSDLGLES2(window));
 #endif
 			case Renderer::DEFAULT: // skip this one
 				return std::unique_ptr<ImGuiRendererSDL>{};

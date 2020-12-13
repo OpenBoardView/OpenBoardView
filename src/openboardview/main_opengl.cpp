@@ -18,17 +18,15 @@
 #include "FileFormats/FZFile.h"
 #include "confparse.h"
 #include "resource.h"
-#ifdef _MSC_VER
 #include <SDL.h>
-#else
-#include <SDL2/SDL.h>
-#endif
+#include <chrono>
 #include <deque>
 #include <memory>
 #include <stdio.h>
 #include <string>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <thread>
 #ifndef _MSC_VER
 #include <unistd.h>
 #endif
@@ -260,6 +258,8 @@ int main(int argc, char **argv) {
 		cleanupAndExit(1);
 	}
 
+	// Needs to be done before initializing the renderer or using any of ImGui stuff
+	ImGui::CreateContext();
 	// Setup renderer
 	std::unique_ptr<ImGuiRendererSDL> renderer = Renderers::initBestRenderer(g.renderer, window);
 	if (!renderer) {
@@ -356,12 +356,12 @@ int main(int argc, char **argv) {
 	 * If you find some things aren't working properly without you having to move
 	 * the mouse or 'waking up' OBV then increase to 5 or more.
 	 */
-	sleepout = 3;
+	sleepout = 30;
 	while (!done) {
 
 		SDL_Event event;
 		while (SDL_PollEvent(&event)) {
-			sleepout = 3;
+			sleepout = 30;
 			renderer->processEvent(event);
 
 			if (event.type == SDL_DROPFILE) {
@@ -392,9 +392,9 @@ int main(int argc, char **argv) {
 			sleepout = 0;
 			continue;
 		} // puts OBV to sleep if nothing is happening.
-
 		// Prepare frame
 		renderer->initFrame();
+		ImGui::NewFrame();
 
 		// If we have a board to view being passed from command line, then "inject"
 		// it here.
@@ -420,11 +420,24 @@ int main(int argc, char **argv) {
 		}
 
 		// Render frame
+		ImGui::Render();
 		renderer->renderFrame(clear_color);
+
+		// vsync disabled, manual FPS limiting
+		if (!SDL_GL_GetSwapInterval()) {
+			static const int FPS = 30;
+			static const std::chrono::duration<std::intmax_t, std::ratio<1, FPS>> frameDuration{1};
+			static auto nextFrame = std::chrono::steady_clock::now() + frameDuration;
+
+			std::this_thread::sleep_until(nextFrame);
+			nextFrame += frameDuration;
+		}
 	}
 
 	// Cleanup
  	renderer->shutdown();
+
+	ImGui::DestroyContext();
 
 	cleanupAndExit(0);
 	return 0;

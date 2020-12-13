@@ -1,7 +1,3 @@
-option(ENABLE_GL1 "Build OpenGL 1 renderer." ON)
-option(ENABLE_GL3 "Build OpenGL 3 renderer." ON)
-option(ENABLE_GLES2 "Build OpenGL ES 2 renderer." ON)
-
 if(ENABLE_GL1)
 	add_definitions(-DENABLE_GL1)
 endif()
@@ -47,18 +43,13 @@ endif()
 include_directories(
 	${CMAKE_CURRENT_SOURCE_DIR}
 	${CMAKE_CURRENT_SOURCE_DIR}/..
-	${CMAKE_CURRENT_SOURCE_DIR}/../imgui
-	${SDL2_INCLUDE_DIRS}
+	${IMGUI_INCLUDE_DIRS}
 	${GLAD_INCLUDE_DIRS}
 	${GTK_INCLUDE_DIRS}
 	${OPENGL_INCLUDE_DIR}
 	${ZLIB_INCLUDE_DIRS}
 	${SQLITE3_INCLUDE_DIRS}
 	${FONTCONFIG_INCLUDE_DIRS}
-)
-
-link_directories(
-	${SDL2_LIBRARY_DIRS}
 )
 
 
@@ -85,25 +76,22 @@ set(SOURCES
 	Renderers/ImGuiRendererSDL.cpp
 	Searcher.cpp
 	SpellCorrector.cpp
+	UI/Keyboard/KeyBinding.cpp
+	UI/Keyboard/KeyBindings.cpp
+	UI/Keyboard/KeyModifier.cpp
+	UI/Keyboard/KeyModifiers.cpp
+	GUI/Preferences/Keyboard.cpp
 	main_opengl.cpp
 )
 
 if(ENABLE_GL1)
 	LIST(APPEND SOURCES
-		Renderers/imgui_impl_sdl.cpp
 		Renderers/ImGuiRendererSDLGL1.cpp
 	)
 endif()
 if(ENABLE_GL3)
 	LIST(APPEND SOURCES
-		Renderers/imgui_impl_sdl_gl3.cpp
 		Renderers/ImGuiRendererSDLGL3.cpp
-	)
-endif()
-if(ENABLE_GLES2)
-	LIST(APPEND SOURCES
-		Renderers/imgui_impl_sdl_gles2.cpp
-		Renderers/ImGuiRendererSDLGLES2.cpp
 	)
 endif()
 
@@ -148,20 +136,15 @@ target_link_libraries(${PROJECT_NAME_LOWER}
 	${CMAKE_DL_LIBS}
 )
 
-if(MINGW) # Link statically with SDL2 for Windows
+if(NOT APPLE AND NOT MINGW)
 	target_link_libraries(${PROJECT_NAME_LOWER}
-		${SDL2_STATIC_LIBRARIES}
-	)
-else()
-	if(NOT APPLE)
-		target_link_libraries(${PROJECT_NAME_LOWER}
-			${FONTCONFIG_LIBRARIES}
-		)
-	endif()
-	target_link_libraries(${PROJECT_NAME_LOWER}
-		${SDL2_LIBRARIES}
+		${FONTCONFIG_LIBRARIES}
 	)
 endif()
+target_link_libraries(${PROJECT_NAME_LOWER}
+	SDL2::SDL2
+	SDL2::SDL2main
+)
 
 install(TARGETS
 	${PROJECT_NAME_LOWER}
