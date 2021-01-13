@@ -51,7 +51,7 @@ CADFile::CADFile(std::vector<char> &buf) {
 	char *arena_end = file_buf + file_buf_size - 1;
 	*arena_end      = 0;
 
-	enum Block current_block = Invalid;
+	enum Block current_block = None;
 	std::unordered_map<std::string, int> parts_id; // map between part name and part number
 	char *nailnet; // Net name for VIA
 
@@ -157,5 +157,5 @@ CADFile::CADFile(std::vector<char> &buf) {
 
 	setlocale(LC_NUMERIC, saved_locale); // Restore locale
 
-	valid = current_block != 0;
+	valid = current_block != None;
 }

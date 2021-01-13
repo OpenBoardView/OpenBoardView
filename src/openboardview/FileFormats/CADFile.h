@@ -9,6 +9,7 @@ struct CADFile : public BRDFile {
 	}
 	enum Block {
 		Invalid,
+		None,
 		Parts,
 		Pins,
 		Nets,
