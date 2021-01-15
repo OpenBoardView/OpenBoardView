@@ -33,8 +33,15 @@ bool KeyBindings::isPressed(const std::string &name) const {
 }
 
 void KeyBindings::reset() {
-	keybindings["Quit"] = {KeyBinding(SDLK_q, {keyModifiers.fromName("Ctrl")}), KeyBinding(SDLK_c, {keyModifiers.fromName("Ctrl")})};
+#ifdef __APPLE__
+	keybindings["Quit"] = {KeyBinding(SDLK_q, {keyModifiers.fromName("Super")})};
+	keybindings["Open"] = {KeyBinding(SDLK_o, {keyModifiers.fromName("Super")})};
+	keybindings["Search"] = {KeyBinding(SDLK_f, {keyModifiers.fromName("Super")}), KeyBinding(SDLK_SLASH)};
+#else
+	keybindings["Quit"] = {KeyBinding(SDLK_q, {keyModifiers.fromName("Ctrl")})};
 	keybindings["Open"] = {KeyBinding(SDLK_o, {keyModifiers.fromName("Ctrl")})};
+	keybindings["Search"] = {KeyBinding(SDLK_f, {keyModifiers.fromName("Ctrl")}), KeyBinding(SDLK_SLASH)};
+#endif
 	keybindings["CloseDialog"] = {KeyBinding(SDLK_ESCAPE)};
 	keybindings["Validate"] = {KeyBinding(SDLK_RETURN, {keyModifiers.fromName("Shift")})};
 	keybindings["Accept"] = {KeyBinding(SDLK_RETURN)};
@@ -57,7 +64,6 @@ void KeyBindings::reset() {
 	keybindings["NetList"] = {KeyBinding(SDLK_l)};
 	keybindings["PartList"] = {KeyBinding(SDLK_k)};
 	keybindings["TogglePins"] = {KeyBinding(SDLK_p)};
-	keybindings["Search"] = {KeyBinding(SDLK_f, {keyModifiers.fromName("Ctrl")}), KeyBinding(SDLK_SLASH)};
 	keybindings["Clear"] = {KeyBinding(SDLK_ESCAPE)};
 }
 
