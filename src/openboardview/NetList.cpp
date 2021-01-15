@@ -26,19 +26,22 @@ void NetList::Draw(const char *title, bool *p_open, Board *board) {
 	if (board) {
 		auto nets = board->Nets();
 
-		ImGuiListClipper clipper(nets.size(), ImGui::GetTextLineHeight());
 		static int selected = -1;
 		string net_name     = "";
-		for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
-			net_name = nets[i]->name;
-			if (ImGui::Selectable(
-			        net_name.c_str(), selected == i, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowDoubleClick)) {
-				selected = i;
-				if (ImGui::IsMouseDoubleClicked(0)) {
-					cbNetSelected_(net_name.c_str());
+		ImGuiListClipper clipper;
+		clipper.Begin(nets.size());
+		while (clipper.Step()) {
+			for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
+				net_name = nets.at(i)->name;
+				if (ImGui::Selectable(
+					net_name.c_str(), selected == i, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowDoubleClick)) {
+					selected = i;
+					if (ImGui::IsMouseDoubleClicked(0)) {
+						cbNetSelected_(net_name.c_str());
+					}
 				}
+				ImGui::NextColumn();
 			}
-			ImGui::NextColumn();
 		}
 		clipper.End();
 	}

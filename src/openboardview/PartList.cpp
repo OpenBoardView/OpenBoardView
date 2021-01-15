@@ -26,19 +26,22 @@ void PartList::Draw(const char *title, bool *p_open, Board *board) {
 	if (board) {
 		auto parts = board->Components();
 
-		ImGuiListClipper clipper(parts.size(), ImGui::GetTextLineHeight());
 		static int selected = -1;
 		string part_name    = "";
-		for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
-			part_name = parts[i]->name;
+		ImGuiListClipper clipper;
+		clipper.Begin(parts.size());
+		while (clipper.Step()) {
+			for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
+				part_name = parts[i]->name;
 
-			if (ImGui::Selectable(part_name.c_str(), selected == i, ImGuiSelectableFlags_AllowDoubleClick)) {
-				selected = i;
-				if (ImGui::IsMouseDoubleClicked(0)) {
-					cbNetSelected_(part_name.c_str());
+				if (ImGui::Selectable(part_name.c_str(), selected == i, ImGuiSelectableFlags_AllowDoubleClick)) {
+					selected = i;
+					if (ImGui::IsMouseDoubleClicked(0)) {
+						cbNetSelected_(part_name.c_str());
+					}
 				}
+				ImGui::NextColumn();
 			}
-			ImGui::NextColumn();
 		}
 		clipper.End();
 	}
