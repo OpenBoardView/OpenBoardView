@@ -58,6 +58,20 @@ add_subdirectory(glad)
 find_package(SDL2 REQUIRED CONFIG)
 add_definitions(-DENABLE_SDL2)
 
+# Create namespace targets for system with SDL2 older than 2.0.12
+if(NOT TARGET SDL2::SDL2)
+       add_library(SDL2::SDL2 SHARED IMPORTED)
+       find_library(SDL2_LIBRARY SDL2)
+       set_target_properties(SDL2::SDL2 PROPERTIES
+               IMPORTED_LOCATION ${SDL2_LIBRARY}
+               INTERFACE_INCLUDE_DIRECTORIES ${SDL2_INCLUDE_DIRS})
+       add_library(SDL2::SDL2main STATIC IMPORTED)
+       find_library(SDL2MAIN_LIBRARY SDL2main)
+       set_target_properties(SDL2::SDL2main PROPERTIES
+               IMPORTED_LOCATION ${SDL2MAIN_LIBRARY}
+               INTERFACE_INCLUDE_DIRECTORIES ${SDL2_INCLUDE_DIRS})
+endif()
+
 ## imgui ##
 # note: in the future there may be integrated CMake support into imgui
 # see: https://github.com/ocornut/imgui/pull/1713
