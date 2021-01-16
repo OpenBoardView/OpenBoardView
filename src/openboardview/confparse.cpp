@@ -244,7 +244,7 @@ int Confparse::Load(const std::string &utf8_filename, bool save_default) {
 			file.open(utf8_filename, std::ios::out | std::ios::binary | std::ios::ate);
 			nested = true;
 			file.close();
-			Load(utf8_filename);
+			return Load(utf8_filename);
 		}
 	}
 
