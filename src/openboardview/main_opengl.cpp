@@ -337,10 +337,7 @@ int main(int argc, char **argv) {
 	 * in to OBV
 	 */
 	if (g.input_file) {
-		struct stat buffer;
-		if ((stat(g.input_file, &buffer) == 0)) {
-			preload_required = true;
-		}
+		preload_required = true;
 	}
 
 	/*
@@ -365,12 +362,7 @@ int main(int argc, char **argv) {
 			Renderers::current->processEvent(event);
 
 			if (event.type == SDL_DROPFILE) {
-				// Validate the file before replacing the current one, not that we
-				// should have to, but always better to be safe
-				struct stat buffer;
-				if (stat(event.drop.file, &buffer) == 0) {
-					app.LoadFile(strdup(event.drop.file));
-				}
+				app.LoadFile(event.drop.file);
 			}
 
 			if (event.type == SDL_QUIT) done = true;
@@ -399,7 +391,7 @@ int main(int argc, char **argv) {
 		// If we have a board to view being passed from command line, then "inject"
 		// it here.
 		if (preload_required) {
-			app.LoadFile(strdup(g.input_file));
+			app.LoadFile(g.input_file);
 			preload_required = false;
 		}
 

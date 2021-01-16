@@ -7,6 +7,8 @@
 
 #include "backends/imgui_impl_sdl.h"
 
+#include "utils.h"
+
 ImGuiRendererSDL::ImGuiRendererSDL(SDL_Window *window) : window(window) {
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
@@ -89,25 +91,27 @@ void ImGuiRendererSDL::shutdown() {
 	ImGui_ImplSDL2_Shutdown();
 }
 
-std::string ImGuiRendererSDL::loadTextureFromFile(const std::string &filename, GLuint* out_texture, int* out_width, int* out_height)
+std::string ImGuiRendererSDL::loadTextureFromFile(const filesystem::path &filepath, GLuint* out_texture, int* out_width, int* out_height)
 {
 	// Load from file
 	int image_width = 0;
 	int image_height = 0;
-	unsigned char* image_data = stbi_load(filename.c_str(), &image_width, &image_height, NULL, 4);
+
+	auto buf = file_as_buffer(filepath);
+	unsigned char* image_data = stbi_load_from_memory(reinterpret_cast<unsigned char*>(buf.data()), buf.size(), &image_width, &image_height, NULL, 4);
 
 	if (image_data == nullptr) {
-		return "Could not load image from " + filename;
+		return "Could not load image from " + filepath.string();
 	}
 
 	int glMaxTextureSize;
 	glGetIntegerv(GL_MAX_TEXTURE_SIZE, &glMaxTextureSize);
 	if (image_width > glMaxTextureSize) {
-		return filename + ": width of " + std::to_string(image_width) + "px is too large for this GPU. Maximum allowed: " + std::to_string(glMaxTextureSize);
+		return filepath.string() + ": width of " + std::to_string(image_width) + "px is too large for this GPU. Maximum allowed: " + std::to_string(glMaxTextureSize);
 	}
 
 	if (image_height > glMaxTextureSize) {
-		return filename + ": height of " + std::to_string(image_width) + "px is too large for this GPU. Maximum allowed: " + std::to_string(glMaxTextureSize);
+		return filepath.string() + ": height of " + std::to_string(image_width) + "px is too large for this GPU. Maximum allowed: " + std::to_string(glMaxTextureSize);
 	}
 
 	// Create a OpenGL texture identifier
@@ -125,10 +129,10 @@ std::string ImGuiRendererSDL::loadTextureFromFile(const std::string &filename, G
 
 	GLenum code = glGetError();
 	if (code == GL_OUT_OF_MEMORY) {
-		return filename + ": image too large to fit in the GPU memory.";
+		return filepath.string() + ": image too large to fit in the GPU memory.";
 	}
 	if (code != GL_NO_ERROR) {
-		return filename + ": error " + std::to_string(code) + " when loading the image into GPU memory.";
+		return filepath.string() + ": error " + std::to_string(code) + " when loading the image into GPU memory.";
 	}
 
 	stbi_image_free(image_data);

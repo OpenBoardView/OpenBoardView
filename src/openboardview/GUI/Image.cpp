@@ -7,7 +7,7 @@
 
 #include "Renderers/Renderers.h"
 
-Image::Image(const std::string &file) : file(file) {
+Image::Image(const filesystem::path &file) : file(file) {
 }
 
 Image::~Image() {

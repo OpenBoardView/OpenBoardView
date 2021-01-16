@@ -1,4 +1,3 @@
-#include "platform.h"
 #include "utils.h"
 #include <algorithm>
 #include <assert.h>
@@ -17,19 +16,19 @@
 #include <sys/types.h>
 
 // Loads an entire file in to memory
-std::vector<char> file_as_buffer(const std::string &utf8_filename) {
+std::vector<char> file_as_buffer(const filesystem::path &filepath) {
 	std::vector<char> data;
 
-	if (!path_is_regular(utf8_filename)) {
-		std::cerr << "Error opening " << utf8_filename << ": not a regular file " << std::endl;
+	if (!filesystem::is_regular_file(filepath)) {
+		std::cerr << "Error opening " << filepath.string() << ": not a regular file " << std::endl;
 		return data;
 	}
 
-	std::ifstream file;
-	file.open(utf8_filename, std::ios::in | std::ios::binary | std::ios::ate);
+	ifstream file;
+	file.open(filepath, std::ios::in | std::ios::binary | std::ios::ate);
 
 	if (!file.is_open()) {
-		std::cerr << "Error opening " << utf8_filename << ": " << strerror(errno) << std::endl;
+		std::cerr << "Error opening " << filepath.string() << ": " << strerror(errno) << std::endl;
 		return data;
 	}
 
@@ -48,14 +47,13 @@ std::vector<char> file_as_buffer(const std::string &utf8_filename) {
 
 // Extract extension from filename and check against given fileext
 // fileext must be lowercase
-bool check_fileext(const std::string &filename, const std::string fileext) {
-	auto extpos     = filename.rfind('.');
-	std::string ext = (extpos == std::string::npos) ? "" : filename.substr(extpos); // extract file ext
+bool check_fileext(const filesystem::path &filepath, const std::string fileext) {
+	std::string ext{filepath.extension().string()}; // extract file ext
 	std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);                 // make ext lowercase
 	return ext == fileext;
 }
 
-// Retunrs true if the given str was found in buf
+// Returns true if the given str was found in buf
 bool find_str_in_buf(const std::string str, const std::vector<char> &buf) {
 	return std::search(buf.begin(), buf.end(), str.begin(), str.end()) != buf.end();
 }
@@ -68,27 +66,13 @@ bool compare_string_insensitive(const std::string &str1, const std::string &str2
 }
 
 // Case insensitive lookup of a filename at the given path
-std::string lookup_file_insensitive(const std::string &path, const std::string &filename) {
-#ifdef _WIN32
-	// Windows is case-insesntivie, can simply return file name with any case.
-	return path + filename;
-#else
-	std::string filefound;
-	DIR *dir;
-	struct dirent *dent;
-
-	if (path.empty())
-		dir = opendir("./"); // open current dir if given path is empty
-	else
-		dir = opendir(path.c_str()); /* any suitable directory name  */
-	if (!dir) return filefound;
-
-	while ((dent = readdir(dir)) != NULL) {
-		std::string cfile(dent->d_name);
-		if (compare_string_insensitive(cfile, filename)) filefound = path + cfile;
+filesystem::path lookup_file_insensitive(const filesystem::path &path, const std::string &filename) {
+	for(auto& p: filesystem::directory_iterator(path)) {
+		if (compare_string_insensitive(p.path().filename().string(), filename)) {
+			return p.path();
+		}
 	}
-	return filefound;
-#endif
+	return {};
 }
 
 // Split a string in a vector, delimiter is a space (stringstream iterator)
@@ -106,20 +90,4 @@ std::vector<std::string> split_string(const std::string &str, char delimeter) {
 		strs.push_back(item);
 	}
 	return strs;
-}
-
-bool path_is_directory(const std::string &path) {
-	path_stat_t st;
-	if (path_stat(path, &st) != 0) {
-		return false;
-	}
-	return S_ISDIR(st.st_mode);
-}
-
-bool path_is_regular(const std::string &path) {
-	path_stat_t st;
-	if (path_stat(path, &st) != 0) {
-		return false;
-	}
-	return S_ISREG(st.st_mode);
 }

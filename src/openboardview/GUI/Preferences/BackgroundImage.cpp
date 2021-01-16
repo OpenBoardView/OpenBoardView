@@ -36,12 +36,16 @@ void BackgroundImage::errorPopup() {
 
 void BackgroundImage::imageSettings(const std::string &name, Image &image) {
 	ImGui::Text("%s image settings", name.c_str());
-	ImGui::InputText((name + " file").c_str(), &image.file);
+	std::string filename = image.file.string();
+	if (ImGui::InputText((name + " file").c_str(), &filename)) {
+		image.file = filename;
+	}
 	ImGui::SameLine();
 	if (ImGui::Button(("Browse##" + name).c_str())) {
 		auto path = show_file_picker();
 		if (!path.empty()) {
 			image.file = path;
+			filename = path.string();
 			std::string error = image.reload();
 			if (!error.empty()) {
 				erroredFiles.push_back(error);
