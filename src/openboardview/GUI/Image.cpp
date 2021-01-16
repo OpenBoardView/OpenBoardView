@@ -16,6 +16,10 @@ Image::~Image() {
 
 std::string Image::reload() {
 	glDeleteTextures(1, &texture);
+	texture = 0;
+	if (file.empty()) { // Ignore empty paths silently
+		return {};
+	}
 	return Renderers::current->loadTextureFromFile(file, &texture, &width, &height);
 }
 
