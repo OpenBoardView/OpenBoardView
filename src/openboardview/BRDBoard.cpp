@@ -57,8 +57,6 @@ BRDBoard::BRDBoard(const BRDFile *const boardFile)
 			// avoid having multiple UNCONNECTED<XXX> references
 			if (is_prefix(kNetUnconnectedPrefix, net->name)) continue;
 
-			// check whether the pin represents ground
-			net->is_ground = (net->name == "GND");
 			net->number    = brd_nail.probe;
 
 			if (brd_nail.side == 1) {
@@ -214,6 +212,8 @@ BRDBoard::BRDBoard(const BRDFile *const boardFile)
 
 	// Populate Net vector by using the map. (sorted by keys)
 	for (auto &net : net_map) {
+		// check whether the pin represents ground
+		net.second->is_ground = (net.second->name == "GND");
 		nets_.push_back(net.second);
 	}
 
