@@ -3128,12 +3128,6 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 				//				draw->AddCircle(ImVec2(pos.x, pos.y), psz * pinHaloDiameter, ImColor(0xff0000ff), 32);
 			}
 
-			if (!pin->net || pin->type == Pin::kPinTypeNotConnected) {
-				color = (m_colors.pinNotConnectedColor & cmask) | omask;
-			} else {
-				if (pin->net->is_ground) color = (m_colors.pinGroundColor & cmask) | omask;
-			}
-
 			/*
 			 * If the part is selected, as part of search or otherwise
 			 */
@@ -3161,6 +3155,12 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 				draw_ring  = true;
 				show_text  = true;
 				threshold  = 0;
+			}
+
+			if (!pin->net || pin->type == Pin::kPinTypeNotConnected) {
+				color = (m_colors.pinNotConnectedColor & cmask) | omask;
+			} else {
+				if (pin->net->is_ground) color = (m_colors.pinGroundColor & cmask) | omask;
 			}
 
 			// pin is on the same net as selected pin: highlight > rest
