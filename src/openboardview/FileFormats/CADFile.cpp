@@ -142,7 +142,7 @@ CADFile::CADFile(std::vector<char> &buf) {
 				double posy  = READ_DOUBLE();
 				nail.pos.y   = posy * multiplier;
 				/*STR        =*/READ_STR();
-				nail.side    = READ_DOUBLE();
+				nail.side    = READ_DOUBLE() == 1 ? BRDPartMountingSide::Top : BRDPartMountingSide::Bottom;
 				/*double     =*/READ_DOUBLE();
 				nails.push_back(nail);
 			} break;

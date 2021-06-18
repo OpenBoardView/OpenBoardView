@@ -82,9 +82,9 @@ void ASCFile::parse_nail(char *&p, char *&s, char *&arena, char *&arena_end, lin
 	/*char *grid =*/READ_STR();
 	char *loc = READ_STR();
 	if (!strcmp(loc, "(T)"))
-		nail.side = 1;
+		nail.side = BRDPartMountingSide::Top;
 	else
-		nail.side = 2;
+		nail.side = BRDPartMountingSide::Bottom;
 	/*char *netid =*/READ_STR(); // uint
 	nail.net = READ_STR();
 	nails.push_back(nail);

@@ -9,6 +9,7 @@
 #include <iostream>
 #include <limits.h>
 #include <memory>
+#include <algorithm>
 #include <stdio.h>
 #ifdef ENABLE_SDL2
 #include <SDL.h>
@@ -25,6 +26,7 @@
 #include "FileFormats/CADFile.h"
 #include "FileFormats/CSTFile.h"
 #include "FileFormats/FZFile.h"
+#include "FileFormats/GenCADFile.h"
 #include "annotations.h"
 #include "imgui/imgui.h"
 
@@ -423,26 +425,29 @@ int BoardView::LoadFile(const std::string &filename) {
 		SetLastFileOpenName(filename);
 		std::vector<char> buffer = file_as_buffer(filename);
 		if (!buffer.empty()) {
-			BRDFile *file = nullptr;
-
-			if (check_fileext(filename, ".fz")) { // Since it is encrypted we cannot use the below logic. Trust the ext.
-				file = new FZFile(buffer, FZKey);
-			} else if (check_fileext(filename, ".bom") || check_fileext(filename, ".asc"))
-				file = new ASCFile(buffer, filename);
-			else if (ADFile::verifyFormat(buffer))
-				file = new ADFile(buffer);
-			else if (CADFile::verifyFormat(buffer))
-				file = new CADFile(buffer);
-			else if (check_fileext(filename, ".cst"))
-				file = new CSTFile(buffer);
-			else if (BRDFile::verifyFormat(buffer))
-				file = new BRDFile(buffer);
-			else if (BRD2File::verifyFormat(buffer))
-				file = new BRD2File(buffer);
-			else if (BDVFile::verifyFormat(buffer))
-				file = new BDVFile(buffer);
-			else if (BVRFile::verifyFormat(buffer))
-				file = new BVRFile(buffer);
+			BRDFileBase *file = nullptr;
+			if (check_fileext(filename, ".cad")) {
+				file = new GenCADFile(filename.c_str());
+			} else {
+				if (check_fileext(filename, ".fz")) { // Since it is encrypted we cannot use the below logic. Trust the ext.
+					file = new FZFile(buffer, FZKey);
+				} else if (check_fileext(filename, ".bom") || check_fileext(filename, ".asc"))
+					file = new ASCFile(buffer, filename);
+				else if (ADFile::verifyFormat(buffer))
+					file = new ADFile(buffer);
+				else if (CADFile::verifyFormat(buffer))
+					file = new CADFile(buffer);
+				else if (check_fileext(filename, ".cst"))
+					file = new CSTFile(buffer);
+				else if (BRDFile::verifyFormat(buffer))
+					file = new BRDFile(buffer);
+				else if (BRD2File::verifyFormat(buffer))
+					file = new BRD2File(buffer);
+				else if (BDVFile::verifyFormat(buffer))
+					file = new BDVFile(buffer);
+				else if (BVRFile::verifyFormat(buffer))
+					file = new BVRFile(buffer);
+			}
 
 			if (file && file->valid) {
 				SetFile(file);
@@ -470,8 +475,8 @@ int BoardView::LoadFile(const std::string &filename) {
 				CenterView();
 				m_lastFileOpenWasInvalid = false;
 				m_validBoard             = true;
-
 			} else {
+				m_lastFileLoadError = file->error_string;
 				m_validBoard = false;
 				delete file;
 			}
@@ -1690,13 +1695,42 @@ void BoardView::SearchComponent(void) {
 		ImGui::Text("ENTER: Search, ESC: Exit, TAB: next field");
 
 		ImGui::Separator();
-		ImGui::Checkbox("Components", &m_searchComponents);
+
+		{
+			//Configure searcher.part_fields_to_look and m_searchComponents by checkboxes
+			auto& part_search_by = searcher.part_fields_to_look;
+			auto by_name_it = std::find(part_search_by.begin(), part_search_by.end(), &Component::name);
+			bool by_name = by_name_it != part_search_by.end();
+			if (by_name)
+			{
+				part_search_by.erase(by_name_it);
+			}
+			auto by_part_number_it = std::find(part_search_by.begin(), part_search_by.end(), &Component::mfgcode);
+			bool by_part_number = by_part_number_it != part_search_by.end();
+			if (by_part_number)
+			{
+				part_search_by.erase(by_part_number_it);
+			}
+
+			ImGui::Checkbox("Components name", &by_name);
+			ImGui::SameLine();
+			ImGui::Checkbox("Components part number", &by_part_number);
+
+			if (by_name)
+			{
+				part_search_by.push_back(&Component::name);
+			}
+			if (by_part_number)
+			{
+				part_search_by.push_back(&Component::mfgcode);
+			}
+			m_searchComponents = by_part_number || by_name;
+		}
 
 		ImGui::SameLine();
 		ImGui::Checkbox("Nets", &m_searchNets);
 
 		{
-			ImGui::SameLine();
 			ImGui::Text(" Search mode: ");
 			ImGui::SameLine();
 			if (ImGui::RadioButton("Substring", searcher.isMode(SearchMode::Sub))) {
@@ -2093,6 +2127,7 @@ void BoardView::Update() {
 
 		if (ImGui::BeginPopupModal("Error opening file")) {
 			ImGui::Text("There was an error opening the file: %s", m_lastFileOpenName.c_str());
+			ImGui::Text("%s", m_lastFileLoadError.c_str());
 			if (check_fileext(m_lastFileOpenName, ".fz")) {
 				int i;
 				ImGui::Separator();
@@ -4066,7 +4101,7 @@ void BoardView::CenterView(void) {
 	m_needsRedraw = true;
 }
 
-void BoardView::SetFile(BRDFile *file) {
+void BoardView::SetFile(BRDFileBase *file) {
 	delete m_file;
 	delete m_board;
 

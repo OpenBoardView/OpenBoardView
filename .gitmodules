@@ -18,3 +18,6 @@
 [submodule "src/filesystem"]
 	path = src/filesystem
 	url = https://github.com/gulrak/filesystem.git
+[submodule "src/mpc"]
+	path = src/mpc
+	url = https://github.com/orangeduck/mpc.git

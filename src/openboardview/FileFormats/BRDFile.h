@@ -14,7 +14,7 @@
 		ENSURE(value >= 0);                      \
 		return static_cast<unsigned int>(value); \
 	}
-#define READ_DOUBLE() strtod(p, &p);
+#define READ_DOUBLE() strtod(p, &p)
 #define READ_STR                                     \
 	[&]() {                                          \
 		while ((*p) && (isspace((uint8_t)*p))) ++p;  \
@@ -26,6 +26,7 @@
 	}
 
 struct BRDPoint {
+	// mil (thou) is used here
 	int x;
 	int y;
 };
@@ -34,11 +35,11 @@ enum class BRDPartMountingSide { Both, Bottom, Top };
 enum class BRDPartType { SMD, ThroughHole };
 
 struct BRDPart {
-	const char *name;
+	const char *name = nullptr;
 	std::string mfgcode;
 	BRDPartMountingSide mounting_side;
 	BRDPartType part_type; // SMD or TH
-	unsigned int end_of_pins;
+	unsigned int end_of_pins = 0;
 	BRDPoint p1{0, 0};
 	BRDPoint p2{0, 0};
 };
@@ -62,11 +63,11 @@ struct BRDPin {
 struct BRDNail {
 	unsigned int probe;
 	BRDPoint pos;
-	unsigned int side;
+	BRDPartMountingSide side;
 	const char *net;
 };
 
-class BRDFile {
+class BRDFileBase {
   public:
 	unsigned int num_format = 0;
 	unsigned int num_parts  = 0;
@@ -78,12 +79,20 @@ class BRDFile {
 	std::vector<BRDPin> pins;
 	std::vector<BRDNail> nails;
 
-	char *file_buf = nullptr;
-
 	bool valid = false;
 
+	std::string error_string;
+
+	BRDFileBase() {}
+	~BRDFileBase() {}
+};
+
+class BRDFile : public BRDFileBase {
+  public:
+	char *file_buf = nullptr;
+
 	BRDFile(std::vector<char> &buf);
-	BRDFile(){};
+	BRDFile(){}
 	~BRDFile() {
 		free(file_buf);
 	}

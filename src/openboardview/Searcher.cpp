@@ -35,13 +35,18 @@ bool Searcher::strstrModeSearch(const std::string &strhaystack, const std::strin
 	return false;
 }
 
-template<class T> std::vector<T> Searcher::searchFor(const std::string& search, std::vector<T> v,  int limit) {
-	std::vector<T> results;
+template<class T> SharedVector<T> Searcher::searchFor(const std::string& search, SharedVector<T> v, int limit, std::vector<std::string T::*> fields_to_look) {
+	SharedVector<T> results;
 
 	if (search.empty()) return results;
 
 	for (auto &p : v) {
-		if (strstrModeSearch(p->name, search)) {
+		bool matched = false;
+		for (auto& field : fields_to_look)
+		{
+			matched |= strstrModeSearch((*p).*field, search);
+		}
+		if (matched) {
 			results.push_back(p);
 			limit--;
 		}
@@ -51,7 +56,7 @@ template<class T> std::vector<T> Searcher::searchFor(const std::string& search, 
 }
 
 SharedVector<Component> Searcher::parts(const std::string& search, int limit) {
-	return searchFor(search, m_parts, limit);
+	return searchFor(search, m_parts, limit, part_fields_to_look);
 }
 
 SharedVector<Component> Searcher::parts(const std::string& search) {
@@ -59,7 +64,7 @@ SharedVector<Component> Searcher::parts(const std::string& search) {
 }
 
 SharedVector<Net> Searcher::nets(const std::string& search, int limit) {
-	return searchFor(search, m_nets, limit);
+	return searchFor(search, m_nets, limit, {&Net::name});
 }
 
 SharedVector<Net> Searcher::nets(const std::string& search) {

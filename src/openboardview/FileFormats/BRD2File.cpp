@@ -149,7 +149,7 @@ BRD2File::BRD2File(std::vector<char> &buf) {
 					std::cerr << "Missing net id: " << netid << std::endl;
 				}
 
-				nail.side = READ_UINT();
+				nail.side = READ_UINT() == 1 ? BRDPartMountingSide::Top : BRDPartMountingSide::Bottom;
 				nails.push_back(nail);
 
 			} break;
@@ -217,14 +217,14 @@ BRD2File::BRD2File(std::vector<char> &buf) {
 	for (auto &nail : nails) {
 		BRDPin pin;
 		pin.pos = nail.pos;
-		if (nail.side == 1) {
+		if (nail.side == BRDPartMountingSide::Top) {
 			pin.part = parts.size();
 		} else {
 			pin.pos.y = max.y - pin.pos.y;
 			pin.part  = parts.size() - 1;
 		}
 		pin.probe = nail.probe;
-		pin.side  = nail.side;
+		pin.side  = (unsigned int)nail.side;
 		pin.net   = nail.net;
 		pins.push_back(pin);
 	}

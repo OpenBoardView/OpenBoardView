@@ -12,9 +12,11 @@ class Searcher {
 	SharedVector<Net> m_nets;
 	SharedVector<Component> m_parts;
 
-	template<class T> std::vector<T> searchFor(const std::string& search, std::vector<T> v,  int limit);
+	template<class T> SharedVector<T> searchFor(const std::string& search, SharedVector<T> v, int limit, std::vector<std::string T::*> fields_to_look);
 	bool strstrModeSearch(const std::string &strhaystack, const std::string &strneedle);
 public:
+	//fields to use while searching Component. Logically its a set, but set<pointer-to-member> doesn't compile.
+	std::vector<std::string Component::*> part_fields_to_look = {&Component::name};
 	void setNets(SharedVector<Net> nets);
 	void setParts(SharedVector<Component> components);
 
