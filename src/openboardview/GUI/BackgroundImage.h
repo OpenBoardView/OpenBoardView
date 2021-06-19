@@ -9,6 +9,7 @@
 
 #include "Renderers/ImGuiRendererSDL.h"
 #include "GUI/Image.h"
+#include "filesystem_impl.h"
 
 // Requires forward declaration in order to friend since it's from another namespace
 namespace Preferences {
@@ -28,7 +29,7 @@ private:
 	Image topImage{};
 	Image bottomImage{};
 
-	std::string configFilename{};
+	filesystem::path configFilepath{};
 
 	const Side *side = &defaultSide; // Try to keep this pointer always valid, linked to the BoardView::m_current_side attribute
 	const Image &selectedImage() const;
@@ -38,8 +39,8 @@ public:
 	BackgroundImage(const Side &side);
 	BackgroundImage(const int &side);
 
-	void loadFromConfig(const std::string &filename);
-	void writeToConfig(const std::string &filename);
+	void loadFromConfig(const filesystem::path &filepath);
+	void writeToConfig(const filesystem::path &filepath);
 	std::string reload();
 	void render(ImDrawList &draw, const ImVec2 &p_min, const ImVec2 &p_max, int rotation);
 

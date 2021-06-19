@@ -87,7 +87,7 @@ void BackgroundImage::render() {
 		}
 		if (ImGui::Button("Save")) {
 			shown = false;
-			backgroundImage.writeToConfig(backgroundImage.configFilename);
+			backgroundImage.writeToConfig(backgroundImage.configFilepath);
 			std::string error = backgroundImage.topImage.reload();
 			if (!error.empty()) {
 				erroredFiles.push_back(error);

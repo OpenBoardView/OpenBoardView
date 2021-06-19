@@ -456,7 +456,9 @@ int BoardView::LoadFile(const filesystem::path &filepath) {
 				m_annotations.SetFilename(filepath.string());
 				m_annotations.Load();
 
-				backgroundImage.loadFromConfig(filepath.string() + ".conf");
+				auto conffilepath = filepath;
+				conffilepath.replace_extension("conf");
+				backgroundImage.loadFromConfig(conffilepath);
 
 				/*
 				 * Set pins to a known lower size, they get resized

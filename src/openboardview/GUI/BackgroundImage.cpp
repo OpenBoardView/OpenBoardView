@@ -16,16 +16,16 @@ BackgroundImage::BackgroundImage(const Side &side) : side(&side) {
 BackgroundImage::BackgroundImage(const int &side) : side(reinterpret_cast<const Side*>(&side)) {
 }
 
-void BackgroundImage::loadFromConfig(const std::string &filename) {
-	configFilename = filename; // save filename for latter use with writeToConfig
+void BackgroundImage::loadFromConfig(const filesystem::path &filepath) {
+	configFilepath = filepath; // save filepath for latter use with writeToConfig
 
-	if (!filesystem::exists(filename)) // Config file doesn't exist, do not attempt to read or write it and load images
+	if (!filesystem::exists(filepath)) // Config file doesn't exist, do not attempt to read or write it and load images
 		return;
 
-	auto configDir = filesystem::path{filename}.parent_path();
+	auto configDir = filepath.parent_path();
 
 	Confparse confparse{};
-	confparse.Load(filename);
+	confparse.Load(filepath);
 
 	std::string topImageFilename{confparse.ParseStr("TopImageFile", "")};
 	topImage = Image{topImageFilename.empty() ? filesystem::path{} : configDir/topImageFilename};
@@ -47,19 +47,19 @@ void BackgroundImage::loadFromConfig(const std::string &filename) {
 	bottomImage.mirrorY = confparse.ParseBool("BottomImageMirrorY", false);
 	bottomImage.transparency = confparse.ParseDouble("BottomImageTransparency", 0.0);
 
-	writeToConfig(filename);
+	writeToConfig(filepath);
 	reload();
 }
 
-void BackgroundImage::writeToConfig(const std::string &filename) {
-	if (filename.empty()) // No destination file to save to
+void BackgroundImage::writeToConfig(const filesystem::path &filepath) {
+	if (filepath.empty()) // No destination file to save to
 		return;
 
 	std::error_code ec;
 	auto confparse = Confparse{};
-	confparse.Load(filename);
+	confparse.Load(filepath);
 
-	auto configDir = filesystem::path{filename}.parent_path();
+	auto configDir = filepath.parent_path();
 
 	if (!topImage.file.empty()) {
 		auto topImagePath = filesystem::relative(topImage.file, configDir, ec);
