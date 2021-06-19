@@ -28,7 +28,7 @@ void BackgroundImage::loadFromConfig(const filesystem::path &filepath) {
 	confparse.Load(filepath);
 
 	std::string topImageFilename{confparse.ParseStr("TopImageFile", "")};
-	topImage = Image{topImageFilename.empty() ? filesystem::path{} : configDir/topImageFilename};
+	topImage = Image{topImageFilename.empty() ? filesystem::path{} : configDir/filesystem::u8path(topImageFilename)};
 	topImage.offsetX = confparse.ParseInt("TopImageOffsetX", 0);
 	topImage.offsetY = confparse.ParseInt("TopImageOffsetY", 0);
 	topImage.scalingX = confparse.ParseDouble("TopImageScalingX", 1.0);
@@ -38,7 +38,7 @@ void BackgroundImage::loadFromConfig(const filesystem::path &filepath) {
 	topImage.transparency = confparse.ParseDouble("TopImageTransparency", 0.0);
 
 	std::string bottomImageFilename{confparse.ParseStr("BottomImageFile", "")};
-	bottomImage = Image{bottomImageFilename.empty() ? filesystem::path{} : configDir/bottomImageFilename};
+	bottomImage = Image{bottomImageFilename.empty() ? filesystem::path{} : configDir/filesystem::u8path(bottomImageFilename)};
 	bottomImage.offsetX = confparse.ParseInt("BottomImageOffsetX", 0);
 	bottomImage.offsetY = confparse.ParseInt("BottomImageOffsetY", 0);
 	bottomImage.scalingX = confparse.ParseDouble("BottomImageScalingX", 1.0);

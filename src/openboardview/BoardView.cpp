@@ -2119,7 +2119,7 @@ void BoardView::Update() {
 		filesystem::path filepath;
 
 		if (preset_filename) {
-			filepath        = filesystem::path{preset_filename};
+			filepath        = filesystem::u8path(preset_filename);
 			preset_filename = NULL;
 		} else {
 			filepath = show_file_picker(true);

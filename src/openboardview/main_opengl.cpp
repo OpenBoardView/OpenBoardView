@@ -34,6 +34,8 @@
 // Rendering stuff
 #include "Renderers/Renderers.h"
 
+#include "filesystem_impl.h"
+
 struct globals {
 	char *input_file;
 	char *config_file;
@@ -362,7 +364,7 @@ int main(int argc, char **argv) {
 			Renderers::current->processEvent(event);
 
 			if (event.type == SDL_DROPFILE) {
-				app.LoadFile(event.drop.file);
+				app.LoadFile(filesystem::u8path(event.drop.file));
 			}
 
 			if (event.type == SDL_QUIT) done = true;
@@ -391,7 +393,7 @@ int main(int argc, char **argv) {
 		// If we have a board to view being passed from command line, then "inject"
 		// it here.
 		if (preload_required) {
-			app.LoadFile(g.input_file);
+			app.LoadFile(filesystem::u8path(g.input_file));
 			preload_required = false;
 		}
 
