@@ -307,7 +307,7 @@ struct BoardView {
 	void DrawBoard();
 	void DrawNetWeb(ImDrawList *draw);
 	void SetFile(BRDFile *file);
-	int LoadFile(const std::string &filename);
+	int LoadFile(const filesystem::path &filepath);
 	ImVec2 CoordToScreen(float x, float y, float w = 1.0f);
 	ImVec2 ScreenToCoord(float x, float y, float w = 1.0f);
 	// void Move(float x, float y);

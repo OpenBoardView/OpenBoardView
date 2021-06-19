@@ -400,10 +400,10 @@ int BoardView::ConfigParse(void) {
 	return 0;
 }
 
-int BoardView::LoadFile(const std::string &filename) {
+int BoardView::LoadFile(const filesystem::path &filepath) {
 	m_lastFileOpenWasInvalid = true;
 	m_validBoard             = false;
-	if (!filename.empty()) {
+	if (!filepath.empty()) {
 		// clean up the previous file.
 		if (m_file && m_board) {
 			for (auto &p : m_board->Components()) {
@@ -420,20 +420,20 @@ int BoardView::LoadFile(const std::string &filename) {
 			// delete m_board;
 		}
 
-		SetLastFileOpenName(filename);
-		std::vector<char> buffer = file_as_buffer(filename);
+		SetLastFileOpenName(filepath.string());
+		std::vector<char> buffer = file_as_buffer(filepath);
 		if (!buffer.empty()) {
 			BRDFile *file = nullptr;
 
-			if (check_fileext(filename, ".fz")) { // Since it is encrypted we cannot use the below logic. Trust the ext.
+			if (check_fileext(filepath, ".fz")) { // Since it is encrypted we cannot use the below logic. Trust the ext.
 				file = new FZFile(buffer, FZKey);
-			} else if (check_fileext(filename, ".bom") || check_fileext(filename, ".asc"))
-				file = new ASCFile(buffer, filename);
+			} else if (check_fileext(filepath, ".bom") || check_fileext(filepath, ".asc"))
+				file = new ASCFile(buffer, filepath);
 			else if (ADFile::verifyFormat(buffer))
 				file = new ADFile(buffer);
 			else if (CADFile::verifyFormat(buffer))
 				file = new CADFile(buffer);
-			else if (check_fileext(filename, ".cst"))
+			else if (check_fileext(filepath, ".cst"))
 				file = new CSTFile(buffer);
 			else if (BRDFile::verifyFormat(buffer))
 				file = new BRDFile(buffer);
@@ -446,17 +446,19 @@ int BoardView::LoadFile(const std::string &filename) {
 
 			if (file && file->valid) {
 				SetFile(file);
-				fhistory.Prepend_save(filename);
+				fhistory.Prepend_save(filepath.string());
 				history_file_has_changed = 1; // used by main to know when to update the window title
 				boardMinMaxDone          = false;
 				m_rotation               = 0;
 				m_current_side           = 0;
 				EPCCheck(); // check to see we don't have a flipped board outline
 
-				m_annotations.SetFilename(filename);
+				m_annotations.SetFilename(filepath.string());
 				m_annotations.Load();
 
-				backgroundImage.loadFromConfig(filename + ".conf");
+				auto conffilepath = filepath;
+				conffilepath.replace_extension("conf");
+				backgroundImage.loadFromConfig(conffilepath);
 
 				/*
 				 * Set pins to a known lower size, they get resized
@@ -2086,10 +2088,6 @@ void BoardView::Update() {
 		if (m_showSearch && m_file) {
 			ImGui::OpenPopup("Search for Component / Network");
 		}
-		if (m_lastFileOpenWasInvalid) {
-			ImGui::OpenPopup("Error opening file");
-			m_lastFileOpenWasInvalid = false;
-		}
 
 		if (ImGui::BeginPopupModal("Error opening file")) {
 			ImGui::Text("There was an error opening the file: %s", m_lastFileOpenName.c_str());
@@ -2110,17 +2108,21 @@ void BoardView::Update() {
 			}
 			ImGui::EndPopup();
 		}
+		if (m_lastFileOpenWasInvalid) {
+			ImGui::OpenPopup("Error opening file");
+			m_lastFileOpenWasInvalid = false;
+		}
 		ImGui::EndMainMenuBar();
 	}
 
 	if (open_file) {
-		std::string filename;
+		filesystem::path filepath;
 
 		if (preset_filename) {
-			filename        = preset_filename;
+			filepath        = filesystem::u8path(preset_filename);
 			preset_filename = NULL;
 		} else {
-			filename = show_file_picker(true);
+			filepath = show_file_picker(true);
 
 			ImGuiIO &io           = ImGui::GetIO();
 			io.MouseDown[0]       = false;
@@ -2128,8 +2130,8 @@ void BoardView::Update() {
 			io.MouseClickedPos[0] = ImVec2(0, 0);
 		}
 
-		if (!filename.empty()) {
-			LoadFile(filename);
+		if (!filepath.empty()) {
+			LoadFile(filepath);
 		}
 	}
 

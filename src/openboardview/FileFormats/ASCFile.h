@@ -4,10 +4,12 @@
 
 #include <vector>
 
+#include "filesystem_impl.h"
+
 class ASCFile : public BRDFile {
   public:
 	typedef std::vector<char *>::iterator line_iterator_t;
-	ASCFile(std::vector<char> &buf, const std::string &filename);
+	ASCFile(std::vector<char> &buf, const filesystem::path &filepath);
 	~ASCFile() {
 		free(file_buf);
 	}
@@ -16,7 +18,7 @@ class ASCFile : public BRDFile {
 	void parse_format(char *&p, char *&s, char *&arena, char *&arena_end, line_iterator_t &line_it);
 	void parse_pin(char *&p, char *&s, char *&arena, char *&arena_end, line_iterator_t &line_it);
 	void parse_nail(char *&p, char *&s, char *&arena, char *&arena_end, line_iterator_t &line_it);
-	bool read_asc(const std::string &filename, void (ASCFile::*parser)(char *&, char *&, char *&, char *&, line_iterator_t&));
+	bool read_asc(const filesystem::path &filepath, void (ASCFile::*parser)(char *&, char *&, char *&, char *&, line_iterator_t&));
 	void update_counts();
 
   protected:

@@ -212,15 +212,15 @@ Confparse::~Confparse(void) {
 	if (conf) free(conf);
 }
 
-int Confparse::SaveDefault(const std::string &utf8_filename) {
-	std::ofstream file;
-	file.open(utf8_filename, std::ios::out | std::ios::binary | std::ios::ate);
+int Confparse::SaveDefault(const filesystem::path &filepath) {
+	ofstream file;
+	file.open(filepath, std::ios::out | std::ios::binary | std::ios::ate);
 
 	nested = true;
 	if (file.is_open()) {
 		file.write(default_conf, sizeof(default_conf) - 1);
 		file.close();
-		Load(utf8_filename);
+		Load(filepath);
 
 		return 0;
 	} else {
@@ -228,27 +228,27 @@ int Confparse::SaveDefault(const std::string &utf8_filename) {
 	}
 }
 
-int Confparse::Load(const std::string &utf8_filename, bool save_default) {
-	std::ifstream file;
-	file.open(utf8_filename, std::ios::in | std::ios::binary | std::ios::ate);
+int Confparse::Load(const filesystem::path &filepath, bool save_default) {
+	ifstream file;
+	file.open(filepath, std::ios::in | std::ios::binary | std::ios::ate);
 	if (!file.is_open()) {
-		//		std::cerr << "Error opening " << utf8_filename << ": " <<
+		//		std::cerr << "Error opening " << filepath.string() << ": " <<
 		// strerror(errno) << std::endl;
 		buffer_size = 0;
 		conf        = NULL;
 		if (nested) return 1; // to prevent infinite recursion, we test the nested flag
 		if (save_default) { // Create file with default OBV configuration
-			return (SaveDefault(utf8_filename));
+			return (SaveDefault(filepath));
 		} else { // Create empty file
-			std::ofstream file;
-			file.open(utf8_filename, std::ios::out | std::ios::binary | std::ios::ate);
+			ofstream file;
+			file.open(filepath, std::ios::out | std::ios::binary | std::ios::ate);
 			nested = true;
 			file.close();
-			return Load(utf8_filename);
+			return Load(filepath);
 		}
 	}
 
-	filename = utf8_filename;
+	this->filepath = filepath;
 
 	if (conf) free(conf);
 
@@ -420,22 +420,22 @@ bool Confparse::WriteStr(const char *key, const char *value) {
 	int keylen;
 
 	if (!conf) return false;
-	if (filename.empty()) return false;
+	if (filepath.empty()) return false;
 	if (!value) return false;
 	if (!key) return false;
 
 	keylen = strlen(key);
 	if (keylen == 0) return false;
-
 	op = p = strstr(conf, key);
 	if (p == NULL) {
 		char buf[1024];
 		size_t bs;
-		const std::string nfn = filename + "~";
-		std::ofstream file;
+		auto nfn = filepath;
+		nfn += "~";
+		ofstream file;
 
-		rename(filename.c_str(), nfn.c_str());
-		file.open(filename, std::ios::out | std::ios::binary | std::ios::trunc);
+		filesystem::rename(filepath, nfn);
+		file.open(filepath, std::ios::out | std::ios::binary | std::ios::trunc);
 		if (!file.is_open()) {
 			return false;
 		}
@@ -445,7 +445,7 @@ bool Confparse::WriteStr(const char *key, const char *value) {
 		file.flush();
 		file.close();
 
-		Load(filename);
+		Load(filepath);
 		return true;
 	}
 
@@ -496,11 +496,12 @@ bool Confparse::WriteStr(const char *key, const char *value) {
 					}
 
 					{
-						const std::string nfn = filename + "~";
-						std::ofstream file;
+						auto nfn = filepath;
+						nfn += "~";
+						ofstream file;
 
-						rename(filename.c_str(), nfn.c_str());
-						file.open(filename, std::ios::out | std::ios::binary | std::ios::trunc);
+						filesystem::rename(filepath, nfn);
+						file.open(filepath, std::ios::out | std::ios::binary | std::ios::trunc);
 						if (!file.is_open()) {
 							return false;
 						}
@@ -509,7 +510,7 @@ bool Confparse::WriteStr(const char *key, const char *value) {
 						file.write(ep, limit - ep);       // write the rest of the file
 						file.close();
 
-						Load(filename);
+						Load(filepath);
 						return true;
 					}
 				}
@@ -524,8 +525,8 @@ bool Confparse::WriteStr(const char *key, const char *value) {
 	 */
 	{
 		char sep[CONFPARSE_MAX_VALUE_SIZE];
-		std::ofstream file;
-		file.open(filename, std::ios::out | std::ios::binary | std::ios::app);
+		ofstream file;
+		file.open(filepath, std::ios::out | std::ios::binary | std::ios::app);
 		if (!file.is_open()) {
 			return false;
 		}
@@ -534,7 +535,7 @@ bool Confparse::WriteStr(const char *key, const char *value) {
 		file.flush();
 		file.close();
 
-		Load(filename);
+		Load(filepath);
 		return true;
 	}
 

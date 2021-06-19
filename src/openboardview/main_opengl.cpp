@@ -34,6 +34,8 @@
 // Rendering stuff
 #include "Renderers/Renderers.h"
 
+#include "filesystem_impl.h"
+
 struct globals {
 	char *input_file;
 	char *config_file;
@@ -78,19 +80,6 @@ char help[] =
 
 int parse_parameters(int argc, char **argv, struct globals *g) {
 	int param;
-
-	/*
-	 * When we're using file-associations, the OS usually just
-	 * passes the filename to be loaded as the single initial
-	 * parameter, so in this special case situation we see if the
-	 * single param is a valid file, and try load it.
-	 */
-	if (argc == 2) {
-		if (access(argv[1], F_OK) != -1) {
-			g->input_file = argv[1];
-			return 0;
-		}
-	}
 
 	/**
 	 * Decode the input parameters.
@@ -183,11 +172,21 @@ int parse_parameters(int argc, char **argv, struct globals *g) {
 		} else if (strcmp(p, "-d") == 0) {
 			g->debug = true;
 
+		} else if (argc == 2) {
+			/*
+			 * When we're using file-associations, the OS usually just
+			 * passes the filename to be loaded as the single initial
+			 * parameter, so in this special case situation we try to
+			 * load it.
+			 */
+			g->input_file = argv[1];
+			return 0;
 		} else {
 			SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Unknown parameter '%s'\n\n%s %s", p, argv[0], help);
 			exit(1);
 		}
 	}
+
 
 	return 0;
 }
@@ -337,10 +336,7 @@ int main(int argc, char **argv) {
 	 * in to OBV
 	 */
 	if (g.input_file) {
-		struct stat buffer;
-		if ((stat(g.input_file, &buffer) == 0)) {
-			preload_required = true;
-		}
+		preload_required = true;
 	}
 
 	/*
@@ -365,12 +361,7 @@ int main(int argc, char **argv) {
 			Renderers::current->processEvent(event);
 
 			if (event.type == SDL_DROPFILE) {
-				// Validate the file before replacing the current one, not that we
-				// should have to, but always better to be safe
-				struct stat buffer;
-				if (stat(event.drop.file, &buffer) == 0) {
-					app.LoadFile(strdup(event.drop.file));
-				}
+				app.LoadFile(filesystem::u8path(event.drop.file));
 			}
 
 			if (event.type == SDL_QUIT) done = true;
@@ -399,7 +390,7 @@ int main(int argc, char **argv) {
 		// If we have a board to view being passed from command line, then "inject"
 		// it here.
 		if (preload_required) {
-			app.LoadFile(strdup(g.input_file));
+			app.LoadFile(filesystem::u8path(g.input_file));
 			preload_required = false;
 		}
 

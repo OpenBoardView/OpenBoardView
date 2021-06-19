@@ -9,6 +9,8 @@
 
 #include "imgui/imgui.h"
 
+#include "filesystem_impl.h"
+
 class ImGuiRendererSDL {
 public:
 	explicit ImGuiRendererSDL(SDL_Window *window);
@@ -24,7 +26,7 @@ public:
 	virtual void shutdown();
 
 	// Returned string is error message, empty if successful
-	virtual std::string loadTextureFromFile(const std::string &filename, GLuint* out_texture, int* out_width, int* out_height);
+	virtual std::string loadTextureFromFile(const filesystem::path &filepath, GLuint* out_texture, int* out_width, int* out_height);
 protected:
 	SDL_Window *window = nullptr;
 	virtual void setGLVersion();

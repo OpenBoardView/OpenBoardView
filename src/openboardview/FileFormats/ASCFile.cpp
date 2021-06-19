@@ -95,9 +95,9 @@ void ASCFile::parse_nail(char *&p, char *&s, char *&arena, char *&arena_end, lin
  * pins.asc, parts.asc (not supported), nets.asc (not supported), nails.asc, format.asc
  * *.bom files not supported either
  */
-bool ASCFile::read_asc(const std::string &filename, void (ASCFile::*parser)(char *&, char *&, char *&, char *&, line_iterator_t&)) {
-	if (filename.empty()) return false;
-	std::vector<char> buf = file_as_buffer(filename);
+bool ASCFile::read_asc(const filesystem::path &filepath, void (ASCFile::*parser)(char *&, char *&, char *&, char *&, line_iterator_t&)) {
+	if (filepath.empty()) return false;
+	std::vector<char> buf = file_as_buffer(filepath);
 	if (buf.empty()) return false;
 
 	ENSURE(buf.size() > 4);
@@ -145,21 +145,14 @@ void ASCFile::update_counts() {
  * buf unused for now, read all files even if one of the supported *.asc was
  * passed
  */
-ASCFile::ASCFile(std::vector<char> &buf, const std::string &filename) {
+ASCFile::ASCFile(std::vector<char> &buf, const filesystem::path &filepath) {
 	char *saved_locale;
 	saved_locale = setlocale(LC_NUMERIC, "C"); // Use '.' as delimiter for strtod
 
-#ifdef _WIN32
-	auto dpos = filename.rfind('\\');
-#else
-	auto dpos = filename.rfind('/');
-#endif
-	std::string filepath = (dpos == std::string::npos) ? "" : filename.substr(0, dpos + 1); // extract file directory
-
 	valid = true;
-	if (!read_asc(lookup_file_insensitive(filepath, "format.asc"), &ASCFile::parse_format)) valid = false;
-	if (!read_asc(lookup_file_insensitive(filepath, "pins.asc"), &ASCFile::parse_pin)) valid      = false;
-	if (!read_asc(lookup_file_insensitive(filepath, "nails.asc"), &ASCFile::parse_nail)) valid    = false;
+	if (!read_asc(lookup_file_insensitive(filepath.parent_path(), "format.asc"), &ASCFile::parse_format)) valid = false;
+	if (!read_asc(lookup_file_insensitive(filepath.parent_path(), "pins.asc"), &ASCFile::parse_pin)) valid      = false;
+	if (!read_asc(lookup_file_insensitive(filepath.parent_path(), "nails.asc"), &ASCFile::parse_nail)) valid    = false;
 
 	update_counts();
 	setlocale(LC_NUMERIC, saved_locale); // Restore locale

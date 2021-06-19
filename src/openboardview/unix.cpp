@@ -93,7 +93,7 @@ bool load() {
 #define gtk_window_new GTK::gtk_window_new
 #define g_type_check_instance_cast GTK::g_type_check_instance_cast
 
-const std::string show_file_picker(bool filterBoards) {
+const filesystem::path show_file_picker(bool filterBoards) {
 	std::string path;
 	if (!GTK::load()) return path;
 
@@ -114,7 +114,7 @@ const std::string show_file_picker(bool filterBoards) {
 	gtk_file_filter_set_name(filter_everything, "All");
 	gtk_file_filter_add_pattern(filter_everything, "*");
 
-	if (!gtk_init_check(NULL, NULL)) return nullptr;
+	if (!gtk_init_check(NULL, NULL)) return {};
 
 	parent = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 
@@ -149,7 +149,7 @@ const std::string show_file_picker(bool filterBoards) {
 	return path;
 }
 #elif !defined(__APPLE__)
-const std::string show_file_picker(bool filterBoards) { // dummy function when not building for OS X and GTK not available
+const filesystem::path show_file_picker(bool filterBoards) { // dummy function when not building for OS X and GTK not available
 	SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Cannot show open file dialog: not built in.");
 	return std::string();
 }
@@ -246,9 +246,5 @@ const std::string get_user_dir(const UserDir userdir) {
 	return "./"; // Something went wrong, use current dir
 }
 #endif
-
-int path_stat(const std::string& path, path_stat_t *st) {
-	return stat(path.c_str(), st);
-}
 
 #endif

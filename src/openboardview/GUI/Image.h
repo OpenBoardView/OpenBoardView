@@ -7,6 +7,7 @@
 
 #include "imgui/imgui.h"
 
+#include "filesystem_impl.h"
 #include "Renderers/ImGuiRendererSDL.h"
 
 // Requires forward declaration in order to friend since it's from another namespace
@@ -16,7 +17,7 @@ namespace Preferences {
 
 class Image {
 private:
-	std::string file{};
+	filesystem::path file{};
 	GLuint texture = 0;
 	int width = 0;
 	int height = 0;
@@ -32,7 +33,7 @@ private:
 
 public:
 	Image() = default;
-	Image(const std::string &file);
+	Image(const filesystem::path &file);
 	~Image();
 
 	std::string reload();
