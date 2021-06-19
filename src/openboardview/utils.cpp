@@ -1,4 +1,5 @@
 #include "utils.h"
+#include <SDL.h>
 #include <algorithm>
 #include <assert.h>
 #include <cctype>
@@ -20,7 +21,7 @@ std::vector<char> file_as_buffer(const filesystem::path &filepath) {
 	std::vector<char> data;
 
 	if (!filesystem::is_regular_file(filepath)) {
-		std::cerr << "Error opening " << filepath.string() << ": not a regular file " << std::endl;
+		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Error opening %s: not a regular file", filepath.string().c_str());
 		return data;
 	}
 
@@ -28,7 +29,7 @@ std::vector<char> file_as_buffer(const filesystem::path &filepath) {
 	file.open(filepath, std::ios::in | std::ios::binary | std::ios::ate);
 
 	if (!file.is_open()) {
-		std::cerr << "Error opening " << filepath.string() << ": " << strerror(errno) << std::endl;
+		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Error opening %s: %s", filepath.string().c_str(), strerror(errno));
 		return data;
 	}
 
