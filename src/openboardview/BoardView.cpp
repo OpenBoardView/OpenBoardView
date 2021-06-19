@@ -2088,10 +2088,6 @@ void BoardView::Update() {
 		if (m_showSearch && m_file) {
 			ImGui::OpenPopup("Search for Component / Network");
 		}
-		if (m_lastFileOpenWasInvalid) {
-			ImGui::OpenPopup("Error opening file");
-			m_lastFileOpenWasInvalid = false;
-		}
 
 		if (ImGui::BeginPopupModal("Error opening file")) {
 			ImGui::Text("There was an error opening the file: %s", m_lastFileOpenName.c_str());
@@ -2111,6 +2107,10 @@ void BoardView::Update() {
 				ImGui::CloseCurrentPopup();
 			}
 			ImGui::EndPopup();
+		}
+		if (m_lastFileOpenWasInvalid) {
+			ImGui::OpenPopup("Error opening file");
+			m_lastFileOpenWasInvalid = false;
 		}
 		ImGui::EndMainMenuBar();
 	}

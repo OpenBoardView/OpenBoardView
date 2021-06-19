@@ -81,19 +81,6 @@ char help[] =
 int parse_parameters(int argc, char **argv, struct globals *g) {
 	int param;
 
-	/*
-	 * When we're using file-associations, the OS usually just
-	 * passes the filename to be loaded as the single initial
-	 * parameter, so in this special case situation we see if the
-	 * single param is a valid file, and try load it.
-	 */
-	if (argc == 2) {
-		if (access(argv[1], F_OK) != -1) {
-			g->input_file = argv[1];
-			return 0;
-		}
-	}
-
 	/**
 	 * Decode the input parameters.
 	 * Yes, I know, I should do this using gnu params etc.
@@ -185,11 +172,21 @@ int parse_parameters(int argc, char **argv, struct globals *g) {
 		} else if (strcmp(p, "-d") == 0) {
 			g->debug = true;
 
+		} else if (argc == 2) {
+			/*
+			 * When we're using file-associations, the OS usually just
+			 * passes the filename to be loaded as the single initial
+			 * parameter, so in this special case situation we try to
+			 * load it.
+			 */
+			g->input_file = argv[1];
+			return 0;
 		} else {
 			SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Unknown parameter '%s'\n\n%s %s", p, argv[0], help);
 			exit(1);
 		}
 	}
+
 
 	return 0;
 }
