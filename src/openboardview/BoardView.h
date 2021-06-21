@@ -117,7 +117,7 @@ enum DrawChannel {
 enum FlipModes { flipModeVP = 0, flipModeMP = 1, NUM_FLIP_MODES };
 
 struct BoardView {
-	BRDFile *m_file;
+	BRDFileBase *m_file;
 	Board *m_board;
 	BackgroundImage backgroundImage{m_current_side};
 
@@ -287,6 +287,7 @@ struct BoardView {
 	bool m_showColorPreferences;
 	bool m_firstFrame = true;
 	bool m_lastFileOpenWasInvalid;
+	std::string m_lastFileLoadError;
 	bool m_validBoard = false;
 	bool m_wantsQuit;
 
@@ -306,7 +307,7 @@ struct BoardView {
 	void DrawParts(ImDrawList *draw);
 	void DrawBoard();
 	void DrawNetWeb(ImDrawList *draw);
-	void SetFile(BRDFile *file);
+	void SetFile(BRDFileBase *file);
 	int LoadFile(const filesystem::path &filepath);
 	ImVec2 CoordToScreen(float x, float y, float w = 1.0f);
 	ImVec2 ScreenToCoord(float x, float y, float w = 1.0f);

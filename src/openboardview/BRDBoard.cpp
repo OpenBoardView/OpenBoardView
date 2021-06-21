@@ -16,7 +16,7 @@ using namespace std::placeholders;
 const string BRDBoard::kNetUnconnectedPrefix = "UNCONNECTED";
 const string BRDBoard::kComponentDummyName   = "...";
 
-BRDBoard::BRDBoard(const BRDFile *const boardFile)
+BRDBoard::BRDBoard(const BRDFileBase * const boardFile)
     : m_file(boardFile) {
 	// TODO: strip / trim all strings, especially those used as keys
 	// TODO: just loop through original arrays?
