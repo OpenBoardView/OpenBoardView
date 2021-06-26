@@ -478,6 +478,10 @@ int BoardView::LoadFile(const filesystem::path &filepath) {
 				conffilepath.replace_extension("conf");
 				backgroundImage.loadFromConfig(conffilepath);
 
+				auto pdffilepath = filepath;
+				pdffilepath.replace_extension("pdf");
+				pdfBridge.OpenDocument(pdffilepath);
+
 				/*
 				 * Set pins to a known lower size, they get resized
 				 * in DrawParts() when the component is analysed
@@ -1304,6 +1308,12 @@ void BoardView::ShowInfoPane(void) {
 					ImGui::SetClipboardText(to_copy.c_str());
 				}
 			}
+			ImGui::SameLine();
+			std::string pdfButtonName = "PDF Search##" + part->name;
+			if (ImGui::SmallButton(pdfButtonName.c_str())) {
+				pdfBridge.DocumentSearch(part->name);
+			}
+
 			if (part->mfgcode.size()) ImGui::TextWrapped("%s", part->mfgcode.c_str());
 
 			/*

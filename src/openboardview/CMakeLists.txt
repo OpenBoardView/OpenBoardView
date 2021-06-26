@@ -13,12 +13,12 @@ if(WIN32)
 	add_definitions(-DUNICODE)
 	add_definitions(-D_UNICODE)
 else()
-if(APPLE)
-        find_library(COCOA_LIBRARY Cocoa)
-	find_package(OpenGL REQUIRED)
-	set(OPENGL_INCLUDE_DIR ${OPENGL_INCLUDE_DIR}/Headers)
+	if(APPLE)
+		find_library(COCOA_LIBRARY Cocoa)
+		find_package(OpenGL REQUIRED)
+		set(OPENGL_INCLUDE_DIR ${OPENGL_INCLUDE_DIR}/Headers)
 	else(APPLE)
-find_package(PkgConfig REQUIRED)
+		find_package(PkgConfig REQUIRED)
 
 		pkg_check_modules(FONTCONFIG REQUIRED fontconfig)
 		if(FONTCONFIG_FOUND)
@@ -36,6 +36,16 @@ find_package(PkgConfig REQUIRED)
 			add_definitions(-DENABLE_GTK)
 		else()
 			message(WARNING "GTK not found, file picker will be unavailable.")
+		endif()
+
+		pkg_search_module(GIO REQUIRED gio-2.0)
+		if(GIO_FOUND)
+			message(STATUS "Found GIO version ${GIO_VERSION}")
+			link_directories(${GIO_LIBRARY_DIRS}) # not linked since we load it at runtime
+			add_definitions(${GIO_CFLAGS_OTHER})
+			add_definitions(-DENABLE_PDFBRIDGE_EVINCE)
+		else()
+			message(SEND_ERROR "GIO not found, PDFBridgeEvince cannot be enabled.")
 		endif()
 	endif(APPLE)
 endif()
@@ -98,6 +108,12 @@ if(ENABLE_GL3)
 	)
 endif()
 
+if(GIO_FOUND)
+	set(SOURCES ${SOURCES}
+		PDFBridge/PDFBridgeEvince.cpp
+	)
+endif()
+
 if(WIN32)
 	set(SOURCES ${SOURCES}
 		win32.cpp
@@ -112,6 +128,7 @@ endif()
 		unix.cpp
 	)
 endif()
+
 
 # Must be defined in the same directory as the add_executable including the file
 set_source_files_properties(${ASSETS} PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
@@ -145,6 +162,14 @@ if(NOT APPLE AND NOT MINGW)
 		${FONTCONFIG_LIBRARIES}
 	)
 endif()
+
+if(GIO_FOUND)
+	target_link_libraries(${PROJECT_NAME_LOWER}
+		${GIO_LIBRARIES}
+	)
+endif()
+
+
 if(MINGW)
 target_link_libraries(${PROJECT_NAME_LOWER}
 	SDL2::SDL2-static

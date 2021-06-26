@@ -11,6 +11,7 @@
 #include "GUI/Preferences/Keyboard.h"
 #include "GUI/BackgroundImage.h"
 #include "GUI/Preferences/BackgroundImage.h"
+#include "PDFBridge/PDFBridgeEvince.h"
 #include <cstdint>
 #include <vector>
 
@@ -131,6 +132,7 @@ struct BoardView {
 	KeyBindings keybindings;
 	Preferences::Keyboard keyboardPreferences{keybindings, obvconfig};
 	Preferences::BackgroundImage backgroundImagePreferences{keybindings, backgroundImage};
+	PDFBridgeEvince pdfBridge;
 	bool debug                   = false;
 	int history_file_has_changed = 0;
 	int dpi                      = 0;
