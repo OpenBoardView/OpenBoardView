@@ -1200,7 +1200,7 @@ void BoardView::ShowInfoPane(void) {
 			ImGui::Text(" ");
 
 			if (ImGui::SmallButton(part->name.c_str())) {
-				if (!ComponentIsVisible(part)) FlipBoard();
+				if (!BoardElementIsVisible(part)) FlipBoard();
 				if (part->centerpoint.x && part->centerpoint.y) {
 					ImVec2 psz;
 
@@ -1228,7 +1228,7 @@ void BoardView::ShowInfoPane(void) {
 				char bn[128];
 				snprintf(bn, sizeof(bn), "Z##%s", part->name.c_str());
 				if (ImGui::SmallButton(bn)) {
-					if (!ComponentIsVisible(part)) FlipBoard();
+					if (!BoardElementIsVisible(part)) FlipBoard();
 					if (part->centerpoint.x && part->centerpoint.y) {
 						ImVec2 psz;
 
@@ -1373,7 +1373,7 @@ void BoardView::ContextMenu(void) {
 			min_dist *= min_dist; // all distance squared
 			Pin *selection = nullptr;
 			for (auto &pin : m_board->Pins()) {
-				if (ComponentIsVisible(pin->component)) {
+				if (BoardElementIsVisible(pin->component)) {
 					float dx   = pin->position.x - pos.x;
 					float dy   = pin->position.y - pos.y;
 					float dist = dx * dx + dy * dy;
@@ -1406,7 +1406,7 @@ void BoardView::ContextMenu(void) {
 					int hit = 0;
 					//					auto p_part = part.get();
 
-					if (!ComponentIsVisible(part)) continue;
+					if (!BoardElementIsVisible(part)) continue;
 
 					// Work out if the point is inside the hull
 					{
@@ -2360,7 +2360,7 @@ void BoardView::HandleInput() {
 					min_dist *= min_dist; // all distance squared
 					std::shared_ptr<Pin> selection = nullptr;
 					for (auto &pin : m_board->Pins()) {
-						if (ComponentIsVisible(pin->component)) {
+						if (BoardElementIsVisible(pin->component)) {
 							float dx   = pin->position.x - pos.x;
 							float dy   = pin->position.y - pos.y;
 							float dist = dx * dx + dy * dy;
@@ -2391,7 +2391,7 @@ void BoardView::HandleInput() {
 							int hit = 0;
 							//							auto p_part = part.get();
 
-							if (!ComponentIsVisible(part)) continue;
+							if (!BoardElementIsVisible(part)) continue;
 
 							// Work out if the point is inside the hull
 							{
@@ -3042,7 +3042,7 @@ void BoardView::DrawNetWeb(ImDrawList *draw) {
 
 		if (p->net == m_pinSelected->net) {
 			uint32_t col = m_colors.pinNetWebColor;
-			if (!ComponentIsVisible(p->component)) {
+			if (!BoardElementIsVisible(p->component)) {
 				col = m_colors.pinNetWebOSColor;
 				draw->AddCircle(CoordToScreen(p->position.x, p->position.y), p->diameter * m_scale, col, 16);
 			}
@@ -3098,7 +3098,7 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 		bool draw_ring      = true;
 
 		// continue if pin is not visible anyway
-		if (!ComponentIsVisible(pin->component)) continue;
+		if (!BoardElementIsVisible(pin)) continue;
 
 		ImVec2 pos = CoordToScreen(pin->position.x, pin->position.y);
 		{
@@ -3628,7 +3628,7 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 
 		} // if !outline_done
 
-		if (!ComponentIsVisible(part)) continue;
+		if (!BoardElementIsVisible(part)) continue;
 
 		if (part->outline_done) {
 
@@ -3759,7 +3759,7 @@ void BoardView::DrawPartTooltips(ImDrawList *draw) {
 		int hit = 0;
 		//		auto p_part = part.get();
 
-		if (!ComponentIsVisible(part)) continue;
+		if (!BoardElementIsVisible(part)) continue;
 
 		// Work out if the point is inside the hull
 		{
@@ -4271,12 +4271,12 @@ void BoardView::SetTarget(float x, float y) {
 	m_dy += coord.y - y;
 }
 
-inline bool BoardView::ComponentIsVisible(const std::shared_ptr<Component> part) {
-	if (!part) return true; // no component? => no board side info
+inline bool BoardView::BoardElementIsVisible(const std::shared_ptr<BoardElement> be) {
+	if (!be) return true; // no element? => no board side info
 
-	if (part->board_side == m_current_side) return true;
+	if (be->board_side == m_current_side) return true;
 
-	if (part->board_side == kBoardSideBoth) return true;
+	if (be->board_side == kBoardSideBoth) return true;
 
 	return false;
 }
@@ -4301,14 +4301,14 @@ bool BoardView::AnyItemVisible(void) {
 
 	if (m_searchComponents) {
 		for (auto &p : m_partHighlighted) {
-			any_visible |= ComponentIsVisible(p);
+			any_visible |= BoardElementIsVisible(p);
 		}
 	}
 
 	if (!any_visible) {
 		if (m_searchNets) {
 			for (auto &p : m_pinHighlighted) {
-				any_visible |= ComponentIsVisible(p->component);
+				any_visible |= BoardElementIsVisible(p->component);
 			}
 		}
 	}

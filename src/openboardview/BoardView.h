@@ -320,7 +320,7 @@ struct BoardView {
 
 	// Returns true if the part is shown on the currently displayed side of the
 	// board.
-	bool ComponentIsVisible(const std::shared_ptr<Component> part);
+	bool BoardElementIsVisible(const std::shared_ptr<BoardElement> be);
 	bool IsVisibleScreen(float x, float y, float radius, const ImGuiIO &io);
 	// Returns true if the circle described by screen coordinates x, y, and radius
 	// is visible in the
