@@ -1,7 +1,6 @@
 #include "BRD2File.h"
 
 #include "utils.h"
-#include <assert.h>
 #include <ctype.h>
 #include <iostream>
 #include <stdint.h>

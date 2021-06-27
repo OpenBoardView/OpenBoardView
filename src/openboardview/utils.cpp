@@ -1,7 +1,6 @@
 #include "utils.h"
 #include <SDL.h>
 #include <algorithm>
-#include <assert.h>
 #include <cctype>
 #include <cstring>
 #include <fstream>
@@ -35,12 +34,12 @@ std::vector<char> file_as_buffer(const filesystem::path &filepath) {
 
 	file.seekg(0, std::ios_base::end);
 	std::streampos sz = file.tellg();
-	assert(sz >= 0);
+	ENSURE(sz >= 0);
 	data.reserve(sz);
 	file.seekg(0, std::ios_base::beg);
 	data.assign(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
 
-	assert(data.size() == static_cast<unsigned int>(sz));
+	ENSURE(data.size() == static_cast<unsigned int>(sz));
 	file.close();
 
 	return data;

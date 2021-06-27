@@ -2,7 +2,6 @@
 #include "utils.h"
 
 #include <algorithm>
-#include <assert.h>
 #include <ctype.h>
 #include <locale.h>
 #include <stdint.h>

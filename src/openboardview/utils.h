@@ -3,7 +3,11 @@
 #include <string>
 #include <vector>
 
+#include <SDL.h>
+
 #include "filesystem_impl.h"
+
+#define ENSURE(X) if (!(X)) SDL_LogError(SDL_LOG_CATEGORY_ERROR, "%s:%d: %s: Assertion `%s' failed.", __FILE__, __LINE__, __PRETTY_FUNCTION__, #X);
 
 // Loads an entire file in to memory
 std::vector<char> file_as_buffer(const filesystem::path &filepath);

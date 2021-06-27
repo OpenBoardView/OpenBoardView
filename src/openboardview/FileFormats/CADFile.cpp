@@ -1,7 +1,6 @@
 #include "CADFile.h"
 
 #include "utils.h"
-#include <assert.h>
 #include <algorithm>
 #include <cmath>
 #include <ctype.h>
@@ -103,7 +102,7 @@ CADFile::CADFile(std::vector<char> &buf) {
 				BRDPin pin;
 				/*char *TYPE  =*/READ_STR();
 				char *part    = READ_STR();
-				char *ptr; 
+				char *ptr;
 				ptr = strchr(part, '-'); //remove all after
 				if (ptr != NULL)         //
 					{*ptr = '\0';}       //

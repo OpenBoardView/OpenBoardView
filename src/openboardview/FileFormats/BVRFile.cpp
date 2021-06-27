@@ -1,7 +1,6 @@
 #include "BVRFile.h"
 
 #include "utils.h"
-#include <assert.h>
 #include <cmath>
 #include <ctype.h>
 #include <locale.h>

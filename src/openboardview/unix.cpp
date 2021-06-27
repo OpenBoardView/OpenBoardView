@@ -4,7 +4,6 @@
 #include "imgui/imgui.h"
 #include "version.h"
 #include <SDL.h>
-#include <assert.h>
 #include <stdint.h>
 #include <sys/stat.h>
 #include <sys/types.h>

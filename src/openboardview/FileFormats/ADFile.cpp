@@ -1,7 +1,6 @@
 #include "ADFile.h"
 #include "utils.h"
 #include <algorithm>
-#include <assert.h>
 #include <cmath>
 #include <ctype.h>
 #include <locale.h>

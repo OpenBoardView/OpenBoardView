@@ -1,7 +1,6 @@
 #include "ASCFile.h"
 
 #include "utils.h"
-#include <assert.h>
 #include <cstring>
 #include <ctype.h>
 #include <locale.h>

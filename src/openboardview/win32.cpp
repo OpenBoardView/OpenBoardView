@@ -4,7 +4,6 @@
 #include "imgui/imgui.h"
 #include "utf8/utf8.h"
 #include "version.h"
-#include <assert.h>
 #include <codecvt>
 #include <iostream>
 #include <locale>

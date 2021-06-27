@@ -5,7 +5,6 @@
 #include <string>
 #include <vector>
 
-#define ENSURE(X) assert(X);
 #define READ_INT() strtol(p, &p, 10);
 // Warning: read as int then cast to uint if positive
 #define READ_UINT                                \

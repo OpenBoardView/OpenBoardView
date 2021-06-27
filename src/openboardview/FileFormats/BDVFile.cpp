@@ -1,7 +1,6 @@
 #include "BDVFile.h"
 
 #include "utils.h"
-#include <assert.h>
 #include <ctype.h>
 #include <locale.h>
 #include <stdint.h>

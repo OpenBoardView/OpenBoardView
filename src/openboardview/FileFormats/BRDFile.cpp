@@ -2,7 +2,6 @@
 
 #include "utf8/utf8.h"
 #include "utils.h"
-#include <assert.h>
 #include <ctype.h>
 #include <stdexcept>
 #include <stdint.h>
