@@ -87,8 +87,3 @@ For Fedora, you will need the following packages at a minimum;
 
 - L: Show net list
 - K: Show part list
-
-
-### Discussion
-
-IRC Freenode channel: **#openboardview**
