@@ -1174,10 +1174,10 @@ void BoardView::ShowInfoPane(void) {
 
 	if (m_board) {
 		ImGui::Columns(2);
-		ImGui::Text("Pins: %ld", m_board->Pins().size());
-		ImGui::Text("Parts: %ld", m_board->Components().size());
+		ImGui::Text("Pins: %zu", m_board->Pins().size());
+		ImGui::Text("Parts: %zu", m_board->Components().size());
 		ImGui::NextColumn();
-		ImGui::Text("Nets: %ld", m_board->Nets().size());
+		ImGui::Text("Nets: %zu", m_board->Nets().size());
 		ImGui::TextWrapped("Size: %0.2f x %0.2f\"", m_boardWidth / 1000.0f, m_boardHeight / 1000.0f);
 		ImGui::Columns(1);
 		ImGui::Separator();
@@ -1252,7 +1252,7 @@ void BoardView::ShowInfoPane(void) {
 			}
 
 			ImGui::SameLine();
-			ImGui::Text("%ld Pin(s)", part->pins.size());
+			ImGui::Text("%zu Pin(s)", part->pins.size());
 			ImGui::SameLine();
 			{
 				char name_and_id[128];
