@@ -22,7 +22,7 @@
 #include <chrono>
 #include <deque>
 #include <memory>
-#include <stdio.h>
+#include <cstdio>
 #include <string>
 #include <sys/stat.h>
 #include <sys/types.h>

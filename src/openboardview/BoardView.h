@@ -11,7 +11,7 @@
 #include "GUI/Preferences/Keyboard.h"
 #include "GUI/BackgroundImage.h"
 #include "GUI/Preferences/BackgroundImage.h"
-#include <stdint.h>
+#include <cstdint>
 #include <vector>
 
 #define DPIF(x) (((x)*dpi) / 100.f)

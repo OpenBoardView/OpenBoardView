@@ -1,10 +1,10 @@
 #include "BDVFile.h"
 
 #include "utils.h"
-#include <ctype.h>
-#include <locale.h>
-#include <stdint.h>
-#include <string.h>
+#include <cctype>
+#include <clocale>
+#include <cstdint>
+#include <cstring>
 
 void decode_bdv(char *buf, size_t buffer_size) {
 	int count = 0xa0; // First key

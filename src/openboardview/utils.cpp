@@ -7,7 +7,7 @@
 #include <iostream>
 #include <iterator>
 #include <sstream>
-#include <stdint.h>
+#include <cstdint>
 
 #ifndef _WIN32
 #include <dirent.h>

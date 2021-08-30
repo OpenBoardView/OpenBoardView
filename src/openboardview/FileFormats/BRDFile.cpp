@@ -2,10 +2,10 @@
 
 #include "utf8/utf8.h"
 #include "utils.h"
-#include <ctype.h>
+#include <cctype>
 #include <stdexcept>
-#include <stdint.h>
-#include <string.h>
+#include <cstdint>
+#include <cstring>
 #include <unordered_map>
 
 // Header for recognizing a BRD file

@@ -1,6 +1,6 @@
 #include <cmath>
 #include <iostream>
-#include <limits.h>
+#include <climits>
 #include <memory>
 #include <cstdio>
 #include <cstdlib>

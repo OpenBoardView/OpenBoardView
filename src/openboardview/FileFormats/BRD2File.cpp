@@ -1,10 +1,10 @@
 #include "BRD2File.h"
 
 #include "utils.h"
-#include <ctype.h>
+#include <cctype>
 #include <iostream>
-#include <stdint.h>
-#include <string.h>
+#include <cstdint>
+#include <cstring>
 #include <unordered_map>
 
 bool BRD2File::verifyFormat(std::vector<char> &buf) {

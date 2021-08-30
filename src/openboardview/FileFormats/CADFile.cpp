@@ -3,10 +3,10 @@
 #include "utils.h"
 #include <algorithm>
 #include <cmath>
-#include <ctype.h>
-#include <locale.h>
-#include <stdint.h>
-#include <string.h>
+#include <cctype>
+#include <clocale>
+#include <cstdint>
+#include <cstring>
 #include <unordered_map>
 
 #define OUTLINE_MARGIN 20

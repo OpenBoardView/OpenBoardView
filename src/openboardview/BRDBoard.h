@@ -3,7 +3,7 @@
 #include "Board.h"
 
 #include <memory>
-#include <string.h>
+#include <cstring>
 #include <vector>
 
 using namespace std;

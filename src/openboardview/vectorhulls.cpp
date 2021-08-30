@@ -1,11 +1,11 @@
 #include "imgui/imgui.h"
 #include <cmath>
 #include <iostream>
-#include <limits.h>
+#include <climits>
 #include <memory>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 
 #include "vectorhulls.h"
 

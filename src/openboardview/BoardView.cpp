@@ -7,9 +7,9 @@
 
 #include <cmath>
 #include <iostream>
-#include <limits.h>
+#include <climits>
 #include <memory>
-#include <stdio.h>
+#include <cstdio>
 #ifdef ENABLE_SDL2
 #include <SDL.h>
 #endif

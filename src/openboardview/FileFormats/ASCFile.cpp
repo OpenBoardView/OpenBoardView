@@ -2,9 +2,9 @@
 
 #include "utils.h"
 #include <cstring>
-#include <ctype.h>
-#include <locale.h>
-#include <stdint.h>
+#include <cctype>
+#include <clocale>
+#include <cstdint>
 
 /*bool ASCFile::verifyFormat(std::vector<char> &buf) {
     return find_str_in_buf("dd:1.3?,r?-=bb", buf) || ( find_str_in_buf("<<format.asc>>", buf) && find_str_in_buf("<<pins.asc>>",

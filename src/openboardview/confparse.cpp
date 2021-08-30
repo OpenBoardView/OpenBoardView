@@ -1,10 +1,10 @@
-#include <errno.h>
+#include <cerrno>
 #include <fstream>
 #include <iostream>
 #include <memory>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 
 #include "confparse.h"
 #include "version.h"

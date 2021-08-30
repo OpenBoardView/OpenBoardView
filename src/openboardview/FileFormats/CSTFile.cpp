@@ -2,9 +2,9 @@
 #include "utils.h"
 
 #include <algorithm>
-#include <ctype.h>
-#include <stdint.h>
-#include <string.h>
+#include <cctype>
+#include <cstdint>
+#include <cstring>
 #include <unordered_map>
 
 /*

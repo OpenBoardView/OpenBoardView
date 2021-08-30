@@ -9,7 +9,7 @@
 #include <locale>
 #include <shlobj.h>
 #include <shobjidl.h>
-#include <stdint.h>
+#include <cstdint>
 #include <winnls.h>
 #ifdef ENABLE_SDL2
 #include <SDL.h>
