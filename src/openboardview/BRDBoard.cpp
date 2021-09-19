@@ -213,7 +213,7 @@ BRDBoard::BRDBoard(const BRDFile *const boardFile)
 	// Populate Net vector by using the map. (sorted by keys)
 	for (auto &net : net_map) {
 		// check whether the pin represents ground
-		net.second->is_ground = (net.second->name == "GND");
+		net.second->is_ground = (net.second->name == "GND" || net.second->name == "GROUND");
 		nets_.push_back(net.second);
 	}
 
