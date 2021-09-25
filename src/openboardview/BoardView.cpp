@@ -1725,6 +1725,7 @@ void BoardView::SearchComponent(void) {
 		//		char cs[128];
 		const char *first_button[] = {m_search[0], m_search[1], m_search[2]};
 
+		bool search_params_changed = m_showSearch; //treat initiail popup reopening similar to later search option changes
 		if (m_showSearch) {
 			m_showSearch       = false;
 			m_tooltips_enabled = false;
@@ -1747,13 +1748,13 @@ void BoardView::SearchComponent(void) {
 		ImGui::SameLine();
 		if (ImGui::Button("Reset")) {
 			FindComponent("");
-			for (int i = 0; i < 3; i++) m_search[i][0] = '\0';
+			ResetSearch();
 		} // reset button
 
 		ImGui::SameLine();
 		if (ImGui::Button("Exit") || keybindings.isPressed("CloseDialog")) {
 			FindComponent("");
-			for (int i = 0; i < 3; i++) m_search[i][0] = '\0';
+			ResetSearch();
 			m_tooltips_enabled = true;
 			ImGui::CloseCurrentPopup();
 		} // exit button
@@ -1764,26 +1765,28 @@ void BoardView::SearchComponent(void) {
 		ImGui::PushItemWidth(-1);
 		ImGui::Text("ENTER: Search, ESC: Exit, TAB: next field");
 
-		ImGui::Separator();
-		ImGui::Checkbox("Components", &m_searchComponents);
-
-		ImGui::SameLine();
-		ImGui::Checkbox("Nets", &m_searchNets);
-
 		{
+			ImGui::Separator();
+			search_params_changed |= ImGui::Checkbox("Components", &m_searchComponents);
+
 			ImGui::SameLine();
+			search_params_changed |= ImGui::Checkbox("Nets", &m_searchNets);
+
 			ImGui::Text(" Search mode: ");
 			ImGui::SameLine();
 			if (ImGui::RadioButton("Substring", searcher.isMode(SearchMode::Sub))) {
+				search_params_changed = true;
 				searcher.setMode(SearchMode::Sub);
 			}
 			ImGui::SameLine();
 			if (ImGui::RadioButton("Prefix", searcher.isMode(SearchMode::Prefix))) {
+				search_params_changed = true;
 				searcher.setMode(SearchMode::Prefix);
 			}
 			ImGui::SameLine();
 			ImGui::PushItemWidth(-1);
 			if (ImGui::RadioButton("Whole", searcher.isMode(SearchMode::Whole))) {
+				search_params_changed = true;
 				searcher.setMode(SearchMode::Whole);
 			}
 			ImGui::PopItemWidth();
@@ -1793,35 +1796,45 @@ void BoardView::SearchComponent(void) {
 
 		ImGui::Columns(3);
 
-		for (int i = 1; i <= 3; i++) {
-			std::string istr        = std::to_string(i);
-			std::string title       = "Item #" + istr;
-			std::string searchLabel = "##search" + istr;
+		for (int i = 0; i < 3; i++) {
+			std::string ui_number   = std::to_string(i + 1); // visual UI number is 1-based unlike 0-based indexing
+			std::string title       = "Item #" + ui_number;
+			std::string searchLabel = "##search" + ui_number;
 			ImGui::Text("%s", title.c_str());
 
 			ImGui::PushItemWidth(-1);
 
-			bool searching  = m_search[i - 1][0] != '\0';                        // Text typed in the search box
-			auto results    = SearchPartsAndNets(m_search[i - 1], 30);           // Perform the search for both nets and parts
-			bool hasResults = !results.first.empty() || !results.second.empty(); // We found some nets or some parts
+			bool textNonEmpty = m_search[i][0] != '\0';                            // Text typed in the search box
+			auto results      = SearchPartsAndNets(m_search[i], 30);               // Perform the search for both nets and parts
+			bool hasResults   = !results.first.empty() || !results.second.empty(); // We found some nets or some parts
 
-			if (searching && !hasResults) ImGui::PushStyleColor(ImGuiCol_FrameBg, 0xFF6666FF);
-			auto ret = ImGui::InputText(searchLabel.c_str(),
-			                            m_search[i - 1],
-			                            128,
-			                            ImGuiInputTextFlags_CharsNoBlank | (m_search[0] ? ImGuiInputTextFlags_AutoSelectAll : 0));
-			if (searching && !hasResults) ImGui::PopStyleColor();
+			if (textNonEmpty && !hasResults) ImGui::PushStyleColor(ImGuiCol_FrameBg, 0xFF6666FF);
+			bool textChanged =
+			    ImGui::InputText(searchLabel.c_str(),
+			                     m_search[i],
+			                     128,
+			                     ImGuiInputTextFlags_CharsNoBlank | (m_search[0] ? ImGuiInputTextFlags_AutoSelectAll : 0));
+			if (textNonEmpty && !hasResults) ImGui::PopStyleColor();
+			if (ImGui::IsItemActivated()) {
+				// user activates another column
+				m_active_search_column = i;
+				search_params_changed  = true;
+			}
 
-			if (ret) SearchCompound(m_search[i - 1]);
+			bool this_column_active = i == m_active_search_column;
+
+			if (textChanged || (search_params_changed && this_column_active)) SearchCompound(m_search[i]);
 
 			ImGui::PopItemWidth();
 
-			if (i == 1 && ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows) && !ImGui::IsAnyItemActive() && !ImGui::IsMouseClicked(0)) {
+			if (!ImGui::IsItemDeactivated() && this_column_active &&
+			    ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows) && !ImGui::IsAnyItemActive() &&
+			    !ImGui::IsMouseClicked(0)) {
 				ImGui::SetKeyboardFocusHere(-1);
-			} // set keyboard focus
+			} // set keyboard focus back to active colun input-text after other type of element was clicked
 
 			ImGui::PushItemWidth(-1);
-			if (searching) SearchColumnGenerate("##SC" + istr, results, m_search[i - 1], 30);
+			if (textNonEmpty) SearchColumnGenerate("##SC" + ui_number, results, m_search[i], 30);
 			ImGui::PopItemWidth();
 			if (i == 1)
 				ImGui::PushItemWidth(DPI(500));
@@ -1857,13 +1870,16 @@ void BoardView::SearchComponent(void) {
 	}
 }
 
+void BoardView::ResetSearch() {
+	for (int i = 0; i < 3; i++) m_search[i][0] = '\0';
+	m_active_search_column = 0;
+}
+
 void BoardView::ClearAllHighlights(void) {
 	m_pinSelected = nullptr;
 	FindNet("");
 	FindComponent("");
-	m_search[0][0]     = '\0';
-	m_search[1][0]     = '\0';
-	m_search[2][0]     = '\0';
+	ResetSearch();
 	m_needsRedraw      = true;
 	m_tooltips_enabled = true;
 	if (m_board != NULL) {
@@ -4525,10 +4541,10 @@ void BoardView::SearchCompoundNoClear(const char *item) {
 }
 
 void BoardView::SearchCompound(const char *item) {
-	if (*item == '\0') return;
 	m_pinHighlighted.clear();
 	m_partHighlighted.clear();
 	//	ClearAllHighlights();
+	if (*item == '\0') return;
 
 	SearchCompoundNoClear(item);
 }
