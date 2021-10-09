@@ -215,6 +215,8 @@ struct Component : BoardElement {
 	string UniqueId() const {
 		return kBoardComponentPrefix + name;
 	}
+
+	uint32_t shade_color_ = 0;
 };
 
 class Board {

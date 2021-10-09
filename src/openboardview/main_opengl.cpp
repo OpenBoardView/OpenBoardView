@@ -15,6 +15,7 @@
 #include "BoardView.h"
 #include "history.h"
 
+#include "TCL.h"
 #include "FileFormats/FZFile.h"
 #include "confparse.h"
 #include "resource.h"
@@ -353,8 +354,12 @@ int main(int argc, char **argv) {
 	 * the mouse or 'waking up' OBV then increase to 5 or more.
 	 */
 	sleepout = 30;
+
+	TCL tcl(&app);
 	while (!done) {
 
+		tcl.pollfd();
+		
 		SDL_Event event;
 		while (SDL_PollEvent(&event)) {
 			sleepout = 30;

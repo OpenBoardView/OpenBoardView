@@ -49,6 +49,8 @@ include_directories(
 	${OPENGL_INCLUDE_DIR}
 	${ZLIB_INCLUDE_DIRS}
 	${FONTCONFIG_INCLUDE_DIRS}
+	/usr/include/tcl8.6
+	${CMAKE_CURRENT_SOURCE_DIR}/../cpptcl
 )
 
 
@@ -131,6 +133,7 @@ endif()
 
 target_link_libraries(${PROJECT_NAME_LOWER}
 	imgui
+	tcl8.6
 	SQLite::SQLite3
 	${GLAD_LIBRARIES}
 	${COCOA_LIBRARY}

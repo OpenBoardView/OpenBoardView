@@ -23,6 +23,7 @@
 #include "FileFormats/BRDFile.h"
 #include "FileFormats/BVRFile.h"
 #include "FileFormats/CADFile.h"
+//#include "FileFormats/CAMCADFile.h"
 #include "FileFormats/CSTFile.h"
 #include "FileFormats/FZFile.h"
 #include "annotations.h"
@@ -433,6 +434,8 @@ int BoardView::LoadFile(const filesystem::path &filepath) {
 				file = new ADFile(buffer);
 			else if (CADFile::verifyFormat(buffer))
 				file = new CADFile(buffer);
+			//			else if (CAMCADFile::verifyFormat(buffer))
+			//	file = new CAMCADFile(buffer);
 			else if (check_fileext(filepath, ".cst"))
 				file = new CSTFile(buffer);
 			else if (BRDFile::verifyFormat(buffer))
@@ -3642,12 +3645,19 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 			c = ImVec2(CoordToScreen(part->outline[2].x, part->outline[2].y));
 			d = ImVec2(CoordToScreen(part->outline[3].x, part->outline[3].y));
 
+			auto apply_shade = [] (uint32_t c, uint32_t s) {
+				if (s) {
+					return s;
+				}
+				return c;
+			};
+			
 			// if (fillParts) draw->AddQuadFilled(a, b, c, d, color & 0xffeeeeee);
-			if (fillParts && !slowCPU) draw->AddQuadFilled(a, b, c, d, m_colors.partFillColor);
+			if (fillParts && !slowCPU) draw->AddQuadFilled(a, b, c, d, apply_shade(m_colors.partFillColor, part->shade_color_));
 			draw->AddQuad(a, b, c, d, color);
 			if (PartIsHighlighted(part)) {
 				if (fillParts && !slowCPU) draw->AddQuadFilled(a, b, c, d, m_colors.partHighlightedFillColor);
-				draw->AddQuad(a, b, c, d, m_colors.partHighlightedColor);
+				draw->AddQuad(a, b, c, d, apply_shade(m_colors.partHighlightedColor, part->shade_color_));
 			}
 
 			/*
