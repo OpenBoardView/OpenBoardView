@@ -23,7 +23,7 @@ public:
 	static const char bindingSeparator = '|';
 	static const char modifierSeparator = '~';
 
-	KeyBindings();
+	KeyBindings(std::vector<std::string> const * actions = nullptr);
 
 	bool isPressed(const std::string &name) const;
 

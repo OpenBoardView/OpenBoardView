@@ -41,39 +41,36 @@ BRD2File::BRD2File(std::vector<char> &buf) {
 		char *p = line;
 		char *s;
 
-		if (strstr(line, "BRDOUT:") == line) {
+		if ((p = cmp(line, "BRDOUT:"))) {
 			current_block = 1;
-			p += 7; // Skip "BRDOUT:"
 			num_format = READ_UINT();
 			max.x      = READ_INT();
 			max.y      = READ_INT();
 			continue;
 		}
-		if (strstr(line, "NETS:") == line) {
+		if ((p = cmp(line, "NETS:"))) {
 			current_block = 2;
-			p += 5; // Skip "NETS:"
 			num_nets = READ_UINT();
 			continue;
 		}
-		if (strstr(line, "PARTS:") == line) {
+		if ((p = cmp(line, "PARTS:"))) {
 			current_block = 3;
-			p += 6; // Skip "PARTS:"
 			num_parts = READ_UINT();
 			continue;
 		}
-		if (strstr(line, "PINS:") == line) {
+		if ((p = cmp(line, "PINS:"))) {
 			current_block = 4;
-			p += 5; // Skip "PINS:"
 			num_pins = READ_UINT();
 			continue;
 		}
-		if (strstr(line, "NAILS:") == line) {
+		if ((p = cmp(line, "NAILS:"))) {
 			current_block = 5;
-			p += 6; // Skip "NAILS:"
 			num_nails = READ_UINT();
 			continue;
 		}
 
+		p = line;
+		
 		switch (current_block) {
 			case 1: { // Format
 				ENSURE(format.size() < num_format);
@@ -103,9 +100,9 @@ BRD2File::BRD2File(std::vector<char> &buf) {
 				part.end_of_pins = READ_UINT(); // Warning: not end but beginning in this format
 				part.part_type   = BRDPartType::SMD;
 				int side         = READ_UINT();
-				if (side == 1)
+				if (side == 2)
 					part.mounting_side = BRDPartMountingSide::Top; // SMD part on top
-				else if (side == 2)
+				else if (side == 1)
 					part.mounting_side = BRDPartMountingSide::Bottom; // SMD part on bottom
 
 				parts.push_back(part);
@@ -187,8 +184,8 @@ BRD2File::BRD2File(std::vector<char> &buf) {
 			while (cpi < pei) {
 				pins[cpi].part                           = i + 1;
 				if (pins[cpi].side != 1) pins[cpi].pos.y = max.y - pins[cpi].pos.y;
-				if ((pins[cpi].side == 1 && parts[i].mounting_side == BRDPartMountingSide::Top) ||
-				    (pins[cpi].side == 2 &&
+				if ((pins[cpi].side == 2 && parts[i].mounting_side == BRDPartMountingSide::Top) ||
+				    (pins[cpi].side == 1 &&
 				     parts[i].mounting_side == BRDPartMountingSide::Bottom)) // Pins on the same side as the part
 					isDIP = false;
 				cpi++;

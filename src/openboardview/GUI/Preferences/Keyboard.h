@@ -15,8 +15,8 @@ private:
 public:
 	Keyboard(KeyBindings &keybindings, Confparse &obvconfig);
 
-	void menuItem();
-	void render();
+	void menuItem(const char * name = nullptr);
+	void render(const char * name = nullptr);
 };
 
 } // namespace Preferences

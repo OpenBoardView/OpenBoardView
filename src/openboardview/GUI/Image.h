@@ -29,16 +29,25 @@ private:
 	bool mirrorY = false;
 	float transparency = 0.0f;
 
+	std::array<ImVec2, 4> tex_coord_ = { { { 0.0f, 1.0f }, { 1.0f, 1.0f }, { 1.0f, 0.0f }, { 0.0f, 0.0f } } };
+	
 	std::array<ImVec2, 4> TransformRelativeCoordinates(int rotation) const;
 
-public:
+	unsigned char * imgdata = nullptr;
+	int imgwidth = 0;
+	int imgheight = 0;
+	bool no_rotation_ = false;
+ public:
 	Image() = default;
-	Image(const filesystem::path &file);
+	Image(const filesystem::path &file, bool no_rotation = false);
+	Image(unsigned char * data, int width, int height, bool no_rotation = false);
 	~Image();
 
 	std::string reload();
 	void render(ImDrawList &draw, const ImVec2 &p_min, const ImVec2 &p_max, int rotation) const;
-
+	void zoom(ImVec2 xz, float z);
+	void scroll(ImVec2);
+	
 	float x0() const;
 	float y0() const;
 	float x1() const;

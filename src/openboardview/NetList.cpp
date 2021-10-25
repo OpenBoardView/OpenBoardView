@@ -9,6 +9,8 @@ NetList::NetList(TcharStringCallback cbNetSelected) {
 NetList::~NetList() {}
 
 void NetList::Draw(const char *title, bool *p_open, Board *board) {
+	if (title && p_open) { }
+
 	// TODO: export / fix dimensions & behaviour
 	int width  = 400;
 	int height = 640;

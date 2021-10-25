@@ -9,6 +9,8 @@ PartList::PartList(TcharStringCallback cbNetSelected) {
 PartList::~PartList() {}
 
 void PartList::Draw(const char *title, bool *p_open, Board *board) {
+	if (title && p_open) { }
+
 	// TODO: export / fix dimensions & behaviour
 	int width  = 400;
 	int height = 640;

@@ -91,6 +91,58 @@ void ImGuiRendererSDL::shutdown() {
 	ImGui_ImplSDL2_Shutdown();
 }
 
+std::string ImGuiRendererSDL::loadTextureFromData(unsigned char * image_data, int image_width, int image_height, GLuint* out_texture) {
+	// Load from file
+	//int image_width = 0;
+	//int image_height = 0;
+
+	//auto buf = file_as_buffer(filepath);
+	//unsigned char* image_data = stbi_load_from_memory(reinterpret_cast<unsigned char*>(buf.data()), buf.size(), &image_width, &image_height, NULL, 4);
+
+	//unsigned char * image_data = new char
+	
+	int glMaxTextureSize;
+	glGetIntegerv(GL_MAX_TEXTURE_SIZE, &glMaxTextureSize);
+	if (image_width > glMaxTextureSize) {
+		return "width of " + std::to_string(image_width) + "px is too large for this GPU. Maximum allowed: " + std::to_string(glMaxTextureSize);
+	}
+
+	if (image_height > glMaxTextureSize) {
+		return "height of " + std::to_string(image_width) + "px is too large for this GPU. Maximum allowed: " + std::to_string(glMaxTextureSize);
+	}
+
+	// Create a OpenGL texture identifier
+	GLuint image_texture;
+	glGenTextures(1, &image_texture);
+	glBindTexture(GL_TEXTURE_2D, image_texture);
+
+	// Setup filtering parameters for display
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	// Upload pixels into texture
+	glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image_width, image_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image_data);
+
+	GLenum code = glGetError();
+	if (code == GL_OUT_OF_MEMORY) {
+		return "image too large to fit in the GPU memory.";
+	}
+	if (code != GL_NO_ERROR) {
+		return "error " + std::to_string(code) + " when loading the image into GPU memory.";
+	}
+
+	//stbi_image_free(image_data);
+
+	*out_texture = image_texture;
+	//*out_width = image_width;
+	//*out_height = image_height;
+
+	return {};
+}
+	
+
+
 std::string ImGuiRendererSDL::loadTextureFromFile(const filesystem::path &filepath, GLuint* out_texture, int* out_width, int* out_height)
 {
 	// Load from file

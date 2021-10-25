@@ -13,12 +13,16 @@
 #include "GUI/Preferences/BackgroundImage.h"
 #include <cstdint>
 #include <vector>
+#include <mutex>
 
 #define DPIF(x) (((x)*dpi) / 100.f)
 #define DPI(x) (((x)*dpi) / 100)
 
 struct BRDPart;
 class BRDFile;
+namespace OBV_Tcl {
+	struct TCL;
+}
 
 struct BitVec {
 	uint32_t *m_bits;
@@ -117,8 +121,8 @@ enum DrawChannel {
 enum FlipModes { flipModeVP = 0, flipModeMP = 1, NUM_FLIP_MODES };
 
 struct BoardView {
-	BRDFile *m_file;
-	Board *m_board;
+	std::shared_ptr<BRDFile> m_file;
+	std::shared_ptr<Board> m_board;
 	BackgroundImage backgroundImage{m_current_side};
 
 	Confparse obvconfig;
@@ -127,8 +131,12 @@ struct BoardView {
 	SpellCorrector scnets;
 	SpellCorrector scparts;
 	KeyBindings keybindings;
+	KeyBindings * tcl_keybindings = nullptr;
+
 	Preferences::Keyboard keyboardPreferences{keybindings, obvconfig};
 	Preferences::BackgroundImage backgroundImagePreferences{keybindings, backgroundImage};
+	Preferences::Keyboard * tcl_keyboardPreferences = nullptr;
+	
 	bool debug                   = false;
 	int history_file_has_changed = 0;
 	int dpi                      = 0;
@@ -140,7 +148,8 @@ struct BoardView {
 	int panFactor                = 30;
 	int panModifier              = 5;
 	int flipMode                 = 0;
-
+	bool startFullscreen         = false;
+	
 	int annotationBoxOffset = 10;
 	int annotationBoxSize   = 10;
 
@@ -243,6 +252,10 @@ struct BoardView {
 	float m_dy;
 	float m_mx; // board MID POINTS
 	float m_my;
+	float m_x_offset = 0;
+	float m_y_offset = 0;
+	bool  m_draw_both_sides = false;
+
 	float m_scale       = 1.0f;
 	float m_scale_floor = 1.0f; // scale which displays the entire board
 	float m_lastWidth;          // previously checked on-screen window size; use to redraw
@@ -257,9 +270,12 @@ struct BoardView {
 	ImVec2 m_board_surface;
 	ImVec2 m_info_surface;
 	int m_dragging_token = 0; // 1 = board window, 2 = side pane
-
+	bool m_tcl_drag = false;
+	
 	ColorScheme m_colors;
 
+	float m_default_intensity = 1.0;
+	
 	// TODO: save settings to disk
 	// pinDiameter: diameter for all pins.  Unit scale: 1 = 0.025mm, boards are
 	// done in "thou" (1/1000" = 0.0254mm)
@@ -290,8 +306,29 @@ struct BoardView {
 	bool m_validBoard = false;
 	bool m_wantsQuit;
 
+	std::mutex m_sleep_mutex;
+
+	void sleep_mutex_lock() {
+		m_sleep_mutex.lock();
+	}
+	void sleep_mutex_unlock() {
+		m_sleep_mutex.unlock();
+	}
+	
 	~BoardView();
 
+	OBV_Tcl::TCL * m_tcl;
+	void set_tcl(OBV_Tcl::TCL * t);
+	SDL_Window * m_sdl_window = nullptr;
+	bool m_is_fullscreen = false;
+	void sdl_window(SDL_Window * w) {
+		m_sdl_window = w;
+		if (startFullscreen) {
+			SDL_MaximizeWindow(m_sdl_window);
+			m_is_fullscreen = true;
+		}
+	}
+	
 	void ShowNetList(bool *p_open);
 	void ShowPartList(bool *p_open);
 
@@ -304,12 +341,16 @@ struct BoardView {
 	void DrawOutline(ImDrawList *draw);
 	void DrawPins(ImDrawList *draw);
 	void DrawParts(ImDrawList *draw);
+	bool DrawPartSymbol(ImDrawList * draw, Component * c);
 	void DrawBoard();
 	void DrawNetWeb(ImDrawList *draw);
-	void SetFile(BRDFile *file);
+	void SetFile(std::shared_ptr<BRDFile> file, std::shared_ptr<BRDBoard> board = nullptr);
 	int LoadFile(const filesystem::path &filepath);
+	BRDFile * loadBoard(const filesystem::path &filepath);
 	ImVec2 CoordToScreen(float x, float y, float w = 1.0f);
 	ImVec2 ScreenToCoord(float x, float y, float w = 1.0f);
+	ImVec2 CoordToScreen(ImVec2 xy, float w = 1.0f) { return CoordToScreen(xy.x, xy.y, w); }
+	ImVec2 ScreenToCoord(ImVec2 xy, float w = 1.0f) { return ScreenToCoord(xy.x, xy.y, w); }
 	// void Move(float x, float y);
 	void Rotate(int count);
 	void DrawSelectedPins(ImDrawList *draw);

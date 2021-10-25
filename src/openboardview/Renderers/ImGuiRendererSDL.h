@@ -27,7 +27,9 @@ public:
 
 	// Returned string is error message, empty if successful
 	virtual std::string loadTextureFromFile(const filesystem::path &filepath, GLuint* out_texture, int* out_width, int* out_height);
-protected:
+
+	virtual std::string loadTextureFromData(unsigned char * image_data, int image_width, int image_height, GLuint * out_texture);
+ protected:
 	SDL_Window *window = nullptr;
 	virtual void setGLVersion();
 private:

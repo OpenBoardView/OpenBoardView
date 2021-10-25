@@ -46,6 +46,7 @@ int Annotations::Init(void) {
 	if (!sqldb) return 1;
 
 	/* Execute SQL statement */
+
 	rc = sqlite3_exec(sqldb, sql_table_create, NULL, 0, &zErrMsg);
 	if (rc != SQLITE_OK) {
 		if (debug) fprintf(stderr, "SQL error: %s\n", zErrMsg);

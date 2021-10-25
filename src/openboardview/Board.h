@@ -78,6 +78,8 @@ struct BoardElement {
 
 	// String uniquely identifying this element on the board.
 	virtual string UniqueId() const = 0;
+
+	void * tcl_priv = nullptr;
 };
 
 // A point/position on the board relative to top left corner of the board.
@@ -147,6 +149,7 @@ struct Pin : BoardElement {
 	string UniqueId() const {
 		return kBoardPinPrefix + number;
 	}
+
 };
 
 // A component on the board having multiple Pins.
@@ -217,6 +220,8 @@ struct Component : BoardElement {
 	}
 
 	uint32_t shade_color_ = 0;
+	float intensity_delta_ = 1;
+
 };
 
 class Board {
