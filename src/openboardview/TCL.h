@@ -29,9 +29,13 @@
 
 #include "BoardView.h"
 #include <regex>
+#include <atomic>
 
 //#include "TCLDUMMY.h"
 
+#ifdef OBV_USE_POPPLER
+
+#error Enabling pdf rendering with poppler changes the license of openboardview. Uncomment this line to continue with this derivation of openboardview under GPL license
 
 #include <poppler/PDFDocFactory.h>
 #include <poppler/TextOutputDev.h>
@@ -40,6 +44,7 @@
 
 #include <poppler/glib/poppler.h>
 #include <poppler/glib/poppler-document.h>
+#endif
 
 #include <boost/iterator/function_output_iterator.hpp>
 
@@ -871,6 +876,11 @@ namespace OBV_Tcl {
 			}
 		}
 
+		std::thread * schem_open_thread_ = nullptr;
+		std::atomic<bool> schem_thread_joinable_ = false;
+
+		
+#ifdef OBV_USE_POPPLER
 		PDFDoc * pdf_ = nullptr;
 		std::string pdf_filename_;
 		PopplerDocument * pdoc_ = nullptr;
@@ -938,12 +948,6 @@ namespace OBV_Tcl {
 		Component * pdf_in_cell_ = nullptr;
 		//ImVec2 pdf_min_, pdf_max_;
 
-		void imgui_draw(ImDrawList * draw) {
-			if (pdf_img_) {
-				//imgui_draw_in(draw, pdf_min_, pdf_max_);
-				imgui_draw_in(draw, pdf_win_.box.min, pdf_win_.box.max);
-			}
-		}
 
 		struct pdf_txt_bbox {
 			bbox box;
@@ -1031,7 +1035,6 @@ namespace OBV_Tcl {
 				}
 			}
 		}
-
 		bool handle_mouse_drag(ImVec2 const & ppos, ImVec2 const & drag, bool token) {
 			ImGuiIO &io = ImGui::GetIO();
 			ImVec2 pos = pdf_win_.sticky ? ppos : boardview()->ScreenToCoord(ppos);
@@ -1052,7 +1055,13 @@ namespace OBV_Tcl {
 			}
 			return false;
 		}
-		
+
+		void imgui_draw(ImDrawList * draw) {
+			if (pdf_img_) {
+				//imgui_draw_in(draw, pdf_min_, pdf_max_);
+				imgui_draw_in(draw, pdf_win_.box.min, pdf_win_.box.max);
+			}
+		}
 		bool handle_mouse_wheel(float x, float y, float wh) {
 			ImVec2 spos = { x, y };
 			ImVec2 mpos = pdf_win_.sticky ? spos : boardview()->ScreenToCoord(spos);
@@ -1085,6 +1094,7 @@ namespace OBV_Tcl {
 			}
 			return false;
 		}
+		
 
 
 		bool pdf_sticky(opt<bool> const & v) {
@@ -1262,9 +1272,6 @@ namespace OBV_Tcl {
 			pdf_win_.update();
 		}
 
-		std::thread * schem_open_thread_ = nullptr;
-		std::atomic<bool> schem_thread_joinable_ = false;
-
 		static constexpr const char * schematic_open_opt = "background";
 		void schematic_open(getopt<bool> const & background, std::string const & fname) {
 			schem_thread_joinable_ = false;
@@ -1378,6 +1385,16 @@ namespace OBV_Tcl {
 				boardview()->sleep_mutex_unlock();
 			}
 		}
+#else // OBV_USE_POPPLER
+		void imgui_draw(ImDrawList *) {
+		}
+		bool handle_mouse_drag(ImVec2 const &, ImVec2 const &, bool) {
+			return false;
+		}
+		bool handle_mouse_wheel(float, float, float) {
+			return false;
+		}
+#endif // OBV_USE_POPPLER
 		
 		object file_history() {
 			object r;
@@ -1533,11 +1550,13 @@ namespace OBV_Tcl {
 				.def("report_prop",     &this_t::report_prop)
 				.def("highlight",       &this_t::highlight, policies(), this_t::highlight_opt)
 				.def("selection",       &this_t::selection)
+#ifdef OBV_USE_POPPLER
 				.def("schem_open",      &this_t::schematic_open, policies(), schematic_open_opt)
 				.def("schem_sticky",    &this_t::pdf_sticky)
 				.def("draw_page",       &this_t::draw_page)
 				.def("undraw_page",     &this_t::undraw_page)
 				.def("schem_highlight", &this_t::schem_highlight)
+#endif
 				.def("get_prop",        &this_t::get_prop)
 				.def("set_prop",        &this_t::set_prop)
 				.def("trace",           &this_t::trace)
