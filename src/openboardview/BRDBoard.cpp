@@ -25,6 +25,8 @@ BRDBoard::BRDBoard(const BRDFile *const boardFile)
 	vector<BRDNail> m_nails(m_file->num_nails);
 	vector<BRDPoint> m_points(m_file->num_format);
 
+	Component * dummy_comp_ = nullptr;
+	
 	m_parts  = m_file->parts;
 	m_pins   = m_file->pins;
 	m_nails  = m_file->nails;
@@ -33,7 +35,7 @@ BRDBoard::BRDBoard(const BRDFile *const boardFile)
 	// Set outline
 	{
 		for (auto &brdPoint : m_points) {
-			auto point = make_shared<Point>(brdPoint.x, brdPoint.y);
+			auto point = obv_make_shared<Point>(brdPoint.x, brdPoint.y);
 			outline_.push_back(point);
 		}
 	}
@@ -42,14 +44,14 @@ BRDBoard::BRDBoard(const BRDFile *const boardFile)
 	SharedStringMap<Net> net_map;
 	{
 		// adding special net 'UNCONNECTED'
-		auto net_nc           = make_shared<Net>();
+		auto net_nc           = obv_make_shared<Net>();
 		net_nc->name          = kNetUnconnectedPrefix;
 		net_nc->is_ground     = false;
 		net_map[net_nc->name] = net_nc;
 
 		// handle all the others
 		for (auto &brd_nail : m_nails) {
-			auto net = make_shared<Net>();
+			auto net = obv_make_shared<Net>();
 
 			// copy NET name and number (probe)
 			net->name = string(brd_nail.net);
@@ -72,14 +74,15 @@ BRDBoard::BRDBoard(const BRDFile *const boardFile)
 
 	// Populate parts
 	{
+		int make = 0;
 		for (auto &brd_part : m_parts) {
-			auto comp = make_shared<Component>();
-
+			auto comp = obv_make_shared<Component>();
+			++make;
 			comp->name    = string(brd_part.name);
 			comp->mfgcode = std::move(brd_part.mfgcode);
 
-			comp->p1 = {brd_part.p1.x, brd_part.p1.y};
-			comp->p2 = {brd_part.p2.x, brd_part.p2.y};
+			comp->p1 = {float(brd_part.p1.x), float(brd_part.p1.y)};
+			comp->p2 = {float(brd_part.p2.x), float(brd_part.p2.y)};
 
 			// is it some dummy component to indicate test pads?
 			if (is_prefix(kComponentDummyName, comp->name)) comp->component_type = Component::kComponentTypeDummy;
@@ -102,7 +105,16 @@ BRDBoard::BRDBoard(const BRDFile *const boardFile)
 	// Populate pins
 	{
 		// generate dummy component as reference
-		auto comp_dummy            = make_shared<Component>();
+		obv_shared_ptr<Component> comp_dummy = nullptr;
+
+		if constexpr (! std::is_same<obv_shared_ptr<Component>, std::shared_ptr<Component> >::value) {
+			if (! dummy_comp_) {
+				dummy_comp_ = new Component();
+			}
+			comp_dummy            = obv_shared_ptr<Component>(dummy_comp_); //obv_make_shared<Component>(dummy_comp_);
+		} else {
+			comp_dummy            = obv_make_shared<Component>();
+		}
 		comp_dummy->name           = kComponentDummyName;
 		comp_dummy->component_type = Component::kComponentTypeDummy;
 
@@ -115,11 +127,11 @@ BRDBoard::BRDBoard(const BRDFile *const boardFile)
 		for (size_t i = 0; i < pins.size(); i++) {
 			// (originally from BoardView::DrawPins)
 			const BRDPin &brd_pin = pins[i];
-			std::shared_ptr<Component> comp       = components_[brd_pin.part - 1];
+			obv_shared_ptr<Component> comp       = components_[brd_pin.part - 1];
 
 			if (!comp) continue;
 
-			auto pin = make_shared<Pin>();
+			auto pin = obv_make_shared<Pin>();
 
 			if (comp->is_dummy()) {
 				// component is virtual, i.e. "...", pin is test pad
@@ -175,7 +187,7 @@ BRDBoard::BRDBoard(const BRDFile *const boardFile)
 						pin->type = Pin::kPinTypeNotConnected;
 					} else {
 						// indeed a new net
-						auto net        = make_shared<Net>();
+						auto net        = obv_make_shared<Net>();
 						net->name       = net_name;
 						net->board_side = pin->board_side;
 						// NOTE: net->number not set
@@ -203,10 +215,17 @@ BRDBoard::BRDBoard(const BRDFile *const boardFile)
 		}
 
 		// remove all dummy components from vector, add our official dummy
-		components_.erase(
-		    remove_if(begin(components_), end(components_), [](shared_ptr<Component> &comp) { return comp->is_dummy(); }),
-		    end(components_));
 
+		if constexpr (! std::is_same<obv_shared_ptr<Component>, std::shared_ptr<Component> >::value) {
+			components_.erase(
+							  remove_if(begin(components_), end(components_), [](obv_shared_ptr<Component> &comp) { if (comp->is_dummy()) { delete comp.get(); return true; } return false; }),
+							  end(components_));
+		} else {
+			components_.erase(
+							  remove_if(begin(components_), end(components_), [](obv_shared_ptr<Component> &comp) { return comp->is_dummy(); }),
+							  end(components_));
+		}
+		
 		components_.push_back(comp_dummy);
 	}
 
@@ -218,12 +237,27 @@ BRDBoard::BRDBoard(const BRDFile *const boardFile)
 	}
 
 	// Sort components by name
-	sort(begin(components_), end(components_), [](const shared_ptr<Component> &lhs, const shared_ptr<Component> &rhs) {
+	sort(begin(components_), end(components_), [](const obv_shared_ptr<Component> &lhs, const obv_shared_ptr<Component> &rhs) {
 		return lhs->name < rhs->name;
 	});
 }
 
-BRDBoard::~BRDBoard() {}
+BRDBoard::~BRDBoard() {
+	if constexpr (! std::is_same<obv_shared_ptr<Component>, std::shared_ptr<Component> >::value) {
+		for (auto && ci : components_) {
+			delete ci.get();
+		}
+		for (auto && ni : nets_) {
+			delete ni.get();
+		}
+		for (auto && pi : pins_) {
+			delete pi.get();
+		}
+	}
+	if constexpr (Component::do_refcount) {
+		std::cerr << "component count after board delete: " << Component::icount << "\n";
+	}
+}
 
 SharedVector<Component> &BRDBoard::Components() {
 	return components_;

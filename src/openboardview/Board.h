@@ -18,7 +18,7 @@
 
 using namespace std;
 
-struct Point;
+//struct Point;
 struct BoardElement;
 struct Net;
 struct Pin;
@@ -27,11 +27,50 @@ struct Component;
 typedef function<void(const char *)> TcharStringCallback;
 typedef function<void(BoardElement *)> TboardElementCallback;
 
-template <class T>
-using SharedVector = vector<shared_ptr<T>>;
+
+#if 0
+template <typename T>
+using obv_shared_ptr = std::shared_ptr<T>;
+template <typename T, typename ...Args>
+obv_shared_ptr<T> obv_make_shared(Args... args) { return std::make_shared<T>(args...); }
+#else
+template <typename T>
+struct obv_shared_ptr {
+	T * t_;
+	obv_shared_ptr() { }
+	explicit obv_shared_ptr(T * t) : t_(t) { }
+	obv_shared_ptr(std::nullptr_t) : t_(nullptr) { }
+	T & operator*() { return *t_; }
+	T * operator->() { return t_; }
+	T * get() { return t_; }
+	const T & operator*() const { return *t_; }
+	const T * operator->() const { return t_; }
+	const T * get() const { return t_; }
+	template <typename TT>
+	operator obv_shared_ptr<TT>() { return obv_shared_ptr<TT>((TT *) get()); }
+	bool operator==(std::nullptr_t) { return get() == nullptr; }
+	bool operator!() const { return !t_; }
+	operator bool() const { return t_; }
+	void operator=(std::nullptr_t) { t_ = nullptr; }
+	template <typename TT>
+	void operator=(obv_shared_ptr<TT> p) { t_ = p.get(); }
+    void operator=(T * t) { t_ = t; }
+};
+
+template <typename T>
+bool operator==(obv_shared_ptr<T> const & a, obv_shared_ptr<T> const & b) {
+	return a.get() == b.get();
+}
+
+template <typename T, typename ...Args>
+obv_shared_ptr<T> obv_make_shared(Args... args) { return obv_shared_ptr<T>(new T(args...)); }
+#endif
 
 template <class T>
-using SharedStringMap = map<string, shared_ptr<T>>;
+using SharedVector = vector<obv_shared_ptr<T>>;
+
+template <class T>
+using SharedStringMap = map<string, obv_shared_ptr<T>>;
 
 enum EBoardSide {
 	kBoardSideTop    = 0,
@@ -78,12 +117,17 @@ struct BoardElement {
 
 	// String uniquely identifying this element on the board.
 	virtual string UniqueId() const = 0;
-
+	virtual ~BoardElement() { }
+	
 	void * tcl_priv = nullptr;
 };
 
 // A point/position on the board relative to top left corner of the board.
 // TODO: not sure how different formats will store this info.
+
+
+typedef ImVec2 Point;
+#if 0
 struct Point {
 	float x, y;
 
@@ -97,6 +141,7 @@ struct Point {
 	    : x(float(_x))
 	    , y(float(_y)){};
 };
+#endif
 
 // Shared potential between multiple Pins/Contacts.
 struct Net : BoardElement {
@@ -111,9 +156,10 @@ struct Net : BoardElement {
 	}
 };
 
-struct outline_pt {
-	double x, y;
-};
+typedef ImVec2 outline_pt;
+//struct outline_pt {
+//	double x, y;
+//};
 
 // Any observeable contact (nails, component pins).
 // Convieniently/Confusingly named Pin not Contact here.
@@ -144,7 +190,7 @@ struct Pin : BoardElement {
 	Net *net;
 
 	// Contact belonging to this component (pin), nullptr if nail.
-	std::shared_ptr<Component> component;
+	obv_shared_ptr<Component> component;
 
 	string UniqueId() const {
 		return kBoardPinPrefix + number;
@@ -156,6 +202,19 @@ struct Pin : BoardElement {
 struct Component : BoardElement {
 	enum EMountType { kMountTypeUnknown = 0, kMountTypeSMD, kMountTypeDIP };
 
+#if 0
+	static const bool do_refcount = false;
+#else
+	static const bool do_refcount = true;
+	static inline int icount = 0;
+	Component() {
+		++icount;
+	}
+	~Component() {
+		--icount;
+	}
+#endif
+	
 	enum EComponentType {
 		kComponentTypeUnknown = 0,
 		kComponentTypeDummy,

@@ -121,8 +121,8 @@ enum DrawChannel {
 enum FlipModes { flipModeVP = 0, flipModeMP = 1, NUM_FLIP_MODES };
 
 struct BoardView {
-	std::shared_ptr<BRDFile> m_file;
-	std::shared_ptr<Board> m_board;
+	obv_shared_ptr<BRDFile> m_file;
+	obv_shared_ptr<Board> m_board;
 	BackgroundImage backgroundImage{m_current_side};
 
 	Confparse obvconfig;
@@ -180,7 +180,7 @@ struct BoardView {
 	uint32_t FZKey[44] = {0};
 
 	int ConfigParse(void);
-	uint32_t byte4swap(uint32_t x);
+	static uint32_t byte4swap(uint32_t x);
 	void CenterView(void);
 	void Pan(int direction, int amount);
 	void Zoom(float osd_x, float osd_y, float zoom);
@@ -232,13 +232,13 @@ struct BoardView {
 	void ShowInfoPane(void);
 
 	bool HighlightedPinIsHovered(void);
-	std::shared_ptr<Pin> m_pinHighlightedHovered    = nullptr;
-	std::shared_ptr<Pin> currentlyHoveredPin        = nullptr;
-	std::shared_ptr<Component> currentlyHoveredPart = nullptr;
+	obv_shared_ptr<Pin> m_pinHighlightedHovered    = nullptr;
+	obv_shared_ptr<Pin> currentlyHoveredPin        = nullptr;
+	obv_shared_ptr<Component> currentlyHoveredPart = nullptr;
 
 	ImVec2 m_showContextMenuPos;
 
-	std::shared_ptr<Pin> m_pinSelected = nullptr;
+	obv_shared_ptr<Pin> m_pinSelected = nullptr;
 	//	vector<Net *> m_netHiglighted;
 	SharedVector<Pin> m_pinHighlighted;
 	SharedVector<Component> m_partHighlighted;
@@ -344,7 +344,7 @@ struct BoardView {
 	bool DrawPartSymbol(ImDrawList * draw, Component * c);
 	void DrawBoard();
 	void DrawNetWeb(ImDrawList *draw);
-	void SetFile(std::shared_ptr<BRDFile> file, std::shared_ptr<BRDBoard> board = nullptr);
+	void SetFile(obv_shared_ptr<BRDFile> file, obv_shared_ptr<BRDBoard> board = nullptr);
 	int LoadFile(const filesystem::path &filepath);
 	BRDFile * loadBoard(const filesystem::path &filepath);
 	ImVec2 CoordToScreen(float x, float y, float w = 1.0f);
@@ -358,17 +358,18 @@ struct BoardView {
 
 	// Sets the center of the screen to (x,y) in board space
 	void SetTarget(float x, float y);
-
+	void SetTarget(ImVec2 xy) { SetTarget(xy.x, xy.y); }
+	
 	// Returns true if the part is shown on the currently displayed side of the
 	// board.
-	bool BoardElementIsVisible(const std::shared_ptr<BoardElement> be);
+	bool BoardElementIsVisible(const obv_shared_ptr<BoardElement> be);
 	bool IsVisibleScreen(float x, float y, float radius, const ImGuiIO &io);
 	// Returns true if the circle described by screen coordinates x, y, and radius
 	// is visible in the
 	// ImGuiIO screen rect.
 	// bool IsVisibleScreen(float x, float y, float radius = 0.0f);
 
-	bool PartIsHighlighted(const std::shared_ptr<Component> component);
+	bool PartIsHighlighted(const obv_shared_ptr<Component> component);
 	void FindNet(const char *net);
 	void FindNetNoClear(const char *name);
 	void FindComponent(const char *name);

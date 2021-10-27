@@ -28,10 +28,12 @@
 #include <SDL.h>
 
 #include "BoardView.h"
+#include "imgui_operators.h"
 #include <regex>
 #include <atomic>
 
 //#include "TCLDUMMY.h"
+//#define OBV_USE_POPPLER
 
 #ifdef OBV_USE_POPPLER
 
@@ -48,6 +50,7 @@
 
 #include <boost/iterator/function_output_iterator.hpp>
 
+#if 0
 inline bool operator>(ImVec2 const & a, ImVec2 const & b) {
 	return a.x > b.x && a.y > b.y;
 }
@@ -97,7 +100,7 @@ std::basic_ostream<C, T> & operator<<(std::basic_ostream<C, T> & os, ImVec2 cons
 	os << v.x << "," << v.y;
 	return os;
 }
-
+#endif
 
 namespace OBV_Tcl {
 	using namespace Tcl;
@@ -239,16 +242,18 @@ namespace OBV_Tcl {
 		void draw_board(BRDBoard * b) {
 			for (std::size_t i = 0; i < boards_.size(); ++i) {
 				if (boards_[i] == b) {
-					current_draw_file_ = std::shared_ptr<BRDFile>(boardfiles_[i], [] (auto) { });
+					//current_draw_file_ = obv_shared_ptr<BRDFile>(boardfiles_[i], [] (auto) { });
+					current_draw_file_ = obv_shared_ptr<BRDFile>(boardfiles_[i]);
 					break;
 				}
 			}
-			current_draw_board_ = std::shared_ptr<BRDBoard>(b, [] (auto) { });
+			//current_draw_board_ = obv_shared_ptr<BRDBoard>(b, [] (auto) { });
+			current_draw_board_ = obv_shared_ptr<BRDBoard>(b);//, [] (auto) { });
 			boardview()->SetFile(current_draw_file_, current_draw_board_);
 		}
 
-		std::shared_ptr<BRDFile> current_draw_file_;
-		std::shared_ptr<BRDBoard> current_draw_board_;
+		obv_shared_ptr<BRDFile> current_draw_file_;
+		obv_shared_ptr<BRDBoard> current_draw_board_;
 
 		static constexpr const char * get_nets_opt = "re all not gnd of filter";
 		object get_nets(getopt<bool> const & use_regex, getopt<bool> const & all, getopt<list<Net> > const & not_, getopt<bool> const & gnd, getopt<any<list<Component>, list<Pin>, list<Net>, list<BRDBoard> > > const & of, getopt<std::string> const & filter_arg, variadic<std::string> const & match) {
@@ -879,7 +884,6 @@ namespace OBV_Tcl {
 		std::thread * schem_open_thread_ = nullptr;
 		std::atomic<bool> schem_thread_joinable_ = false;
 
-		
 #ifdef OBV_USE_POPPLER
 		PDFDoc * pdf_ = nullptr;
 		std::string pdf_filename_;
@@ -904,11 +908,8 @@ namespace OBV_Tcl {
 				bdim     = box.max - box.min;
 				aspect   = bdim.x / bdim.y;
 				wb_ratio = wdim / bdim;
-				//std::cerr << "wb " << wb_ratio << " " << wdim << " " << bdim << "\n";
-				//std::cerr << box.min << " " << box.max << "\n";
 			}				
 
-			
 			ImVec2 bdim;     // derived
 			float  aspect;   // derived
 			ImVec2 wb_ratio; // derived
@@ -951,13 +952,41 @@ namespace OBV_Tcl {
 
 		struct pdf_txt_bbox {
 			bbox box;
-			//float x, y, xmax, ymax;
 			std::string word;
+
+			Component * cell = nullptr;
+			Net * net = nullptr;
 		};
 		typedef std::vector<pdf_txt_bbox> pdf_words_value_t;
 		std::map<int, pdf_words_value_t> pdf_words_;
 
+		Component * currently_hovered_part_ = nullptr;
+		
+		Component * currently_hovered_part() {
+			return currently_hovered_part_;
+		}
+
+		std::optional<obv_shared_ptr<Component> > lookup(Component * c) {
+			if (c) {
+				for (auto && ci : boardview()->m_board->Components()) {
+					if (ci.get() == c) return ci;
+				}
+			}
+			return { };
+		}
+
+		bool grab_mouse_hover() {
+			ImVec2 ppos = ImGui::GetMousePos();
+			ImVec2 pos = pdf_win_.sticky ? ppos : boardview()->ScreenToCoord(ppos);
+			
+			if (pos > pdf_win_.box.min && pos < pdf_win_.box.max) {
+				return true;
+			}
+			return false;
+		}
+		
 		void imgui_draw_in(ImDrawList * draw, ImVec2 min, ImVec2 max) {
+			currently_hovered_part_ = nullptr;
 			if (pdf_img_) {
 				{
 					if (true) {
@@ -966,26 +995,52 @@ namespace OBV_Tcl {
 						std::swap(min_flip.y, max_flip.y);
 
 						if (boardview()->m_current_side) {
-							pdf_img_->render(*draw, boardview()->CoordToScreen(min.x, max.y), boardview()->CoordToScreen(max.x, min.y), 0);
+							pdf_img_->render(*draw, pdf_win_.sticky ? min_flip : boardview()->CoordToScreen(min_flip), pdf_win_.sticky ? max_flip : boardview()->CoordToScreen(max_flip), 0);
 						} else {
 							pdf_img_->render(*draw, pdf_win_.sticky ? min_flip : boardview()->CoordToScreen(min), pdf_win_.sticky ? max_flip : boardview()->CoordToScreen(max), 0);
 						}
 						ImVec2 spos = ImGui::GetMousePos();
-						ImVec2 pos  = boardview()->ScreenToCoord(spos.x, spos.y);
+						ImVec2 pos  = pdf_win_.sticky && false ? spos : boardview()->ScreenToCoord(spos);
+						bool mouse_release = ImGui::IsMouseReleased(0);
+						bool ctrl = ImGui::GetIO().KeyCtrl;
 						
-						if (pos >= min && pos <= max) {
+						if (true || (pos >= min && pos <= max)) {
 							ImVec2 ppos1 = pos - min;
 							ImVec2 psz1  = max - min;
-							auto & phi = pdf_highlight_;
-							ImVec2 ppos = { ppos1.x / psz1.x * phi.pdim.x, phi.pdim.y - ppos1.y / psz1.y * phi.pdim.y };
+							auto & phi   = pdf_highlight_;
+							ImVec2 ppos  = { ppos1.x / psz1.x * phi.pdim.x, phi.pdim.y - ppos1.y / psz1.y * phi.pdim.y };
+							if (boardview()->m_current_side || pdf_win_.sticky) {
+								ppos.y = phi.pdim.y - ppos.y;
+							}
 							//std::cerr << ppos.x << " " << ppos.y << "\n";
 							
 							auto it = pdf_words_.find(phi.page);
 							if (it != pdf_words_.end()) {
+								bool seen_hovered = false;
+
 								for (auto & w : it->second) {
-									if (ppos.x > w.box.min.x && ppos.y > w.box.min.y && ppos.x < w.box.max.x && ppos.y < w.box.max.y) {
-										//std::cerr << ppos.x << " " << ppos.y << " word: " << w.word << "\n";
-										
+									uint32_t col = 0xff8080ff;
+									auto c_shptr = lookup(w.cell);
+									bool is_selected = false;
+									bool is_hovered = !seen_hovered && ppos > w.box.min && ppos < w.box.max;
+									seen_hovered = is_hovered;
+									bool is_visible = false;
+									bool board_is_hovered = false;
+									if (c_shptr) {
+										if (!boardview()->BoardElementIsVisible(*c_shptr)) {
+											col = 0xffff8080;
+										} else {
+											is_visible = true;
+										}
+
+										if ((is_selected = boardview()->PartIsHighlighted(*c_shptr))) {
+											col = 0xff0000ff;
+										}
+										board_is_hovered = boardview()->currentlyHoveredPart.get() == w.cell;
+									}
+
+									//std::cerr << ppos.x << " " << ppos.y << " word: " << w.word << "\n";
+									if (is_selected || board_is_hovered || is_hovered) {
 										ImVec2 xpa, xpb{ w.box.min };
 										
 										for (int i = 0; i < 4; ++i) {
@@ -1001,43 +1056,27 @@ namespace OBV_Tcl {
 											ImVec2 spa = boardview()->CoordToScreen(bpa.x, bpa.y);// + boardview()->m_boardHeight);
 											ImVec2 spb = boardview()->CoordToScreen(bpb.x, bpb.y);// + boardview()->m_boardHeight);
 											
-											draw->AddLine(spa, spb, 0xff00ffff, 5);
-										
+											draw->AddLine(spa, spb, col, 5);
 										}
-										
-										break;
+										if (is_hovered && is_visible) currently_hovered_part_ = w.cell;
+										//break;
+									}
+									if (is_hovered && mouse_release && c_shptr) {
+										if (! ctrl) {
+											boardview()->m_partHighlighted.clear();
+										}
+										boardview()->m_partHighlighted.push_back(*c_shptr);
 									}
 								}
 							}
 						}
 					}
 				}
-
-				pdf_bbox & ref = pdf_highlight_;
-				if (ref.valid) {
-					ImVec2 xpa, xpb{ ref.box.min.x, ref.box.min.y };
-
-					for (int i = 0; i < 4; ++i) {
-						xpa = xpb;
-						if (i == 0)      { xpb = { ref.box.max.x, ref.box.min.y }; }
-						else if (i == 1) { xpb = { ref.box.max.x, ref.box.max.y }; }
-						else if (i == 2) { xpb = { ref.box.min.x, ref.box.max.y }; }
-						else if (i == 3) { xpb = { ref.box.min.x, ref.box.min.y }; }
-
-						ImVec2 bpa = pdf2board(pdf_win_, xpa, boardview()->m_current_side);
-						ImVec2 bpb = pdf2board(pdf_win_, xpb, boardview()->m_current_side);
-						
-						ImVec2 spa = pdf_win_.sticky ? bpa : boardview()->CoordToScreen(bpa.x, bpa.y);
-						ImVec2 spb = pdf_win_.sticky ? bpb : boardview()->CoordToScreen(bpb.x, bpb.y);
-
-						draw->AddLine(spa, spb, 0xff0000ff, 10);
-					}
-				}
 			}
 		}
 		bool handle_mouse_drag(ImVec2 const & ppos, ImVec2 const & drag, bool token) {
 			ImGuiIO &io = ImGui::GetIO();
-			ImVec2 pos = pdf_win_.sticky ? ppos : boardview()->ScreenToCoord(ppos);
+			ImVec2 pos  = pdf_win_.sticky ? ppos : boardview()->ScreenToCoord(ppos);
 
 			
 			if (token || (pos > pdf_win_.box.min && pos < pdf_win_.box.max)) {
@@ -1094,9 +1133,16 @@ namespace OBV_Tcl {
 			}
 			return false;
 		}
+
+		bool pdf_invert_ = false;
 		
-
-
+		bool pdf_invert(opt<bool> const & v) {
+			if (v) {
+				pdf_invert_ = *v;
+			}
+			return pdf_invert_;
+		}
+		
 		bool pdf_sticky(opt<bool> const & v) {
 			if (v) {
 				if (! pdf_win_.sticky && *v) {
@@ -1114,7 +1160,6 @@ namespace OBV_Tcl {
 			return pdf_win_.sticky;
 		}
 		
-		// e__l
 		void schem_highlight(list<float> x, opt<float> y, opt<float> w, opt<float> h) {	
 			pdf_bbox & ref = pdf_highlight_;
 
@@ -1128,9 +1173,8 @@ namespace OBV_Tcl {
 				ref.valid = false;
 			}
 			if (ref.valid) {
-				ref.box.min -= ref.box.max / 2;// x -= ref.w / 2; //* 10 / 100;
-				ref.box.max += ref.box.max; // * 20 / 100;
-				ref.box.max += ref.box.min;
+				ref.box.min -= ref.box.max / 2.0f;
+				ref.box.max = ref.box.max * 2 + ref.box.min;
 			}
 		}
 		void undraw_page() {
@@ -1178,6 +1222,7 @@ namespace OBV_Tcl {
 			if (strcmp(theme, "dark") == 0) {
 				invert = true;
 			}
+			invert ^= pdf_invert_;
 			int img_width  = int(p_width * 8);
 			int img_height = int(p_height * 8);
 			unsigned char * img_buf = new unsigned char[img_width * img_height * 4 + 1 * 1024];
@@ -1324,17 +1369,21 @@ namespace OBV_Tcl {
 						double x, y, x2, y2;
 						w->getBBox(&x, &y, &x2, &y2);
 						auto it = pagemap.find(s);
-						bool clickable = false;
+						Component * clickable_cell = nullptr;
+						Net * clickable_net = nullptr;
+
 						if (it != pagemap.end()) {
 							it->second.second.push_back(occurence{page, float(x), float(y), float(x2 - x), float(y2 - y)});
-							clickable = true;
+							//clickable = true;
+							clickable_cell = it->second.first;
 						} else {
 							auto it = pagemap_net.find(s);
 							if (it != pagemap_net.end()) {
-								clickable = true;
+								//clickable = true;
+								clickable_net = it->second.first;
 							}
 						}
-						if (clickable) {
+						if (clickable_cell || clickable_net) {
 							auto it = pdf_words_.find(page);
 							if (it == pdf_words_.end()) {
 								pdf_words_.insert(std::pair<int, pdf_words_value_t>(page, pdf_words_value_t()));
@@ -1350,7 +1399,7 @@ namespace OBV_Tcl {
 								max.x += sz.x;
 							}
 
-							it->second.push_back({ { min, max }, s });
+							it->second.push_back({ { min, max }, s, clickable_cell, clickable_net });
 						}
 					}
 				}
@@ -1553,6 +1602,7 @@ namespace OBV_Tcl {
 #ifdef OBV_USE_POPPLER
 				.def("schem_open",      &this_t::schematic_open, policies(), schematic_open_opt)
 				.def("schem_sticky",    &this_t::pdf_sticky)
+				.def("schem_invert",    &this_t::pdf_invert)
 				.def("draw_page",       &this_t::draw_page)
 				.def("undraw_page",     &this_t::undraw_page)
 				.def("schem_highlight", &this_t::schem_highlight)

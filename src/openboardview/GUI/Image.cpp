@@ -1,7 +1,6 @@
 #include "Image.h"
 
 #include "imgui/imgui.h"
-#include "imgui/imgui_internal.h" // math ops
 #include <glad/glad.h>
 
 #include <array>
