@@ -122,13 +122,13 @@ void BoardView::ThemeSetStyle(const char *name) {
 	style.WindowBorderSize = 0.0f;
 
 	bool dark = strcmp(name, "dark") == 0;
-	auto f = [style, dark](ImGuiCol icol,
+	auto f = [&style, dark](ImGuiCol icol,
 					 float dr, float dg, float db, float da,
 					 float lr, float lg, float lb, float la) {
 		if (dark) {
-			style.colors[icol] = ImVec4(dr, dg, db, da);
+			style.Colors[icol] = ImVec4(dr, dg, db, da);
 		} else {
-			style.colors[icol] = ImVec4(lr, lg, lb, la);
+			style.Colors[icol] = ImVec4(lr, lg, lb, la);
 		}
 	};
 
@@ -2378,7 +2378,9 @@ void BoardView::HandleInput() {
 										part->visualmode = part->CVMSelected;
 									}
 								}
+								m_tcl->component_select_event();
 
+								
 								/*
 								 * If this part has a non-selected visual mode (normal)
 								 * AND it's not in the existing part list, then add it
@@ -3451,7 +3453,7 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 
 			part->omin        = ImVec2(min_x, min_y);
 			part->omax        = ImVec2(max_x, max_y);
-			part->centerpoint = ImVec2((max_x - min_x) / 2 + min_x, (max_y - min_y) / 2 + min_y);
+			part->centerpoint = part->omin + (part->omax - part->omin) / 2; //ImVec2((max_x - min_x) / 2 + min_x, (max_y - min_y) / 2 + min_y);
 
 			distance = sqrt((max_x - min_x) * (max_x - min_x) + (max_y - min_y) * (max_y - min_y));
 

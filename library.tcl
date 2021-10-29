@@ -289,6 +289,12 @@ proc kb_schematic { } {
 	}
 }
 
+proc cell_select_event { } {
+	if { [ llength [ selection ] ] == 1 } {
+		kb_schematic
+	}
+}
+
 proc r {} {
 	find_vrm [get_cells -filter { $pins > 100 }]
 	#adjacent_cells [lindex [get_cells] 8]

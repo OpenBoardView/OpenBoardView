@@ -32,6 +32,7 @@ private:
 	filesystem::path configFilepath{};
 
 	const Side *side = &defaultSide; // Try to keep this pointer always valid, linked to the BoardView::m_current_side attribute
+	Image &selectedImage();
 	const Image &selectedImage() const;
 
 	std::string error{};

@@ -1,8 +1,9 @@
 #include "ImGuiRendererSDL.h"
 
 #include <sstream>
+#include <iostream>
 #include <glad/glad.h>
-#define STB_IMAGE_IMPLEMENTATION
+//#define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
 #include "backends/imgui_impl_sdl.h"
@@ -91,15 +92,30 @@ void ImGuiRendererSDL::shutdown() {
 	ImGui_ImplSDL2_Shutdown();
 }
 
-std::string ImGuiRendererSDL::loadTextureFromData(unsigned char * image_data, int image_width, int image_height, GLuint* out_texture) {
+void ImGuiRendererSDL::unloadTexture(GLuint t, unsigned char * p) {
+	if (t) {
+		glDeleteTextures(1, &t);
+		if (p) {
+			stbi_image_free(p);
+		}
+	}
+}
+
+std::string ImGuiRendererSDL::loadTextureFromData(unsigned char * image_data_arg, int image_data_size, int * image_width_arg, int * image_height_arg, GLuint* out_texture, unsigned char ** image_buffer, bool use_image_loader) {
 	// Load from file
-	//int image_width = 0;
-	//int image_height = 0;
+	int image_width = 0;
+	int image_height = 0;
 
 	//auto buf = file_as_buffer(filepath);
-	//unsigned char* image_data = stbi_load_from_memory(reinterpret_cast<unsigned char*>(buf.data()), buf.size(), &image_width, &image_height, NULL, 4);
-
-	//unsigned char * image_data = new char
+	unsigned char* image_data = image_data_arg;
+	if (use_image_loader) {
+		std::cerr << "ST";
+		image_data = stbi_load_from_memory(image_data_arg, image_data_size, &image_width, &image_height, NULL, 4);
+		std::cerr << "BI\n";
+	} else {
+		image_width = *image_width_arg;
+		image_height = *image_height_arg;
+	}
 	
 	int glMaxTextureSize;
 	glGetIntegerv(GL_MAX_TEXTURE_SIZE, &glMaxTextureSize);
@@ -134,9 +150,10 @@ std::string ImGuiRendererSDL::loadTextureFromData(unsigned char * image_data, in
 
 	//stbi_image_free(image_data);
 
+	*image_buffer = image_data;
 	*out_texture = image_texture;
-	//*out_width = image_width;
-	//*out_height = image_height;
+	*image_width_arg  = image_width;
+	*image_height_arg = image_height;
 
 	return {};
 }

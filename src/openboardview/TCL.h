@@ -33,11 +33,11 @@
 #include <atomic>
 
 //#include "TCLDUMMY.h"
-//#define OBV_USE_POPPLER
+#define OBV_USE_POPPLER
 
 #ifdef OBV_USE_POPPLER
 
-#error Enabling pdf rendering with poppler changes the license of openboardview. Uncomment this line to continue with this derivation of openboardview under GPL license
+//#error Enabling pdf rendering with poppler changes the license of openboardview. Uncomment this line to continue with this derivation of openboardview under GPL license
 
 #include <poppler/PDFDocFactory.h>
 #include <poppler/TextOutputDev.h>
@@ -49,58 +49,6 @@
 #endif
 
 #include <boost/iterator/function_output_iterator.hpp>
-
-#if 0
-inline bool operator>(ImVec2 const & a, ImVec2 const & b) {
-	return a.x > b.x && a.y > b.y;
-}
-inline bool operator>=(ImVec2 const & a, ImVec2 const & b) {
-	return a.x >= b.x && a.y >= b.y;
-}
-inline bool operator<(ImVec2 const & a, ImVec2 const & b) {
-	return a.x < b.x && a.y < b.y;
-}
-inline bool operator<=(ImVec2 const & a, ImVec2 const & b) {
-	return a.x <= b.x && a.y <= b.y;
-}
-inline bool operator==(ImVec2 const & a, ImVec2 const & b) {
-	return a.x == b.x && a.y == b.y;
-}
-inline bool operator!=(ImVec2 const & a, ImVec2 const & b) {
-	return a.x != b.x || a.y != b.y;
-}
-inline ImVec2 operator-(ImVec2 const & a, ImVec2 const & b) {
-	return { a.x - b.x, a.y - b.y };
-}
-inline ImVec2 operator+(ImVec2 const & a, ImVec2 const & b) {
-	return { a.x + b.x, a.y + b.y };
-}
-inline ImVec2 operator+=(ImVec2 & a, ImVec2 const & b) {
-	a = { a.x + b.x, a.y + b.y };
-	return a;
-}
-inline ImVec2 operator-=(ImVec2 & a, ImVec2 const & b) {
-	a = { a.x - b.x, a.y - b.y };
-	return a;
-}
-inline ImVec2 operator/(ImVec2 const & a, float f) {
-	return { a.x / f, a.y / f };
-}
-inline ImVec2 operator*(ImVec2 const & a, float f) {
-	return { a.x * f, a.y * f };
-}
-inline ImVec2 operator/(ImVec2 const & a, ImVec2 const & b) {
-	return { a.x / b.x, a.y / b.y };
-}
-inline ImVec2 operator*(ImVec2 const & a, ImVec2 const & b) {
-	return { a.x * b.x, a.y * b.y };
-}
-template <typename C, typename T>
-std::basic_ostream<C, T> & operator<<(std::basic_ostream<C, T> & os, ImVec2 const & v) {
-	os << v.x << "," << v.y;
-	return os;
-}
-#endif
 
 namespace OBV_Tcl {
 	using namespace Tcl;
@@ -851,7 +799,15 @@ namespace OBV_Tcl {
 				tcli->terr() << e.what() << "\n";
 			}
 		}
-	
+
+		void component_select_event() {
+			try {
+				tcli->eval(std::string("cell_select_event"));
+			} catch (std::exception & e) {
+				tcli->terr() << e.what() << "\n";
+			}
+		}
+		
 		bool trace(opt<bool> v) {
 			if (v) {
 				trace_ = *v;
@@ -895,7 +851,11 @@ namespace OBV_Tcl {
 		struct bbox {
 			ImVec2 min, max;
 		};
+		bool in(bbox const & b, ImVec2 v) {
+			return v > b.min && v < b.max;
+		}
 
+		
 		struct pdf_window {
 			bbox   box;
 			ImVec2 wdim;
@@ -919,17 +879,24 @@ namespace OBV_Tcl {
 			bool   sticky = false;
 		};
 		
-		ImVec2 pdf2board(pdf_window const & w, ImVec2 c, bool flip) {
+		ImVec2 pdf2board(pdf_window const & w, Image * pdf, ImVec2 c, bool flip) {
+			ImVec2 t = pdf->CoordToScreen(c / w.wdim);
 			if (!flip) {
-				c.y = w.wdim.y - c.y;
+				//c.y = w.wdim.y - c.y;
+				t.y = 1.0f - t.y;
 			}
-			return w.box.min + c / w.wb_ratio;
+			
+			return w.box.min + t * w.bdim;
 			ImVec2 pr = w.wdim / c;
 			return w.box.min + pr * w.bdim;
 		}
-		ImVec2 board2pdf(pdf_window const & w, ImVec2 c, bool flip) {
-			if (!flip) { }
-			return (c - w.box.min) * w.wb_ratio;
+		ImVec2 board2pdf(pdf_window const & w, Image * pdf, ImVec2 c, bool flip) {
+			c = c - w.box.min;
+			if (!flip) {
+				c.y = w.bdim.y - c.y;
+			}
+
+			return pdf->ScreenToCoord((c) / w.bdim) * w.wdim;// * w.wb_ratio;
 			ImVec2 pr = (c - w.box.min) / w.bdim;
 			return pr * w.wdim;
 		}
@@ -960,11 +927,6 @@ namespace OBV_Tcl {
 		typedef std::vector<pdf_txt_bbox> pdf_words_value_t;
 		std::map<int, pdf_words_value_t> pdf_words_;
 
-		Component * currently_hovered_part_ = nullptr;
-		
-		Component * currently_hovered_part() {
-			return currently_hovered_part_;
-		}
 
 		std::optional<obv_shared_ptr<Component> > lookup(Component * c) {
 			if (c) {
@@ -1000,19 +962,19 @@ namespace OBV_Tcl {
 							pdf_img_->render(*draw, pdf_win_.sticky ? min_flip : boardview()->CoordToScreen(min), pdf_win_.sticky ? max_flip : boardview()->CoordToScreen(max), 0);
 						}
 						ImVec2 spos = ImGui::GetMousePos();
-						ImVec2 pos  = pdf_win_.sticky && false ? spos : boardview()->ScreenToCoord(spos);
+						ImVec2 pos  = pdf_win_.sticky ? spos : boardview()->ScreenToCoord(spos);
 						bool mouse_release = ImGui::IsMouseReleased(0);
 						bool ctrl = ImGui::GetIO().KeyCtrl;
 						
-						if (true || (pos >= min && pos <= max)) {
-							ImVec2 ppos1 = pos - min;
-							ImVec2 psz1  = max - min;
+						if (true) {
 							auto & phi   = pdf_highlight_;
-							ImVec2 ppos  = { ppos1.x / psz1.x * phi.pdim.x, phi.pdim.y - ppos1.y / psz1.y * phi.pdim.y };
-							if (boardview()->m_current_side || pdf_win_.sticky) {
+							//ImVec2 ppos  = { ppos1.x / psz1.x * phi.pdim.x, phi.pdim.y - ppos1.y / psz1.y * phi.pdim.y };
+							ImVec2 ppos = board2pdf(pdf_win_, pdf_img_, pos, boardview()->m_current_side || pdf_win_.sticky);
+
+							if (false && (boardview()->m_current_side || pdf_win_.sticky)) {
 								ppos.y = phi.pdim.y - ppos.y;
 							}
-							//std::cerr << ppos.x << " " << ppos.y << "\n";
+							//std::cerr << ppos << "\n"; //.x << " " << ppos.y << "\n";
 							
 							auto it = pdf_words_.find(phi.page);
 							if (it != pdf_words_.end()) {
@@ -1022,7 +984,7 @@ namespace OBV_Tcl {
 									uint32_t col = 0xff8080ff;
 									auto c_shptr = lookup(w.cell);
 									bool is_selected = false;
-									bool is_hovered = !seen_hovered && ppos > w.box.min && ppos < w.box.max;
+									bool is_hovered = !seen_hovered && in(pdf_win_.box, pos) && in(w.box, ppos);// > w.box.min && ppos < w.box.max;
 									seen_hovered = is_hovered;
 									bool is_visible = false;
 									bool board_is_hovered = false;
@@ -1050,13 +1012,21 @@ namespace OBV_Tcl {
 											else if (i == 2) { xpb = { w.box.min.x, w.box.max.y }; }
 											else if (i == 3) { xpb = { w.box.min.x, w.box.min.y }; }
 											
-											ImVec2 bpa = pdf2board(pdf_win_, xpa, boardview()->m_current_side);
-											ImVec2 bpb = pdf2board(pdf_win_, xpb, boardview()->m_current_side);
-											
-											ImVec2 spa = boardview()->CoordToScreen(bpa.x, bpa.y);// + boardview()->m_boardHeight);
-											ImVec2 spb = boardview()->CoordToScreen(bpb.x, bpb.y);// + boardview()->m_boardHeight);
-											
-											draw->AddLine(spa, spb, col, 5);
+											ImVec2 bpa = pdf2board(pdf_win_, pdf_img_, xpa, boardview()->m_current_side || pdf_win_.sticky);
+											ImVec2 bpb = pdf2board(pdf_win_, pdf_img_, xpb, boardview()->m_current_side || pdf_win_.sticky);
+
+											if (in(pdf_win_.box, bpa) && in(pdf_win_.box, bpb)) {
+												if (pdf_win_.sticky) {
+													draw->AddLine(bpa, bpb, col, 5);
+												} else {
+													
+													ImVec2 spa = boardview()->CoordToScreen(bpa);// + boardview()->m_boardHeight);
+													
+													ImVec2 spb = boardview()->CoordToScreen(bpb);// + boardview()->m_boardHeight);
+
+													draw->AddLine(spa, spb, col, 5);
+												}
+											}
 										}
 										if (is_hovered && is_visible) currently_hovered_part_ = w.cell;
 										//break;
@@ -1089,6 +1059,10 @@ namespace OBV_Tcl {
 					pdf_win_.box.min += bdrag;
 					pdf_win_.box.max += bdrag;
 					pdf_win_.reuse = true;
+					return true;
+				} else if (io.KeyShift || pdf_win_.sticky) {
+					ImVec2 bdrag = pdf_win_.sticky ? drag : ImVec2(1.0f, -1.0f) * boardview()->ScreenToCoord(drag, 0);
+					pdf_img_->scroll(bdrag / pdf_win_.bdim);
 					return true;
 				}
 			}
@@ -1156,6 +1130,7 @@ namespace OBV_Tcl {
 				}
 
 				pdf_win_.sticky = *v;
+				pdf_win_.update();
 			}
 			return pdf_win_.sticky;
 		}
@@ -1190,6 +1165,25 @@ namespace OBV_Tcl {
 			pdf_win_.reuse = false;
 			pdf_win_.sticky = false;
 		}
+		struct page_cache {
+			unsigned char * thumb = nullptr;
+			unsigned char * img_buf = nullptr;
+			Image * pdf_img = nullptr;
+			ImVec2 dim;
+		};
+
+		std::map<int, page_cache> page_cache_;
+
+		struct helper_cairo_write_t {
+			std::vector<unsigned char> data;
+		};
+		
+		static cairo_status_t cairo_write_func(void * c, const unsigned char * data, unsigned int len) {
+			auto * p = (helper_cairo_write_t *) c;
+			p->data.insert(p->data.end(), data, data + len);
+			//std::cerr << "cairo write raw=" << *p << " png=" << len << "\n";
+			return CAIRO_STATUS_SUCCESS;
+		}
 		void draw_page(int page, opt<Component *> inside) {
 			if (!pdoc_) {
 				struct stat sbuf;
@@ -1209,59 +1203,98 @@ namespace OBV_Tcl {
 				}
 			}
 
-			PopplerPage * ppage = poppler_document_get_page(pdoc_, page - 1);
-			if (! page) {
-				std::cerr << "get_page\n";
-				return;
-			}
-			double p_width, p_height;
-			poppler_page_get_size(ppage, &p_width, &p_height);
-
-			bool invert = false;
-			const char * theme = boardview()->obvconfig.ParseStr("colorTheme", "default");
-			if (strcmp(theme, "dark") == 0) {
-				invert = true;
-			}
-			invert ^= pdf_invert_;
-			int img_width  = int(p_width * 8);
-			int img_height = int(p_height * 8);
-			unsigned char * img_buf = new unsigned char[img_width * img_height * 4 + 1 * 1024];
-			cairo_surface_t * surface = cairo_image_surface_create_for_data(img_buf,
-																			CAIRO_FORMAT_ARGB32,
-																			img_width, img_height, cairo_format_stride_for_width(CAIRO_FORMAT_ARGB32, img_width));
-
-			if (auto err = cairo_surface_status(surface); err != CAIRO_STATUS_SUCCESS) {
-				std::cerr << "surface_create: " << cairo_status_to_string(err) << "\n";
-				return;
-			}
-			
-			cairo_t * cr = cairo_create(surface);
-
-			cairo_scale(cr, 8, 8);
-			
-			if (invert) {
-				cairo_set_source_rgb (cr, 1., 1., 1.);
-				cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
+			auto pcache = page_cache_.find(page);
+			if (pcache == page_cache_.end()) {
+				PopplerPage * ppage = poppler_document_get_page(pdoc_, page - 1);
+				if (! page) {
+					std::cerr << "get_page\n";
+					return;
+				}
+				double p_width, p_height;
+				poppler_page_get_size(ppage, &p_width, &p_height);
+				
+				bool invert = false;
+				const char * theme = boardview()->obvconfig.ParseStr("colorTheme", "default");
+				if (strcmp(theme, "dark") == 0) {
+					invert = true;
+				}
+				invert ^= pdf_invert_;
+				int img_width  = int(p_width * 8);
+				int img_height = int(p_height * 8);
+				int img_buf_size = img_width * img_height * 4 + 1 * 1024;
+				unsigned char * img_buf = new unsigned char[img_buf_size];
+				cairo_surface_t * surface = cairo_image_surface_create_for_data(img_buf,
+																				CAIRO_FORMAT_ARGB32,
+																				img_width, img_height, cairo_format_stride_for_width(CAIRO_FORMAT_ARGB32, img_width));
+				
+				if (auto err = cairo_surface_status(surface); err != CAIRO_STATUS_SUCCESS) {
+					std::cerr << "surface_create: " << cairo_status_to_string(err) << "\n";
+					return;
+				}
+				
+				cairo_t * cr = cairo_create(surface);
+				
+				cairo_scale(cr, 8, 8);
+				
+				if (invert) {
+					cairo_set_source_rgb (cr, 1., 1., 1.);
+					cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
+					cairo_paint(cr);
+				}
+				
+				cairo_save(cr);
+				poppler_page_render(ppage, cr);
+				cairo_restore(cr);
+				
+				if (invert) {
+					cairo_set_operator (cr, CAIRO_OPERATOR_DIFFERENCE);
+					cairo_set_source_rgb(cr, 1., 1., 1.);
+				} else {
+					cairo_set_operator (cr, CAIRO_OPERATOR_DEST_OVER);
+					cairo_set_source_rgb (cr, 1, 1, 1);
+				}
 				cairo_paint(cr);
+				
+				//cairo_restore(cr);
+				helper_cairo_write_t whelp;
+				cairo_surface_write_to_png_stream(surface, cairo_write_func, (void *) &whelp);
+				std::cerr << "render png " << whelp.data.size() << " bytes\n";
+
+				const int thumb_ratio = 30;
+				unsigned char * thumb = new unsigned char[(img_width / thumb_ratio + 1) * (img_height / thumb_ratio + 1) * 4];
+				{
+					const int ratio = thumb_ratio;
+					for (int y = 0; y < img_height; y += ratio) {
+						for (int x = 0; x < img_width; x += ratio) {
+							for (int c = 0; c < 4; ++c) {
+								thumb[((x / ratio) + (img_width / ratio) * (y / ratio)) * 4 + c]
+									= img_buf[(x + img_width * y) * 4 + c];
+							}
+						}
+					}
+				}
+				
+				cairo_destroy (cr);
+				page_cache cache_ent;
+
+				if (true) {
+					cache_ent.thumb = thumb;
+					cache_ent.img_buf = new unsigned char[whelp.data.size()];
+					memcpy(cache_ent.img_buf, whelp.data.data(), whelp.data.size());
+					cache_ent.pdf_img = new Image(cache_ent.img_buf, whelp.data.size(), img_width, img_height, true, true, thumb, img_width / thumb_ratio, img_height / thumb_ratio); //("output.png");
+					delete img_buf;
+				} else {
+					cache_ent.img_buf = img_buf;
+					cache_ent.pdf_img = new Image(img_buf, 0, img_width, img_height, false, true);
+				}
+				cache_ent.dim = ImVec2(float(p_width), float(p_height));
+				auto imgp = cache_ent.pdf_img;
+				imgp->zoom_factor(boardview()->zoomFactor);
+				//imgp->reload();
+				cairo_surface_destroy(surface);
+				page_cache_.insert(std::make_pair(page, cache_ent));
 			}
-
-			cairo_save(cr);
-			poppler_page_render(ppage, cr);
-			cairo_restore(cr);
-			
-			if (invert) {
-				cairo_set_operator (cr, CAIRO_OPERATOR_DIFFERENCE);
-				cairo_set_source_rgb(cr, 1., 1., 1.);
-			} else {
-				cairo_set_operator (cr, CAIRO_OPERATOR_DEST_OVER);
-				cairo_set_source_rgb (cr, 1, 1, 1);
-			}
-			cairo_paint(cr);
-
-			//cairo_restore(cr);
-
-			cairo_destroy (cr);
-
+#if 0
 			if (pdf_img_) {
 				delete pdf_img_;
 			}
@@ -1270,15 +1303,26 @@ namespace OBV_Tcl {
 			}
 			pdf_img_buf_ = img_buf;
 			pdf_img_ = new Image(img_buf, img_width, img_height, true); //("output.png");
+			pdf_img_->zoom_factor(boardview()->zoomFactor);
 			pdf_img_->reload();
-			cairo_surface_destroy(surface);
-
+#endif
+			for (auto & i : page_cache_) {
+				if (i.first != page) {
+					i.second.pdf_img->unload();
+				}
+			}
+			
+			auto pcit = page_cache_.find(page);
+			//pcit->second.pdf_img->reload(false);
+			pdf_img_ = pcit->second.pdf_img;
+			
 			pdf_highlight_.valid  = false;
-			pdf_highlight_.pdim.x = float(p_width);
-			pdf_highlight_.pdim.y = float(p_height);
+			pdf_highlight_.pdim   = pcit->second.dim;
+			//pdf_highlight_.pdim.x = float(p_width);
+			//pdf_highlight_.pdim.y = float(p_height);
 			pdf_highlight_.page = page;
 
-			pdf_win_.wdim = { float(p_width), float(p_height) };
+			pdf_win_.wdim = pcit->second.dim; //{ float(p_width), float(p_height) };
 			
 			pdf_in_cell_ = nullptr;
 			if (! pdf_win_.reuse) {
@@ -1443,7 +1487,17 @@ namespace OBV_Tcl {
 		bool handle_mouse_wheel(float, float, float) {
 			return false;
 		}
+		bool grab_mouse_hover() {
+			return false;
+		}
 #endif // OBV_USE_POPPLER
+
+		Component * currently_hovered_part_ = nullptr;
+		
+		Component * currently_hovered_part() {
+			return currently_hovered_part_;
+		}
+
 		
 		object file_history() {
 			object r;
