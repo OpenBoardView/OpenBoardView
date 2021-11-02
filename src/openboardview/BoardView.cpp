@@ -1191,9 +1191,10 @@ void BoardView::ShowInfoPane(void) {
 							//
 						} else {
 							m_pinSelected = pin;
-							for (auto p : m_partHighlighted) {
-								pin->component->visualmode = pin->component->CVMNormal;
-							};
+							//for (auto p : m_partHighlighted) {
+							//	pin->component->visualmode = pin->component->CVMNormal;
+							//};
+							pin->component->visualmode = pin->component->CVMNormal;
 							m_partHighlighted.push_back(pin->component);
 							CenterZoomNet(pin->net->name);
 						}
@@ -2080,7 +2081,6 @@ void BoardView::Update() {
 			ImGui::Text("Position: %0.3f\", %0.3f\" (%0.2f, %0.2fmm)", pos.x / 1000, pos.y / 1000, pos.x * 0.0254, pos.y * 0.0254);
 			ImGui::SameLine();
 		}
-
 		{
 			if (m_validBoard) {
 				ImVec2 s = ImGui::CalcTextSize(fhistory.history[0]);
@@ -2105,14 +2105,15 @@ void BoardView::Update() {
 	 * Drawing surface, where the actual PCB/board is plotted out
 	 */
 	ImGui::SetNextWindowPos(ImVec2(0, m_menu_height));
-	if (io.DisplaySize.x != m_lastWidth || io.DisplaySize.y != m_lastHeight) {
-		//		m_lastWidth   = io.DisplaySize.x;
+
+	//if (io.DisplaySize.x != m_lastWidth || io.DisplaySize.y != m_lastHeight) {
+	if (m_board_surface.x != m_lastWidth || m_board_surface.y != m_lastHeight) {
+	//		m_lastWidth   = io.DisplaySize.x;
 		//		m_lastHeight  = io.DisplaySize.y;
 		m_lastWidth   = m_board_surface.x;
 		m_lastHeight  = m_board_surface.y;
 		m_needsRedraw = true;
 	}
-
 	ImGui::SetNextWindowSize(m_board_surface);
 
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
@@ -2120,8 +2121,9 @@ void BoardView::Update() {
 	ImGui::PushStyleColor(ImGuiCol_WindowBg, m_colors.backgroundColor);
 
 	ImGui::Begin("surface", nullptr, draw_surface_flags);
+	HandleInput();
+
 	if (m_validBoard) {
-		HandleInput();
 		backgroundImage.render(*ImGui::GetWindowDrawList(),
 			CoordToScreen(backgroundImage.x0(), backgroundImage.y0()),
 			CoordToScreen(backgroundImage.x1(), backgroundImage.y1()),
@@ -2156,6 +2158,7 @@ void BoardView::Update() {
 		}
 	}
 	ImGui::End();
+
 	ImGui::PopStyleColor();
 	ImGui::PopStyleVar();
 
@@ -2251,15 +2254,13 @@ void BoardView::HandleInput() {
 				// off screen). 500 arbritary chosen
 				ImGui::ResetMouseDragDelta();
 
-				if (! m_tcl->handle_mouse_drag(io.MouseClickedPos[0], delta, m_tcl_drag)) {
+				if (! (m_tcl_drag = m_tcl->handle_mouse_drag(io.MouseClickedPos[0], delta, m_tcl_drag))) {
 					ImVec2 td = ScreenToCoord(delta.x, delta.y, 0);
 
 					m_dx += td.x;
 					m_dy += td.y;
-					m_draggingLastFrame = true;
-				} else {
-					m_tcl_drag = true;
 				}
+				m_draggingLastFrame = true;
 				m_needsRedraw       = true;
 			}
 		} else if (m_dragging_token >= 0) {
@@ -2268,6 +2269,7 @@ void BoardView::HandleInput() {
 			
 			if (m_lastFileOpenWasInvalid == false) {
 				// Conext menu
+
 				if (!m_lastFileOpenWasInvalid && m_file && m_board && ImGui::IsMouseClicked(1)) {
 					if (showAnnotations) {
 						// Build context menu here, for annotations and inspection
@@ -2288,7 +2290,7 @@ void BoardView::HandleInput() {
 					FlipBoard();
 
 					// Else, click to select pin
-				} else if (!m_lastFileOpenWasInvalid && m_file && m_board && ImGui::IsMouseReleased(0) && !m_draggingLastFrame) {
+				} else if (!m_lastFileOpenWasInvalid && m_file && m_board && ImGui::IsMouseReleased(0) && !m_draggingLastFrame && !m_tcl->handle_mouse_click(io.MouseClickedPos[0])) {
 					ImVec2 spos = ImGui::GetMousePos();
 					ImVec2 pos  = ScreenToCoord(spos.x, spos.y);
 
@@ -2826,7 +2828,7 @@ void BoardView::OutlineGenFillDraw(ImDrawList *draw, int ydelta, double thicknes
 
 	// Get the viewport limits, so we don't waste time scanning what we don't need
 	ImVec2 vpa = ScreenToCoord(0, 0);
-	ImVec2 vpb = ScreenToCoord(io.DisplaySize.x, io.DisplaySize.y);
+	ImVec2 vpb = ScreenToCoord(io.DisplaySize);
 
 	if (vpa.y > vpb.y) {
 		ystart = vpb.y;
@@ -2963,12 +2965,12 @@ inline void BoardView::DrawOutline(ImDrawList *draw) {
 		Point &pb = *outline[i + 1];
 
 		// jump double/dud points
-		if (pa == pb) continue; //. if (pa.x == pb.x && pa.y == pb.y) continue;
+		if (pa == pb) continue;
 
 		// if we encounter our hull/poly start point, then we've now created the
 		// closed
 		// hull, jump the next segment and reset the first-point
-		if (!jump && fp == pb) { //. if ((!jump) && (fp.x == pb.x) && (fp.y == pb.y)) {
+		if (!jump && fp == pb) {
 			if (i < outline.size() - 2) {
 				fp   = *outline[i + 2];
 				jump = 1;
@@ -2978,8 +2980,8 @@ inline void BoardView::DrawOutline(ImDrawList *draw) {
 			jump = 0;
 		}
 
-		ImVec2 spa = CoordToScreen(pa); //. ImVec2 spa = CoordToScreen(pa.x, pa.y);
-		ImVec2 spb = CoordToScreen(pb); //. ImVec2 spb = CoordToScreen(pb.x, pb.y);
+		ImVec2 spa = CoordToScreen(pa);
+		ImVec2 spb = CoordToScreen(pb);
 
 		/*
 		 * If we have a pin selected, we mask off the colour to shade out
@@ -4156,11 +4158,8 @@ void BoardView::DrawBoard() {
 	DrawPartTooltips(draw);
 	DrawAnnotations(draw);
 
-
 	m_tcl->imgui_draw(draw);//ImGui::GetWindowDrawList());
-		
 
-	
 	draw->ChannelsMerge();
 
 	// Copy the new draw list and cmd buffer:
@@ -4581,3 +4580,12 @@ void BitVec::Resize(uint32_t new_size) {
 	}
 	m_size = new_size;
 }
+
+void BoardView::wakeup() {
+	if (m_wakeup_pipe[0] < 0) {
+		pipe(m_wakeup_pipe);
+	}
+	write(m_wakeup_pipe[1], "\0", 1);
+}
+
+int BoardView::m_wakeup_pipe[2] = { -1, -1 };

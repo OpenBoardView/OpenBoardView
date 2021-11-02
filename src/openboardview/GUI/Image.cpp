@@ -11,6 +11,7 @@
 #include "imgui_operators.h"
 
 #include "Renderers/Renderers.h"
+#include "BoardView.h"
 
 Image::Image(const filesystem::path &file, bool no_r) : file(file), no_rotation_(no_r) {
 	imgdata_raw_ = new std::atomic<unsigned char *>(nullptr);
@@ -235,6 +236,7 @@ void Image::render(ImDrawList &draw, const ImVec2 &p_min, const ImVec2 &p_max, i
 					}
 #endif
 					*imgdata_raw_= tp;
+					BoardView::wakeup();
 				});
 				//imgdata_raw_thread_->join();
 				//imgdata_raw_thread_ = nullptr;
@@ -264,7 +266,16 @@ void Image::render(ImDrawList &draw, const ImVec2 &p_min, const ImVec2 &p_max, i
 	
 	if (texture) {
 		auto uvs = TransformRelativeCoordinates(rotation);
+#if 1
+		float w_aspect = abs((p_max - p_min).x / (p_max - p_min).y);
+		float i_aspect = float(imgwidth) / float(imgheight);
 
+		float x_new = uvs[0].x + (uvs[1].x - uvs[0].x) / i_aspect * w_aspect;
+		uvs[1].x = x_new; //uvs[0].x / i_aspect * w_aspect;
+		uvs[2].x = x_new; //uvs[3].x / i_aspect * w_aspect;
+
+		//std::cerr << w_aspect << " " << i_aspect << " " << i_aspect / w_aspect << "\n";
+#endif
 		//std::cerr << "DRAW\n";
 		draw.AddImageQuad(reinterpret_cast<void*>(texture),
 						  p_min, // Asbolute render rectangle top-left corner

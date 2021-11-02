@@ -279,8 +279,10 @@ int main(int argc, char **argv) {
 		cleanupAndExit(1);
 	}
 
+#ifdef SDL_DROPFILE
 	SDL_EventState(SDL_DROPFILE, SDL_ENABLE);
-
+#endif
+	
 	// SDL disables screen saver by default which doesn't make sense for us.
 	SDL_EnableScreenSaver();
 
@@ -365,7 +367,9 @@ int main(int argc, char **argv) {
 	 * If you find some things aren't working properly without you having to move
 	 * the mouse or 'waking up' OBV then increase to 5 or more.
 	 */
-	sleepout = 30;
+	const int snooze = 30;
+	sleepout = snooze;
+	bool wakeup = false;
 
 	bool tcl_available = false;
 	{
@@ -399,13 +403,15 @@ int main(int argc, char **argv) {
 			
 			SDL_Event event;
 			while (SDL_PollEvent(&event)) {
-				sleepout = 30;
+				sleepout = snooze;
 				Renderers::current->processEvent(event);
 				
+#ifdef SDL_DROPFILE
 				if (event.type == SDL_DROPFILE) {
 					app.LoadFile(filesystem::u8path(event.drop.file));
 					tcl->notify_load_file();
 				}
+#endif
 				
 				if (event.type == SDL_QUIT) done = true;
 			}
@@ -418,7 +424,10 @@ int main(int argc, char **argv) {
 			}
 			
 			if (tcl) {
-				tcl->pollfd(!sleepout ? 50000 : 0);
+				wakeup = tcl->pollfd(!sleepout ? 50000 : 0);
+				if (wakeup) {
+					sleepout = snooze;
+				}
 				if (!(sleepout--)) {
 					sleepout = 0;
 					continue;
@@ -438,7 +447,7 @@ int main(int argc, char **argv) {
 			
 			Renderers::current->initFrame();
 			ImGui::NewFrame();
-			
+
 			// If we have a board to view being passed from command line, then "inject"
 			// it here.
 			if (preload_required) {
@@ -470,7 +479,8 @@ int main(int argc, char **argv) {
 			// vsync disabled, manual FPS limiting
 			if (!SDL_GL_GetSwapInterval()) {
 				static const int FPS = 30;
-				static const std::chrono::duration<std::intmax_t, std::ratio<1, FPS>> frameDuration{1};
+				//static const std::chrono::duration<std::intmax_t, std::ratio<1, FPS>> frameDuration{1};
+				static const std::chrono::duration<int, std::ratio<1, FPS>> frameDuration{1};
 				static auto nextFrame = std::chrono::steady_clock::now() + frameDuration;
 				
 				std::this_thread::sleep_until(nextFrame);

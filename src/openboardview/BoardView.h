@@ -270,7 +270,10 @@ struct BoardView {
 	ImVec2 m_board_surface;
 	ImVec2 m_info_surface;
 	int m_dragging_token = 0; // 1 = board window, 2 = side pane
-	bool m_tcl_drag = false;
+	int m_tcl_drag = 0;
+
+	static void wakeup();
+	static int m_wakeup_pipe[2];
 	
 	ColorScheme m_colors;
 

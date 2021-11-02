@@ -279,6 +279,118 @@ proc kb_nextboard { } {
 }
 
 proc kb_schematic { } {
+	schem_sticky -toggle
+}
+
+proc enclosed_box1 { words } {
+	set xmin 1000000
+	set xmax 0
+	set ymin $xmin
+	set ymax 0
+	foreach w $words {
+		set minx [get_prop xmin $w]
+		set miny [get_prop ymin $w]
+		set maxx [get_prop xmax $w]
+		set maxy [get_prop ymax $w]
+		
+		if { $minx < $xmin } { set xmin $minx }
+		if { $miny < $ymin } { set ymin $miny }
+		if { $maxx > $xmax } { set xmax $maxx }
+		if { $maxy > $ymax } { set ymax $maxy }
+	}
+	return [list $xmin $ymin $xmax $ymax]
+}
+
+proc distance_to_box { box word } {
+	
+}
+
+proc is_orthogonal { angle dev } {
+	set aa [ expr { abs($angle) } ]
+
+	for { set i 0 } { $i < 3 } { incr i } {
+		if { $aa < $dev } { return 1 }
+		set aa [expr { $aa - 90 } ]
+		if { $aa < 0 } { return 0 }
+	}
+	return 0
+}
+
+proc schem_find_pins_simple { cell radius } {
+	set ref [ get_schem_words -of $cell ]
+	if { [ llength $ref ] != 1 } return
+	set page [ get_prop page $ref ]
+
+	set found [list]
+	foreach p [ lsort -integer -decreasing [ get_prop name [ get_pins -of $cell ]]] {
+		set cand [ get_schem_words -filter { ! $highlighted } -page $page -ref $ref -radius $radius $p ]
+		if { [ llength $cand ] != 1 } return
+		set found [ concat $found $cand ]
+		#puts [ llength $found ]
+		#report_prop -verbose $found
+	}
+	if { [ llength $found ] > 0 && [ llength $found ] == [ get_prop pins $cell ] } {
+		#puts "$cell $found"
+		#report_prop -verbose $found
+		highlight -color "\#00ff00" $found
+	}
+}
+
+proc schem_find_pins { cell } {
+	set page [ get_prop page [ get_schem_words -of $cell ] ]
+	if { [ llength $page ] != 1 } return
+	set found [list]
+	foreach p [ lsort -integer -decreasing [ get_prop name [ get_pins -of $cell ] ] ] {
+		set a_match_max -1
+		set a_match_max_mindist 10000
+		set a_match_max_word ""
+		foreach w [ get_schem_words -page $page -exact $p ] {
+			set a_match 0
+			set a_match_mindist 10000
+			foreach ww $found {
+				set ang [ angle -ortho $w $ww]
+				#if { $w eq "6" } {
+				#	puts "ortho $ang $ww"
+				#}
+				if { $ang < 5 } {
+					incr a_match
+					set d [ distance $ww $w ]
+					if { $d < $a_match_mindist } {
+						set a_match_mindist $d
+					}
+				}
+			}
+			#if { $w eq "6" } {
+			#	puts "candid $w angle match $a_match mindist $a_match_mindist"
+			#}
+			# if { $a_match > $a_match_max || ($a_match == $a_match_max && $a_match_mindist < $a_match_max_mindist) } {}
+			if { $a_match / $a_match_mindist > $a_match_max / $a_match_max_mindist } {
+				set a_match_max $a_match
+				set a_match_max_mindist $a_match_mindist
+				set a_match_max_word $w
+				#puts "candidate $w angle match $a_match mindist $a_match_mindist"
+			}
+		}
+		set found [ linsert $found end $a_match_max_word ]
+		#puts "[llength $found] [lindex $found 0]"
+	}
+	#highlight -color "#00ff00" $found
+	return $found
+}
+
+proc schem_find_pin_labels { cell pins } {
+	if { ! [llength $pins] } {
+		set pins [ schem_find_pins $cell ]
+	}
+	set b [ enclosed_box $pins ]
+	foreach w [ get_schem_words -bbox $b ] {
+		if { ! ($w in $pins) } {
+			puts $w
+		}
+	}
+}
+
+proc cell_select_event { } {
 	if { [ llength [ selection ] ] == 0 } {
 		undraw_page
 	} else {
@@ -287,17 +399,19 @@ proc kb_schematic { } {
 		draw_page $page [get_cells $c]
 		schem_highlight [lrange [ lindex [get_prop schem_pages $c ] 0 ] 1 end]
 	}
-}
-
-proc cell_select_event { } {
-	if { [ llength [ selection ] ] == 1 } {
-		kb_schematic
-	}
+	#if { [ llength [ selection ] ] == 1 } {
+	#	kb_schematic
+	#}
 }
 
 proc r {} {
 	find_vrm [get_cells -filter { $pins > 100 }]
 	#adjacent_cells [lindex [get_cells] 8]
+}
+
+proc r2 {} {
+	schem_find_pins [ get_cells PU7201 ]
+	enclosed_box [ get_schem_words -color "#9900ff00" ]
 }
 
 proc RE {} {

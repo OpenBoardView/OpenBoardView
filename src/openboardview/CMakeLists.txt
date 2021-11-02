@@ -8,7 +8,7 @@ if(ENABLE_GLES2)
 	add_definitions(-DENABLE_GLES2)
 endif()
 
-add_definitions(-DIMGUI_DEFINE_MATH_OPERATORS)
+#add_definitions(-DIMGUI_DEFINE_MATH_OPERATORS)
 
 # Platform-specific configuration
 if(WIN32)
