@@ -316,35 +316,84 @@ proc is_orthogonal { angle dev } {
 	return 0
 }
 
-proc schem_find_pins_simple { cell radius } {
-	set ref [ get_schem_words -of $cell ]
+proc highlight_marked {} {
+	foreach o [ get_schem_words -filter { !$highlighted && $marked } ] {
+		highlight -colorindex [get_prop mark $o] $o
+	}
+}
+
+proc schem_find_pins_simple { page pin radius } {
+	foreach cw [ get_schem_words -page $page -filter { $is_cell } ] {
+		set_prop genmark [ generate_mark ] $cw
+	}
+	set last_dud 0
+	while { 1 } {
+		set dud [ impl_schem_find_pins_simple $page $pin $radius ]
+		if { $dud == $last_dud } { break }
+		set last_dud $dud
+	}
+}
+
+proc impl_schem_find_pins_simple { page pin radius } {
+	set dud 0
+	foreach w [ get_schem_words -page $page -filter { !$marked } $pin ] {
+		set cells [ get_schem_words -ref $w -radius $radius -filter { $is_cell && ! $marked } -sort { [ distance $a $r ] < [distance $b $r ] } ]
+		if { [ llength $cells ] == 1 } {
+			set_prop mark [ get_prop genmark $cells ] $cells
+			set_prop mark [ get_prop genmark $cells ] $w
+			#highlight -color "\#00ff00" $w
+			#highlight -color "\#00ff00" $cells
+			#puts "$cells $pin"
+		} elseif { [ llength $cells ] } {
+			set d0 [ distance [ lindex $cells 0 ] $w ]
+			set d1 [ distance [ lindex $cells 1 ] $w ]
+			if { [ expr $d1 / $d0 > 1.5 ] } {
+				set gm [ get_prop genmark [lindex $cells 0] ]
+				set_prop mark $gm [lindex $cells 0]
+				set_prop mark $gm $w
+				#highlight -color "\#00ff00" $w
+				#highlight -color "\#00ff00" [lindex $cells 0]
+				#puts "[lindex $cells 0] $pin"
+			} else {
+				incr dud
+			}
+		}
+	}
+	return $dud
+}
+		
+
+proc schem_find_pins_simple_obsolete1 { cell } {
+	set ref [ get_schem_words -of $cell -filter { !$marked } ]
 	if { [ llength $ref ] != 1 } return
 	set page [ get_prop page $ref ]
 
 	set found [list]
+	set numpins [ get_prop pins $cell ]
 	foreach p [ lsort -integer -decreasing [ get_prop name [ get_pins -of $cell ]]] {
-		set cand [ get_schem_words -filter { ! $highlighted } -page $page -ref $ref -radius $radius $p ]
+		set cand [ get_schem_words -filter { ! $marked } -page $page -ref $ref -radius [ expr $numpins * 10 ] $p ]
 		if { [ llength $cand ] != 1 } return
 		set found [ concat $found $cand ]
-		#puts [ llength $found ]
-		#report_prop -verbose $found
 	}
-	if { [ llength $found ] > 0 && [ llength $found ] == [ get_prop pins $cell ] } {
+	if { [ llength $found ] > 0 && [ llength $found ] == $numpins } {
 		#puts "$cell $found"
 		#report_prop -verbose $found
-		highlight -color "\#00ff00" $found
+		#highlight -color "\#00ff00" $found
+		set_prop mark $mark $found
 	}
 }
 
-proc schem_find_pins { cell } {
-	set page [ get_prop page [ get_schem_words -of $cell ] ]
-	if { [ llength $page ] != 1 } return
+proc schem_find_pin_shaped { cell mark } {
+	set ref [ get_schem_words -of $cell -filter { !$marked } ]
+	if { [ llength $ref ] != 1 } return
+	set page [ get_prop page $ref ]
 	set found [list]
+	set numpins [ get_prop pins $ref ]
 	foreach p [ lsort -integer -decreasing [ get_prop name [ get_pins -of $cell ] ] ] {
 		set a_match_max -1
 		set a_match_max_mindist 10000
 		set a_match_max_word ""
-		foreach w [ get_schem_words -page $page -exact $p ] {
+		foreach w [ get_schem_words -ref $ref -radius [ expr $num_pins * 10 ] -page $page -filter { !$marked } $p ] {
 			set a_match 0
 			set a_match_mindist 10000
 			foreach ww $found {
@@ -374,6 +423,7 @@ proc schem_find_pins { cell } {
 		set found [ linsert $found end $a_match_max_word ]
 		#puts "[llength $found] [lindex $found 0]"
 	}
+	set_prop mark $mark $found
 	#highlight -color "#00ff00" $found
 	return $found
 }

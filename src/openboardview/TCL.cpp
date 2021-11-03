@@ -1,4 +1,6 @@
 #include "TCL.h"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wparentheses"
 
 //Tcl_ObjType TCL::net_objtype_, TCL::cell_objtype_, TCL::pin_objtype_, TCL::board_objtype_;
 #if 0
@@ -27,6 +29,8 @@ namespace OBV_Tcl {
 		std::regex re;
 		if (use_regex) re = match[0];
 
+		//Tcl_Parse filter_parse;
+		
 		if (radius && ! ref) {
 			throw tcl_error("-radius requires -ref");
 		}
@@ -36,6 +40,26 @@ namespace OBV_Tcl {
 			filter_ns = namespace_str(filter);
 			namespace_open(*tcli, filter_ns);
 			filter_o = object(std::string("namespace eval ") + filter_ns + " { expr { " + *filter_arg + " } }");
+
+#if 0
+			//auto expr = std::string("namespace eval ") + filter_ns + " { expr { " + *filter_arg + " } }";
+			std::string expr = *filter_arg;
+			if (Tcl_ParseExpr(tcl, expr.c_str(), -1, &filter_parse) != TCL_OK) {
+				std::cerr << "error: parseexpr\n";
+			} else {
+				std::cerr << "expr parse ok\n";
+			}
+			std::cerr << "num tokens: " << filter_parse.numTokens << "\n";
+			for (int ti = 0; ti < filter_parse.numTokens; ++ti) {
+				std::cerr << filter_parse.tokenPtr[ti].type << " " << filter_parse.tokenPtr[ti].size;
+				std::cerr << std::string(filter_parse.tokenPtr[ti].start, filter_parse.tokenPtr[ti].size) << "\n";
+			}
+			if (Tcl_EvalTokensStandard(tcl, filter_parse.tokenPtr, 1) != TCL_OK) {
+				std::cerr << "error: evaltokens\n";
+			} else {
+				std::cerr << "eval ok\n";
+			}
+#endif
 		}
 
 		if (sort) {
@@ -44,7 +68,7 @@ namespace OBV_Tcl {
 			namespace_open(*tcli, sort_ns);
 			sort_o = object(std::string("namespace eval ") + sort_ns + " { expr { " + *sort + " } }");
 		}
-		
+
 		std::set<pdf_txt_bbox *> not_set;
 		if (not_ && *not_) {
 			for (auto * p : *not_) {
@@ -101,8 +125,8 @@ namespace OBV_Tcl {
 					}
 				}
 			}
-		} else if (page) {
-			auto it = pdf_words_.find(*page);
+		} else if (page || ref) {
+			auto it = pdf_words_.find(page ? *page : (*ref)->page);
 			if (it != pdf_words_.end()) {
 				for (auto & w : it->second) {
 					try_append(&w);
@@ -117,6 +141,7 @@ namespace OBV_Tcl {
 		}
 		if (sort) {
 			std::sort(ret.begin(), ret.end(), [&](pdf_txt_bbox * a, pdf_txt_bbox * b) {
+						  //std::cerr << "less " << a->word << " " << b->word << "\n";
 						  return sort_less(*tcli, sort_ns, sort_o, a, b, ref ? *ref : nullptr);
 					  });
 			for (auto * p : ret) {
@@ -295,14 +320,13 @@ namespace OBV_Tcl {
 		return r;
 	}
 
-	object TCL::get_cells(getopt<std::string> const & filter_arg, getopt<bool> const & use_regex, getopt<any<list<Component>, list<Net>, list<Pin>, list<pdf_txt_bbox> > > const & of, getopt<bool> const & all,
+	object TCL::get_cells(getopt<std::string> const & filter_arg, getopt<std::string> const & sort, getopt<bool> const & use_regex, getopt<any<list<Component>, list<Net>, list<Pin>, list<pdf_txt_bbox> > > const & of, getopt<bool> const & all,
 						  getopt<bool> const & top,
 						  getopt<bool> const & bottom,
-						  getopt<list<Component> > const & not_, variadic<std::string> const & match) {
+						  getopt<list<Component> > const & not_, getopt<Component *> const & ref, variadic<std::string> const & match) {
 		object r;
-		int filter = 0;
-		std::string filter_ns;
-		object filter_o;
+		int filter = 0; std::string filter_ns; object filter_o;
+		int sort_ix; std::string sort_ns; object sort_o;
 		std::regex re;
 
 		if (use_regex && match) re = match[0];
@@ -313,7 +337,14 @@ namespace OBV_Tcl {
 			namespace_open(*tcli, filter_ns);
 			filter_o = object(std::string("namespace eval ") + namespace_str(filter) + " { expr { " + *filter_arg + " } }");
 		}
-			
+
+		if (sort) {
+			sort_ix = sort_ns_ix++ % 1000;
+			sort_ns = sort_namespace_str(sort_ix);
+			namespace_open(*tcli, sort_ns);
+			sort_o = object(std::string("namespace eval ") + sort_ns + " { expr { " + *sort + " } }");
+		}
+		
 		std::set<Component *> dup;
 		std::set<Component *> not_set;
 
@@ -323,6 +354,8 @@ namespace OBV_Tcl {
 			}
 		}
 
+		std::vector<Component *> ret;
+		
 		auto try_append = [&](Component * c) {
 			if (!is_dummy(c)
 				&& ((! top && ! bottom) || (top && c->board_side == kBoardSideTop) || (bottom && c->board_side == kBoardSideBottom))
@@ -330,7 +363,11 @@ namespace OBV_Tcl {
 				&& not_set.find(c) == not_set.end()
 				&& matches(match, re, c->name, use_regex)
 				&& filter_match(*tcli, filter_ns, filter_o, c)) {
-				r.append(makeobj(c));
+				if (sort) {
+					ret.push_back(c);
+				} else {
+					r.append(makeobj(c));
+				}
 				if (!all) dup.insert(c);
 			}
 			return true;
@@ -374,6 +411,15 @@ namespace OBV_Tcl {
 				}
 			}				
 		}
+
+		if (sort) {
+			std::sort(ret.begin(), ret.end(), [&](Component * a, Component * b) {
+						  return sort_less(*tcli, sort_ns, sort_o, a, b, ref ? *ref : nullptr);
+					  });
+			for (auto * p : ret) {
+				r.append(makeobj(p));
+			}
+		}
 		return r;
 	}
 
@@ -389,10 +435,36 @@ namespace OBV_Tcl {
 		return r;
 	}
 
-	void TCL::highlight(getopt<bool> const & un, getopt<bool> const & all, getopt<std::string> const & color, getopt<float> const & inten, opt<list<any<Component, Pin, pdf_txt_bbox> > > const & obj) {
+	void TCL::highlight(getopt<bool> const & save, getopt<bool> const & un, getopt<bool> const & all, getopt<std::string> const & color, getopt<int> const & colorindex, getopt<float> const & inten, opt<list<any<Component, Pin, pdf_txt_bbox> > > const & obj) {
 		uint32_t color_v = 0xffaaaaaa;
 
-		if (color) {
+		const uint32_t distinct[] = {
+			//0x2f4f4f,
+			0xf0e68c,
+			0xa0522d,
+			//0x006400,
+			0x00008b,
+			0x48d1cc,
+			0xff0000,
+			0xffa500,
+			0xffff00,
+			0x00ff00,
+			0x00fa9a,
+			0x0000ff,
+			0xda70d6,
+			0xd8bfd8,
+			0xff00ff,
+			0x1e90ff
+		};
+		const int ndistinct = sizeof(distinct) / sizeof(distinct[0]);
+
+		if (save) {
+			this->eval("prop_begin -highlight");
+		}
+		
+		if (colorindex) {
+			color_v = uint32_t(0xff000000) | distinct[*colorindex % ndistinct];
+		} else if (color) {
 			const std::string & col = *color;
 			if (col[0] == '#') {
 				std::istringstream iss(col);
@@ -438,9 +510,42 @@ namespace OBV_Tcl {
 							 }
 						 },
 						 [&](pdf_txt_bbox * p) {
+							 prop_stack_try_save_highlight(p);
 							 if (un) p->color = 0;
 							 else p->color = color_v;
 						 });
+			}
+		}
+	}
+
+	void TCL::set_prop(std::string const & prop, std::string const & value, list<any<Component, Net, Pin, pdf_txt_bbox> > const & obj) {
+		for (auto a : obj) {
+			be_priv * pr = nullptr;
+			a.visit([&](Component * c) {
+						if (! c->tcl_priv) { c->tcl_priv = (void *) new cell_priv(); }
+						pr = (be_priv *) c->tcl_priv;
+					},
+					[&](Net * n) {
+						if (! n->tcl_priv) { n->tcl_priv = (void *) new net_priv(); }
+						pr = (be_priv *) n->tcl_priv;
+					},
+					[&](Pin * p) {
+						if (! p->tcl_priv) { p->tcl_priv = (void *) new pin_priv(); }
+						pr = (be_priv *) p->tcl_priv;
+					},
+					[&](pdf_txt_bbox * p) {
+						if (prop == "mark") {
+							prop_stack_try_save_mark(p);
+							p->mark = stoi(value);
+						} else if (prop == "genmark") {
+							p->mark = stoi(value);
+							p->mark |= 1ULL << sizeof(p->mark) * 8 - 1;
+						} else {
+							throw tcl_error(std::string("illegal property ") + prop + " for type schem_word");
+						}
+					});
+			if (pr) {
+				pr->properties[prop] = value;
 			}
 		}
 	}
@@ -528,6 +633,16 @@ namespace OBV_Tcl {
 		std::cerr << oss.str();
 	}
 
+#ifdef HAVE_READLINE
+	static void	int_handler(int status) {
+		if (status) { }
+		printf("\n"); // Move to a new line
+		rl_on_new_line(); // Regenerate the prompt on a newline
+		rl_replace_line("", 0); // Clear the previous text
+		rl_redisplay();
+	}
+#endif
+	
 	TCL::TCL(BoardView * bvv, bool * d, std::string const & script) : b(bvv), done_(d) {
 		tcl = Tcl_CreateInterp();
 		
@@ -588,35 +703,41 @@ namespace OBV_Tcl {
 		tcli->type<schem_word_ops>("schem_word", (pdf_txt_bbox *) nullptr);
 
 		tcli->def(this)
-			.def("get_nets",        &this_t::get_nets,  options(get_nets_opt))
-			.def("get_cells",       &this_t::get_cells, options(get_cells_opt))
-			.def("get_pins",        &this_t::get_pins,  options(get_pins_opt))
-			.def("get_boards",      &this_t::get_boards)
-			.def("default_boards",  &this_t::default_boards)
-			.def("draw_board",      &this_t::draw_board)
-			.def("report_prop",     &this_t::report_prop, options(report_prop_opt))
-			.def("highlight",       &this_t::highlight, options(highlight_opt))
-			.def("selection",       &this_t::selection)
+			.def("get_nets",          &this_t::get_nets,          options(get_nets_opt))
+			.def("get_cells",         &this_t::get_cells,         options(get_cells_opt))
+			.def("get_pins",          &this_t::get_pins,          options(get_pins_opt))
+			.def("get_boards",        &this_t::get_boards)
+			.def("default_boards",    &this_t::default_boards)
+			.def("draw_board",        &this_t::draw_board)
+			.def("report_prop",       &this_t::report_prop,       options(report_prop_opt))
+			.def("highlight",         &this_t::highlight,         options(highlight_opt))
+			.def("selection",         &this_t::selection)
 #ifdef OBV_USE_POPPLER
-			.def("get_schem_words", &this_t::get_schem_words, options(get_schem_words_opt))
-			.def("schem_open",      &this_t::schematic_open,  options(schematic_open_opt))
-			.def("schem_sticky",    &this_t::pdf_sticky, options("toggle"))
-			.def("schem_invert",    &this_t::pdf_invert)
-			.def("draw_page",       &this_t::draw_page)
-			.def("undraw_page",     &this_t::undraw_page)
-			.def("schem_highlight", &this_t::schem_highlight)
-			.def("distance",        &this_t::distance_fun, options(distance_opt))
-			.def("angle",           &this_t::angle, options(angle_opt))
-			.def("enclosed_box",    &this_t::enclosed_box)
+			.def("get_schem_words",   &this_t::get_schem_words,   options(get_schem_words_opt))
+			.def("schem_open",        &this_t::schematic_open,    options(schematic_open_opt))
+			.def("schem_sticky",      &this_t::pdf_sticky,        options("toggle"))
+			.def("schem_invert",      &this_t::pdf_invert)
+			.def("draw_page",         &this_t::draw_page)
+			.def("undraw_page",       &this_t::undraw_page)
+			.def("schem_highlight",   &this_t::schem_highlight)
+			.def("distance",          &this_t::distance_fun,      options(distance_opt))
+			.def("angle",             &this_t::angle,             options(angle_opt))
+			.def("enclosed_box",      &this_t::enclosed_box)
+			.def("prop_begin",        &this_t::prop_begin,        options(prop_begin_opt))
+			.def("prop_abort",        &this_t::prop_abort)
+			.def("prop_commit",       &this_t::prop_commit)
+			.def("prop_stack_enable", &this_t::prop_stack_enable)
+			.def("prop_stack_info",   &this_t::prop_stack_info)
 #endif
-			.def("get_prop",        &this_t::get_prop)
-			.def("set_prop",        &this_t::set_prop)
-			.def("trace",           &this_t::trace)
-			.def("select",          &this_t::select)
-			.def("file_history",    &this_t::file_history)
-			.def("obv_open",        &this_t::obv_open)
-			.def("exit",            &this_t::quit)
-			.def("last_result",     &this_t::last_result);
+			.def("generate_mark",     &this_t::generate_mark,     options(generate_mark_opt))
+			.def("get_prop",          &this_t::get_prop)
+			.def("set_prop",          &this_t::set_prop)
+			.def("trace",             &this_t::trace)
+			.def("select",            &this_t::select)
+			.def("file_history",      &this_t::file_history)
+			.def("obv_open",          &this_t::obv_open)
+			.def("exit",              &this_t::quit)
+			.def("last_result",       &this_t::last_result);
 
 		tcli->defvar("default_intensity", boardview()->m_default_intensity);
 		tcli->defvar("dual_draw", boardview()->m_draw_both_sides);
@@ -632,13 +753,15 @@ namespace OBV_Tcl {
 #ifdef HAVE_READLINE
 		rl_prep_terminal(0);
 		rl_attempted_completion_function = rl_complete;
-		rl_callback_handler_install("> ", rl_cb);
+		rl_callback_handler_install("OBV> ", rl_cb);
+		read_history((get_user_dir(UserDir::Data) + "/tcl_history").c_str());
+		signal(SIGINT, int_handler);
 #endif
 		Tcl_SetExitProc(exit_proc);
 		tcli->eval("source library.tcl");
 		startup_script = script;
 	}
-
+	
 	template <typename CMP>
 	object TCL::schem_word_get_prop(const char * prop, pdf_txt_bbox * p, CMP icmp) {
 		if (icmp(prop, "xmin")) {
@@ -663,12 +786,20 @@ namespace OBV_Tcl {
 			std::ostringstream oss;
 			oss << '#' << std::hex << p->color;
 			return object(oss.str());
+		} else if (icmp(prop, "mark")) {
+			return object(p->mark & 1 << sizeof(p->mark) * 8 - 1 ? 0 : p->mark);
+		} else if (icmp(prop, "genmark")) {
+			return object(p->mark & ~(1 << sizeof(p->mark) * 8 - 1));
 		} else if (icmp(prop, "is_cell")) {
 			return object(bool(p->cell));
 		} else if (icmp(prop, "is_net")) {
 			return object(bool(p->net));
 		} else if (icmp(prop, "highlighted")) {
 			return object(bool(p->color));
+		} else if (icmp(prop, "marked")) {
+			return object(bool(p->mark) && !bool(p->mark & 1ULL << sizeof(p->mark) * 8 - 1));
+		} else if (icmp(prop, "genmarked")) {
+			return object(bool(p->mark & 1ULL << sizeof(p->mark) * 8 - 1) && bool(p->mark & ~(1ULL << sizeof(p->mark) * 8 - 1)));
 		}
 		return object();
 	}
@@ -1409,3 +1540,5 @@ namespace OBV_Tcl {
 	
 	
 }
+
+#pragma GCC diagnostic pop

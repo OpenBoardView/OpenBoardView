@@ -1,5 +1,7 @@
 // -*- c++ -*-
 #pragma once
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wparentheses"
 
 #define HAVE_READLINE
 #define OBV_USE_POPPLER
@@ -26,6 +28,7 @@
 #include <fstream>
 #include <set>
 #include <thread>
+#include <stack>
 #ifdef HAVE_READLINE
 #define _FUNCTION_DEF
 #include <readline/readline.h>
@@ -35,6 +38,7 @@
 #include <SDL.h>
 
 #include "BoardView.h"
+#include "platform.h"
 #include "imgui_operators.h"
 #include <regex>
 #include <atomic>
@@ -52,7 +56,6 @@
 #include <poppler/glib/poppler-document.h>
 #include <boost/iterator/function_output_iterator.hpp>
 #endif
-
 
 namespace OBV_Tcl {
 	using namespace Tcl;
@@ -144,6 +147,7 @@ namespace OBV_Tcl {
 			Net * net = nullptr;
 			int page;
 			uint32_t color = 0;
+			int mark = 0;
 		};
 		
 		template <typename OT, typename DEL>
@@ -284,13 +288,110 @@ namespace OBV_Tcl {
 		object get_nets(getopt<bool> const & use_regex, getopt<bool> const & all, getopt<list<Net> > const & not_, getopt<bool> const & gnd, getopt<any<list<Component>, list<Pin>, list<Net>, list<BRDBoard> > > const & of, getopt<std::string> const & filter_arg, variadic<std::string> const & match);
 		static constexpr const char * get_pins_opt = "re all parallel filter of brief";
 		object get_pins(getopt<bool> const & use_regex, getopt<bool> const & all, getopt<bool> const & parallel, getopt<std::string> const & filter_arg, getopt<any<list<Component>, list<Net>, list<Pin>, list<BRDBoard> > > const & of, getopt<bool> const & brief, variadic<std::string> const & match);
-		static constexpr const char * highlight_opt = "un all color intensity";
-		void highlight(getopt<bool> const & un, getopt<bool> const & all, getopt<std::string> const & color, getopt<float> const & inten, opt<list<any<Component, Pin, pdf_txt_bbox> > > const & obj);
-		const char * get_cells_opt = "filter re of all top bottom not";
-		object get_cells(getopt<std::string> const & filter_arg, getopt<bool> const & use_regex, getopt<any<list<Component>, list<Net>, list<Pin>, list<pdf_txt_bbox> > > const & of, getopt<bool> const & all,
+		static constexpr const char * highlight_opt = "save un all color colorindex intensity";
+		void highlight(getopt<bool> const & save, getopt<bool> const & un, getopt<bool> const & all, getopt<std::string> const & color, getopt<int> const & colorindex, getopt<float> const & inten, opt<list<any<Component, Pin, pdf_txt_bbox> > > const & obj);
+		const char * get_cells_opt = "filter sort re of all top bottom not ref";
+		object get_cells(getopt<std::string> const & filter_arg, getopt<std::string> const & sort, getopt<bool> const & use_regex, getopt<any<list<Component>, list<Net>, list<Pin>, list<pdf_txt_bbox> > > const & of, getopt<bool> const & all,
 						 getopt<bool> const & top,
 						 getopt<bool> const & bottom,
-						 getopt<list<Component> > const & not_, variadic<std::string> const & match);
+						 getopt<list<Component> > const & not_, getopt<Component *> const & ref, variadic<std::string> const & match);
+
+		static constexpr const char * generate_mark_opt = "set";
+		int generate_mark(getopt<int> set) {
+			if (set) {
+				generate_mark_ = *set;
+			}
+			return generate_mark_++;
+		}
+		int generate_mark_ = 1;
+
+		struct prop_stack_item {
+			pdf_txt_bbox * word;
+			int saved_mark;
+			uint32_t saved_color;
+		};
+
+		struct prop_stack_frame {
+			std::vector<prop_stack_item> items;
+			bool mark;
+			bool highlight;
+			prop_stack_frame(bool m, bool h) : mark(m), highlight(h) { }
+		};
+		
+		std::deque<prop_stack_frame> prop_stack_;
+		bool prop_stack_enable_ = true;
+
+		void man_prop_stack(std::ostream & os) {
+			os << "A property stack frame will record all values that have been\n"
+			   << "overwritten by regular means, such as by the 'highlight' or 'set_prop'\n"
+			   << "commands.\n"
+			   << "If a property stack is commited, the information is simply discarded.\n"
+			   << "If it is aborted, the values will be restored in reverse order.\n"
+			   << "prop_stack_enable [bool] keeps the content of the stack intact, but\n"
+			   << "any changes done while it is disabled will not be restorable\n";
+		}
+		
+		static constexpr const char * prop_begin_opt = "help mark highlight";
+		void prop_begin(getopt<bool> const & help, getopt<bool> const & mark, getopt<bool> const & highlight) {
+			if (help) {
+				std::cerr << "begin a new property stack frame\n";
+				std::cerr << " -mark      save mark information\n";
+				std::cerr << " -highlight save highlight information\n";
+				std::cerr << "\n";
+				man_prop_stack(std::cerr);
+				throw tcl_usage_message_printed();
+			}
+			prop_stack_.push_front(prop_stack_frame(mark, highlight));
+		}
+		void prop_stack_info() {
+			std::cerr << prop_stack_.size() << " frames\n";
+			for (int i = prop_stack_.size() - 1; i >= 0; --i) {
+				std::cerr << "frame " << i << " " << prop_stack_[i].items.size() << " items\n";
+			}
+		}
+
+		void prop_commit() {
+			if (prop_stack_.empty()) {
+				throw tcl_error("property stack is empty");
+			}
+			prop_stack_.pop_front();
+		}
+		bool prop_stack_enable(opt<bool> v) {
+			if (v) {
+				prop_stack_enable_ = *v;
+			}
+			return prop_stack_enable_;
+		}
+
+		void prop_abort() {
+			if (prop_stack_.empty()) {
+				throw tcl_error("property stack is empty");
+			}
+			auto & r = prop_stack_.front();
+			for (auto it = r.items.rbegin(); it != r.items.rend(); ++it) {
+				if (r.mark) {
+					it->word->mark = it->saved_mark;
+				}
+				if (r.highlight) {
+					it->word->color = it->saved_color;
+				}
+			}
+			prop_stack_.pop_front();
+		}
+		void prop_stack_try_save_mark(pdf_txt_bbox * w) {
+			if (! prop_stack_enable_ || prop_stack_.empty()) return;
+			auto & r = prop_stack_.front();
+			if (r.mark) {
+				r.items.push_back({ w, w->mark, 0 });
+			}
+		}
+		void prop_stack_try_save_highlight(pdf_txt_bbox * w) {
+			if (! prop_stack_enable_ || prop_stack_.empty()) return;
+			auto & r = prop_stack_.front();
+			if (r.highlight) {
+				r.items.push_back({ w, 0, w->color });
+			}
+		}
 
 		static bool matches(const variadic<std::string> & glob, const std::regex & re, const std::string & s, bool use_re);
 
@@ -392,7 +493,9 @@ namespace OBV_Tcl {
 		bool sort_less(interpreter & I, std::string const & ns, object const & eval, OT * a, OT * b, OT * r) {
 			filter_install(I, ns, a, "a_");
 			filter_install(I, ns, b, "b_");
-			filter_install(I, ns, r, "r_");
+			if (r) {
+				filter_install(I, ns, r, "r_");
+			}
 			object ao = I.makeobj(a), bo = I.makeobj(b);
 
 			I.setVar(ns + "::a", ao);
@@ -524,25 +627,8 @@ namespace OBV_Tcl {
 			pr->properties[name] = value;
 		}
 
-		void set_prop(std::string const & prop, std::string const & value, list<any<Component, Net, Pin> > const & obj) {
-			for (auto a : obj) {
-				be_priv * pr = nullptr;
-				a.visit([&](Component * c) {
-							if (! c->tcl_priv) { c->tcl_priv = (void *) new cell_priv(); }
-							pr = (be_priv *) c->tcl_priv;
-						},
-						[&](Net * n) {
-							if (! n->tcl_priv) { n->tcl_priv = (void *) new net_priv(); }
-							pr = (be_priv *) n->tcl_priv;
-						},
-						[&](Pin * p) {
-							if (! p->tcl_priv) { p->tcl_priv = (void *) new pin_priv(); }
-							pr = (be_priv *) p->tcl_priv;
-						});
-
-				pr->properties[prop] = value;
-			}
-		}
+		
+		void set_prop(std::string const & prop, std::string const & value, list<any<Component, Net, Pin, pdf_txt_bbox> > const & obj);
 		
 		object get_prop(std::string const & prop, list<any_obv_type> const & obj);
 		
@@ -696,14 +782,26 @@ namespace OBV_Tcl {
 
 		int handle_mouse_drag(ImVec2 const & ppos, ImVec2 const & drag, int token);
 
+		uint64_t last_click_ = 0;
 		bool handle_mouse_click(ImVec2 const & spos) {
 			if (pdf_win_.sticky ? in(pdf_win_.box, spos) : in(pdf_win_.box, boardview()->ScreenToCoord(spos))) {
 				if (pdf_win_.dragging || boardview()->m_draggingLastFrame) {
 					pdf_win_.ignore_one_mouse_release = true;
 				} else {
 					pdf_win_.mouse_released = true;
+
+					uint64_t now = time_ms();
+					if (last_click_ + 300 > now) {
+						//if (ImGui::IsMouseDoubleClicked(0) || ImGui::GetIO().MouseDoubleClicked[0]) {
+						//std::cerr << "doubleclick\n";
+						this->eval("schem_sticky -toggle");
+						last_click_ = 0;
+					} else {
+						last_click_ = now;
+					}
 				}
 				pdf_win_.dragging = false;
+
 				return true;
 			}
 			return false;
@@ -881,6 +979,7 @@ namespace OBV_Tcl {
 			rl_callback_handler_remove();
 			rl_deprep_terminal();
 			if (farewell_newline_) std::cerr << "\n";
+			write_history((get_user_dir(UserDir::Data) + "/tcl_history").c_str());
 #endif
 		}
 
@@ -947,10 +1046,12 @@ namespace OBV_Tcl {
 				}
 				
 				auto res = this_s_->eval(line);
-				if (truncate && res.is_object_vector && res.str.size() > 256) {
-					std::cerr << res.str.substr(0, 255) << " ...\n";
-				} else {
-					std::cerr << res.str << (res.str.size() ? "\n" : "");
+				if (res.ok) {
+					if (truncate && res.is_object_vector && res.str.size() > 256) {
+						std::cerr << res.str.substr(0, 255) << " ...\n";
+					} else {
+						std::cerr << res.str << (res.str.size() ? "\n" : "");
+					}
 				}
 				//std::cerr << "readline: " << line << "\n";
 				add_history(line);
@@ -961,6 +1062,7 @@ namespace OBV_Tcl {
 		//	std::thread thread_;
 
 		struct eval_result {
+			bool ok;
 			bool is_object_vector;
 			std::string str;
 		};
@@ -989,12 +1091,12 @@ namespace OBV_Tcl {
 					}
 				}
 
-				return { isvec, r.get<std::string>() };
+				return { true, isvec, r.get<std::string>() };
 			} catch (std::runtime_error & e) {
-				std::cerr << "while executing: " << cmd << "\n";
-				return { false, e.what() };
+				std::cerr << "while executing: " << cmd << ": " << e.what() << "\n";
+				return { false, false, e.what() };
 			}
-			return { false, "" };
+			return { false, false, "" };
 		}
 
 		bool pollfd(int sleep) {
@@ -1038,10 +1140,12 @@ namespace OBV_Tcl {
 					fgets(buf, sizeof(buf), stdin);
 					//std::cerr << "cmd: " << buf;
 					auto res = eval(buf);
-					if (res.is_object_vector && res.str.size() > 256) {
-						std::cerr << res.str.substr(0, 255) << " ...\n";
-					} else {
-						std::cerr << res.str << (res.str.size() ? "\n" : "");
+					if (res.ok) {
+						if (res.is_object_vector && res.str.size() > 256) {
+							std::cerr << res.str.substr(0, 255) << " ...\n";
+						} else {
+							std::cerr << res.str << (res.str.size() ? "\n" : "");
+						}
 					}
 #else
 					rl_callback_read_char();
@@ -1059,3 +1163,5 @@ namespace OBV_Tcl {
 }
 
 typedef OBV_Tcl::TCL TCL;
+
+#pragma GCC diagnostic pop
