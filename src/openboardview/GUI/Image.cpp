@@ -221,25 +221,9 @@ void Image::render(ImDrawList &draw, const ImVec2 &p_min, const ImVec2 &p_max, i
 					if (! tp) {
 						std::cerr << "decode failed\n";
 					}
-#if 0
-					if (tp && !imgdata_thumb_) {
-						const int ratio = 30;
-						imgdata_thumb_ = new unsigned char[(imgwidth / ratio + 1) * (imgheight / ratio + 1) * 4];
-						for (int y = 0; y < imgheight; y += ratio) {
-							for (int x = 0; x < imgwidth; x += ratio) {
-								for (int c = 0; c < 4; ++c) {
-									imgdata_thumb_[((x / ratio) + (imgwidth / ratio) * (y / ratio)) * 4 + c]
-										= tp[(x + imgwidth * y) * 4 + c];
-								}
-							}
-						}
-					}
-#endif
 					*imgdata_raw_= tp;
 					BoardView::wakeup();
 				});
-				//imgdata_raw_thread_->join();
-				//imgdata_raw_thread_ = nullptr;
 		}
 		if (thumb_texture) {
 			auto uvs = TransformRelativeCoordinates(rotation);
@@ -276,20 +260,7 @@ void Image::render(ImDrawList &draw, const ImVec2 &p_min, const ImVec2 &p_max, i
 
 		//std::cerr << w_aspect << " " << i_aspect << " " << i_aspect / w_aspect << "\n";
 #endif
-		//std::cerr << "DRAW\n";
 		draw.AddImageQuad(reinterpret_cast<void*>(texture),
-						  p_min, // Asbolute render rectangle top-left corner
-						  ImVec2(p_max[0], p_min[1]), // Asbolute render rectangle top-right corner
-						  p_max, // Absolute render rectangle bottom-right corner
-						  ImVec2(p_min[0], p_max[1]), // Absolute render rectangle bottom-left corner
-						  uvs[0], // Image relative top-left corner
-						  uvs[1], // Image relative top-right corner
-						  uvs[2], // Image relative bottom-right corner
-						  uvs[3], // Image relative bottom-left corner
-						  ImGui::GetColorU32(ImVec4(1.0f, 1.0f, 1.0f, 1.0f - transparency)));
-	} else if (false) {
-		auto uvs = TransformRelativeCoordinates(rotation);
-		draw.AddImageQuad(reinterpret_cast<void*>(thumb_texture),
 						  p_min, // Asbolute render rectangle top-left corner
 						  ImVec2(p_max[0], p_min[1]), // Asbolute render rectangle top-right corner
 						  p_max, // Absolute render rectangle bottom-right corner

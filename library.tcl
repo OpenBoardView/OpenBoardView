@@ -334,6 +334,31 @@ proc schem_find_pins_simple { page pin radius } {
 	}
 }
 
+proc find_orthogonal { words maxdist } {
+	#prop_begin -mark
+	#set_prop mark 0 $words
+	foreach w $words {
+		#puts "kkkkkkkkkkkkkkkkkkkk $w"
+		if { ! [ get_prop marked $w] } { set_prop mark [generate_mark] $w }
+		set n 1
+		set ww2 [ get_schem_words -of $words -ref $w -filter { [ angle -ortho $r $_ ] < 5 } -sort { [ distance $a $r ] < [ distance $b $r ] } ]
+		#puts "len [llength $ww2]"
+		foreach w2 $ww2 {
+			if { [ same_object $w $w2 ] } continue
+			#puts "$w $w2 $words ---- $ww2 "
+			if { ! [get_prop marked $w2] } {
+				set ok 0
+				if { [distance $w $w2] < [ expr 10 * $n ] && [ expr { [distance $w $w2] * [ angle -ortho $w $w2 ] } ] < 30 } {
+					set_prop mark [ get_prop mark $w ] $w2
+					set ok 1
+				}
+				#puts "[angle -ortho $w $w2] [ distance $w $w2 ] $w $w2 $n $ok"
+				incr n
+			}
+		}
+	}
+}
+
 proc impl_schem_find_pins_simple { page pin radius } {
 	set dud 0
 	foreach w [ get_schem_words -page $page -filter { !$marked } $pin ] {
@@ -468,4 +493,4 @@ proc RE {} {
 	source library.tcl
 }
 
-dual_draw 0
+#dual_draw 0
