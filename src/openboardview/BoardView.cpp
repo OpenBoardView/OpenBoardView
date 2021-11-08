@@ -2078,7 +2078,12 @@ void BoardView::Update() {
 		}
 
 		if (showPosition == true) {
-			ImGui::Text("Position: %0.3f\", %0.3f\" (%0.2f, %0.2fmm)", pos.x / 1000, pos.y / 1000, pos.x * 0.0254, pos.y * 0.0254);
+			auto schem_pos = m_tcl->schem_position();
+			if (schem_pos) {
+				ImGui::Text("Position: %0.3f, %0.3f (page %d)", schem_pos->point.x, schem_pos->point.y, schem_pos->page);
+			} else {
+				ImGui::Text("Position: %0.3f\", %0.3f\" (%0.2f, %0.2fmm)", pos.x / 1000, pos.y / 1000, pos.x * 0.0254, pos.y * 0.0254);
+			}
 			ImGui::SameLine();
 		}
 		{
@@ -2447,8 +2452,8 @@ void BoardView::HandleInput() {
 		}
 	}
 
-	if ((!io.WantCaptureKeyboard)) {
-
+	if ((!io.WantCaptureKeyboard) && ! m_tcl->handle_keypress()) {
+		
 		if (keybindings.isPressed("Mirror")) {
 			Mirror();
 			CenterView();

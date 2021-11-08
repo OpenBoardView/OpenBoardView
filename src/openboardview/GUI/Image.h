@@ -26,6 +26,8 @@ private:
 	unsigned char * imgdata_thumb_ = nullptr;
 	GLuint thumb_texture = 0;
 
+	float w_aspect_ = 0.0f;
+
 	int width = 0;
 	int height = 0;
 	int offsetX = 0;
@@ -49,7 +51,7 @@ private:
 	unsigned char * thumb_ = nullptr;
 	int thumb_width_ = 0;
 	int thumb_height_ = 0;
-	
+	float x_right_ = 1.0f;
 
 	float zoom_factor_ = 1.0f;
 	void observe_border();

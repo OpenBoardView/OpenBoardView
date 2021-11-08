@@ -659,19 +659,29 @@ namespace OBV_Tcl {
 		bool sort_less(interpreter & I, std::string const & ns, std::map<std::string, object> * vars, object const & eval, OT * a, OT * b, OT * r) {
 			const bool dump = false;
 
+			struct {
+				OT * o; const char * n;
+			} v[] = { { a, "a" }, { b, "b" }, { r, "r" } };
+			
 			if (vars) {
 				for (auto & i : *vars) {
 					std::string const & name = i.first;
 					if (name.size() > 2 && name[1] == '_') {
 						disown d(i.second);
-						if (name[0] == 'a') {
-							filter_install(a, i.second, name.substr(2).c_str());
-						} else if (name[0] == 'b') {
-							filter_install(b, i.second, name.substr(2).c_str());
-						} else if (name[0] == 'r') {
-							filter_install(r, i.second, name.substr(2).c_str());
+						
+						for (auto & vi : v) {
+							if (name[0] == vi.n[0]) {
+								filter_install(vi.o, i.second, name.substr(2).c_str());
+							}
 						}
 					}
+#if 0
+					else if (name[0] == 'b') {
+						filter_install(b, i.second, name.substr(2).c_str());
+					} else if (name[0] == 'r') {
+						filter_install(r, i.second, name.substr(2).c_str());
+					}
+#endif
 				}
 			} else {
 				throw;
@@ -683,10 +693,6 @@ namespace OBV_Tcl {
 				}
 #endif
 			}
-
-			struct {
-				OT * o; const char * n;
-			} v[] = { { a, "a" }, { b, "b" }, { r, "r" } };
 
 			for (auto & vi : v) {
 				if (! vi.o ) continue;
@@ -941,6 +947,15 @@ namespace OBV_Tcl {
 				tcli->terr() << e.what() << "\n";
 			}
 		}
+
+		struct schem_pos_t {
+			ImVec2 point;
+			int page;
+		};
+
+		std::optional<schem_pos_t> schem_position();
+
+		bool handle_keypress();
 		
 		static constexpr const char * trace_opt = "off report count print";
 		void trace(getopt<bool> const & off, getopt<bool> const & report, getopt<bool> const & count, getopt<bool> const & print) {
@@ -979,10 +994,12 @@ namespace OBV_Tcl {
 
 		struct pdf_window {
 			bbox   box;
+			bbox   saved_box;
+
 			ImVec2 wdim;
 
 			pdf_window() { }
-			pdf_window(bbox const & bb, ImVec2 const & wd) : box(bb), wdim(wd) {
+			pdf_window(bbox const & bb, ImVec2 const & wd) : box(bb), saved_box(bb), wdim(wd) {
 				update();
 			}
 			void update() {
@@ -990,7 +1007,10 @@ namespace OBV_Tcl {
 				aspect   = bdim.x / bdim.y;
 				wb_ratio = wdim / bdim;
 			}				
-
+			void restore() {
+				//box = saved_box;
+			}
+			
 			ImVec2 bdim;     // derived
 			float  aspect;   // derived
 			ImVec2 wb_ratio; // derived
@@ -998,6 +1018,9 @@ namespace OBV_Tcl {
 			bool   valid = false;
 			bool   reuse = false;
 			bool   sticky = false;
+			bool   saved_sticky = false;
+			bool   is_fullscreen = false;
+			bool   is_docked = false;
 			bool   ignore_one_mouse_release = false;
 			bool   dragging = false;
 			bool   mouse_released = false;

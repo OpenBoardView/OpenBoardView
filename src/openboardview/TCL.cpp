@@ -102,6 +102,79 @@ namespace OBV_Tcl {
 		}
 	}
 
+	bool TCL::handle_keypress() {
+		ImVec2 mposs = ImGui::GetMousePos();
+		ImVec2 mpos = pdf_win_.sticky ? mposs : boardview()->ScreenToCoord(mposs);
+		if (in(pdf_win_.box, mpos)) {
+			auto kp = [](auto k) -> bool {
+				return ImGui::IsKeyPressed(SDL_GetScancodeFromKey(k));
+			};
+			
+			if (kp(SDLK_q)) {
+				pdf_img_ = nullptr;
+				pdf_win_.box = { { 0.0f, 0.0f }, { 0.0f, 0.0f } };
+				pdf_win_.reuse  = false;
+				pdf_win_.sticky = false;
+			} else if (kp(SDLK_s)) {
+				eval("schem_sticky -toggle");
+				//pdf_win_.sticky ^= true;
+				//pdf_win_.update();
+			} else if (kp(SDLK_f)) {
+				if (pdf_win_.is_fullscreen) {
+					pdf_win_.box = pdf_win_.saved_box;
+					pdf_win_.sticky = pdf_win_.saved_sticky;
+					pdf_win_.is_fullscreen = false;
+				} else {
+					if (! pdf_win_.is_docked) {
+						pdf_win_.saved_box = pdf_win_.box;
+						pdf_win_.saved_sticky = pdf_win_.sticky;
+					}
+					pdf_win_.is_fullscreen = true;
+					pdf_win_.is_docked = false;
+					pdf_win_.sticky = true;
+					pdf_win_.box = { { 0.0f, boardview()->m_menu_height }, { boardview()->m_board_surface.x, boardview()->m_menu_height + boardview()->m_board_surface.y } };
+				}
+				pdf_win_.update();
+			} else if (kp(SDLK_d)) {
+				if (pdf_win_.is_docked) {
+					pdf_win_.box = pdf_win_.saved_box;
+					pdf_win_.sticky = pdf_win_.saved_sticky;
+					pdf_win_.is_docked = false;
+				} else {
+					if (! pdf_win_.is_fullscreen) {
+						pdf_win_.saved_box = pdf_win_.box;
+						pdf_win_.saved_sticky = pdf_win_.sticky;
+					}
+					pdf_win_.reuse = true;
+					pdf_win_.is_docked = true;
+					pdf_win_.is_fullscreen = false;
+					pdf_win_.sticky = true;
+					pdf_win_.box = { { boardview()->m_board_surface.x / 2, boardview()->m_menu_height }, { boardview()->m_board_surface.x, boardview()->m_menu_height + boardview()->m_board_surface.y } };
+				}
+				pdf_win_.update();
+			} else {
+				return false;
+			}
+			return true;
+		}
+		return false;
+	}
+	
+	std::optional<TCL::schem_pos_t> TCL::schem_position() {
+		ImVec2 mposs = ImGui::GetMousePos();
+		ImVec2 mpos = pdf_win_.sticky ? mposs : boardview()->ScreenToCoord(mposs);
+		if (in(pdf_win_.box, mpos)) {
+			TCL::schem_pos_t ret;
+			ret.point = (mpos - pdf_win_.box.min) / pdf_win_.bdim * pdf_win_.wdim;
+			if (! pdf_win_.sticky && ! boardview()->m_current_side) {
+				ret.point.y = pdf_win_.wdim.y - ret.point.y;
+			}
+			ret.page  = pdf_win_.page;
+			return ret;
+		}
+		return {};
+	}
+	
 #ifdef OBV_USE_POPPLER
 	object TCL::get_schem_words(getopt<int> const & page, getopt<std::string> const & filter_arg, getopt<bool> const & use_regex, getopt<pdf_txt_bbox *> const & ref, getopt<std::string> const & sort, getopt<list<pdf_txt_bbox> > const & not_, getopt<any<list<Component> , list<Pin>, list<Net>, list<pdf_txt_bbox> > > const & of, getopt<std::string> const & exact, getopt<std::string> const & color, getopt<list<pdf_txt_bbox> > const & bbox, getopt<float> const & radius, variadic<std::string> const & match) {
 		object r;
@@ -467,7 +540,7 @@ namespace OBV_Tcl {
 				&& (all || dup.find(c) == dup.end())
 				&& not_set.find(c) == not_set.end()
 				&& matches(match, re, c->name, use_regex)
-				&& filter_match(*tcli, filter_ns, filter_vars, filter_o, c)) {
+				&& filter_match(*tcli, filter_ns, filter_vars, filter_o, c, nullptr, ref ? *ref : nullptr)) {
 
 				if (sort) {
 					ret.push_back(c);
@@ -909,7 +982,7 @@ namespace OBV_Tcl {
 		tcli->eval("source library.tcl");
 		startup_script = script;
 	}
-	
+
 	template <typename CMP>
 	bool TCL::schem_word_get_prop_impl(const char * prop, pdf_txt_bbox * p, object & ret, CMP icmp) {
 		if (icmp(prop, "xmin")) {
@@ -1378,10 +1451,12 @@ namespace OBV_Tcl {
 				pdf_win_.box.min = boardview()->CoordToScreen(pdf_win_.box.min);
 				pdf_win_.box.max = boardview()->CoordToScreen(pdf_win_.box.max);
 				std::swap(pdf_win_.box.min.y, pdf_win_.box.max.y);
+				pdf_win_.reuse = true;
 			} else if (pdf_win_.sticky && !newv) {
 				pdf_win_.box.min = boardview()->ScreenToCoord(pdf_win_.box.min);
 				pdf_win_.box.max = boardview()->ScreenToCoord(pdf_win_.box.max);
 				std::swap(pdf_win_.box.min.y, pdf_win_.box.max.y);
+				pdf_win_.reuse = true;
 			}
 
 			pdf_win_.sticky = newv;
@@ -1423,7 +1498,8 @@ namespace OBV_Tcl {
 		pdf_highlight_.page   = page;
 
 		pdf_win_.wdim = p->dim;
-
+		pdf_win_.page = page;
+		
 		pdf_in_cell_ = nullptr;
 		if (! pdf_win_.reuse) {
 			if (inside) {
@@ -1457,6 +1533,8 @@ namespace OBV_Tcl {
 				pdf_win_.box.min = { 0, float(boardview()->m_boardHeight) };
 				pdf_win_.box.max = { float(boardview()->m_boardWidth), 2 * float(boardview()->m_boardHeight) };
 			}
+		} else {
+			pdf_win_.restore();
 		}
 		pdf_win_.update();
 

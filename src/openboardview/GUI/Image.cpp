@@ -145,6 +145,12 @@ void Image::zoom(ImVec2 xy, float dz) {
 		i += dzz * (i - xy);
 	}
 
+	float w_aspect = w_aspect_; //abs((p_max - p_min).x / (p_max - p_min).y);
+	float i_aspect = float(imgwidth) / float(imgheight);
+	
+	float x_new = tex_coord_[0].x + (tex_coord_[1].x - tex_coord_[0].x) / i_aspect * w_aspect;
+	x_right_ = x_new;
+	
 	ImVec2 off = ScreenToCoord(xy);
 	for (auto & i : tex_coord_) {
 		i += coord - off;
@@ -153,6 +159,7 @@ void Image::zoom(ImVec2 xy, float dz) {
 }
 
 void Image::observe_border() {
+	return;
 	while (true) {
 
 		ImVec2 dim = { tex_coord_[2].x - tex_coord_[3].x, tex_coord_[0].y - tex_coord_[3].y };
@@ -162,7 +169,6 @@ void Image::observe_border() {
 			tex_coord_[2] = { 1.0f, 0.0f };
 			tex_coord_[3] = { 0.0f, 0.0f };
 		}
-
 		bool scroll = false;
 		ImVec2 scr;
 		for (int i = 0; i < 4; ++i) {
@@ -199,13 +205,16 @@ void Image::observe_border() {
 
 ImVec2 Image::CoordToScreen(ImVec2 const & xy) {
 	auto c = tex_coord_;
-	float xd = c[1].x - c[0].x;
+	//float xd = c[1].x - c[0].x;
+	float xd = x_right_ - c[0].x;
 	float yd = c[0].y - c[3].y;
 	return { (xy.x - c[3].x) / xd, (xy.y - c[3].y) / yd };
 }
 ImVec2 Image::ScreenToCoord(ImVec2 const & xy) {
 	auto c = tex_coord_;
-	float xd = c[1].x - c[0].x;
+
+	//float xd = c[1].x - c[0].x;
+	float xd = x_right_ - c[0].x;
 	float yd = c[0].y - c[3].y;
 	return { c[3].x + xd * xy.x, c[3].y + yd * xy.y };
 }
@@ -257,7 +266,10 @@ void Image::render(ImDrawList &draw, const ImVec2 &p_min, const ImVec2 &p_max, i
 		float x_new = uvs[0].x + (uvs[1].x - uvs[0].x) / i_aspect * w_aspect;
 		uvs[1].x = x_new; //uvs[0].x / i_aspect * w_aspect;
 		uvs[2].x = x_new; //uvs[3].x / i_aspect * w_aspect;
+		x_right_ = x_new;
 
+		w_aspect_ = w_aspect;
+		
 		//std::cerr << w_aspect << " " << i_aspect << " " << i_aspect / w_aspect << "\n";
 #endif
 		draw.AddImageQuad(reinterpret_cast<void*>(texture),
