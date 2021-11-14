@@ -20,17 +20,7 @@ EOH
 
 PROJECT="$(color 3 OpenBoardView)"
 if [ -z $THREADS ]; then
-    THREADS=1
-    case "$(uname -s)" in
-      *Darwin*|*BSD*)
-        THREADS=`sysctl -n hw.ncpu`
-        ;;
-      *)
-        if [ -r "/proc/cpuinfo" ]; then
-            THREADS=`cat /proc/cpuinfo | grep processor | wc -l`
-        fi
-        ;;
-    esac
+    THREADS="$(getconf _NPROCESSORS_ONLN 2>/dev/null || getconf NPROCESSORS_ONLN 2>/dev/null || echo 1)"
 fi
 ARG_LENGTH=$#
 if [ "$1" = "--help" ]; then
