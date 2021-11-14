@@ -1,9 +1,12 @@
 #!/bin/sh
 
+TPUT_B="$(tput bold)"
+TPUT_0="$(tput sgr0)"
+
 color() {
   color="$1"
   text="$2"
-  echo "$(tput bold; tput setaf ${color})${text}$(tput sgr0)"
+  echo "$TPUT_B$(tput setaf ${color})${text}$TPUT_0"
 }
 
 helpMsg() {
