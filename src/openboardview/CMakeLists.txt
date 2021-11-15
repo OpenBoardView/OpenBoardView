@@ -28,7 +28,7 @@ find_package(PkgConfig REQUIRED)
 			add_definitions(-DENABLE_FONTCONFIG)
 		endif()
 
-		pkg_search_module(GTK REQUIRED gtk+-3.0 gtk+-2.0) # gtk2 fallback if gtk3 not found
+		pkg_search_module(GTK gtk+-3.0 gtk+-2.0) # gtk2 fallback if gtk3 not found
 		if(GTK_FOUND)
 			message(STATUS "Found GTK version ${GTK_VERSION}")
 			link_directories(${GTK_LIBRARY_DIRS}) # not linked since we load it at runtime

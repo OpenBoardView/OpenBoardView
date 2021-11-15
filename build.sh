@@ -1,9 +1,12 @@
 #!/bin/sh
 
+TPUT_B="$(tput bold)"
+TPUT_0="$(tput sgr0)"
+
 color() {
   color="$1"
   text="$2"
-  echo "$(tput bold; tput setaf ${color})${text}$(tput sgr0)"
+  echo "$TPUT_B$(tput setaf ${color})${text}$TPUT_0"
 }
 
 helpMsg() {
@@ -20,17 +23,7 @@ EOH
 
 PROJECT="$(color 3 OpenBoardView)"
 if [ -z $THREADS ]; then
-    THREADS=1
-    case "$(uname -s)" in
-      *Darwin*|*BSD*)
-        THREADS=`sysctl -n hw.ncpu`
-        ;;
-      *)
-        if [ -r "/proc/cpuinfo" ]; then
-            THREADS=`cat /proc/cpuinfo | grep processor | wc -l`
-        fi
-        ;;
-    esac
+    THREADS="$(getconf _NPROCESSORS_ONLN 2>/dev/null || getconf NPROCESSORS_ONLN 2>/dev/null || echo 1)"
 fi
 ARG_LENGTH=$#
 if [ "$1" = "--help" ]; then
