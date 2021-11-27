@@ -117,12 +117,19 @@ BRD2File::BRD2File(std::vector<char> &buf) {
 				int netid = READ_UINT();
 				pin.side  = READ_UINT();
 
-				try {
-					pin.net = nets.at(netid);
+				{
+					auto it = nets.find(netid);
+					if (it != nets.end()) {
+						pin.net = it->second;
+					}
+				}
+#if 0
+				pin.net = nets.at(netid);
 				} catch (const std::out_of_range &e) {
 					pin.net = "";
 				}
-
+#endif
+				
 				pin.probe = 1;
 				pin.part  = 0;
 				pins.push_back(pin);

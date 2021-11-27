@@ -1,5 +1,36 @@
 package require struct::set
 
+set trace_frame 0
+
+proc trace_execution { cmd code result op } {
+	global trace_frame
+	if { $code == 1 } { 
+		set f [ info frame -4 ]
+		#puts " $code [ dict get $f file ] [ dict get $f line ] [ dict get $f proc ] [ dict get $f level ]"
+		if { $trace_frame == 0 } {
+			set trace_frame [ info frame -4 ]
+		}
+	} else {
+		set trace_frame 0
+	}
+}
+
+proc traced { cmd } {
+	global trace_frame
+	trace add execution eval leavestep trace_execution
+	try {
+		eval $cmd
+	} on error { msg opt } {
+		if [ dict exists $trace_frame file ] {
+			puts "ERROR: $msg [ dict get $trace_frame file ] [ dict get $trace_frame line ]"
+		} else {
+			puts "ERROR: $msg [ dict get $trace_frame line ]"
+		}
+	} finally {
+		trace remove execution eval leavestep trace_execution
+	}
+}
+
 proc adjacent_cells { c } {
 	set ret [list]
 
@@ -73,7 +104,7 @@ proc find_vrm { cell } {
 }
 
 proc guess_type { cell } {
-	set cstr [list $cell]
+	set cstr [dup $cell]
 	set npins [get_prop pins $cell]
 
 	if { $npins > 2 && [regexp {[^uU]?[uU][0-9]+} $cstr] } {
@@ -103,7 +134,7 @@ proc guess_switch_topology { c_inductor n_phase } {
 
 proc guess_fet_type { cell } {
 	foreach n [get_nets $cell] {
-		set nstr [list $n]
+		set nstr [dup $n]
 		if { [regexp {BOOT|BST|BOOST} $nstr] } {
 			incr has_bst
 		} elseif { [regexp {UG|HG} $nstr] } {
@@ -142,7 +173,7 @@ proc find_vrm_fet { net { cell } } {
 
 	foreach c [get_cells -of $net -not $cell] {
 		set npins [get_prop pins $c]
-		set cstr [list $c]
+		set cstr [dup $c]
 		set t [guess_type $c]
 		
 		if { $npins > 2 && [regexp {[^uU]?[uU][0-9]+} $cstr] } {
@@ -158,6 +189,16 @@ proc find_vrm_fet { net { cell } } {
 		}
 	}
 	return $cell
+}
+
+proc remove_extra_type_letter { cell } {
+	set c [ dup $cell ]
+	set f [ string index $c 0 ]
+	set r [ string range $c 1 end ]
+	if { [ string first $f $r ] != -1 } {
+		return $r
+	}
+	return $c
 }
 
 proc find_vrm_inductor { net { cell } } {
@@ -323,9 +364,6 @@ proc highlight_marked {} {
 }
 
 proc schem_find_pins_simple { page pin radius } {
-	foreach cw [ get_schem_words -page $page -filter { $is_cell } ] {
-		set_prop genmark [ generate_mark ] $cw
-	}
 	set last_dud 0
 	while { 1 } {
 		set dud [ impl_schem_find_pins_simple $page $pin $radius ]
@@ -386,7 +424,6 @@ proc impl_schem_find_pins_simple { page pin radius } {
 	}
 	return $dud
 }
-		
 
 proc schem_find_pins_simple_obsolete1 { cell } {
 	set ref [ get_schem_words -of $cell -filter { !$marked } ]
@@ -408,17 +445,22 @@ proc schem_find_pins_simple_obsolete1 { cell } {
 	}
 }
 
-proc schem_find_pin_shaped { cell mark } {
+proc schem_find_pins_shaped { cell mark } {
 	set ref [ get_schem_words -of $cell -filter { !$marked } ]
 	if { [ llength $ref ] != 1 } return
-	set page [ get_prop page $ref ]
+	set page [ get page $ref ]
 	set found [list]
-	set numpins [ get_prop pins $ref ]
-	foreach p [ lsort -integer -decreasing [ get_prop name [ get_pins -of $cell ] ] ] {
+	set numpins [ get pins $cell ]
+	puts "$ref $numpins"
+	#puts "[ info frame ]"
+	#for { set fi 0 } { $fi < [ info frame ] } { incr fi } {
+	#	puts [info frame $fi]
+	#}
+	foreach p [ get_pins -of $cell -sort { $a_name > $b_name } ] {
 		set a_match_max -1
 		set a_match_max_mindist 10000
 		set a_match_max_word ""
-		foreach w [ get_schem_words -ref $ref -radius [ expr $num_pins * 10 ] -page $page -filter { !$marked } $p ] {
+		foreach w [ get_schem_words -ref $ref -radius [ expr $numpins * 10 ] -sort { [ distance $a $r ] < [ distance $b $r ] } -page $page -filter { !$marked } $p ] {
 			set a_match 0
 			set a_match_mindist 10000
 			foreach ww $found {
@@ -453,6 +495,25 @@ proc schem_find_pin_shaped { cell mark } {
 	return $found
 }
 
+proc schem_find_pins { page } {
+	foreach cw [ get_schem_words -page $page -filter { $is_cell } ] {
+		set_prop genmark [ generate_mark ] $cw
+	}
+	foreach c [ get_cells -filter { $pins > 4 } -sort { $a_pins > $b_pins } -of [ get_schem_words -page $page -filter { $is_cell } ] ] {
+		schem_find_pins_shaped $c [ get genmark [ get_schem_words -of $c ] ]
+		puts "$c [ get pins $c ]"
+	}
+	for { set pins 4 } { $pins > 0 } { incr pins -1 } {
+		puts " find pins $pins "
+		schem_find_pins_simple $page $pins 50
+
+		set l1 [ llength [ get_schem_words -page $page -filter { $marked } $pins ] ]
+		set_prop mark 0 [ get_schem_words -page $page -filter { $is_cell } ]
+		set l2 [ llength [ get_schem_words -page $page -filter { $marked } $pins ] ]
+		puts "$l1 $l2"
+	}
+}
+
 proc schem_find_pin_labels { cell pins } {
 	if { ! [llength $pins] } {
 		set pins [ schem_find_pins $cell ]
@@ -465,13 +526,26 @@ proc schem_find_pin_labels { cell pins } {
 	}
 }
 
+proc D_preload_schem_pages { quality } {
+	foreach sch [ get_schematics ] {
+		set pages [ get pages $sch ]
+
+		for { set p 1 } { $p <= $pages } { incr p } {
+			draw_page -cache -quality $quality -of $sch $p
+		}
+	}
+}
+
+proc on_schematic_open {} {
+}
+
 proc cell_select_event { } {
 	if { [ llength [ selection ] ] == 0 } {
 		undraw_page
 	} else {
 		set c [lindex [selection] 0]
 		set page [lindex [lindex [get_prop schem_pages $c] 0 ] 0]
-		draw_page $page [get_cells $c]
+		draw_page -quality 0.5 $page [get_cells $c]
 		schem_highlight [lrange [ lindex [get_prop schem_pages $c ] 0 ] 1 end]
 	}
 	#if { [ llength [ selection ] ] == 1 } {
@@ -487,6 +561,17 @@ proc r {} {
 proc r2 {} {
 	schem_find_pins [ get_cells PU7201 ]
 	enclosed_box [ get_schem_words -color "#9900ff00" ]
+}
+
+proc r3 {} {
+	GDFactory_construct GD
+	set i [ GD create www 1000 1000 ]
+	set col [ $i allocate_color 0 0 0 ]
+	set col2 [ $i allocate_color 255 255 255 ]
+	puts "$col $col2"
+	$i line 0 0 100 100 $col2
+	set fp [ open "test111.jpeg" w ]
+	puts $fp [ $i jpeg_data 1 ]
 }
 
 proc RE {} {

@@ -140,6 +140,7 @@ target_link_libraries(${PROJECT_NAME_LOWER}
 	imgui
 	#tcl8.6
 	tclstub8.6
+	gd
 	readline
 	cpptcl_static
 	cpptcl_runtime

@@ -105,7 +105,6 @@ inline void cfg_color_visit_each(ColorScheme & c, F f) {
 	f("annotationPartAliasColor", c.annotationPartAliasColor, 0xffff00ff, 0xffff00ff);
 	f("annotationBoxColor",       c.annotationBoxColor,       0xcccc88ff, 0xff0000aa);
 	f("annotationStalkColor",     c.annotationStalkColor,     0xaaaaaaff, 0x000000ff);
-	f("annotationPopupBackgroundColor", c.annotationPopupBackgroundColor, 0x888888ff, 0xeeeeeeff);
 	f("annotationPopupTextColor", c.annotationPopupTextColor, 0xffffffff, 0x000000ff);
 	f("selectedMaskPins",         c.selectedMaskPins,         0xffffffff, 0xffffffff);
 	f("selectedMaskParts",        c.selectedMaskParts,        0xffffffff, 0xffffffff);
@@ -113,6 +112,8 @@ inline void cfg_color_visit_each(ColorScheme & c, F f) {
 	f("orMaskPins",               c.orMaskPins,               0x00000000, 0x00000000);
 	f("orMaskParts",              c.orMaskParts,              0x00000000, 0x00000000);
 	f("orMaskOutline",            c.orMaskOutline,            0x00000000, 0x00000000);
+
+	f("annotationPopupBackgroundColor", c.annotationPopupBackgroundColor, 0x888888ff, 0xeeeeeeff);
 }	
 
 void BoardView::ThemeSetStyle(const char *name) {
@@ -132,6 +133,8 @@ void BoardView::ThemeSetStyle(const char *name) {
 		}
 	};
 
+	//                               ------RGBA DARK-----------    -------RGBA LIGHT----------
+
 	f(ImGuiCol_Text,                 0.90f, 0.90f, 0.90f, 1.00f,   0.00f, 0.00f, 0.00f, 1.00f);
 	f(ImGuiCol_TextDisabled,         0.60f, 0.60f, 0.60f, 1.00f,   0.60f, 0.60f, 0.60f, 1.00f);
 	f(ImGuiCol_WindowBg,             0.00f, 0.00f, 0.00f, 0.70f,   0.94f, 0.94f, 0.94f, 1.00f);
@@ -139,7 +142,7 @@ void BoardView::ThemeSetStyle(const char *name) {
 	f(ImGuiCol_PopupBg,              0.05f, 0.05f, 0.10f, 0.90f,   0.94f, 0.94f, 0.94f, 1.00f);
 	f(ImGuiCol_Border,               0.70f, 0.70f, 0.70f, 0.65f,   0.00f, 0.00f, 0.00f, 0.39f);
 	f(ImGuiCol_BorderShadow,         0.00f, 0.00f, 0.00f, 0.00f,   1.00f, 1.00f, 1.00f, 0.10f);
-	f(ImGuiCol_FrameBg, 		     0.30f, 0.30f, 0.30f, 1.00f,   1.00f, 1.00f, 1.00f, 1.00f); // Background of checkbox, radio button, plot, slider, text input
+	f(ImGuiCol_FrameBg, 		     0.30f, 0.30f, 0.30f, 1.00f,   1.00f, 1.00f, 1.00f, 1.00f);
 	f(ImGuiCol_FrameBgHovered,       0.90f, 0.80f, 0.80f, 0.40f,   0.26f, 0.59f, 0.98f, 0.40f);
 	f(ImGuiCol_FrameBgActive,        0.90f, 0.65f, 0.65f, 0.45f,   0.26f, 0.59f, 0.98f, 0.67f);
 	f(ImGuiCol_TitleBg,              0.27f, 0.27f, 0.54f, 0.83f,   0.96f, 0.96f, 0.96f, 1.00f);
@@ -203,6 +206,88 @@ int BoardView::ConfigParse(void) {
 	const char *v     = obvconfig.ParseStr("colorTheme", "light");
 	ThemeSetStyle(v);
 
+
+#if 1
+	auto f = [&](const char * optname, auto & dest) {
+		typedef typename std::remove_reference<decltype(dest)>::type dt;
+		if constexpr (std::is_same<dt, bool>::value) {
+			dest = obvconfig.ParseBool(optname, dest);
+		} else if constexpr (std::is_floating_point<dt>::value) {
+			dest = obvconfig.ParseDouble(optname, dest);
+		} else if constexpr (std::is_integral<dt>::value) {
+			dest = obvconfig.ParseInt(optname, dest);
+		} else if constexpr (std::is_convertible<const char *, dt>::value) {
+			dest = obvconfig.ParseStr(optname, dest);
+		} else {
+			throw;
+		}
+	};
+
+#ifdef M
+#error fix this
+#endif
+#define M(name) f(#name , name)
+	M(fontSize);
+	M(pinSizeThresholdLow);
+	M(pinShapeSquare);
+	if (!pinShapeCircle && !pinShapeSquare) {
+		pinShapeSquare = true;
+	}
+	// Special test here, in case we've already set the dpi from external
+	// such as command line.
+	if (!dpi) dpi = obvconfig.ParseInt("dpi", 100);
+	if (dpi < 50) dpi = 50;
+	if (dpi > 400) dpi = 400;
+	dpiscale = dpi / 100.0f;
+	
+	M(pinHalo);
+	M(pinHaloDiameter);
+	M(pinHaloThickness);
+	M(pinSelectMasks);
+	M(startFullscreen);
+	M(pinA1threshold);
+	M(showFPS);
+	M(showInfoPanel);
+
+	M(infoPanelSelectPartsOnNet);
+	M(infoPanelCenterZoomNets);
+	M(partZoomScaleOutFactor);
+
+	//f("infoPanelWidth", m_info_surface.x);
+	m_info_surface.x          = obvconfig.ParseInt("infoPanelWidth", 350);
+
+	M(showPins);
+	M(showPosition);
+	M(showNetWeb);
+	M(showAnnotations);
+	f("showBackgroundImage", backgroundImage.enabled);
+	M(fillParts);
+	f("centerZoomSearchResults", m_centerZoomSearchResults); // = obvconfig.ParseBool("centerZoomSearchResults", true);
+	M(flipMode);
+
+	M(boardFill);
+	M(boardFillSpacing);
+
+	zoomFactor   = obvconfig.ParseInt("zoomFactor", 10) / 10.0f;
+	M(zoomModifier);
+
+	M(panFactor);
+	panFactor = DPI(panFactor);
+
+	M(panModifier);
+
+	M(annotationBoxSize);
+	annotationBoxSize = DPI(annotationBoxSize);
+
+	M(annotationBoxOffset);
+	annotationBoxOffset = DPI(annotationBoxOffset);
+
+	M(netWebThickness);
+
+	
+#undef M
+
+#else
 	fontSize            = obvconfig.ParseDouble("fontSize", 20);
 	pinSizeThresholdLow = obvconfig.ParseDouble("pinSizeThresholdLow", 0);
 	pinShapeSquare      = obvconfig.ParseBool("pinShapeSquare", false);
@@ -262,7 +347,8 @@ int BoardView::ConfigParse(void) {
 	annotationBoxOffset = DPI(annotationBoxOffset);
 
 	netWebThickness = obvconfig.ParseInt("netWebThickness", 2);
-
+#endif
+	
 	/*
 	 * Some machines (Atom etc) don't have enough CPU/GPU
 	 * grunt to cope with the large number of AA'd circles

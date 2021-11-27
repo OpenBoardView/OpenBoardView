@@ -151,6 +151,42 @@ namespace OBV_Tcl {
 			uint32_t color = 0;
 			int mark = 0;
 		};
+
+		struct page_cache {
+			unsigned char * thumb = nullptr;
+			unsigned char * img_buf = nullptr;
+			Image * pdf_img = nullptr;
+			ImVec2 dim;
+			float quality;
+
+			page_cache() = default;
+			page_cache(page_cache && o) {
+				img_buf = o.img_buf;
+				pdf_img = o.pdf_img;
+				dim     = o.dim;
+				quality = o.quality;
+				o.img_buf = nullptr;
+				o.pdf_img = nullptr;
+			}
+			page_cache(page_cache const &) = delete;
+			~page_cache() {
+				if (img_buf) delete img_buf;
+				if (pdf_img) delete pdf_img;
+			}
+		};
+
+		struct schematic {
+			std::string filename;
+			PDFDoc * doc = nullptr;
+			PopplerDocument * poppler_doc = nullptr;
+			typedef std::vector<pdf_txt_bbox> pdf_words_value_t;
+			std::map<int, pdf_words_value_t> words;
+			std::multimap<int, page_cache> page_cache_;
+		};
+
+		std::vector<schematic> schematics_;
+
+		schematic * default_schematic_ = nullptr;
 		
 		template <typename OT, typename DEL>
 		typename std::enable_if<detail::contains<OT, Net, Pin, Component, BRDBoard, pdf_txt_bbox>::value, void>::type
@@ -317,8 +353,8 @@ namespace OBV_Tcl {
 		object get_schem_words(getopt<int> const & page, getopt<std::string> const & filter_arg, getopt<bool> const & use_regex, getopt<pdf_txt_bbox *> const & ref, getopt<std::string> const & sort, getopt<list<pdf_txt_bbox> > const & not_, getopt<any<list<Component> , list<Pin>, list<Net>, list<pdf_txt_bbox> > > const & of, getopt<std::string> const & exact, getopt<std::string> const & color, getopt<list<pdf_txt_bbox> > const & bbox, getopt<float> const & radius, variadic<std::string> const & match);
 		static constexpr const char * get_nets_opt = "re all not gnd of filter";
 		object get_nets(getopt<bool> const & use_regex, getopt<bool> const & all, getopt<list<Net> > const & not_, getopt<bool> const & gnd, getopt<any<list<Component>, list<Pin>, list<Net>, list<BRDBoard> > > const & of, getopt<std::string> const & filter_arg, variadic<std::string> const & match);
-		static constexpr const char * get_pins_opt = "re all parallel filter of brief";
-		object get_pins(getopt<bool> const & use_regex, getopt<bool> const & all, getopt<bool> const & parallel, getopt<std::string> const & filter_arg, getopt<any<list<Component>, list<Net>, list<Pin>, list<BRDBoard> > > const & of, getopt<bool> const & brief, variadic<std::string> const & match);
+		static constexpr const char * get_pins_opt = "re all parallel filter of ref sort brief";
+		object get_pins(getopt<bool> const & use_regex, getopt<bool> const & all, getopt<bool> const & parallel, getopt<std::string> const & filter_arg, getopt<any<list<Component>, list<Net>, list<Pin>, list<BRDBoard> > > const & of, getopt<Pin *> const & ref, getopt<std::string> const & sort, getopt<bool> const & brief, variadic<std::string> const & match);
 		static constexpr const char * highlight_opt = "save un all color colorindex intensity";
 		void highlight(getopt<bool> const & save, getopt<bool> const & un, getopt<bool> const & all, getopt<std::string> const & color, getopt<int> const & colorindex, getopt<float> const & inten, opt<list<any<Component, Pin, pdf_txt_bbox> > > const & obj);
 		const char * get_cells_opt = "filter sort re of all top bottom not ref";
@@ -326,7 +362,9 @@ namespace OBV_Tcl {
 						 getopt<bool> const & top,
 						 getopt<bool> const & bottom,
 						 getopt<list<Component> > const & not_, getopt<Component *> const & ref, variadic<std::string> const & match);
+		object get_schem_windows();
 
+		
 		static constexpr const char * generate_mark_opt = "set";
 		int generate_mark(getopt<int> set) {
 			if (set) {
@@ -367,17 +405,8 @@ namespace OBV_Tcl {
 		}
 		
 		static constexpr const char * prop_begin_opt = "help mark highlight";
-		void prop_begin(getopt<bool> const & help, getopt<bool> const & mark, getopt<bool> const & highlight) {
-			if (help) {
-				std::cerr << "begin a new property stack frame\n";
-				std::cerr << " -mark      save mark information\n";
-				std::cerr << " -highlight save highlight information\n";
-				std::cerr << "\n";
-				man_prop_stack(std::cerr);
-				throw tcl_usage_message_printed();
-			}
-			prop_stack_.push_front(prop_stack_frame(mark, highlight));
-		}
+		void prop_begin(getopt<bool> const & help, getopt<bool> const & mark, getopt<bool> const & highlight);
+
 		void prop_stack_info() {
 			std::cerr << prop_stack_.size() << " frames\n";
 			for (int i = prop_stack_.size() - 1; i >= 0; --i) {
@@ -398,21 +427,11 @@ namespace OBV_Tcl {
 			return prop_stack_enable_;
 		}
 
-		void prop_abort() {
-			if (prop_stack_.empty()) {
-				throw tcl_error("property stack is empty");
-			}
-			auto & r = prop_stack_.front();
-			for (auto it = r.items.rbegin(); it != r.items.rend(); ++it) {
-				if (r.mark) {
-					it->word->mark = it->saved_mark;
-				}
-				if (r.highlight) {
-					it->word->color = it->saved_color;
-				}
-			}
-			prop_stack_.pop_front();
-		}
+		void prop_abort();
+
+		static constexpr const char * prop_frame_opt = "current historic";
+		object prop_frame(getopt<bool> const & current, getopt<bool> const & historic, int frame_arg);
+		
 		void prop_stack_try_save_mark(pdf_txt_bbox * w) {
 			if (! prop_stack_enable_ || prop_stack_.empty()) return;
 			auto & r = prop_stack_.front();
@@ -473,16 +492,16 @@ namespace OBV_Tcl {
 		}
 		
 		void filter_install(Component * c, object & obj, const char * varname) {
-			cell_get_prop_impl(varname, c, obj);
+			cell_get_prop_impl(varname, c, obj, nullptr);
 		}
 		void filter_install(Net * c, object & obj, const char * varname) {
-			net_get_prop_impl(varname, c, obj);
+			net_get_prop_impl(varname, c, obj, nullptr);
 		}
 		void filter_install(Pin * c, object & obj, const char * varname) {
-			pin_get_prop_impl(varname, c, obj);
+			pin_get_prop_impl(varname, c, obj, nullptr);
 		}
 		void filter_install(pdf_txt_bbox * c, object & obj, const char * varname) {
-			schem_word_get_prop_impl(varname, c, obj);
+			schem_word_get_prop_impl(varname, c, obj, nullptr);
 		}
 
 #if 0
@@ -540,55 +559,75 @@ namespace OBV_Tcl {
 #endif
 		
 		struct cmpeq_t {
-			bool operator()(const char * a, const char * b) {
-				return strcasecmp(a, b) == 0;
-			}
-		};
-		struct record_strings_t : public std::vector<std::string> {
-			bool operator()(const char * a, const char * b) {
-				const char * c = a ? a : b;
-				if (c) {
-					push_back(c);
+			bool write_;
+			cmpeq_t(bool w) : write_(w) { }
+			cmpeq_t() : write_(false) { }
+
+			bool operator()(const char * a, const char * b, bool writable = false) {
+				if (! write_ || writable) {
+					return strcasecmp(a, b) == 0;
 				}
 				return false;
 			}
 		};
+		struct record_strings_t : public std::vector<std::pair<std::string, bool> > {
+			record_strings_t() { }
+			record_strings_t(record_strings_t const &) = delete;
+
+			bool operator()(const char * a, const char * b, bool writable = false) {
+				const char * c = a ? a : b;
+
+				if (c) {
+					push_back(std::pair(c, writable));
+				}
+				return false;
+			}
+		};
+		
 
 		template <typename CMP=cmpeq_t>
 		static object schem_word_get_prop(const char * prop, pdf_txt_bbox * p, CMP icmp = cmpeq_t()) {
 			object ret;
-			schem_word_get_prop_impl(prop, p, ret, icmp);
+			schem_word_get_prop_impl(prop, p, ret, nullptr, icmp);
 			return ret;
 		}
 		template <typename CMP=cmpeq_t>
 		static object cell_get_prop(const char * prop, Component * c, CMP icmp = cmpeq_t()) {
 			object ret;
-			cell_get_prop_impl(prop, c, ret, icmp);
+			cell_get_prop_impl(prop, c, ret, nullptr, icmp);
 			return ret;
 		}
 		template <typename CMP=cmpeq_t>
 		static object pin_get_prop(const char * prop, Pin * p, CMP icmp = cmpeq_t()) {
 			object ret;
-			pin_get_prop_impl(prop, p, ret, icmp);
+			pin_get_prop_impl(prop, p, ret, nullptr, icmp);
 			return ret;
 		}
 		template <typename CMP=cmpeq_t>
 		static object net_get_prop(const char * prop, Net * n, CMP icmp = cmpeq_t()) {
 			object ret;
-			net_get_prop_impl(prop, n, ret, icmp);
+			net_get_prop_impl(prop, n, ret, nullptr, icmp);
 			return ret;
 		}
-
 		template <typename CMP=cmpeq_t>
-		static bool schem_word_get_prop_impl(const char * prop, pdf_txt_bbox * p, object & ret, CMP icmp = cmpeq_t());
+		static object schematic_get_prop(const char * prop, schematic * s, CMP icmp = cmpeq_t()) {
+			object ret;
+			schematic_get_prop_impl(prop, s, ret, nullptr, icmp);
+			return ret;
+		}
+		
 		template <typename CMP=cmpeq_t>
-		static bool cell_get_prop_impl(const char * prop, Component * c, object & ret, CMP icmp = cmpeq_t());
+		static bool schem_word_get_prop_impl(const char * prop, pdf_txt_bbox * p, object & ret, object * set, CMP icmp = cmpeq_t());
 		template <typename CMP=cmpeq_t>
-		static bool pin_get_prop_impl(const char * prop, Pin * p, object & ret, CMP icmp = cmpeq_t());
+		static bool cell_get_prop_impl(const char * prop, Component * c, object & ret, object * set, CMP icmp = cmpeq_t());
 		template <typename CMP=cmpeq_t>
-		static bool net_get_prop_impl(const char * prop, Net * n, object & ret, CMP icmp = cmpeq_t());
-
-		static char const ** cell_props_, ** pin_props_, ** net_props_, ** pdf_word_props_;
+		static bool pin_get_prop_impl(const char * prop, Pin * p, object & ret, object * set, CMP icmp = cmpeq_t());
+		template <typename CMP=cmpeq_t>
+		static bool net_get_prop_impl(const char * prop, Net * n, object & ret, object * set, CMP icmp = cmpeq_t());
+		template <typename CMP=cmpeq_t>
+		static bool schematic_get_prop_impl(const char * prop, schematic * s, object & ret, object * set, CMP icmp = cmpeq_t());
+		
+		static char const ** cell_props_, ** pin_props_, ** net_props_, ** pdf_word_props_, ** schematic_props_;
 
 		template <typename Fn>
 		static char const ** enumerate_props_impl(Fn, cmpeq_t &) {
@@ -596,10 +635,16 @@ namespace OBV_Tcl {
 		}
 		template <typename Fn>
 		static char const ** enumerate_props_impl(Fn fn, record_strings_t & rec) {
-			fn(nullptr, nullptr, rec);
+			object obj;
+			object set;
+			fn(nullptr, nullptr, obj, &set, rec);
+
 			char const ** p = new char const *[rec.size() + 1];
 			for (std::size_t i = 0; i < rec.size(); ++i) {
-				p[i] = strdup(rec[i].c_str());
+				char * pp = new char[rec[i].first.size() + 2];
+				strcpy(pp, rec[i].first.c_str());
+				pp[rec[i].first.size() + 1] = rec[i].second ? 1 : 0;
+				p[i] = const_cast<const char *>(pp);
 			}
 			p[rec.size()] = nullptr;
 			rec.clear();
@@ -861,11 +906,23 @@ namespace OBV_Tcl {
 			}
 		}
 
+		object dup(object const & o) {
+			return o.duplicate();
+		}
+		
 		std::string objinfo(object const & o) {
 			std::ostringstream oss;
 			Tcl_Obj * oo = o.get_object();
 			
 			oss << "obj=" << oo << " refcount=" << oo->refCount << " typePtr=" << oo->typePtr << " typename=" << tcl_typename(oo) << " ptr1=" << oo->internalRep.twoPtrValue.ptr1 << " ptr2=" << oo->internalRep.twoPtrValue.ptr2 << "\n";
+			if (oo->typePtr) {
+				if (strcmp(oo->typePtr->name, "cmdName") == 0) {
+					Tcl_CmdInfo cmdinfo;
+					if (Tcl_GetCommandInfo(tcli->get_interp(), Tcl_GetString(oo), &cmdinfo)) {
+						oss << "cmdinfo proc=" << (void *) cmdinfo.objProc << " cd=" << cmdinfo.objClientData << " ns=" << cmdinfo.namespacePtr << "\n";
+					}
+				}
+			}
 			return oss.str();
 		}
 		
@@ -905,7 +962,7 @@ namespace OBV_Tcl {
 			return "(notype)";
 		}
 
-		typedef any<Component, Net, Pin, Board, pdf_txt_bbox> any_obv_type;
+		typedef any<Component, Net, Pin, Board, pdf_txt_bbox, schematic> any_obv_type;
 
 		void cell_set_prop(Component * c, std::string const & name, std::string const & value) {
 			if (! c->tcl_priv) { c->tcl_priv = (void *) new cell_priv(); }
@@ -985,9 +1042,9 @@ namespace OBV_Tcl {
 			return v > b.min && v < b.max;
 		}
 #ifdef OBV_USE_POPPLER
-		PDFDoc * pdf_ = nullptr;
-		std::string pdf_filename_;
-		PopplerDocument * pdoc_ = nullptr;
+		//PDFDoc * pdf_ = nullptr;
+		//std::string pdf_filename_;
+		//PopplerDocument * pdoc_ = nullptr;
 
 		Image * pdf_img_ = nullptr;
 		unsigned char * pdf_img_buf_ = nullptr;
@@ -1024,11 +1081,12 @@ namespace OBV_Tcl {
 			bool   ignore_one_mouse_release = false;
 			bool   dragging = false;
 			bool   mouse_released = false;
+			float  quality = 0.0f;
 		};
 		
 		ImVec2 pdf2board(pdf_window const & w, Image * pdf, ImVec2 c, bool flip) {
 			ImVec2 t = pdf->CoordToScreen(c / w.wdim);
-			if (!flip) {
+			if (flip) {
 				//c.y = w.wdim.y - c.y;
 				t.y = 1.0f - t.y;
 			}
@@ -1064,8 +1122,8 @@ namespace OBV_Tcl {
 		//ImVec2 pdf_min_, pdf_max_;
 
 
-		typedef std::vector<pdf_txt_bbox> pdf_words_value_t;
-		std::map<int, pdf_words_value_t> pdf_words_;
+		//typedef std::vector<pdf_txt_bbox> pdf_words_value_t;
+		//std::map<int, pdf_words_value_t> pdf_words_;
 
 		std::optional<obv_shared_ptr<Component> > lookup(Component * c) {
 			if (c) {
@@ -1090,7 +1148,7 @@ namespace OBV_Tcl {
 		ImVec2 yflip(ImVec2 const & v) {
 			return { v.x, boardview()->m_current_side || pdf_win_.sticky ? (pdf_win_.box.min + pdf_win_.bdim - (v - pdf_win_.box.min)).y : v.y };
 		}
-
+		
 		int handle_mouse_drag(ImVec2 const & ppos, ImVec2 const & drag, int token);
 
 		uint64_t last_click_ = 0;
@@ -1130,6 +1188,11 @@ namespace OBV_Tcl {
 		
 		bool pdf_invert(opt<bool> const & v) {
 			if (v) {
+				if (*v != pdf_invert_) {
+					//for (auto & s : schematics_) {
+						//	s.page_cache_.clear();
+					//}
+				}
 				pdf_invert_ = *v;
 			}
 			return pdf_invert_;
@@ -1151,40 +1214,43 @@ namespace OBV_Tcl {
 			pdf_win_.reuse = false;
 			pdf_win_.sticky = false;
 		}
-		struct page_cache {
-			unsigned char * thumb = nullptr;
-			unsigned char * img_buf = nullptr;
-			Image * pdf_img = nullptr;
-			ImVec2 dim;
-		};
-
-		std::map<int, page_cache> page_cache_;
-
 		struct helper_cairo_write_t {
 			std::vector<unsigned char> data;
 		};
-		
-		void draw_page(int page, opt<Component *> const & inside);
 
+		std::thread * draw_page_thread_ = nullptr;
+		std::atomic<bool> draw_page_in_progress_ = false;
+		std::mutex * draw_page_mutex_ = nullptr;
+		
+		static constexpr const char * draw_page_opt = "background quality cache norender reusewin of origin zoom";
+		void draw_page(getopt<bool> const & background, getopt<float> const & quality, getopt<bool> const & cache, getopt<bool> const & norender, getopt<bool> const & reusewin, getopt<schematic *> const & of, getopt<std::string> const & center, getopt<float> const & zoom, int page, opt<Component *> const & inside);
+
+		static constexpr const char * history_opt = "auto";
+		object history(getopt<bool> const & automatic);
+		
+		static constexpr const char * get_schematics_opt = "";
+		object get_schematics(); //std::getopt<std::list<pdf_txt_bbox> > const & of);
+		
 		static cairo_status_t cairo_write_func(void * c, const unsigned char * data, unsigned int len) {
 			auto * p = (helper_cairo_write_t *) c;
 			p->data.insert(p->data.end(), data, data + len);
 			return CAIRO_STATUS_SUCCESS;
 		}
 
-		page_cache * render_page(int page);
+		page_cache * render_page(int page, getopt<float> quality, schematic * sch, bool norender);
 
-		static constexpr const char * schematic_open_opt = "background";
-		void schematic_open(getopt<bool> const & background, std::string const & fname) {
+		static constexpr const char * schematic_open_opt = "background preload preload_quality";
+		void schematic_open(getopt<bool> const & background, getopt<bool> const & preload, getopt<float> const & preload_quality, std::string const & fname) {
 			schem_thread_joinable_ = false;
 			if (background) {
-				schem_open_thread_ = new std::thread([fname, this] { schematic_open_impl(fname, true); });
+				schem_open_thread_ = new std::thread([=] { schematic_open_impl(fname, true, preload || preload_quality, preload_quality ? *preload_quality : 0.5f); });
 			} else {
-				schematic_open_impl(fname, false);
+				schematic_open_impl(fname, false, preload || preload_quality, preload_quality ? *preload_quality : 0.5f);
 			}
 		}
 
-		void schematic_open_impl(std::string const & fname, bool bg);
+
+		void schematic_open_impl(std::string const & fname, bool bg, bool preload, float preload_quality);
 #else // OBV_USE_POPPLER
 		void imgui_draw(ImDrawList *);
 
@@ -1236,9 +1302,14 @@ namespace OBV_Tcl {
 			*done_ = true;
 		}
 
+		int cover(int a, int b) {
+			return a + b;
+		}
+
+		
 		static constexpr const char * report_prop_opt = "verbose";
 		void report_prop(getopt<bool> const & verbose, list<any_obv_type> const & obj);
-
+		
 		object last_result() {
 			return last_result_;
 		}
@@ -1395,8 +1466,8 @@ namespace OBV_Tcl {
 					last_result_ = r;
 				}
 				bool isvec = false;
-				if (r.is_list()) {
-					interpreter I(r.get_interp(), false);
+				interpreter I(r.get_interp(), false);
+				if (r.is_list() && r.size(I)) {
 					if (r.at_ref(0, I).get_object()->typePtr) {
 						isvec = true;
 					}

@@ -5,6 +5,7 @@
 #include <string>
 #include <atomic>
 #include <thread>
+#include <optional>
 #include <glad/glad.h>
 
 #include "imgui/imgui.h"
@@ -38,9 +39,9 @@ private:
 	bool mirrorY = false;
 	float transparency = 0.0f;
 
-	std::array<ImVec2, 4> tex_coord_ = { { { 0.0f, 1.0f }, { 1.0f, 1.0f }, { 1.0f, 0.0f }, { 0.0f, 0.0f } } };
+	std::array<ImVec2, 4> tex_coord_ = { { { 0.0f, 0.0f }, { 1.0f, 0.0f }, { 1.0f, 1.0f }, { 0.0f, 1.0f } } };
 	
-	std::array<ImVec2, 4> TransformRelativeCoordinates(int rotation) const;
+	std::array<ImVec2, 4> TransformRelativeCoordinates(int rotation, ImVec2 & pmin, ImVec2 & pmax) const;
 
 	unsigned char * imgdata = nullptr, * imgdata_loader = nullptr;
 	int imgwidth = 0;
@@ -53,8 +54,12 @@ private:
 	int thumb_height_ = 0;
 	float x_right_ = 1.0f;
 
+	ImVec2 origin_ = { 0.0f, 0.0f };
+	float scale_ = 1.0f;
+	
 	float zoom_factor_ = 1.0f;
 	void observe_border();
+
  public:
 	Image() { imgdata_raw_ = new std::atomic<unsigned char *>; }
 	Image(const filesystem::path &file, bool no_rotation = false);
@@ -63,12 +68,20 @@ private:
 	ImVec2 CoordToScreen(ImVec2 const & xy);
 	ImVec2 ScreenToCoord(ImVec2 const & xy);
 
+	//ImVec2 center();
+	//float  zoom();
+
+	void decode_image(bool);
+	
 	void zoom_factor(float f) { zoom_factor_ = f; }
 
-	
 	void unload();
 	std::string reload(bool force = false);
-	void render(ImDrawList &draw, const ImVec2 &p_min, const ImVec2 &p_max, int rotation);
+	std::optional<float> render(ImDrawList &draw, const ImVec2 &p_min, const ImVec2 &p_max, int rotation);
+	void zoom(float s) { scale_ = s; }
+	void origin(ImVec2 const & o) { origin_ = o; }
+	ImVec2 origin() const { return origin_; }
+	float zoom() const { return scale_; }
 	void zoom(ImVec2 xz, float z);
 	void scroll(ImVec2);
 	
