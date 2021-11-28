@@ -64,7 +64,7 @@ std::string Image::reload(bool force) {
 	}
 }
 
-std::array<ImVec2, 4> Image::TransformRelativeCoordinates(int rotation, ImVec2 & bmin, ImVec2 & bmax) const {
+std::array<ImVec2, 4> Image::TransformRelativeCoordinates(int rotation, ImVec2 & bmin, ImVec2 & bmax) {
 	std::array<ImVec2, 4> ret;
 
 	float waspect = float(imgwidth) / float(imgheight);
@@ -72,9 +72,13 @@ std::array<ImVec2, 4> Image::TransformRelativeCoordinates(int rotation, ImVec2 &
 	ImVec2 bdim = bmax - bmin;
 
 	float baspect = bdim.x / bdim.y;
+	current_view_aspect_ = baspect;
 	
-	float xscale = scale_;
-	float yscale = scale_;
+	float xscale = scale_ / waspect * baspect; // / (baspect < 1.0f ? baspect : 1.0f);
+	float yscale = scale_;//  / baspect; /// (baspect > 1.0f ? baspect : 1.0f);
+
+	//float xscale = a_scale().x / (baspect < 1.0f ? baspect : 1.0f);
+	//float yscale = a_scale().y / (baspect > 1.0f ? baspect : 1.0f);
 	
 	if (origin_.x < 0.0f) {
 		bmin.x -= bdim.x / xscale * origin_.x;
@@ -173,27 +177,15 @@ std::array<ImVec2, 4> Image::TransformRelativeCoordinates(int rotation, ImVec2 &
 	}
 }
 
+ImVec2 Image::a_scale() const {
+	float waspect = float(imgwidth) / float(imgheight);
+	float xscale = scale_ / waspect * current_view_aspect_;
+	return ImVec2(xscale, scale_);
+}
+
 void Image::scroll(ImVec2 dxy) {
-	origin_ -= dxy * scale_;
-	return;
-
-	ImVec2 dim = { x_right_ - tex_coord_[3].x, tex_coord_[3].y - tex_coord_[0].y };
-	dxy *= dim;
-	for (auto & i : tex_coord_) {
-		i -= dxy;
-	}
-	observe_border();
+	origin_ -= dxy * a_scale();
 }
-
-#if 0
-ImVec2 Image::center() {
-	return { tex_coord_[0].x + (x_right_ - tex_coord_[0].x) / 2, tex_coord_[3].y + (tex_coord_[0].y - tex_coord_[3].y) / 2 };
-}
-
-float Image::zoom() {
-	return 1.0f;
-}
-#endif
 
 void Image::zoom(ImVec2 xy, float dz) {
 	ImVec2 coord = ScreenToCoord(xy);
@@ -202,30 +194,6 @@ void Image::zoom(ImVec2 xy, float dz) {
 	ImVec2 coord2 = ScreenToCoord(xy);
 
 	origin_ += coord - coord2;
-	
-	return;
-#if 0
-	ImVec2 coord = ScreenToCoord(xy);
-	
-	ImVec2 dzz { -dz / 2 * zoom_factor_, -dz / 2 * zoom_factor_ };
-	
-	
-	for (auto & i : tex_coord_) {
-		i += dzz * (i - xy);
-	}
-
-	float w_aspect = w_aspect_; //abs((p_max - p_min).x / (p_max - p_min).y);
-	float i_aspect = float(imgwidth) / float(imgheight);
-	
-	float x_new = tex_coord_[0].x + (tex_coord_[1].x - tex_coord_[0].x) / i_aspect * w_aspect;
-	x_right_ = x_new;
-	
-	ImVec2 off = ScreenToCoord(xy);
-	for (auto & i : tex_coord_) {
-		i += coord - off;
-	}
-	observe_border();
-#endif
 }
 
 void Image::observe_border() {
@@ -274,23 +242,23 @@ void Image::observe_border() {
 }
 
 ImVec2 Image::CoordToScreen(ImVec2 const & xy) {
-	return (xy - origin_) / scale_;
+	float waspect = float(imgwidth) / float(imgheight);
+	float xscale = scale_ / waspect * current_view_aspect_;
+	
+	ImVec2 ret = (xy - origin_);
+	ret.x /= xscale;
+	ret.y /= scale_;
 
-	auto c = tex_coord_;
-	//float xd = c[1].x - c[0].x;
-	float xd = x_right_ - c[0].x;
-	float yd = c[3].y - c[0].y;
-	return { (xy.x - c[0].x) / xd, (xy.y - c[0].y) / yd };
+	return ret;
 }
 ImVec2 Image::ScreenToCoord(ImVec2 const & xy) {
-	return xy * scale_ + origin_;
+	float waspect = float(imgwidth) / float(imgheight);
+	float xscale = scale_ / waspect * current_view_aspect_;
 
-	auto c = tex_coord_;
-
-	//float xd = c[1].x - c[0].x;
-	float xd = x_right_ - c[0].x;
-	float yd = c[3].y - c[0].y;
-	return { c[0].x + xd * xy.x, c[0].y + yd * xy.y };
+	ImVec2 ret = xy;
+	ret.x *= xscale;
+	ret.y *= scale_;
+	return ret + origin_;
 }
 
 
@@ -318,22 +286,6 @@ void Image::decode_image(bool bg) {
 				fn();
 			}
 		}
-#if 0			
-		if (thumb_texture) {
-			auto uvs = TransformRelativeCoordinates(rotation);
-			draw.AddImageQuad(reinterpret_cast<void*>(thumb_texture),
-							  p_min, // Asbolute render rectangle top-left corner
-							  ImVec2(p_max[0], p_min[1]), // Asbolute render rectangle top-right corner
-							  p_max, // Absolute render rectangle bottom-right corner
-							  ImVec2(p_min[0], p_max[1]), // Absolute render rectangle bottom-left corner
-							  uvs[0], // Image relative top-left corner
-							  uvs[1], // Image relative top-right corner
-							  uvs[2], // Image relative bottom-right corner
-							  uvs[3], // Image relative bottom-left corner
-							  ImGui::GetColorU32(ImVec4(1.0f, 1.0f, 1.0f, 1.0f - transparency)));
-		}
-		return std::optional<float>();
-#endif
 	}
 }
 
@@ -358,35 +310,12 @@ std::optional<float> Image::render(ImDrawList &draw, const ImVec2 &p_min, const 
 
 		auto uvs = TransformRelativeCoordinates(rotation, p_min_new, p_max_new);
 		{
-			
-#if 0
-			ImVec2 pdim = p_max - p_min;
-			ImVec2 pdim_o = pdim;
-			ImVec2 tdim = { uvs[1].x - uvs[0].x, uvs[3].y - uvs[1].y };
-			
-			float redu = std::clamp(std::max(tdim.x, tdim.y), 1.0f, std::numeric_limits<float>::max());
-			pdim.x /= std::clamp(tdim.x, 1.0f, std::numeric_limits<float>::max());
-			pdim.y /= std::clamp(tdim.y, 1.0f, std::numeric_limits<float>::max());
-			
-			
-			//ImVec2 p_min_new = ImVec2{ tdim.x > 1.0f ? p_min.x - uvs[0].x / tdim.x * pdim_o.x : p_min.x, tdim.y > 1.0f ? p_min.y - uvs[1].y / tdim.y * pdim_o.y : p_min.y };
-			
-
-			std::cerr << "draw " << origin_ << " " << scale_ << "\n";
-			//std::cerr << "draw " << p_min_new << " " << pdim << " " << uvs[0] << " " << uvs[1] << " " << uvs[2] << " " << uvs[3] << "\n";
-#endif
-
 			ImVec2 pdim = p_max_new - p_min_new;
-			//std::cerr << "draw o=" << origin_ << " sc=" << scale_ << " win=" << p_min_new << "/" << p_max_new << "\n";
-
 
 			draw.AddImageQuad(reinterpret_cast<void*>(texture),
 							  p_min_new, // Asbolute render rectangle top-left corner
-							  
 							  { p_min_new.x + pdim.x, p_min_new.y }, //ImVec2(p_max[0], p_min[1]), // Asbolute render rectangle top-right corner
-							  
 							  { p_min_new.x + pdim.x, p_min_new.y + pdim.y }, //p_max, // Absolute render rectangle bottom-right corner
-							  
 							  { p_min_new.x, p_min_new.y + pdim.y }, //ImVec2(p_min[0], p_max[1]), // Absolute render rectangle bottom-left corner
 							  
 							  uvs[0], // Image relative top-left corner
@@ -397,95 +326,6 @@ std::optional<float> Image::render(ImDrawList &draw, const ImVec2 &p_min, const 
 			
 			return scale_ * imgwidth * imgheight / (pdim.x * pdim.y);
 		}
-
-
-
-
-		
-#if 0
-#if 1
-		float w_aspect = abs((p_max - p_min).x / (p_max - p_min).y);
-		float i_aspect = float(imgwidth) / float(imgheight);
-
-		float x_new = uvs[0].x + (uvs[1].x - uvs[0].x) / i_aspect * w_aspect;
-		uvs[1].x = x_new; //uvs[0].x / i_aspect * w_aspect;
-		uvs[2].x = x_new; //uvs[3].x / i_aspect * w_aspect;
-		x_right_ = x_new;
-
-		w_aspect_ = w_aspect;
-		
-		//std::cerr << w_aspect << " " << i_aspect << " " << i_aspect / w_aspect << "\n";
-#else
-		
-#endif
-		draw.AddRectFilled(p_min, p_max, ImGui::GetColorU32(ImVec4(0.0f, 0.0f, 0.0f, 1.0f)));
-
-#if 0
-		for (auto & up : uvs) {
-			std::cerr << up << " ";
-		}
-		std::cerr << " --- ";
-#endif
-
-
-		ImVec2 pdim = p_max - p_min;
-		ImVec2 pdim_o = pdim;
-		ImVec2 tdim = { uvs[1].x - uvs[0].x, uvs[3].y - uvs[1].y };
-
-		std::cerr << "render: p_max=" << p_max << " pmin=" << p_min << " pdim=" << pdim << " tdim=" << tdim << "\n";
-
-
-		float redu = std::clamp(std::max(tdim.x, tdim.y), 1.0f, std::numeric_limits<float>::max());
-		pdim.x /= std::clamp(tdim.x, 1.0f, std::numeric_limits<float>::max());
-		pdim.y /= std::clamp(tdim.y, 1.0f, std::numeric_limits<float>::max());
-
-		
-		ImVec2 p_min_new = ImVec2{ tdim.x > 1.0f ? p_min.x - uvs[0].x / tdim.x * pdim_o.x : p_min.x, tdim.y > 1.0f ? p_min.y - uvs[1].y / tdim.y * pdim_o.y : p_min.y };
-		//ImVec2 p_min_new = tdim.x > 1.0f ? ImVec2{ p_min.x - uvs[0].x / tdim.x * pdim_o.x, p_min.y - uvs[1].y / tdim.y * pdim_o.y } : p_min;
-
-		
-		for (int i = 0; i < 4; ++i) {
-			uvs[i].x = std::clamp(uvs[i].x, 0.0f, 1.0f);
-			uvs[i].y = std::clamp(uvs[i].y, 0.0f, 1.0f);
-		}
-
-		
-#if 0
-		for (auto & up : uvs) {
-			std::cerr << up << " ";
-		}
-		std::cerr << "\n";
-#endif
-		ImVec2 wdim = (uvs[2] - uvs[0]) * ImVec2(imgwidth, imgheight);
-#if 0
-		if (abs(wdim.x) < abs(pdim.x) || abs(wdim.y) < abs(pdim.y)) {
-			std::cerr << "incr\n";
-		} else {
-			std::cerr << "stay\n";
-		}
-#endif
-		
-		float res_factor = abs(wdim.x * wdim.y) / abs(pdim.x * pdim.y);
-		//std::cerr << "res factor: " << res_factor << "\n";
-		
-		//std::cerr << pdim << " " << (uvs[2] - uvs[0]) * ImVec2(imgwidth, imgheight) << " " << ImVec2(imgwidth, imgheight) << "\n";
-
-		draw.AddImageQuad(reinterpret_cast<void*>(texture),
-						  p_min_new, // Asbolute render rectangle top-left corner
-
-						  { p_min_new.x + pdim.x, p_min_new.y }, //ImVec2(p_max[0], p_min[1]), // Asbolute render rectangle top-right corner
-
-						  { p_min_new.x + pdim.x, p_min_new.y + pdim.y }, //p_max, // Absolute render rectangle bottom-right corner
-
-						  { p_min_new.x, p_min_new.y + pdim.y }, //ImVec2(p_min[0], p_max[1]), // Absolute render rectangle bottom-left corner
-
-						  uvs[0], // Image relative top-left corner
-						  uvs[1], // Image relative top-right corner
-						  uvs[2], // Image relative bottom-right corner
-						  uvs[3], // Image relative bottom-left corner
-						  ImGui::GetColorU32(ImVec4(1.0f, 1.0f, 1.0f, 1.0f - transparency)));
-		return res_factor;
-#endif
 	}
 	return std::optional<float>();
 }

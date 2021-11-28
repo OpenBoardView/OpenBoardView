@@ -898,7 +898,8 @@ namespace OBV_Tcl {
 					if (prop_stack_[frame].highlight) {
 						tmp->color = v.saved_color;
 					}
-					r.append(tcli->makeobj(tmp, true));
+					const bool sharedptr = true;
+					r.append(tcli->makeobj(tmp, sharedptr));
 				}
 			}
 		}

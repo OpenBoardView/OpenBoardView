@@ -41,7 +41,7 @@ private:
 
 	std::array<ImVec2, 4> tex_coord_ = { { { 0.0f, 0.0f }, { 1.0f, 0.0f }, { 1.0f, 1.0f }, { 0.0f, 1.0f } } };
 	
-	std::array<ImVec2, 4> TransformRelativeCoordinates(int rotation, ImVec2 & pmin, ImVec2 & pmax) const;
+	std::array<ImVec2, 4> TransformRelativeCoordinates(int rotation, ImVec2 & pmin, ImVec2 & pmax);
 
 	unsigned char * imgdata = nullptr, * imgdata_loader = nullptr;
 	int imgwidth = 0;
@@ -54,6 +54,7 @@ private:
 	int thumb_height_ = 0;
 	float x_right_ = 1.0f;
 
+	float current_view_aspect_ = 1.0f;
 	ImVec2 origin_ = { 0.0f, 0.0f };
 	float scale_ = 1.0f;
 	
@@ -84,6 +85,7 @@ private:
 	float zoom() const { return scale_; }
 	void zoom(ImVec2 xz, float z);
 	void scroll(ImVec2);
+	ImVec2 a_scale() const;
 	
 	float x0() const;
 	float y0() const;
