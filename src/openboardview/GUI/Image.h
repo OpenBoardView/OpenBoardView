@@ -24,10 +24,6 @@ private:
 	GLuint texture = 0;
 	std::atomic<unsigned char *> * imgdata_raw_ = nullptr;
 	std::thread * imgdata_raw_thread_ = nullptr;
-	unsigned char * imgdata_thumb_ = nullptr;
-	GLuint thumb_texture = 0;
-
-	float w_aspect_ = 0.0f;
 
 	int width = 0;
 	int height = 0;
@@ -49,18 +45,10 @@ private:
 	int imgdatasize = 0;
 	bool use_loader_ = false;
 	bool no_rotation_ = false;
-	unsigned char * thumb_ = nullptr;
-	int thumb_width_ = 0;
-	int thumb_height_ = 0;
-	float x_right_ = 1.0f;
 
 	float current_view_aspect_ = 1.0f;
 	ImVec2 origin_ = { 0.0f, 0.0f };
 	float scale_ = 1.0f;
-	
-	float zoom_factor_ = 1.0f;
-	void observe_border();
-
  public:
 	Image() { imgdata_raw_ = new std::atomic<unsigned char *>; }
 	Image(const filesystem::path &file, bool no_rotation = false);
@@ -74,8 +62,6 @@ private:
 
 	void decode_image(bool);
 	
-	void zoom_factor(float f) { zoom_factor_ = f; }
-
 	void unload();
 	std::string reload(bool force = false);
 	std::optional<float> render(ImDrawList &draw, const ImVec2 &p_min, const ImVec2 &p_max, int rotation);

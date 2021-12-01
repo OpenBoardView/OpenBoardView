@@ -17,14 +17,13 @@ Image::Image(const filesystem::path &file, bool no_r) : file(file), no_rotation_
 	imgdata_raw_ = new std::atomic<unsigned char *>(nullptr);
 }
 
-Image::Image(unsigned char * data, int dlen, int width, int height, bool use_l, bool no_r, unsigned char * thumb, int thumb_width, int thumb_height) : imgdata(data), imgwidth(width), imgheight(height), imgdatasize(dlen), use_loader_(use_l), no_rotation_(no_r), thumb_(thumb), thumb_width_(thumb_width), thumb_height_(thumb_height) {
+Image::Image(unsigned char * data, int dlen, int width, int height, bool use_l, bool no_r, unsigned char *, int, int) : imgdata(data), imgwidth(width), imgheight(height), imgdatasize(dlen), use_loader_(use_l), no_rotation_(no_r) {
 	imgdata_raw_ = new std::atomic<unsigned char *>(nullptr);
 }
 
 Image::~Image() {
 	unload();
 	delete *imgdata_raw_;
-	//if (imgdata_thumb_) { delete[] imgdata_thumb_; }
 }
 
 void Image::unload() {
@@ -37,14 +36,6 @@ void Image::unload() {
 }
 
 std::string Image::reload(bool force) {
-#if 0
-	if (! thumb_texture && thumb_) {
-		int w = thumb_width_;
-		int h = thumb_height_;
-		unsigned char * p;
-		Renderers::current->loadTextureFromData(thumb_, imgdatasize * 0, &w, &h, &thumb_texture, &p, false);
-	}		
-#endif
 	if (texture && !force) return "";
 	if (texture) {
 		glDeleteTextures(1, &texture);
@@ -194,51 +185,6 @@ void Image::zoom(ImVec2 xy, float dz) {
 	ImVec2 coord2 = ScreenToCoord(xy);
 
 	origin_ += coord - coord2;
-}
-
-void Image::observe_border() {
-	return;
-	while (true) {
-
-		ImVec2 dim = { tex_coord_[2].x - tex_coord_[3].x, tex_coord_[0].y - tex_coord_[3].y };
-		if (dim.x > 1.0f || dim.y > 1.0f) {
-			tex_coord_[0] = { 0.0f, 1.0f };
-			tex_coord_[1] = { 1.0f, 1.0f };
-			tex_coord_[2] = { 1.0f, 0.0f };
-			tex_coord_[3] = { 0.0f, 0.0f };
-		}
-		bool scroll = false;
-		ImVec2 scr;
-		for (int i = 0; i < 4; ++i) {
-			if (tex_coord_[i].x < 0.0f) {
-				scr = { -tex_coord_[i].x, 0 };
-				scroll = true;
-				break;
-			}
-			if (tex_coord_[i].x > 1.0f) {
-				scr = { -tex_coord_[i].x + 1.0f, 0 };
-				scroll = true;
-				break;
-			}
-			if (tex_coord_[i].y < 0.0f) {
-				scr = { 0, -tex_coord_[i].y };
-				scroll = true;
-				break;
-			}
-			if (tex_coord_[i].y > 1.0f) {
-				scr = { 0, -tex_coord_[i].y + 1.0f };
-				scroll = true;
-				break;
-			}
-		}
-		if (scroll) {
-			for (auto & i : tex_coord_) {
-				i += scr;
-			}
-		} else {
-			break;
-		}
-	}
 }
 
 ImVec2 Image::CoordToScreen(ImVec2 const & xy) {

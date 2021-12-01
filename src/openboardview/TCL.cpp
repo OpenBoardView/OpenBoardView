@@ -24,7 +24,7 @@ char const ** TCL::pdf_word_props_ = nullptr,
 bool TCL::static_initialized_ = false;
 
 namespace OBV_Tcl {
-	std::optional<std::map<std::string, object> > TCL::get_variables_from_expr(std::string const & expr, bool command, bool throw_on_error) {
+	std::optional<std::map<std::string, object> > TCL::get_variables_from_expr(interpreter * tcli, std::string const & expr, bool command, bool throw_on_error) {
 		std::map<std::string, object> ret;
 
 		Tcl_Parse tokens;
@@ -47,9 +47,9 @@ namespace OBV_Tcl {
 
 		int tret;
 		if (command) {
-			tret = Tcl_ParseCommand(tcl, expr.c_str(), -1, 1, &tokens);
+			tret = Tcl_ParseCommand(tcli->get_interp(), expr.c_str(), -1, 1, &tokens);
 		} else {
-			tret = Tcl_ParseExpr(tcl, expr.c_str(), -1, &tokens);
+			tret = Tcl_ParseExpr(tcli->get_interp(), expr.c_str(), -1, &tokens);
 		}
 				
 		if (tret != TCL_OK) {
@@ -87,7 +87,7 @@ namespace OBV_Tcl {
 						return { };
 					}
 					try {
-						auto rv = get_variables_from_expr(std::string(r.start + 1, r.size - 1), true, true);
+						auto rv = get_variables_from_expr(tcli, std::string(r.start + 1, r.size - 1), true, true);
 						if (rv) {
 							for (auto & i : *rv) {
 								ret.insert(i);
@@ -158,6 +158,8 @@ namespace OBV_Tcl {
 					pdf_win_.box = { { boardview()->m_board_surface.x / 2, boardview()->m_menu_height }, { boardview()->m_board_surface.x, boardview()->m_menu_height + boardview()->m_board_surface.y } };
 				}
 				pdf_win_.update();
+			} else if (kp(SDLK_p)) {
+				
 			} else {
 				return false;
 			}
@@ -165,13 +167,19 @@ namespace OBV_Tcl {
 		}
 		return false;
 	}
+
+	std::vector<uint32_t> TCL::get_schem_word_colors(pdf_txt_bbox *) {
+		std::vector<uint32_t> ret;
+		return ret;
+	}
 	
 	std::optional<TCL::schem_pos_t> TCL::schem_position() {
 		ImVec2 mposs = ImGui::GetMousePos();
 		ImVec2 mpos = pdf_win_.sticky ? mposs : boardview()->ScreenToCoord(mposs);
 		if (in(pdf_win_.box, mpos)) {
 			TCL::schem_pos_t ret;
-			ret.point = pdf_img_->ScreenToCoord((mpos - pdf_win_.box.min) / pdf_win_.bdim); //(mpos - pdf_win_.box.min) / pdf_win_.bdim * pdf_win_.wdim;
+
+			ret.point = pdf_img_->ScreenToCoord((yflip(mpos) - pdf_win_.box.min) / pdf_win_.bdim); //(mpos - pdf_win_.box.min) / pdf_win_.bdim * pdf_win_.wdim;
 			if (ret.point > ImVec2{ 0.0f, 0.0f } && ret.point < ImVec2{ 1.0f, 1.0f }) {
 				ret.point *= pdf_win_.wdim;
 				if (! pdf_win_.sticky && ! boardview()->m_current_side) {
@@ -201,7 +209,7 @@ namespace OBV_Tcl {
 		return r;
 	}
 
-	object TCL::get_schem_words(getopt<int> const & page, getopt<std::string> const & filter_arg, getopt<bool> const & use_regex, getopt<pdf_txt_bbox *> const & ref, getopt<std::string> const & sort, getopt<list<pdf_txt_bbox> > const & not_, getopt<any<list<Component> , list<Pin>, list<Net>, list<pdf_txt_bbox> > > const & of, getopt<std::string> const & exact, getopt<std::string> const & color, getopt<list<pdf_txt_bbox> > const & bbox, getopt<float> const & radius, variadic<std::string> const & match) {
+	object TCL::get_schem_words(interpreter * tcli, getopt<int> const & page, getopt<std::string> const & filter_arg, getopt<bool> const & use_regex, getopt<pdf_txt_bbox *> const & ref, getopt<std::string> const & sort, getopt<list<pdf_txt_bbox> > const & not_, getopt<any<list<Component> , list<Pin>, list<Net>, list<pdf_txt_bbox> > > const & of, getopt<std::string> const & exact, getopt<std::string> const & color, getopt<list<pdf_txt_bbox> > const & bbox, getopt<float> const & radius, getopt<int> const & nearest, variadic<std::string> const & match) {
 		object r;
 		object filter_o; int filter = 0; std::string filter_ns;
 		object sort_o; int sort_ix; std::string sort_ns;
@@ -210,6 +218,9 @@ namespace OBV_Tcl {
 
 		if (radius && ! ref) {
 			throw tcl_error("-radius requires -ref");
+		}
+		if (nearest && ! ref) {
+			throw tcl_error("-nearest requires -ref, -nearest not implemented");
 		}
 
 		if (filter_arg) {
@@ -220,7 +231,7 @@ namespace OBV_Tcl {
 
 			//std::cerr << "filter vars: " << join(get_variables_from_expr(*filter_arg)) << "\n";
 		}
-		auto filt_nshold = make_namespace_holder(filter_ns);
+		auto filt_nshold = make_namespace_holder(tcli, filter_ns);
 		
 		if (sort) {
 			sort_ix = sort_ns_ix++ % 1000;
@@ -229,9 +240,9 @@ namespace OBV_Tcl {
 			sort_o = object(std::string("namespace eval ") + sort_ns + " { expr { " + *sort + " } }");
 			//std::cerr << "sort vars: " << join(get_variables_from_expr(*sort)) << "\n";
 		}
-		auto sort_nshold = make_namespace_holder(sort_ns);
+		auto sort_nshold = make_namespace_holder(tcli, sort_ns);
 		
-		std::set<pdf_txt_bbox *> not_set;
+		std::set<pdf_txt_bbox const *> not_set;
 		if (not_ && *not_) {
 			for (auto * p : *not_) {
 				not_set.insert(p);
@@ -265,20 +276,20 @@ namespace OBV_Tcl {
 
 		std::vector<std::pair<pdf_txt_bbox *, Tcl_Obj *> > ret;
 
-		auto filter_vars1 = get_variables_from_expr(filter_arg ? *filter_arg : "");
+		auto filter_vars1 = get_variables_from_expr(tcli, filter_arg ? *filter_arg : "");
 		auto * filter_vars = filter_vars1 ? &*filter_vars1 : nullptr;
 
-		auto filter_vars_holder = make_variables_installer(filter_ns, filter_vars ? &*filter_vars : nullptr);
+		auto filter_vars_holder = make_variables_installer(tcli, filter_ns, filter_vars ? &*filter_vars : nullptr);
 		
 		auto try_append = [&](pdf_txt_bbox * p, Tcl_Obj * obj = nullptr) {
 			//std::cerr << "try " << p->word << " " << p << "\n";
 			if (matches(match, re, p->word, use_regex)
+				&& (!radius || ((*ref)->page == p->page && distance((*ref)->box, p->box) < *radius))
 				&& (!color || p->color == col)
 				&& (!exact || *exact == p->word)
-				&& (exact_match.empty() || exact_match.find(p->word) != exact_match.end())
-				&& filter_match(*tcli, filter_ns, filter_vars, filter_o, p, nullptr, ref ? *ref : nullptr)
 				&& not_set.find(p) == not_set.end()
-				&& (!radius || ((*ref)->page == p->page && distance((*ref)->box, p->box) < *radius))
+				&& (exact_match.empty() || exact_match.find(p->word) != exact_match.end())
+				&& filter_match(tcli, filter_ns, filter_vars, filter_o, p, nullptr, ref ? *ref : nullptr)
 				) {
 				if (sort) {
 					//std::cerr << "push " << p->word << "\n";
@@ -287,7 +298,7 @@ namespace OBV_Tcl {
 					if (obj) {
 						r.append(object(obj));
 					} else {
-						r.append(makeobj(p));
+						r.append(tcli->makeobj(p));
 					}
 				}
 			}
@@ -318,15 +329,27 @@ namespace OBV_Tcl {
 				}
 			}
 		} else {
-			for (auto & mi : sch->words) {
-				for (auto & w : mi.second) {
-					try_append(&w);
+			if (match && ! use_regex) {
+				for (auto const & v : match) {
+					if (v.find('*') == std::string::npos && v.find('?') == std::string::npos) {
+						for (auto & mi : sch->words_by_name) {
+							for (auto it = mi.second.lower_bound(v), itend = mi.second.upper_bound(v); it != itend; ++it) {
+								try_append(it->second);
+							}
+						}
+					}
+				}
+			} else {
+				for (auto & mi : sch->words) {
+					for (auto & w : mi.second) {
+						try_append(&w);
+					}
 				}
 			}
 		}
 		if (sort) {
-			auto vars = get_variables_from_expr(*sort);
-			auto vars_holder = make_variables_installer(sort_ns, vars ? &*vars : nullptr);
+			auto vars = get_variables_from_expr(tcli, *sort);
+			auto vars_holder = make_variables_installer(tcli, sort_ns, vars ? &*vars : nullptr);
 
 			std::sort(ret.begin(), ret.end(), [&](std::pair<pdf_txt_bbox *, Tcl_Obj *> a, std::pair<pdf_txt_bbox *, Tcl_Obj *> b) -> bool {
 						  //std::cerr << "less " << a->word << " " << b->word << "\n";
@@ -337,7 +360,7 @@ namespace OBV_Tcl {
 				if (p.second) {
 					r.append(object(p.second));
 				} else {
-					r.append(makeobj(p.first));
+					r.append(tcli->makeobj(p.first));
 				}
 			}
 		}
@@ -345,7 +368,7 @@ namespace OBV_Tcl {
 	}
 #endif // OBV_USE_POPPLER
 	
-	object TCL::get_nets(getopt<bool> const & use_regex, getopt<bool> const & all, getopt<list<Net> > const & not_, getopt<bool> const & gnd, getopt<any<list<Component>, list<Pin>, list<Net>, list<BRDBoard> > > const & of, getopt<std::string> const & filter_arg, variadic<std::string> const & match) {
+	object TCL::get_nets(interpreter * tcli, getopt<bool> const & use_regex, getopt<bool> const & all, getopt<list<Net> > const & not_, getopt<bool> const & gnd, getopt<any<list<Component>, list<Pin>, list<Net>, list<BRDBoard> > > const & of, getopt<std::string> const & filter_arg, variadic<std::string> const & match) {
 		object r;
 
 		object filter_o; int filter = 0; std::string filter_ns;
@@ -356,7 +379,7 @@ namespace OBV_Tcl {
 			//namespace_open(*tcli, filter_ns);
 			filter_o = object(std::string("namespace eval ") + filter_ns + " { expr { " + *filter_arg + " } }");
 		}
-		auto filt_nshold = make_namespace_holder(filter_ns);
+		auto filt_nshold = make_namespace_holder(tcli, filter_ns);
 
 		std::regex re;
 		if (use_regex && match.size() == 1) re = match[0];
@@ -371,18 +394,18 @@ namespace OBV_Tcl {
 				}
 			}
 		}
-		auto filter_vars1 = get_variables_from_expr(filter_arg ? *filter_arg : "");
+		auto filter_vars1 = get_variables_from_expr(tcli, filter_arg ? *filter_arg : "");
 		auto * filter_vars = filter_vars1 ? &*filter_vars1 : nullptr;
 
-		auto filter_vars_holder = make_variables_installer(filter_ns, filter_vars ? &*filter_vars : nullptr);
+		auto filter_vars_holder = make_variables_installer(tcli, filter_ns, filter_vars ? &*filter_vars : nullptr);
 		
 		auto try_append = [&](Net * n, Component * of = nullptr) {
 			if ((gnd || !n->is_ground)
 				&& (all || dup.find(n) == dup.end())
 				&& not_set.find(n) == not_set.end()
 				&& matches(match, re, n->name, use_regex)
-				&& filter_match(*tcli, filter_ns, filter_vars, filter_o, n, of)) {
-				r.append(makeobj(n));
+				&& filter_match(tcli, filter_ns, filter_vars, filter_o, n, of)) {
+				r.append(tcli->makeobj(n));
 				if (!all) dup.insert(n);
 			}
 			return true;
@@ -434,7 +457,7 @@ namespace OBV_Tcl {
 	}
 
 
-	object TCL::get_pins(getopt<bool> const & use_regex, getopt<bool> const & all, getopt<bool> const & parallel, getopt<std::string> const & filter_arg, getopt<any<list<Component>, list<Net>, list<Pin>, list<BRDBoard> > > const & of, getopt<Pin *> const & ref, getopt<std::string> const & sort, getopt<bool> const & brief, variadic<std::string> const & match) {
+	object TCL::get_pins(interpreter * tcli, getopt<bool> const & use_regex, getopt<bool> const & all, getopt<bool> const & parallel, getopt<std::string> const & filter_arg, getopt<any<list<Component>, list<Net>, list<Pin>, list<BRDBoard> > > const & of, getopt<Pin *> const & ref, getopt<std::string> const & sort, getopt<bool> const & brief, variadic<std::string> const & match) {
 		if (brief) { }
 
 		object r;
@@ -446,14 +469,14 @@ namespace OBV_Tcl {
 			filter_ns = namespace_str(filter);
 			filter_o = object(std::string("namespace eval ") + filter_ns + " { expr { " + *filter_arg + " } }");
 		}
-		auto filt_nshold = make_namespace_holder(filter_ns);
+		auto filt_nshold = make_namespace_holder(tcli, filter_ns);
 
 		if (sort) {
 			sort_ix = sort_ns_ix++ % 1000;
 			sort_ns = sort_namespace_str(sort_ix);
 			sort_o = object(std::string("namespace eval ") + sort_ns + " { expr { " + *sort + " } }");
 		}
-		auto sort_nshold = make_namespace_holder(sort_ns);
+		auto sort_nshold = make_namespace_holder(tcli, sort_ns);
 		
 		std::regex re;
 		if (use_regex && match.size() == 1) re = match[0];
@@ -461,10 +484,10 @@ namespace OBV_Tcl {
 		std::set<Pin *> dup;
 		bool match_has_slash = true; //std::find(match.begin(), match.end(), '/') != match.end();
 		
-		auto filter_vars1 = get_variables_from_expr(filter_arg ? *filter_arg : "");
+		auto filter_vars1 = get_variables_from_expr(tcli, filter_arg ? *filter_arg : "");
 		auto * filter_vars = filter_vars1 ? &*filter_vars1 : nullptr;
 
-		auto filter_vars_holder = make_variables_installer(filter_ns, filter_vars ? &*filter_vars : nullptr);
+		auto filter_vars_holder = make_variables_installer(tcli, filter_ns, filter_vars ? &*filter_vars : nullptr);
 
 		std::vector<std::pair<Pin *, Tcl_Obj *> > ret;
 		
@@ -475,7 +498,7 @@ namespace OBV_Tcl {
 			}
 			if ((all || dup.find(c) == dup.end())
 				&& matches(match ? match : variadic<std::string>{}, re, m, use_regex)
-				&& filter_match(*tcli, filter_ns, filter_vars, filter_o, c)) {
+				&& filter_match(tcli, filter_ns, filter_vars, filter_o, c)) {
 
 				if (sort) {
 					ret.push_back(std::pair(c, obj));
@@ -483,7 +506,7 @@ namespace OBV_Tcl {
 					if (obj) {
 						r.append(object(obj));
 					} else {
-						r.append(makeobj(c));
+						r.append(tcli->makeobj(c));
 					}
 				}
 				if (!all) dup.insert(c);
@@ -539,8 +562,8 @@ namespace OBV_Tcl {
 			}
 		}
 		if (sort) {
-			auto vars = get_variables_from_expr(*sort);
-			auto vars_holder = make_variables_installer(sort_ns, vars ? &*vars : nullptr);
+			auto vars = get_variables_from_expr(tcli, *sort);
+			auto vars_holder = make_variables_installer(tcli, sort_ns, vars ? &*vars : nullptr);
 
 			std::sort(ret.begin(), ret.end(), [&](std::pair<Pin *, Tcl_Obj *> a, std::pair<Pin *, Tcl_Obj *> b) -> bool {
 						  //std::cerr << "less " << a->word << " " << b->word << "\n";
@@ -551,7 +574,7 @@ namespace OBV_Tcl {
 				if (p.second) {
 					r.append(object(p.second));
 				} else {
-					r.append(makeobj(p.first));
+					r.append(tcli->makeobj(p.first));
 				}
 			}
 		}
@@ -559,7 +582,7 @@ namespace OBV_Tcl {
 		return r;
 	}
 
-	object TCL::get_cells(getopt<std::string> const & filter_arg, getopt<std::string> const & sort, getopt<bool> const & use_regex, getopt<any<list<Component>, list<Net>, list<Pin>, list<pdf_txt_bbox> > > const & of, getopt<bool> const & all,
+	object TCL::get_cells(interpreter * tcli, getopt<std::string> const & filter_arg, getopt<std::string> const & sort, getopt<bool> const & use_regex, getopt<any<list<Component>, list<Net>, list<Pin>, list<pdf_txt_bbox> > > const & of, getopt<bool> const & all,
 						  getopt<bool> const & top,
 						  getopt<bool> const & bottom,
 						  getopt<list<Component> > const & not_, getopt<Component *> const & ref, variadic<std::string> const & match) {
@@ -576,7 +599,7 @@ namespace OBV_Tcl {
 			//namespace_open(*tcli, filter_ns);
 			filter_o = object(std::string("namespace eval ") + namespace_str(filter) + " { expr { " + *filter_arg + " } }");
 		}
-		auto filt_nshold = make_namespace_holder(filter_ns);
+		auto filt_nshold = make_namespace_holder(tcli, filter_ns);
 
 		if (sort) {
 			sort_ix = sort_ns_ix++ % 1000;
@@ -584,7 +607,7 @@ namespace OBV_Tcl {
 			//namespace_open(*tcli, sort_ns);
 			sort_o = object(std::string("namespace eval ") + sort_ns + " { expr { " + *sort + " } }");
 		}
-		auto sort_nshold = make_namespace_holder(sort_ns);
+		auto sort_nshold = make_namespace_holder(tcli, sort_ns);
 
 		std::set<Component *> dup;
 		std::set<Component *> not_set;
@@ -597,10 +620,10 @@ namespace OBV_Tcl {
 
 		std::vector<Component *> ret;
 
-		auto filter_vars1 = get_variables_from_expr(filter_arg ? *filter_arg : "");
+		auto filter_vars1 = get_variables_from_expr(tcli, filter_arg ? *filter_arg : "");
 		auto * filter_vars = filter_vars1 ? &*filter_vars1 : nullptr;
 
-		auto filter_vars_holder = make_variables_installer(filter_ns, filter_vars ? &*filter_vars : nullptr);
+		auto filter_vars_holder = make_variables_installer(tcli, filter_ns, filter_vars ? &*filter_vars : nullptr);
 		
 		auto try_append = [&](Component * c) {
 			if (!is_dummy(c)
@@ -608,12 +631,12 @@ namespace OBV_Tcl {
 				&& (all || dup.find(c) == dup.end())
 				&& not_set.find(c) == not_set.end()
 				&& matches(match, re, c->name, use_regex)
-				&& filter_match(*tcli, filter_ns, filter_vars, filter_o, c, nullptr, ref ? *ref : nullptr)) {
+				&& filter_match(tcli, filter_ns, filter_vars, filter_o, c, nullptr, ref ? *ref : nullptr)) {
 
 				if (sort) {
 					ret.push_back(c);
 				} else {
-					r.append(makeobj(c));
+					r.append(tcli->makeobj(c));
 				}
 				if (!all) dup.insert(c);
 			}
@@ -661,13 +684,13 @@ namespace OBV_Tcl {
 
 		if (sort) {
 
-			auto vars = get_variables_from_expr(*sort);
-			auto vars_holder = make_variables_installer(sort_ns, vars ? &*vars : nullptr);
+			auto vars = get_variables_from_expr(tcli, *sort);
+			auto vars_holder = make_variables_installer(tcli, sort_ns, vars ? &*vars : nullptr);
 			std::sort(ret.begin(), ret.end(), [&](Component * a, Component * b) -> bool {
 						  return sort_less(*tcli, sort_ns, vars ? &*vars : nullptr, sort_o, a, b, ref ? *ref : nullptr);
 					  });
 			for (auto * p : ret) {
-				r.append(makeobj(p));
+				r.append(tcli->makeobj(p));
 			}
 		}
 
@@ -678,10 +701,10 @@ namespace OBV_Tcl {
 		object r;
 
 		for (auto && pi : boardview()->m_pinHighlighted) {
-			r.append(makeobj(pi.get()));
+			r.append(tcli->makeobj(pi.get()));
 		}
 		for (auto && ci : boardview()->m_partHighlighted) {
-			r.append(makeobj(ci.get()));
+			r.append(tcli->makeobj(ci.get()));
 		}
 		return r;
 	}
@@ -815,6 +838,57 @@ namespace OBV_Tcl {
 		}
 	}
 
+	object TCL::create_thread(std::string const & code) {
+		tcl_thread * thr = new tcl_thread;
+		thr->id = ++threadid_alloc_;
+		thr->exit_mutex.lock();
+		thr->thread = new std::thread([thr, this, code] {
+										  thr->interp = new interpreter(nullptr, true);
+										  imbue_interpreter(thr->interp, false);
+										  thr->interp->eval(code);
+										  thr->exit_mutex.lock();
+										  delete thr->interp;
+									  });
+		threads_.push_back(thr);
+		return tcli->makeobj(thr);
+	}
+	void TCL::join_thread(tcl_thread * thr) {
+		thr->exit_mutex.unlock();
+		thr->thread->join();
+		//Tcl_DeleteInterp(thr->interp);
+		//delete thr->interp;
+		delete thr->thread;
+		auto it = std::find(threads_.begin(), threads_.end(), thr);
+		if (it != threads_.end()) {
+			threads_.erase(it);
+		}
+		delete thr;
+	}
+	object TCL::get_threads() {
+		object r;
+		for (auto * t : threads_) {
+			r.append(tcli->makeobj(t));
+		}
+		return r;
+	}
+
+	std::string TCL::slave_eval(std::string const & code) {
+		if (!tcli2) {
+			tcli2 = new interpreter(Tcl_CreateInterp(), true);
+			imbue_interpreter(tcli2, false);
+		}
+		return tcli2->eval(code);
+	}
+	void TCL::slave_pass_variable(std::string const & varname) {
+		if (! tcli2) {
+			tcli2 = new interpreter(Tcl_CreateInterp(), true);
+			imbue_interpreter(tcli2, false);
+		}
+		object o = tcli->getVar(varname);
+		tcli2->setVar(varname, o);
+	}
+	
+	
 	object TCL::get_prop(std::string const & prop, list<any_obv_type> const & obj) {
 		object r;
 		std::size_t sz = obj.size();
@@ -1023,72 +1097,11 @@ namespace OBV_Tcl {
 		std::cerr << "over2 " << a << ", " << b << "\n";
 	}
 
-	TCL::TCL(BoardView * bvv, bool * d, std::string const & script) : b(bvv), done_(d) {
-		tcl = Tcl_CreateInterp();
-		
-		tcli = new interpreter(tcl, true);
-
-		this_s_ = this;
-
-		static_initialize();
-		
+	void TCL::imbue_interpreter(interpreter * ntcli, bool) {
 		typedef TCL this_t;
 
-		struct cell_ops : public interpreter::type_ops<Component> {
-			static void str(Tcl_Obj * o) {
-				Component * c = (Component *) o->internalRep.twoPtrValue.ptr1;
-				str_impl(o, c->name);
-			}
-		};
-		struct net_ops : public interpreter::type_ops<Net> {
-			static void str(Tcl_Obj * o) {
-				Net * n = (Net *) o->internalRep.twoPtrValue.ptr1;
-				str_impl(o, n->name);
-			}
-		};
-		struct pin_ops : public interpreter::type_ops<Pin> {
-			static void str(Tcl_Obj * o) {
-				Pin * p = (Pin *) o->internalRep.twoPtrValue.ptr1;
-				str_impl(o, p->component->name + "/" + p->name);
-			}
-		};
-		struct board_ops : public interpreter::type_ops<BRDBoard> {
-			static void str(Tcl_Obj * o) {
-				BRDBoard * b = (BRDBoard *) o->internalRep.twoPtrValue.ptr1;
-				std::ostringstream oss;
-				oss << "brd" << (void *) b;
-				str_impl(o, oss.str());
-			}
-		};
-		struct schem_word_ops : public interpreter::type_ops<pdf_txt_bbox> {
-			static void str(Tcl_Obj * o) {
-				pdf_txt_bbox * p = (pdf_txt_bbox *) o->internalRep.twoPtrValue.ptr1;
-				if (p->word.empty()) {
-					std::ostringstream oss;
-					oss << "pdf_txt_bbox@" << p;
-					str_impl(o, oss.str());
-				} else {
-					str_impl(o, p->word);
-				}
-					
-			}
-		};
-		struct schematic_ops : public interpreter::type_ops<schematic> {
-			static void str(Tcl_Obj * o) {
-				schematic * p = (schematic *) o->internalRep.twoPtrValue.ptr1;
-				str_impl(o, p->filename);
-			}
-		};
-		tcli->type<cell_ops>      ("cell",       (Component    *) nullptr);
-		tcli->type<net_ops>       ("net",        (Net          *) nullptr);
-		tcli->type<pin_ops>       ("pin",        (Pin          *) nullptr);
-		tcli->type<board_ops>     ("board",      (BRDBoard     *) nullptr);
-		tcli->type<schem_word_ops>("schem_word", (pdf_txt_bbox *) nullptr);
-		tcli->type<schematic_ops> ("schematic",  (schematic    *) nullptr);
-		//tcli->type<ImVec2>        ("ImVec2",     (ImVec2       *) nullptr);
-
 		
-		tcli->with(this)
+		ntcli->with(this)
 			.def("get_nets",          &this_t::get_nets,          options(get_nets_opt))
 			.def("get_cells",         &this_t::get_cells,         options(get_cells_opt))
 			.def("get_pins",          &this_t::get_pins,          options(get_pins_opt))
@@ -1099,6 +1112,13 @@ namespace OBV_Tcl {
 			.def("highlight",         &this_t::highlight,         options(highlight_opt))
 			.def("selection",         &this_t::selection)
 			.def("same_object",       &this_t::same_object)
+			.def("slave_eval",        &this_t::slave_eval)
+			.def("slave_pass_var",    &this_t::slave_pass_variable)
+
+			.def("create_thread",     &this_t::create_thread)
+			.def("join_thread",       &this_t::join_thread)
+			.def("get_threads",       &this_t::get_threads)
+			
 #ifdef OBV_USE_POPPLER
 			.def("get_schematics",    &this_t::get_schematics,    options(get_schematics_opt))
 			.def("get_schem_words",   &this_t::get_schem_words,   options(get_schem_words_opt))
@@ -1132,8 +1152,8 @@ namespace OBV_Tcl {
 			.def("objinfo",           &this_t::objinfo)
 			.def("last_result",       &this_t::last_result);
 		
-		tcli->defvar("default_intensity", boardview()->m_default_intensity);
-		tcli->defvar("dual_draw", boardview()->m_draw_both_sides);
+		ntcli->defvar("default_intensity", boardview()->m_default_intensity);
+		ntcli->defvar("dual_draw", boardview()->m_draw_both_sides);
 
 		{
 			auto conv = [](TClass * this_p, int, Tcl_Obj * const *, int) {
@@ -1141,18 +1161,18 @@ namespace OBV_Tcl {
 			};
 			auto conv2 = [&](Tcl_Obj * o) {
 				int ret;
-				if (Tcl_GetIntFromObj(tcli->get_interp(), o, &ret) == TCL_OK) {
+				if (Tcl_GetIntFromObj(ntcli->get_interp(), o, &ret) == TCL_OK) {
 					return ret + 1000;
 				}
 				return 0;//return v + 100;
 			};
 			using I = interpreter;
 			
-			tcli->managed_class_<TClass>("tclass", init<int>())
+			ntcli->managed_class_<TClass>("tclass", init<int>())
 				.def("set",  &TClass::set, policies())
 				.def("get",  &TClass::get, policies())
 				.def("free", &TClass::freefun, I::arg<0>, conv);
-			tcli->managed_class_<TClass>("tclass", no_init, I::arg<-1>, conv2)
+			ntcli->managed_class_<TClass>("tclass", no_init, I::arg<-1>, conv2)
 				.def("add2", &TClass::add2)
 				.def("add3", &TClass::add3);
 			
@@ -1162,14 +1182,14 @@ namespace OBV_Tcl {
 		{
 			auto conv = [&](Tcl_Obj * o) {
 				int ret;
-				if (Tcl_GetIntFromObj(tcli->get_interp(), o, &ret) == TCL_OK) {
+				if (Tcl_GetIntFromObj(ntcli->get_interp(), o, &ret) == TCL_OK) {
 					return ret + 100;
 				}
 				return 0;
 			};
 			auto conv2 = [&](int, Tcl_Obj * const * objv, int arg) {
 				int ret;
-				if (Tcl_GetIntFromObj(tcli->get_interp(), objv[arg], &ret) == TCL_OK) {
+				if (Tcl_GetIntFromObj(ntcli->get_interp(), objv[arg], &ret) == TCL_OK) {
 					return ret + 1000;
 				}
 				return 0;
@@ -1177,12 +1197,12 @@ namespace OBV_Tcl {
 			if (false) conv(nullptr);
 			using I = interpreter;
 
-			//tcli->def("over", overload(&over1, &over2), policies(), I::arg<0>(), conv);
-			tcli->def("over2", overload(&over1, &over2), I::arg<0>, conv);
-			tcli->with(this, I::arg<0>, conv)
+			//ntcli->def("over", overload(&over1, &over2), policies(), I::arg<0>(), conv);
+			ntcli->def("over2", overload(&over1, &over2), I::arg<0>, conv);
+			ntcli->with(this, I::arg<0>, conv)
 				.def("cover", &this_t::cover);
 
-			tcli->with(I::arg<0>(), conv)
+			ntcli->with(I::arg<0>(), conv)
 				.def("rover",  over2, I::arg<1>, conv2)
 				.def("rover2", over2, I::arg<1>, conv2);
 		}
@@ -1190,12 +1210,36 @@ namespace OBV_Tcl {
 
 
 #if 0
-		tcli->class_<ImVec2>("ImVec2", init<float, float>())
+		ntcli->class_<ImVec2>("ImVec2", init<float, float>())
 			.defvar("x", &ImVec2::x)
 			.defvar("y", &ImVec2::y);
 #endif
 
-		Tcl_Init(tcl);
+		Tcl_Init(ntcli->get_interp());
+		ntcli->eval("source library.tcl");
+	}
+
+#if 0
+	TCL::TCL() {
+		tcl = Tcl_CreateInterp();
+		tcli = new interpreter(tcl, true);
+		imbue_interpreter(tcli, false);
+	}
+#endif
+	
+	TCL::TCL(BoardView * bvv, bool * d, std::string const & script) : b(bvv), done_(d) {
+		tcl = Tcl_CreateInterp();
+		
+		tcli = new interpreter(tcl, true);
+
+		this_s_ = this;
+
+		static_initialize();
+		
+		//typedef TCL this_t;
+
+		imbue_interpreter(tcli, true);
+		
 
 #ifdef HAVE_READLINE
 		rl_prep_terminal(0);
@@ -1217,7 +1261,7 @@ proc preload_schem_pages { quality } {
 	}
 }
 )EOTCL");
-		tcli->eval("source library.tcl");
+		//tcli->eval("source library.tcl");
 		startup_script = script;
 	}
 
@@ -1394,6 +1438,67 @@ proc preload_schem_pages { quality } {
 			inst(rec, true);
 			cmpeq_t c;
 			inst(c, false); // instantiate methods only
+
+			struct cell_ops : public interpreter::type_ops<Component> {
+				static void str(Tcl_Obj * o) {
+					Component * c = (Component *) o->internalRep.twoPtrValue.ptr1;
+					str_impl(o, c->name);
+				}
+			};
+			struct net_ops : public interpreter::type_ops<Net> {
+				static void str(Tcl_Obj * o) {
+					Net * n = (Net *) o->internalRep.twoPtrValue.ptr1;
+					str_impl(o, n->name);
+				}
+			};
+			struct pin_ops : public interpreter::type_ops<Pin> {
+				static void str(Tcl_Obj * o) {
+					Pin * p = (Pin *) o->internalRep.twoPtrValue.ptr1;
+					str_impl(o, p->component->name + "/" + p->name);
+				}
+			};
+			struct board_ops : public interpreter::type_ops<BRDBoard> {
+				static void str(Tcl_Obj * o) {
+					BRDBoard * b = (BRDBoard *) o->internalRep.twoPtrValue.ptr1;
+					std::ostringstream oss;
+					oss << "brd" << (void *) b;
+					str_impl(o, oss.str());
+				}
+			};
+			struct schem_word_ops : public interpreter::type_ops<pdf_txt_bbox> {
+				static void str(Tcl_Obj * o) {
+					pdf_txt_bbox * p = (pdf_txt_bbox *) o->internalRep.twoPtrValue.ptr1;
+					if (p->word.empty()) {
+						std::ostringstream oss;
+						oss << "pdf_txt_bbox@" << p;
+						str_impl(o, oss.str());
+				} else {
+						str_impl(o, p->word);
+					}
+					
+				}
+			};
+			struct schematic_ops : public interpreter::type_ops<schematic> {
+				static void str(Tcl_Obj * o) {
+					schematic * p = (schematic *) o->internalRep.twoPtrValue.ptr1;
+					str_impl(o, p->filename);
+				}
+			};
+			struct thread_ops : public interpreter::type_ops<tcl_thread> {
+				static void str(Tcl_Obj * o) {
+					tcl_thread * thr = (tcl_thread *) o->internalRep.twoPtrValue.ptr1;
+					str_impl(o, std::to_string(thr->id));
+				}
+			};
+			
+			interpreter::type<cell_ops>      ("cell",       (Component    *) nullptr);
+			interpreter::type<net_ops>       ("net",        (Net          *) nullptr);
+			interpreter::type<pin_ops>       ("pin",        (Pin          *) nullptr);
+			interpreter::type<board_ops>     ("board",      (BRDBoard     *) nullptr);
+			interpreter::type<schem_word_ops>("schem_word", (pdf_txt_bbox *) nullptr);
+			interpreter::type<schematic_ops> ("schematic",  (schematic    *) nullptr);
+			interpreter::type<thread_ops>    ("thread",     (tcl_thread   *) nullptr);
+			//ntcli->type<ImVec2>        ("ImVec2",     (ImVec2       *) nullptr);
 		}
 		static_initialized_ = true;
 	}
@@ -1485,19 +1590,27 @@ proc preload_schem_pages { quality } {
 			ret->page = w->page;
 		}
 		schematic * sch = default_schematic_;
-		sch->words[ret->page].push_back(ret_o);
-		
-		return makeobj(& (sch->words[ret->page].back()), true, [this, sch](pdf_txt_bbox * p) {
-						   auto it = sch->words.find(p->page);
-						   if (it != sch->words.end()) {
-							   for (auto it2 = it->second.begin(); it2 != it->second.end(); ++it2) {
-								   if (& (*it2) == p) {
-									   it->second.erase(it2);
-									   break;
-								   }
-							   }
-						   }
-					   });
+#if 0
+		auto & wref = sch->words[ret->page];
+		wref.push_back(ret_o);
+		auto & ins = wref.back();
+		sch->words_by_name[ret->page].insert(std::pair(ins.word, &ins));
+#endif
+		auto * ins = sch->add(ret_o);
+		return tcli->makeobj(ins, true, [this, sch](pdf_txt_bbox * p) {
+								 sch->del(*p);
+#if 0
+								 auto it = sch->words.find(p->page);
+								 if (it != sch->words.end()) {
+									 for (auto it2 = it->second.begin(); it2 != it->second.end(); ++it2) {
+										 if (& (*it2) == p) {
+											 it->second.erase(it2);
+											 break;
+										 }
+									 }
+								 }
+#endif
+							 });
 	}
 
 	object TCL::history(getopt<bool> const & automatic) {
@@ -1548,7 +1661,7 @@ proc preload_schem_pages { quality } {
 					//std::cerr << (res_factor ? *res_factor : 0.0f) << "\n";
 					
 					if (res_factor && *res_factor < 1.0f && ! draw_page_thread_) {
-						float new_quality = std::clamp(ceilf((pdf_win_.quality / *res_factor) * 9000), 0.0f, 8.0f);
+						float new_quality = std::clamp(ceilf((pdf_win_.quality / *res_factor) * 9000), 0.0f, 4.0f);
 						if (new_quality > pdf_win_.quality * 1.1f) {
 							//std::ostringstream oss;
 							//oss << pdf_img_->origin().x << "," << pdf_img_->origin().y;
@@ -1587,19 +1700,40 @@ proc preload_schem_pages { quality } {
 							ppos.y = phi.pdim.y - ppos.y;
 						}
 						//std::cerr << "pos=" << pos << " ppos=" << ppos << "\n"; //.x << " " << ppos.y << "\n";
-							
+
 						auto it = sch->words.find(phi.page);
 						if (it != sch->words.end()) {
-							bool seen_hovered = false;
+							pdf_txt_bbox const * hovered_word = nullptr;
 
+							if (in(pdf_win_.box, pos)) {
+								for (auto & w : it->second) {
+									if (in(w.box, ppos)) {
+										hovered_word = &w;
+										break;
+									}
+								}
+							}
+							int other_pages = 0;
+							int this_page   = 0;
+							if (hovered_word) {
+								for (auto & pi : sch->words_by_name) {
+									int cnt = pi.second.count(hovered_word->word);
+									if (pi.first == phi.page) {
+										this_page += cnt;
+									} else {
+										other_pages += cnt ? 1 : 0;
+									}
+								}
+							}
+
+							//std::cerr << "on this page: " << this_page << " on other pages: " << other_pages << "\n";
 							for (auto & w : it->second) {
 								if (! w.hoverable && ! w.color) { continue; }
 
 								uint32_t col = 0xff8080ff;
 								auto c_shptr = lookup(w.cell);
 								bool is_selected = false;
-								bool is_hovered = !seen_hovered && in(pdf_win_.box, pos) && in(w.box, ppos);// > w.box.min && ppos < w.box.max;
-								seen_hovered = is_hovered;
+								bool is_hovered = hovered_word && hovered_word->word == w.word; //!seen_hovered && in(pdf_win_.box, pos) && in(w.box, ppos);// > w.box.min && ppos < w.box.max;
 								bool is_visible = false;
 								bool board_is_hovered = false;
 								if (c_shptr) {
@@ -1622,6 +1756,12 @@ proc preload_schem_pages { quality } {
 								if (is_selected || board_is_hovered || is_hovered || w.color) {
 									ImVec2 xpa, xpb{ w.box.min };
 
+									//ImVec2 wbox_size = pdf2board(pdf_win_, pdf_img_, w.box.max, !(boardview()->m_current_side || pdf_win_.sticky));
+									
+									//std::cerr << wbox_size.y << " font " << ImGui::GetFontSize() << "\n";
+
+									float box_height = 0;
+									
 									for (int i = 0; i < 4; ++i) {
 										xpa = xpb;
 										if (i == 0)      { xpb = { w.box.max.x, w.box.min.y }; }
@@ -1632,11 +1772,14 @@ proc preload_schem_pages { quality } {
 										ImVec2 bpa = pdf2board(pdf_win_, pdf_img_, xpa, !(boardview()->m_current_side || pdf_win_.sticky));
 										ImVec2 bpb = pdf2board(pdf_win_, pdf_img_, xpb, !(boardview()->m_current_side || pdf_win_.sticky));
 
+										
 										if (in(pdf_win_.box, bpa) || in(pdf_win_.box, bpb)) {
 											bpa = std::clamp(bpa, pdf_win_.box.min, pdf_win_.box.max);
 											bpb = std::clamp(bpb, pdf_win_.box.min, pdf_win_.box.max);
 
 											if (pdf_win_.sticky) {
+												//std::cerr << "line " << bpa << " " << bpb << "\n";
+												box_height = std::max(box_height, abs(bpb.y - bpa.y));
 												draw->AddLine(bpa, bpb, col, 5);
 											} else {
 													
@@ -1644,10 +1787,18 @@ proc preload_schem_pages { quality } {
 													
 												ImVec2 spb = boardview()->CoordToScreen(bpb);// + boardview()->m_boardHeight);
 
+												box_height = std::max(box_height, abs(bpb.y - bpa.y));
 												draw->AddLine(spa, spb, col, 5);
 											}
 										}
 									}
+									if (hovered_word == &w) {
+										if (this_page > 1 || other_pages) {
+											draw->AddText(nullptr, ImGui::GetFontSize(), ImVec2(0, -ImGui::GetFontSize() * 0) + pdf2board(pdf_win_, pdf_img_, ImVec2{ w.box.min.x, w.box.max.y }, !(boardview()->m_current_side || pdf_win_.sticky)),
+														  col, (std::to_string(this_page) + (other_pages ? " +" + std::to_string(other_pages) : "")).c_str());
+										}
+									}
+
 									if (is_hovered && is_visible) currently_hovered_part_ = w.cell;
 									//break;
 								}
@@ -1988,8 +2139,10 @@ proc preload_schem_pages { quality } {
 			}
 			invert ^= pdf_invert_;
 			//const int highres = 8;
-			int img_width  = int(p_width  * *quality);
-			int img_height = int(p_height * *quality);
+			//int img_width  = int(p_width  * *quality);
+			//int img_height = int(p_height * *quality);
+			int img_width  = int(p_width / p_height * 1000 * *quality);
+			int img_height = int(1000 * *quality);
 			int img_buf_size = img_width * img_height * 4;
 			unsigned char * img_buf = new unsigned char[img_buf_size];
 			cairo_surface_t * surface = cairo_image_surface_create_for_data(img_buf,
@@ -2003,7 +2156,7 @@ proc preload_schem_pages { quality } {
 				
 			cairo_t * cr = cairo_create(surface);
 				
-			cairo_scale(cr, *quality, *quality);
+			cairo_scale(cr, float(img_width) / p_width, float(img_height) / p_height);
 				
 			if (invert) {
 				cairo_set_source_rgb (cr, 1., 1., 1.);
@@ -2058,8 +2211,8 @@ proc preload_schem_pages { quality } {
 				cache_ent.pdf_img = new Image(img_buf, 0, img_width, img_height, false, true);
 			}
 			cache_ent.dim = ImVec2(float(p_width), float(p_height));
-			auto imgp = cache_ent.pdf_img;
-			imgp->zoom_factor(boardview()->zoomFactor);
+			//auto imgp = cache_ent.pdf_img;
+			//imgp->zoom_factor(boardview()->zoomFactor);
 			//imgp->reload();
 			cairo_surface_destroy(surface);
 			sch->page_cache_.insert(std::make_pair(page, std::move(cache_ent)));
@@ -2164,7 +2317,8 @@ proc preload_schem_pages { quality } {
 							max.x += sz.x;
 						}
 						bool clickable = clickable_net || clickable_cell;
-						it->second.push_back({ { min, max }, s, clickable, clickable, clickable_cell, clickable_net, page });
+						//it->second.insert({ { min, max }, s, clickable, clickable, clickable_cell, clickable_net, page });
+						sch.add({ { min, max }, s, clickable, clickable, clickable_cell, clickable_net, page });
 					}
 				}
 			}

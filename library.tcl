@@ -364,6 +364,9 @@ proc highlight_marked {} {
 }
 
 proc schem_find_pins_simple { page pin radius } {
+	foreach cw [ get_schem_words -page $page -filter { $is_cell } ] {
+		set_prop genmark [ generate_mark ] $cw
+	}
 	set last_dud 0
 	while { 1 } {
 		set dud [ impl_schem_find_pins_simple $page $pin $radius ]
@@ -399,8 +402,9 @@ proc find_orthogonal { words maxdist } {
 
 proc impl_schem_find_pins_simple { page pin radius } {
 	set dud 0
+	set allcells [ get_schem_words -page $page -filter { $is_cell } ]
 	foreach w [ get_schem_words -page $page -filter { !$marked } $pin ] {
-		set cells [ get_schem_words -ref $w -radius $radius -filter { $is_cell && ! $marked } -sort { [ distance $a $r ] < [distance $b $r ] } ]
+		set cells [ get_schem_words -ref $w -radius $radius -of $allcells -filter { ! $marked } -sort { [ distance $a $r ] < [distance $b $r ] } ]
 		if { [ llength $cells ] == 1 } {
 			set_prop mark [ get_prop genmark $cells ] $cells
 			set_prop mark [ get_prop genmark $cells ] $w
@@ -495,6 +499,17 @@ proc schem_find_pins_shaped { cell mark } {
 	return $found
 }
 
+proc schem_interpage_nets { page } {
+	set ret [ list ]
+	foreach nw [ get_schem_words -page $page -filter { $is_net } ] {
+		set pages [ lsort -unique [ get page [ get_schem_words -filter " \$page != $page " -- $nw ] ] ]
+		if { [ llength $pages ] > 0 } {
+			lappend ret $nw
+		}
+	}
+	return $ret
+}
+		
 proc schem_find_pins { page } {
 	foreach cw [ get_schem_words -page $page -filter { $is_cell } ] {
 		set_prop genmark [ generate_mark ] $cw
