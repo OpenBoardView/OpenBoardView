@@ -363,6 +363,24 @@ proc highlight_marked {} {
 	}
 }
 
+proc schem_hover_tooltip { page word } {
+	set otherpages 0
+	set samepage 0
+	for { set pi 1 } { $pi < [ get pages [ get_schematics ] ] } { incr pi } {
+		set n [ llength [ get_schem_words -page $pi -- $word ] ]
+		if { $pi == $page } {
+			set samepage $n
+		} else {
+			set otherpages [ expr $otherpages + ($n ? 1 : 0) ]
+		}
+	}
+	if { $samepage > 0 && $otherpages} {
+		return "$samepage +$otherpages"
+	} elseif { $samepage > 1 } {
+		return "$samepage"
+	}
+	return ""
+}
 proc schem_find_pins_simple { page pin radius } {
 	foreach cw [ get_schem_words -page $page -filter { $is_cell } ] {
 		set_prop genmark [ generate_mark ] $cw
@@ -509,7 +527,11 @@ proc schem_interpage_nets { page } {
 	}
 	return $ret
 }
-		
+
+proc draw_something { draw coord } {
+	. $draw AddText $coord 4294967295 "this is a test" 
+}
+
 proc schem_find_pins { page } {
 	foreach cw [ get_schem_words -page $page -filter { $is_cell } ] {
 		set_prop genmark [ generate_mark ] $cw
@@ -539,6 +561,24 @@ proc schem_find_pin_labels { cell pins } {
 			puts $w
 		}
 	}
+}
+
+proc preload_schem_pages { quality { threads 0 } } {
+	if { $threads == 0 } { set threads [ schem_render_concurrency ] }
+	foreach sch [ get_schematics ] {
+		set pages [ get pages $sch ]
+        set thr [list]
+
+        for { set ti 1 } { $ti <= $threads } { incr ti } {
+            lappend thr [ create_thread -detach {
+		        for { set p $ti } { $p <= $pages } { incr p $threads } {
+			        draw_page -cache -quality $quality -of $sch $p
+		        }
+            } [ list ti threads pages sch quality ] ]
+        }
+        #join_thread $thr
+	}
+	return ""
 }
 
 proc D_preload_schem_pages { quality } {

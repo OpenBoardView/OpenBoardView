@@ -112,10 +112,6 @@ namespace OBV_Tcl {
 	class TCL {
 		BoardView * b = nullptr;
 		Tcl_Interp * tcl = nullptr;
-		Tcl::interpreter * tcli = nullptr;
-		Tcl::interpreter * tcli2 = nullptr;
-
-		static thread_local interpreter * thr_tcli;
 		
 		std::string slave_eval(std::string const & code);
 		void slave_pass_variable(std::string const & varname);
@@ -126,6 +122,9 @@ namespace OBV_Tcl {
 		template <typename T>
 		using getopt = Tcl::getopt<T>;
 	public :
+		static TCL * this_s_;
+		Tcl::interpreter * tcli = nullptr;
+
 		struct be_priv {
 			std::map<std::string, std::string> properties;
 		};
@@ -181,11 +180,16 @@ namespace OBV_Tcl {
 			}
 		};
 
+		static int schem_render_concurrency_;
+		
 		struct schematic {
 			std::string filename;
 			PDFDoc * doc = nullptr;
 			PopplerDocument * poppler_doc = nullptr;
 
+			std::vector<PopplerDocument *> render_docs;
+			int render_docs_inflight = 0;
+			
 			typedef std::multimap<std::string, pdf_txt_bbox *> pdf_words_byname_t;
 			typedef std::deque<pdf_txt_bbox> pdf_words_value_t;
 			std::map<int, pdf_words_value_t> words;
@@ -231,43 +235,6 @@ namespace OBV_Tcl {
 
 		schematic * default_schematic_ = nullptr;
 		
-#if 0
-		template <typename OT, typename DEL>
-		typename std::enable_if<detail::contains<OT, Net, Pin, Component, BRDBoard, pdf_txt_bbox>::value, void>::type
-		makeobj_impl(OT * n, object & ret, bool owning = false, DEL delfn = []{}) {
-			tcli->makeobj_inplace(n, ret, owning, delfn);
-			return;
-
-			Tcl_Obj * o = ret.get_object();
-
-			if (o->typePtr && o->internalRep.twoPtrValue.ptr2) {
-				throw tcl_error("failure to free garbage collected object, type: " + tcl_typename(o));
-			}
-
-			o->internalRep.twoPtrValue.ptr1 = (void *) n;
-			if (owning) {
-				if constexpr (std::is_same<DEL, void *>::value) {
-					if (delfn) { }
-					o->internalRep.twoPtrValue.ptr2 = new interpreter::shared_ptr_deleter<OT>(n); //new interpreter::dyn_deleter<OT>(); //nullptr;
-				} else {
-					o->internalRep.twoPtrValue.ptr2 = new interpreter::shared_ptr_deleter<OT>(n, delfn); //new interpreter::dyn_deleter<OT>(); //nullptr;
-				}
-				//o->internalRep.twoPtrValue.ptr2 = new interpreter::dyn_deleter<OT>(); //nullptr;
-			} else {
-				o->internalRep.twoPtrValue.ptr2 = nullptr;
-			}
-			
-			auto it = tcli->obj_type_by_cppname_.find(std::type_index(typeid(OT)));
-			bool ok = it != tcli->obj_type_by_cppname_.end();
-			if (ok) {
-				o->typePtr = it->second;
-			} else {
-				throw tcl_error("type lookup failed");
-			}
-			Tcl_InvalidateStringRep(o);
-		}
-#endif
-		
 		std::optional<std::map<std::string, object> > get_variables_from_expr(interpreter *, std::string const & expr, bool command = false, bool throw_on_error = false);
 		std::string join(std::optional<std::set<std::string> > const & v) {
 			if (v) {
@@ -279,24 +246,6 @@ namespace OBV_Tcl {
 			return "";
 		}
 
-#if 0
-		template <typename OT, typename DEL>
-		typename std::enable_if<detail::contains<OT, Net, Pin, Component, BRDBoard, pdf_txt_bbox>::value, object>::type
-		makeobj(OT * n, bool owning = false, DEL delfn = []{}) {
-			return tcli->makeobj(n, owning, delfn);
-			
-			
-			object ret = object().duplicate();
-			makeobj_impl(n, ret, owning, delfn);
-			return ret;
-		}
-		
-		template <typename OT>
-		typename std::enable_if<detail::contains<OT, Net, Pin, Component, BRDBoard, pdf_txt_bbox>::value, object>::type
-		makeobj(OT * n, bool owning = false) {
-			return makeobj(n, owning, (void *) 0 );
-		}
-#endif
 		std::vector<BRDBoard *> default_boards_;
 
 		object default_boards(variadic<object> argv) {
@@ -401,8 +350,8 @@ namespace OBV_Tcl {
 		object get_nets(interpreter *, getopt<bool> const & use_regex, getopt<bool> const & all, getopt<list<Net> > const & not_, getopt<bool> const & gnd, getopt<any<list<Component>, list<Pin>, list<Net>, list<BRDBoard> > > const & of, getopt<std::string> const & filter_arg, variadic<std::string> const & match);
 		static constexpr const char * get_pins_opt = "re all parallel filter of ref sort brief";
 		object get_pins(interpreter *, getopt<bool> const & use_regex, getopt<bool> const & all, getopt<bool> const & parallel, getopt<std::string> const & filter_arg, getopt<any<list<Component>, list<Net>, list<Pin>, list<BRDBoard> > > const & of, getopt<Pin *> const & ref, getopt<std::string> const & sort, getopt<bool> const & brief, variadic<std::string> const & match);
-		static constexpr const char * highlight_opt = "save un all color colorindex intensity";
-		void highlight(getopt<bool> const & save, getopt<bool> const & un, getopt<bool> const & all, getopt<std::string> const & color, getopt<int> const & colorindex, getopt<float> const & inten, opt<list<any<Component, Pin, pdf_txt_bbox> > > const & obj);
+		static constexpr const char * highlight_opt = "save toggle un all color colorindex intensity";
+		void highlight(getopt<bool> const & save, getopt<bool> const & toggle, getopt<bool> const & un, getopt<bool> const & all, getopt<std::string> const & color, getopt<int> const & colorindex, getopt<float> const & inten, opt<list<any<Component, Pin, pdf_txt_bbox> > > const & obj);
 		const char * get_cells_opt = "filter sort re of all top bottom not ref";
 		object get_cells(interpreter *, getopt<std::string> const & filter_arg, getopt<std::string> const & sort, getopt<bool> const & use_regex, getopt<any<list<Component>, list<Net>, list<Pin>, list<pdf_txt_bbox> > > const & of, getopt<bool> const & all,
 						 getopt<bool> const & top,
@@ -538,73 +487,19 @@ namespace OBV_Tcl {
 			return namespace_holder(*this, interp, name);
 		}
 		
-		void filter_install(Component * c, object & obj, const char * varname) {
-			cell_get_prop_impl(varname, c, obj, nullptr);
+		bool filter_install(Component * c, object & obj, const char * varname) {
+			return cell_get_prop_impl(varname, c, obj, nullptr);
 		}
-		void filter_install(Net * c, object & obj, const char * varname) {
-			net_get_prop_impl(varname, c, obj, nullptr);
+		bool filter_install(Net * c, object & obj, const char * varname) {
+			return net_get_prop_impl(varname, c, obj, nullptr);
 		}
-		void filter_install(Pin * c, object & obj, const char * varname) {
-			pin_get_prop_impl(varname, c, obj, nullptr);
+		bool filter_install(Pin * c, object & obj, const char * varname) {
+			return pin_get_prop_impl(varname, c, obj, nullptr);
 		}
-		void filter_install(pdf_txt_bbox * c, object & obj, const char * varname) {
-			schem_word_get_prop_impl(varname, c, obj, nullptr);
+		bool filter_install(pdf_txt_bbox * c, object & obj, const char * varname) {
+			return schem_word_get_prop_impl(varname, c, obj, nullptr);
 		}
 
-#if 0
-		void filter_install(interpreter & I, std::string const & ns, Component const * c, const char * prefix = nullptr, const char * varname = nullptr) {
-			//std::cerr << "filter install " << ns << " " << c->name << " " << (prefix ? prefix : "") << " " << (varname ? varname : "") << "\n";
-			if (varname) {
-				I.setVar(ns + "::" + (prefix ? prefix : "") + varname, cell_get_prop(varname, c));
-				if (c->tcl_priv) {
-					be_priv * pr = (be_priv *) c->tcl_priv;
-					auto it = pr->properties.find(varname);
-					if (it != pr->properties.end()) {
-						I.setVar(ns + "::" + varname, it->second);
-					}
-				}
-			} else {
-				for (int i = 0; cell_props_[i]; ++i) {
-					I.setVar(ns + "::" + (prefix ? prefix : "") + cell_props_[i], cell_get_prop(cell_props_[i], c));
-				}
-
-				if (c->tcl_priv) {
-					be_priv * pr = (be_priv *) c->tcl_priv;
-					for (auto && i : pr->properties) {
-						I.setVar(ns + "::" + i.first, i.second);
-					}
-				}
-			}
-		}
-		void filter_install(interpreter & I, std::string const & ns, Net const * n, const char * prefix = nullptr, const char * varname = nullptr) {
-			if (varname) {
-				I.setVar(ns + "::" + (prefix ? prefix : "") + varname, net_get_prop(varname, n));
-			} else {
-				for (int i = 0; net_props_[i]; ++i) {
-					I.setVar(ns + "::" + (prefix ? prefix : "") + net_props_[i], net_get_prop(net_props_[i], n));
-				}
-			}
-		}
-		void filter_install(interpreter & I, std::string const & ns, Pin const * p, const char * prefix = nullptr, const char * varname = nullptr) {
-			if (varname) {
-				I.setVar(ns + "::" + (prefix ? prefix : "") + varname, pin_get_prop(varname, p));
-			} else {
-				for (int i = 0; pin_props_[i]; ++i) {
-					I.setVar(ns + "::" + (prefix ? prefix : "") + pin_props_[i], pin_get_prop(pin_props_[i], p));
-				}
-			}
-		}
-		void filter_install(interpreter & I, std::string const & ns, pdf_txt_bbox const * p, const char * prefix = nullptr, const char * varname = nullptr) {
-			if (varname) {
-				I.setVar(ns + "::" + (prefix ? prefix : "") + varname, schem_word_get_prop(varname, p));
-			} else {
-				for (int i = 0; pdf_word_props_[i]; ++i) {
-					I.setVar(ns + "::" + (prefix ? prefix : "") + pdf_word_props_[i], schem_word_get_prop(pdf_word_props_[i], p));
-				}
-			}
-		}
-#endif
-		
 		struct cmpeq_t {
 			bool write_;
 			cmpeq_t(bool w) : write_(w) { }
@@ -630,7 +525,6 @@ namespace OBV_Tcl {
 				return false;
 			}
 		};
-		
 
 		template <typename CMP=cmpeq_t>
 		static object schem_word_get_prop(const char * prop, pdf_txt_bbox * p, CMP icmp = cmpeq_t()) {
@@ -746,6 +640,10 @@ namespace OBV_Tcl {
 				//}
 			}
 		};
+
+		object make_imvec2(float, float, bool);
+		void print_imvec2(ImVec2 *);
+
 		
 		template <typename OT>
 		bool sort_less(interpreter & I, std::string const & ns, std::map<std::string, object> * vars, object const & eval, OT * a, OT * b, OT * r) {
@@ -761,29 +659,22 @@ namespace OBV_Tcl {
 					if (name.size() > 2 && name[1] == '_') {
 						disown d(i.second);
 						
+						bool ok = false;
 						for (auto & vi : v) {
 							if (name[0] == vi.n[0]) {
-								filter_install(vi.o, i.second, name.substr(2).c_str());
+								if (filter_install(vi.o, i.second, name.substr(2).c_str())) {
+									ok = true;
+								}
+								break;
 							}
 						}
+						if (!ok) {
+							throw tcl_error(std::string("illegal variable name in sort expression: " + name));
+						}
 					}
-#if 0
-					else if (name[0] == 'b') {
-						filter_install(b, i.second, name.substr(2).c_str());
-					} else if (name[0] == 'r') {
-						filter_install(r, i.second, name.substr(2).c_str());
-					}
-#endif
 				}
 			} else {
-				throw;
-#if 0
-				filter_install(I, ns, a, "a_");
-				filter_install(I, ns, b, "b_");
-				if (r) {
-					filter_install(I, ns, r, "r_");
-				}
-#endif
+				throw tcl_error("internal error");
 			}
 
 			for (auto & vi : v) {
@@ -798,38 +689,7 @@ namespace OBV_Tcl {
 					}
 				}
 			}
-					
-#if 0
-			if ((it = vars->find("a")) != vars->end()) {
-				if (dump) { std::cerr << "set var a " << vars << "\n"; }
-				if (!vars) {
-					I.setVar(ns + "::a", I.makeobj(a));
-				} else {
-					disown d(it->second);
-					tcli->makeobj_inplace(a, it->second, false, (void *) 0);
-				}
-			}
-			if ((it = vars->find("b")) != vars->end()) {
-				if (dump) { std::cerr << "set var b " << vars << "\n"; }
-				if (!vars) {
-					I.setVar(ns + "::b", I.makeobj(b));
-				} else {
-					disown d(it->second);
-					tcli->makeobj_inplace(b, it->second, false, (void *) 0);
-				}
-			}
 
-			if (r && (it = vars->find("r")) != vars->end()) {
-				if (dump) { std::cerr << "set var r " << vars << "\n"; }
-				if (!vars) {
-					I.setVar(ns + "::r", I.makeobj(r));
-				} else {
-					disown d(it->second);
-					tcli->makeobj_inplace(r, it->second, false, (void *) 0);
-				}
-			}
-#endif
-			
 			bool res = I.eval(eval);
 			I.result_reset();
 			return res;
@@ -847,20 +707,11 @@ namespace OBV_Tcl {
 					if (ref && name.compare(0, 2, "r_") == 0) {
 						filter_install(ref, i.second, name.substr(2).c_str());
 					} else if (name != "r" && name != "_") {
-						//std::cerr << "refc " << i.second.get_object()->refCount << "\n";
 						filter_install(p, i.second, i.first.c_str());
-						//std::cerr << "refc2 " << i.second.get_object()->refCount << "\n";
-						//std::cerr << "install " << i.second.get_object() << " " << tcl_typename(i.second.get_object()) << "\n";
 					}
 				}
 			} else {
 				throw;
-#if 0
-				filter_install(I, ns, p);
-				if (ref) {
-					filter_install(I, ns, ref, "r_");
-				}
-#endif
 			}
 			typename std::remove_reference<decltype(*vars)>::type::iterator it;
 			
@@ -957,34 +808,26 @@ namespace OBV_Tcl {
 			return o.duplicate();
 		}
 		
-		std::string objinfo(object const & o) {
-			std::ostringstream oss;
-			Tcl_Obj * oo = o.get_object();
-			
-			oss << "obj=" << oo << " refcount=" << oo->refCount << " typePtr=" << oo->typePtr << " typename=" << tcl_typename(oo) << " ptr1=" << oo->internalRep.twoPtrValue.ptr1 << " ptr2=" << oo->internalRep.twoPtrValue.ptr2 << "\n";
-			if (oo->typePtr) {
-				if (strcmp(oo->typePtr->name, "cmdName") == 0) {
-					Tcl_CmdInfo cmdinfo;
-					if (Tcl_GetCommandInfo(tcli->get_interp(), Tcl_GetString(oo), &cmdinfo)) {
-						oss << "cmdinfo proc=" << (void *) cmdinfo.objProc << " cd=" << cmdinfo.objClientData << " ns=" << cmdinfo.namespacePtr << "\n";
-					}
-				}
-			}
-			return oss.str();
-		}
-
+		std::string objinfo(list<object> const & o);
+		
 		std::mutex create_interp_mutex_;
 		struct tcl_thread {
 			interpreter * interp;
 			std::thread * thread;
 			int id;
 			std::mutex exit_mutex;
+			std::atomic<bool> finished;
+			std::function<void(void)> cleanup;
 		};
 		std::vector<tcl_thread *> threads_;
 		static inline int threadid_alloc_ = 0;
 
-		object create_thread(std::string const &);
-		void join_thread(tcl_thread *);
+		std::string varinfo(interpreter *, std::string const & var);
+		static constexpr const char * create_thread_opt = "detach";
+		object create_thread(interpreter *, getopt<bool> const & detach, std::string const &, opt<list<std::string> > const &);
+
+		static constexpr const char * join_thread_opt = "try";
+		void join_thread(getopt<bool> const & try_, list<tcl_thread> const &);
 		object get_threads();
 		
 		
@@ -1144,6 +987,7 @@ namespace OBV_Tcl {
 			bool   dragging = false;
 			bool   mouse_released = false;
 			float  quality = 0.0f;
+			schematic * schematic_ = nullptr;
 		};
 		
 		ImVec2 pdf2board(pdf_window const & w, Image * pdf, ImVec2 c, bool flip) {
@@ -1183,7 +1027,6 @@ namespace OBV_Tcl {
 		Component * pdf_in_cell_ = nullptr;
 		//ImVec2 pdf_min_, pdf_max_;
 
-
 		//typedef std::vector<pdf_txt_bbox> pdf_words_value_t;
 		//std::map<int, pdf_words_value_t> pdf_words_;
 
@@ -1205,6 +1048,9 @@ namespace OBV_Tcl {
 			}
 			return false;
 		}
+
+		std::string schem_word_tooltip_;
+		pdf_txt_bbox const * schem_word_tooltip_word_ = nullptr;
 		
 		void imgui_draw_in(ImDrawList * draw, ImVec2 min, ImVec2 max);
 		ImVec2 yflip(ImVec2 const & v) {
@@ -1214,29 +1060,7 @@ namespace OBV_Tcl {
 		int handle_mouse_drag(ImVec2 const & ppos, ImVec2 const & drag, int token);
 
 		uint64_t last_click_ = 0;
-		bool handle_mouse_click(ImVec2 const & spos) {
-			if (pdf_win_.sticky ? in(pdf_win_.box, spos) : in(pdf_win_.box, boardview()->ScreenToCoord(spos))) {
-				if (pdf_win_.dragging || boardview()->m_draggingLastFrame) {
-					pdf_win_.ignore_one_mouse_release = true;
-				} else {
-					pdf_win_.mouse_released = true;
-
-					uint64_t now = time_ms();
-					if (last_click_ + 300 > now) {
-						//if (ImGui::IsMouseDoubleClicked(0) || ImGui::GetIO().MouseDoubleClicked[0]) {
-						//std::cerr << "doubleclick\n";
-						this->eval("schem_sticky -toggle");
-						last_click_ = 0;
-					} else {
-						last_click_ = now;
-					}
-				}
-				pdf_win_.dragging = false;
-
-				return true;
-			}
-			return false;
-		}
+		bool handle_mouse_click(ImVec2 const & spos);
 		
 		void imgui_draw(ImDrawList * draw) {
 			if (pdf_img_) {
@@ -1261,6 +1085,7 @@ namespace OBV_Tcl {
 		}
 		
 		bool pdf_sticky(getopt<bool> const & toggle, opt<bool> const & v);
+		bool schem_fullscreen(getopt<bool> const & toggle, opt<bool> const & v);
 		
 		void schem_highlight(list<float> x, opt<float> y, opt<float> w, opt<float> h);
 		void undraw_page() {
@@ -1284,8 +1109,8 @@ namespace OBV_Tcl {
 		std::atomic<bool> draw_page_in_progress_ = false;
 		std::mutex * draw_page_mutex_ = nullptr;
 		
-		static constexpr const char * draw_page_opt = "background quality cache norender reusewin of origin zoom";
-		void draw_page(getopt<bool> const & background, getopt<float> const & quality, getopt<bool> const & cache, getopt<bool> const & norender, getopt<bool> const & reusewin, getopt<schematic *> const & of, getopt<std::string> const & center, getopt<float> const & zoom, int page, opt<Component *> const & inside);
+		static constexpr const char * draw_page_opt = "background prefer_cache quality cache norender reusewin of origin zoom";
+		void draw_page(getopt<bool> const & background, getopt<bool> const & prefer_cache, getopt<float> const & quality, getopt<bool> const & cache, getopt<bool> const & norender, getopt<bool> const & reusewin, getopt<schematic *> const & of, getopt<std::string> const & center, getopt<float> const & zoom, int page, opt<Component *> const & inside);
 
 		static constexpr const char * history_opt = "auto";
 		object history(getopt<bool> const & automatic);
@@ -1301,7 +1126,8 @@ namespace OBV_Tcl {
 			return CAIRO_STATUS_SUCCESS;
 		}
 
-		page_cache * render_page(int page, getopt<float> quality, schematic * sch, bool norender);
+		std::mutex render_page_mutex_;
+		page_cache * render_page(int page, getopt<float> quality, schematic * sch, bool norender, bool prefer_cache);
 
 		static constexpr const char * schematic_open_opt = "background preload preload_quality";
 		void schematic_open(getopt<bool> const & background, getopt<bool> const & preload, getopt<float> const & preload_quality, std::string const & fname) {
@@ -1370,7 +1196,6 @@ namespace OBV_Tcl {
 			return a + b;
 		}
 
-		
 		static constexpr const char * report_prop_opt = "verbose";
 		void report_prop(getopt<bool> const & verbose, list<any_obv_type> const & obj);
 		
@@ -1431,8 +1256,6 @@ namespace OBV_Tcl {
 #endif
 		}
 
-		static TCL * this_s_;
-
 #ifdef HAVE_READLINE
 		static char ** rl_complete(const char * text, int start, int end) {
 			if (start && end) { }
@@ -1444,7 +1267,7 @@ namespace OBV_Tcl {
 			static std::string commands;
 		
 			if (state == 0) {
-				auto res = this_s_->eval("info commands", true);
+				auto res = this_s_->eval_impl(object("info commands"), true);
 				commands = res.str;
 				ix = 0;
 				len = strlen(text);
@@ -1493,7 +1316,9 @@ namespace OBV_Tcl {
 					truncate = false;
 				}
 				
-				auto res = this_s_->eval(line);
+				std::string sline(line);
+				object oline(sline);
+				auto res = this_s_->eval_impl(oline);
 				if (res.ok) {
 					if (truncate && res.is_object_vector && res.str.size() > 256) {
 						std::cerr << res.str.substr(0, 255) << " ...\n";
@@ -1517,14 +1342,33 @@ namespace OBV_Tcl {
 
 		object last_result_;
 	
-		eval_result eval(const std::string & cmd, bool internal = false) {
+		template <typename ...Args>
+		eval_result eval(Args const &... args) {
+			object a;
+			(a.append(object(args)), ...);
+			return eval_impl(a);
+		}
+		eval_result parse_eval(std::string const & cmd) {
+			return eval("eval", cmd);
+		}
+
+		
+		eval_result eval_impl(object const & cmd, bool internal = false) {
 			if (trace_) {
-				std::cerr << cmd << "\n";
+				std::cerr << cmd.get<std::string>() << "\n";
 			}
 
-			object cmdo(cmd.c_str());
+#if 0
+			std::cerr << "eval ";
+			for (std::size_t i = 0; i < cmd.size(); ++i) {
+				std::cerr << cmd.at(i) << " ";
+			}
+			std::cerr << "\n";
+#endif
+			
+			//object cmdo(cmd.c_str());
 			try {
-				object r = tcli->eval(cmdo);
+				object r = tcli->eval(cmd);
 
 				//std::cerr << "result: " << tcl_typename(r) << " " << r.get<std::string>() << "\n";
 			
@@ -1540,8 +1384,9 @@ namespace OBV_Tcl {
 				}
 
 				return { true, isvec, r.get<std::string>() };
+			} catch (tcl_aborted & e) {
 			} catch (std::runtime_error & e) {
-				std::cerr << "while executing: " << cmd << ": " << e.what() << "\n";
+				std::cerr << "while executing: " << cmd.get<std::string>() << ": " << e.what() << "\n";
 				return { false, false, e.what() };
 			}
 			return { false, false, "" };

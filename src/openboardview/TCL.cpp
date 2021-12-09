@@ -14,6 +14,7 @@ decltype(TCL::schematic_props_) TCL::schematic_props_;
 #endif
 //decltype(TCL::board_props_) TCL::board_props_;
 TCL * TCL::this_s_;
+int TCL::schem_render_concurrency_ = 4;
 
 char const ** TCL::pdf_word_props_ = nullptr,
 	** TCL::cell_props_      = nullptr,
@@ -77,7 +78,8 @@ namespace OBV_Tcl {
 
 					// !!!!!
 					// object cannot be the default object(), because at this point the refcount of the
-					// created object must be =1
+					// created object must be =1 as later a shared variable will be modified, which is normally
+					// not allowed without duplication
 					// !!!!!
 
 					ret.emplace(std::string(tokens.tokenPtr[ti + 1].start, tokens.tokenPtr[ti + 1].size), object().duplicate());
@@ -124,22 +126,7 @@ namespace OBV_Tcl {
 				//pdf_win_.sticky ^= true;
 				//pdf_win_.update();
 			} else if (kp(SDLK_f)) {
-				if (pdf_win_.is_fullscreen) {
-					pdf_win_.box = pdf_win_.saved_box;
-					pdf_win_.sticky = pdf_win_.saved_sticky;
-					pdf_win_.is_fullscreen = false;
-					pdf_win_.reuse = false;
-				} else {
-					if (! pdf_win_.is_docked) {
-						pdf_win_.saved_box = pdf_win_.box;
-						pdf_win_.saved_sticky = pdf_win_.sticky;
-					}
-					pdf_win_.is_fullscreen = true;
-					pdf_win_.is_docked = false;
-					pdf_win_.sticky = true;
-					pdf_win_.box = { { 0.0f, boardview()->m_menu_height }, { boardview()->m_board_surface.x, boardview()->m_menu_height + boardview()->m_board_surface.y } };
-				}
-				pdf_win_.update();
+				parse_eval("schem_fullscreen -toggle");
 			} else if (kp(SDLK_d)) {
 				if (pdf_win_.is_docked) {
 					pdf_win_.box = pdf_win_.saved_box;
@@ -155,11 +142,26 @@ namespace OBV_Tcl {
 					pdf_win_.is_docked = true;
 					pdf_win_.is_fullscreen = false;
 					pdf_win_.sticky = true;
-					pdf_win_.box = { { boardview()->m_board_surface.x / 2, boardview()->m_menu_height }, { boardview()->m_board_surface.x, boardview()->m_menu_height + boardview()->m_board_surface.y } };
+
+					if (ImGui::GetIO().KeyShift) {
+						pdf_win_.box = { { boardview()->m_board_surface.x - boardview()->m_board_surface.x / 10, boardview()->m_menu_height }, { boardview()->m_board_surface.x, boardview()->m_menu_height + boardview()->m_board_surface.y } };
+					} else {
+						pdf_win_.box = { { boardview()->m_board_surface.x / 2, boardview()->m_menu_height }, { boardview()->m_board_surface.x, boardview()->m_menu_height + boardview()->m_board_surface.y } };
+					}
 				}
 				pdf_win_.update();
 			} else if (kp(SDLK_p)) {
-				
+				parse_eval(std::string("highlight -toggle [ schem_interpage_nets ") + std::to_string(pdf_win_.page) + " ]");
+			} else if (kp(SDLK_w)) {
+				parse_eval(std::string("highlight -toggle [ get_schem_words -page ") + std::to_string(pdf_win_.page) + " ]");
+			} else if (kp(SDLK_PAGEUP)) {
+				if (pdf_win_.page > 1) {
+					eval("draw_page", "-reusewin", "-prefer_cache", "-quality", 0.5f, pdf_win_.page - 1);
+				}
+			} else if (kp(SDLK_PAGEDOWN)) {
+				if (pdf_win_.page < pdf_win_.schematic_->doc->getNumPages()) {
+					eval("draw_page", "-prefer_cache", "-quality", 0.5f, "-reusewin", pdf_win_.page + 1);
+				}
 			} else {
 				return false;
 			}
@@ -168,6 +170,32 @@ namespace OBV_Tcl {
 		return false;
 	}
 
+	bool TCL::schem_fullscreen(getopt<bool> const & toggle, opt<bool> const & v) {
+		if (toggle || v) {
+			bool newv = toggle ? ! pdf_win_.is_fullscreen : *v;
+
+			if (newv != pdf_win_.is_fullscreen) {
+				if (pdf_win_.is_fullscreen) {
+					pdf_win_.box = pdf_win_.saved_box;
+					pdf_win_.sticky = pdf_win_.saved_sticky;
+					pdf_win_.is_fullscreen = false;
+					pdf_win_.reuse = false;
+				} else {
+					if (true || ! pdf_win_.is_docked) {
+						pdf_win_.saved_box = pdf_win_.box;
+						pdf_win_.saved_sticky = pdf_win_.sticky;
+					}
+					pdf_win_.is_fullscreen = true;
+					pdf_win_.is_docked = false;
+					pdf_win_.sticky = true;
+					pdf_win_.box = { { 0.0f, boardview()->m_menu_height }, { boardview()->m_board_surface.x, boardview()->m_menu_height + boardview()->m_board_surface.y } };
+				}
+			}
+			pdf_win_.update();
+		}
+		return pdf_win_.is_fullscreen;
+	}
+		
 	std::vector<uint32_t> TCL::get_schem_word_colors(pdf_txt_bbox *) {
 		std::vector<uint32_t> ret;
 		return ret;
@@ -205,7 +233,6 @@ namespace OBV_Tcl {
 		for (auto & sch : schematics_) {
 			r.append(tcli->makeobj(&sch));
 		}
-
 		return r;
 	}
 
@@ -226,19 +253,14 @@ namespace OBV_Tcl {
 		if (filter_arg) {
 			filter = filter_ns_ix++ % 1000;
 			filter_ns = namespace_str(filter);
-			//namespace_open(*tcli, filter_ns);
 			filter_o = object(std::string("namespace eval ") + filter_ns + " { expr { " + *filter_arg + " } }");
-
-			//std::cerr << "filter vars: " << join(get_variables_from_expr(*filter_arg)) << "\n";
 		}
 		auto filt_nshold = make_namespace_holder(tcli, filter_ns);
 		
 		if (sort) {
 			sort_ix = sort_ns_ix++ % 1000;
 			sort_ns = sort_namespace_str(sort_ix);
-			//namespace_open(*tcli, sort_ns);
 			sort_o = object(std::string("namespace eval ") + sort_ns + " { expr { " + *sort + " } }");
-			//std::cerr << "sort vars: " << join(get_variables_from_expr(*sort)) << "\n";
 		}
 		auto sort_nshold = make_namespace_holder(tcli, sort_ns);
 		
@@ -327,6 +349,8 @@ namespace OBV_Tcl {
 				for (auto & w : it->second) {
 					try_append(&w);
 				}
+			} else {
+				throw tcl_error("no such page " + std::to_string(page ? *page : (*ref)->page));
 			}
 		} else {
 			if (match && ! use_regex) {
@@ -596,7 +620,6 @@ namespace OBV_Tcl {
 		if (filter_arg) {
 			filter = filter_ns_ix++ % 1000;
 			filter_ns = namespace_str(filter);
-			//namespace_open(*tcli, filter_ns);
 			filter_o = object(std::string("namespace eval ") + namespace_str(filter) + " { expr { " + *filter_arg + " } }");
 		}
 		auto filt_nshold = make_namespace_holder(tcli, filter_ns);
@@ -604,7 +627,6 @@ namespace OBV_Tcl {
 		if (sort) {
 			sort_ix = sort_ns_ix++ % 1000;
 			sort_ns = sort_namespace_str(sort_ix);
-			//namespace_open(*tcli, sort_ns);
 			sort_o = object(std::string("namespace eval ") + sort_ns + " { expr { " + *sort + " } }");
 		}
 		auto sort_nshold = make_namespace_holder(tcli, sort_ns);
@@ -683,7 +705,6 @@ namespace OBV_Tcl {
 		}
 
 		if (sort) {
-
 			auto vars = get_variables_from_expr(tcli, *sort);
 			auto vars_holder = make_variables_installer(tcli, sort_ns, vars ? &*vars : nullptr);
 			std::sort(ret.begin(), ret.end(), [&](Component * a, Component * b) -> bool {
@@ -709,7 +730,7 @@ namespace OBV_Tcl {
 		return r;
 	}
 
-	void TCL::highlight(getopt<bool> const & save, getopt<bool> const & un, getopt<bool> const & all, getopt<std::string> const & color, getopt<int> const & colorindex, getopt<float> const & inten, opt<list<any<Component, Pin, pdf_txt_bbox> > > const & obj) {
+	void TCL::highlight(getopt<bool> const & save, getopt<bool> const & toggle, getopt<bool> const & un, getopt<bool> const & all, getopt<std::string> const & color, getopt<int> const & colorindex, getopt<float> const & inten, opt<list<any<Component, Pin, pdf_txt_bbox> > > const & obj) {
 		uint32_t color_v = 0xffaaaaaa;
 
 		const uint32_t distinct[] = {
@@ -743,7 +764,7 @@ namespace OBV_Tcl {
 			if (col[0] == '#') {
 				std::istringstream iss(col);
 				char dummy;
-						
+
 				iss >> dummy >> std::hex >> color_v;
 				color_v |= 0xff000000;
 			} else {
@@ -761,7 +782,7 @@ namespace OBV_Tcl {
 			for (auto le : *obj) {
 				if (le) {
 					le.visit([&](Component * c) {
-								 if (un) {
+								 if (un || toggle && c->shade_color_) {
 									 c->shade_color_ = 0;
 								 } else {
 									 if (highlight_delay_enable_) {
@@ -786,7 +807,7 @@ namespace OBV_Tcl {
 							 },
 							 [&](pdf_txt_bbox * p) {
 								 prop_stack_try_save_highlight(p);
-								 if (un) p->color = 0;
+								 if (un || toggle && p->color) p->color = 0;
 								 else p->color = color_v;
 							 });
 				}
@@ -838,31 +859,78 @@ namespace OBV_Tcl {
 		}
 	}
 
-	object TCL::create_thread(std::string const & code) {
+	std::string TCL::varinfo(interpreter * tcli, std::string const & var) {
+		object obj = tcli->getVar(var);
+		return tcli->objinfo(obj);
+	}
+	
+	object TCL::create_thread(interpreter * tcli, getopt<bool> const & detach, std::string const & code, opt<list<std::string> > const & export_vars) {
+		std::map<std::string, object> * evars = nullptr;
+
+		if (export_vars) {
+			evars = new typename std::remove_pointer<decltype(evars)>::type();
+			for (auto const & v : *export_vars) {
+				if (v[0] == '=') {
+					object var = tcli->getVar(v.substr(1));
+					evars->insert(std::pair(v.substr(1), var.duplicate()));
+				} else {
+					evars->insert(std::pair(v, tcli->getVar(v)));
+				}
+			}
+		}
+
 		tcl_thread * thr = new tcl_thread;
 		thr->id = ++threadid_alloc_;
 		thr->exit_mutex.lock();
-		thr->thread = new std::thread([thr, this, code] {
-										  thr->interp = new interpreter(nullptr, true);
-										  imbue_interpreter(thr->interp, false);
-										  thr->interp->eval(code);
-										  thr->exit_mutex.lock();
+		thr->finished = false;
+		if (false && evars) {
+			thr->cleanup = [evars] { delete evars; };
+		}
+		
+		thr->thread = new std::thread([thr, this, code, evars, detach] {
+										  try {
+											  interpreter * tcli = thr->interp = new interpreter(nullptr, true);
+											  imbue_interpreter(thr->interp, false);
+											  if (evars) {
+												  for (auto const & v : *evars) {
+													  tcli->setVar(v.first, v.second);
+												  }
+												  delete evars;
+											  }
+											  thr->interp->eval(code);
+										  } catch (tcl_aborted &) {
+										  } catch (std::exception & e) {
+											  std::cerr << "ERROR: " << e.what() << "\n";
+										  }
+										  if (!detach) {
+											  thr->finished = true;
+											  thr->exit_mutex.lock();
+										  }
 										  delete thr->interp;
 									  });
+		if (detach) {
+			return object();
+		}
+
 		threads_.push_back(thr);
 		return tcli->makeobj(thr);
 	}
-	void TCL::join_thread(tcl_thread * thr) {
-		thr->exit_mutex.unlock();
-		thr->thread->join();
-		//Tcl_DeleteInterp(thr->interp);
-		//delete thr->interp;
-		delete thr->thread;
-		auto it = std::find(threads_.begin(), threads_.end(), thr);
-		if (it != threads_.end()) {
-			threads_.erase(it);
+	void TCL::join_thread(getopt<bool> const & try_, list<tcl_thread> const & threads) {
+		for (auto * thr : threads) {
+			thr->exit_mutex.unlock();
+			if (!try_ || thr->finished) {
+				thr->thread->join();
+				if (thr->cleanup) {
+					thr->cleanup();
+				}
+				delete thr->thread;
+				auto it = std::find(threads_.begin(), threads_.end(), thr);
+				if (it != threads_.end()) {
+					threads_.erase(it);
+				}
+				delete thr;
+			}
 		}
-		delete thr;
 	}
 	object TCL::get_threads() {
 		object r;
@@ -872,6 +940,7 @@ namespace OBV_Tcl {
 		return r;
 	}
 
+#if 0
 	std::string TCL::slave_eval(std::string const & code) {
 		if (!tcli2) {
 			tcli2 = new interpreter(Tcl_CreateInterp(), true);
@@ -887,7 +956,7 @@ namespace OBV_Tcl {
 		object o = tcli->getVar(varname);
 		tcli2->setVar(varname, o);
 	}
-	
+#endif
 	
 	object TCL::get_prop(std::string const & prop, list<any_obv_type> const & obj) {
 		object r;
@@ -980,7 +1049,6 @@ namespace OBV_Tcl {
 		return r;
 	}
 
-	
 	void TCL::report_prop(getopt<bool> const & verbose, list<any_obv_type> const & obj) {
 		std::ostringstream oss;
 
@@ -1053,8 +1121,46 @@ namespace OBV_Tcl {
 		rl_on_new_line(); // Regenerate the prompt on a newline
 		rl_replace_line("", 0); // Clear the previous text
 		rl_redisplay();
+		for (auto * t : TCL::this_s_->threads_) {
+			t->interp->want_abort();
+		}
+		TCL::this_s_->tcli->want_abort();
 	}
 #endif
+	
+	object TCL::make_imvec2(float x, float y, bool ref) {
+		if (ref) {
+			return tcli->makeobj(new ImVec2(x, y), true);
+		} else {
+			return tcli->makevalue(new ImVec2(x, y));
+		}
+	}
+	void TCL::print_imvec2(ImVec2 * v) {
+		std::cerr << v << " " << v->x << "," << v->y << "\n";
+	}
+
+	//void ImGui::modal_popup(std::string const & rext) {
+	//	
+	//}
+	
+	std::string TCL::objinfo(list<object> const & o) {
+		std::ostringstream oss;
+		for (auto const & oi : o) {
+			Tcl_Obj * oo = oi.get_object();
+			
+			oss << "obj=" << oo << " refcount=" << oo->refCount << " typePtr=" << oo->typePtr << " typename=" << tcl_typename(oo) << " ptr1=" << oo->internalRep.twoPtrValue.ptr1 << " ptr2=" << oo->internalRep.twoPtrValue.ptr2 << "\n";
+			if (oo->typePtr) {
+				if (strcmp(oo->typePtr->name, "cmdName") == 0) {
+					Tcl_CmdInfo cmdinfo;
+					if (Tcl_GetCommandInfo(tcli->get_interp(), Tcl_GetString(oo), &cmdinfo)) {
+						oss << "cmdinfo proc=" << (void *) cmdinfo.objProc << " cd=" << cmdinfo.objClientData << " ns=" << cmdinfo.namespacePtr << "\n";
+					}
+				}
+			}
+		}
+		return oss.str();
+	}
+
 	
 	struct TClass {
 		int var_;
@@ -1088,7 +1194,6 @@ namespace OBV_Tcl {
 		}
 	};
 
-
 	static void over1(int a) {
 		std::cerr << "over1 " << a << "\n";
 	}
@@ -1097,9 +1202,12 @@ namespace OBV_Tcl {
 		std::cerr << "over2 " << a << ", " << b << "\n";
 	}
 
-	void TCL::imbue_interpreter(interpreter * ntcli, bool) {
+	void TCL::imbue_interpreter(interpreter * ntcli, bool primary) {
 		typedef TCL this_t;
 
+		if (! primary) {
+			ntcli->set_master(tcli);
+		}
 		
 		ntcli->with(this)
 			.def("get_nets",          &this_t::get_nets,          options(get_nets_opt))
@@ -1112,18 +1220,24 @@ namespace OBV_Tcl {
 			.def("highlight",         &this_t::highlight,         options(highlight_opt))
 			.def("selection",         &this_t::selection)
 			.def("same_object",       &this_t::same_object)
-			.def("slave_eval",        &this_t::slave_eval)
-			.def("slave_pass_var",    &this_t::slave_pass_variable)
+			//.def("slave_eval",        &this_t::slave_eval)
+			//.def("slave_pass_var",    &this_t::slave_pass_variable)
 
-			.def("create_thread",     &this_t::create_thread)
-			.def("join_thread",       &this_t::join_thread)
+			.def("create_thread",     &this_t::create_thread,     options(create_thread_opt))
+			.def("join_thread",       &this_t::join_thread,       options(join_thread_opt))
 			.def("get_threads",       &this_t::get_threads)
+			.def("varinfo",           &this_t::varinfo)
+			
+			.def("make_imvec2",       &this_t::make_imvec2)
+			.def("print_imvec2",      &this_t::print_imvec2)
+			//.def("draw_something",    &this_t::draw_something)
 			
 #ifdef OBV_USE_POPPLER
 			.def("get_schematics",    &this_t::get_schematics,    options(get_schematics_opt))
 			.def("get_schem_words",   &this_t::get_schem_words,   options(get_schem_words_opt))
 			.def("schem_open",        &this_t::schematic_open,    options(schematic_open_opt))
 			.def("schem_sticky",      &this_t::pdf_sticky,        options("toggle"))
+			.def("schem_fullscreen",  &this_t::schem_fullscreen,  options("toggle"))
 			.def("schem_invert",      &this_t::pdf_invert)
 			.def("draw_page",         &this_t::draw_page,         options(draw_page_opt))
 			.def("undraw_page",       &this_t::undraw_page)
@@ -1150,11 +1264,24 @@ namespace OBV_Tcl {
 			.def("obv_open",          &this_t::obv_open)
 			.def("exit",              &this_t::quit)
 			.def("objinfo",           &this_t::objinfo)
-			.def("last_result",       &this_t::last_result);
+			.def("last_result",       &this_t::last_result)
+			//.def("tlambda",           [](int val) { std::cerr << val << "\n"; })
+			;
 		
 		ntcli->defvar("default_intensity", boardview()->m_default_intensity);
 		ntcli->defvar("dual_draw", boardview()->m_draw_both_sides);
+		//ntcli->def("test_lambda",       [](int val) { std::cerr << val; });
+		ntcli->defvar("schem_render_concurrency", schem_render_concurrency_);
+		//ntcli->def("render_status", [this] { std::cerr << "inflight: " << render_docs_inflight_ << " vector: " << default_schematic_.render_docs.size() << "\n"; });
 
+		
+		{
+			ntcli->managed_class_<ImDrawList, false>("ImDrawList", no_init)
+				.def("AddText",  [](ImDrawList * draw, ImVec2 const & at, ImU32 col, const char * txt) {
+						 draw->AddText(nullptr, ImGui::GetFontSize(), at, col, txt);
+					 });
+		}
+		
 		{
 			auto conv = [](TClass * this_p, int, Tcl_Obj * const *, int) {
 				return this_p->stream();
@@ -1168,11 +1295,11 @@ namespace OBV_Tcl {
 			};
 			using I = interpreter;
 			
-			ntcli->managed_class_<TClass>("tclass", init<int>())
+			ntcli->managed_class_<TClass, true>("tclass", init<int>())
 				.def("set",  &TClass::set, policies())
 				.def("get",  &TClass::get, policies())
 				.def("free", &TClass::freefun, I::arg<0>, conv);
-			ntcli->managed_class_<TClass>("tclass", no_init, I::arg<-1>, conv2)
+			ntcli->managed_class_<TClass, true>("tclass", no_init, I::arg<-1>, conv2)
 				.def("add2", &TClass::add2)
 				.def("add3", &TClass::add3);
 			
@@ -1208,15 +1335,20 @@ namespace OBV_Tcl {
 		}
 #endif
 
+#if 1
+		//Tcl_Obj * ooo;
+		//std::cerr << sizeof(ooo->internalRep) << " " << sizeof(ImVec2) << "\n";
 
-#if 0
-		ntcli->class_<ImVec2>("ImVec2", init<float, float>())
+		ntcli->managed_class_<ImVec2, true>("ImVec2", init<float, float>())
 			.defvar("x", &ImVec2::x)
 			.defvar("y", &ImVec2::y);
 #endif
 
 		Tcl_Init(ntcli->get_interp());
-		ntcli->eval("source library.tcl");
+		try {
+			ntcli->eval("source library.tcl");
+		} catch (tcl_aborted &) {
+		}
 	}
 
 #if 0
@@ -1229,17 +1361,16 @@ namespace OBV_Tcl {
 	
 	TCL::TCL(BoardView * bvv, bool * d, std::string const & script) : b(bvv), done_(d) {
 		tcl = Tcl_CreateInterp();
-		
+
 		tcli = new interpreter(tcl, true);
 
 		this_s_ = this;
 
 		static_initialize();
-		
+
 		//typedef TCL this_t;
 
 		imbue_interpreter(tcli, true);
-		
 
 #ifdef HAVE_READLINE
 		rl_prep_terminal(0);
@@ -1250,17 +1381,25 @@ namespace OBV_Tcl {
 		signal(SIGINT, int_handler);
 #endif
 		Tcl_SetExitProc(exit_proc);
+#if 0
 		tcli->eval(R"EOTCL(
-proc preload_schem_pages { quality } {
+proc preload_schem_pages { quality { threads 1 } } {
 	foreach sch [ get_schematics ] {
 		set pages [ get pages $sch ]
+        set thr [list]
 
-		for { set p 1 } { $p <= $pages } { incr p } {
-			draw_page -cache -quality $quality -of $sch $p
-		}
+        for { set ti 1 } { $ti <= $threads } { incr ti } {
+            lappend thr [ create_thread {
+		        for { set p $ti } { $p <= $pages } { incr p $threads } {
+			        draw_page -cache -quality $quality -of $sch $p
+		        }
+            } ]
+        }
+        join_thread $thr
 	}
 }
 )EOTCL");
+#endif
 		//tcli->eval("source library.tcl");
 		startup_script = script;
 	}
@@ -1413,6 +1552,10 @@ proc preload_schem_pages { quality } {
 			ret = s->doc->getNumPages();
 		} else if (icmp(prop, "filename")) {
 			ret = s->filename;
+		} else if (icmp(prop, "rendering")) {
+			ret = s->render_docs_inflight;
+		} else if (icmp(prop, "renderers")) {
+			ret = int(s->render_docs_inflight + s->render_docs.size());
 		} else {
 			return false;
 		}
@@ -1475,7 +1618,6 @@ proc preload_schem_pages { quality } {
 				} else {
 						str_impl(o, p->word);
 					}
-					
 				}
 			};
 			struct schematic_ops : public interpreter::type_ops<schematic> {
@@ -1490,15 +1632,33 @@ proc preload_schem_pages { quality } {
 					str_impl(o, std::to_string(thr->id));
 				}
 			};
-			
-			interpreter::type<cell_ops>      ("cell",       (Component    *) nullptr);
-			interpreter::type<net_ops>       ("net",        (Net          *) nullptr);
-			interpreter::type<pin_ops>       ("pin",        (Pin          *) nullptr);
-			interpreter::type<board_ops>     ("board",      (BRDBoard     *) nullptr);
-			interpreter::type<schem_word_ops>("schem_word", (pdf_txt_bbox *) nullptr);
-			interpreter::type<schematic_ops> ("schematic",  (schematic    *) nullptr);
-			interpreter::type<thread_ops>    ("thread",     (tcl_thread   *) nullptr);
+
+			interpreter::type<cell_ops, false>      ("cell",       (Component    *) nullptr);
+			interpreter::type<net_ops, false>       ("net",        (Net          *) nullptr);
+			interpreter::type<pin_ops, false>       ("pin",        (Pin          *) nullptr);
+			interpreter::type<board_ops, false>     ("board",      (BRDBoard     *) nullptr);
+			interpreter::type<schem_word_ops, false>("schem_word", (pdf_txt_bbox *) nullptr);
+			interpreter::type<schematic_ops, false> ("schematic",  (schematic    *) nullptr);
+			interpreter::type<thread_ops, false>    ("thread",     (tcl_thread   *) nullptr);
 			//ntcli->type<ImVec2>        ("ImVec2",     (ImVec2       *) nullptr);
+
+			struct imvec2_ops : public interpreter::type_ops<ImVec2> {
+				static void str(Tcl_Obj * o) {
+					auto * p = (ImVec2 *) o->internalRep.twoPtrValue.ptr1;
+					str_impl(o, std::to_string(p->x) + ',' + std::to_string(p->y));
+				}
+				static void str_v(Tcl_Obj * o) {
+					if constexpr (sizeof(o->internalRep) >= sizeof(ImVec2)) {
+						auto * p = (ImVec2 *) &o->internalRep;
+						str_impl(o, std::to_string(p->x) + 'x' + std::to_string(p->y));
+					} else {
+						ImVec2 * p = (ImVec2 *) o->internalRep.twoPtrValue.ptr1;
+						str_impl(o, std::to_string(p->x) + '#' + std::to_string(p->y));
+					}
+				}
+			};
+			interpreter::type<imvec2_ops, true>("ImVec2", (ImVec2 *) nullptr);
+
 		}
 		static_initialized_ = true;
 	}
@@ -1529,15 +1689,18 @@ proc preload_schem_pages { quality } {
 			* bp = b.as<pdf_txt_bbox>();
 		if (ap && bp) {
 			if (border) {
-				
+				throw tcl_error("-border not implemented");
 			} else { // center
 				ImVec2 ca = center(ap->box), cb = center(bp->box);
 				ImVec2 d = ca - cb;
 				return sqrtf(d.x * d.x + d.y * d.y);
 			}
+		} else {
+			std::cerr << std::hex << tcli->get_objtype<Component>() << std::dec << "\n";
+			throw tcl_error("argument type not implemented");
 		}
 #if 0
-		} else if (a.as<Component>()) {
+		else if (a.as<Component>()) {
 			//std::cerr << "is component\n";
 		} else if (a.as<Pin>()) {
 			//std::cerr << "is pin\n";
@@ -1644,180 +1807,192 @@ proc preload_schem_pages { quality } {
 		}
 		
 		if (pdf_img_) {
-			{
-				if (true) {
-					//std::cerr << "render pdf boxmin=" << pdf_win_.box.min << " boxmax=" << pdf_win_.box.max << " boxscreenmin=" << boardview()->CoordToScreen(pdf_win_.box.min) << " boxscreenmax=" << boardview()->CoordToScreen(pdf_win_.box.max) << " drawmin=" << min << " drawmax=" << max << "\n";
-					
-					ImVec2 img_min = min, img_max = max;
-					if (! pdf_win_.sticky) {
-						img_min = boardview()->CoordToScreen(img_min);
-						img_max = boardview()->CoordToScreen(img_max);
-						if (!boardview()->m_current_side) {
-							std::swap(img_min.y, img_max.y);
-						}
-					}
-					//auto res_factor = pdf_img_->render(*draw, pdf_win_.sticky ? yflip(min) : boardview()->CoordToScreen(yflip(min)), pdf_win_.sticky ? yflip(max) : boardview()->CoordToScreen(yflip(max)), 0);
-					auto res_factor = pdf_img_->render(*draw, img_min, img_max, 0);
-					//std::cerr << (res_factor ? *res_factor : 0.0f) << "\n";
-					
-					if (res_factor && *res_factor < 1.0f && ! draw_page_thread_) {
-						float new_quality = std::clamp(ceilf((pdf_win_.quality / *res_factor) * 9000), 0.0f, 4.0f);
-						if (new_quality > pdf_win_.quality * 1.1f) {
-							//std::ostringstream oss;
-							//oss << pdf_img_->origin().x << "," << pdf_img_->origin().y;
-							
-							const std::string cmd(std::string("draw_page -background -quality ") + std::to_string(new_quality) + " -reusewin " + std::to_string(pdf_win_.page));
-							//std::cerr << cmd << "\n";
-							eval(cmd);
-							return;
-						}
-					}
-					ImVec2 spos = ImGui::GetMousePos();
-					ImVec2 pos  = pdf_win_.sticky ? spos : boardview()->ScreenToCoord(spos);
-
-					bool mouse_release = in(pdf_win_.box, pos) && pdf_win_.mouse_released; //ImGui::IsMouseReleased(0) && ! boardview()->m_draggingLastFrame;
-					bool ctrl = ImGui::GetIO().KeyCtrl;
-					bool mouse_click_handled = false;
-
-					if (mouse_release) {
+			ImVec2 img_min = min, img_max = max;
+			if (! pdf_win_.sticky) {
+				img_min = boardview()->CoordToScreen(img_min);
+				img_max = boardview()->CoordToScreen(img_max);
+				if (!boardview()->m_current_side) {
+					std::swap(img_min.y, img_max.y);
+				}
+			}
+			auto res_factor = pdf_img_->render(*draw, img_min, img_max, 0);
+			
+			if (res_factor && *res_factor < 0.5f && ! draw_page_thread_) {
+				float new_quality = std::clamp(ceilf((pdf_win_.quality / *res_factor) * 9000), 0.0f, 4.0f);
+				if (new_quality > pdf_win_.quality * 1.1f) {
+					eval("draw_page", "-background", "-quality", new_quality, "-reusewin", pdf_win_.page);
+					return;
+				}
+			}
+			ImVec2 spos = ImGui::GetMousePos();
+			ImVec2 pos  = pdf_win_.sticky ? spos : boardview()->ScreenToCoord(spos);
+			bool win_hover = in(pdf_win_.box, pos);
+			
+			bool mouse_release = win_hover &&  pdf_win_.mouse_released; //ImGui::IsMouseReleased(0) && ! boardview()->m_draggingLastFrame;
+			bool ctrl = ImGui::GetIO().KeyCtrl;
+			bool mouse_click_handled = false;
+			
+			if (mouse_release) {
 #if 0
-						std::cerr << "pdf mouse release";
-						if (pdf_win_.ignore_one_mouse_release) {
-							std::cerr << " ignored";
-							mouse_release = false;
-						}
-						std::cerr << "\n";
-						pdf_win_.ignore_one_mouse_release = false;
+				std::cerr << "pdf mouse release";
+				if (pdf_win_.ignore_one_mouse_release) {
+					std::cerr << " ignored";
+					mouse_release = false;
+				}
+				std::cerr << "\n";
+				pdf_win_.ignore_one_mouse_release = false;
 #endif
-						pdf_win_.mouse_released = false;
-					}
-					if (true) {
-						auto & phi   = pdf_highlight_;
-						//ImVec2 ppos  = { ppos1.x / psz1.x * phi.pdim.x, phi.pdim.y - ppos1.y / psz1.y * phi.pdim.y };
-						ImVec2 ppos = board2pdf(pdf_win_, pdf_img_, pos, (boardview()->m_current_side || pdf_win_.sticky));
-
-						if (false && (boardview()->m_current_side || pdf_win_.sticky)) {
-							ppos.y = phi.pdim.y - ppos.y;
-						}
-						//std::cerr << "pos=" << pos << " ppos=" << ppos << "\n"; //.x << " " << ppos.y << "\n";
-
-						auto it = sch->words.find(phi.page);
-						if (it != sch->words.end()) {
-							pdf_txt_bbox const * hovered_word = nullptr;
-
-							if (in(pdf_win_.box, pos)) {
-								for (auto & w : it->second) {
-									if (in(w.box, ppos)) {
-										hovered_word = &w;
-										break;
-									}
-								}
-							}
-							int other_pages = 0;
-							int this_page   = 0;
-							if (hovered_word) {
-								for (auto & pi : sch->words_by_name) {
-									int cnt = pi.second.count(hovered_word->word);
-									if (pi.first == phi.page) {
-										this_page += cnt;
-									} else {
-										other_pages += cnt ? 1 : 0;
-									}
-								}
-							}
-
-							//std::cerr << "on this page: " << this_page << " on other pages: " << other_pages << "\n";
-							for (auto & w : it->second) {
-								if (! w.hoverable && ! w.color) { continue; }
-
-								uint32_t col = 0xff8080ff;
-								auto c_shptr = lookup(w.cell);
-								bool is_selected = false;
-								bool is_hovered = hovered_word && hovered_word->word == w.word; //!seen_hovered && in(pdf_win_.box, pos) && in(w.box, ppos);// > w.box.min && ppos < w.box.max;
-								bool is_visible = false;
-								bool board_is_hovered = false;
-								if (c_shptr) {
-									if (!boardview()->BoardElementIsVisible(*c_shptr)) {
-										col = 0xffff8080;
-									} else {
-										is_visible = true;
-									}
-
-									if ((is_selected = boardview()->PartIsHighlighted(*c_shptr))) {
-										col = 0xff0000ff;
-									}
-									board_is_hovered = boardview()->currentlyHoveredPart.get() == w.cell;
-								}
-								if (w.color) {
-									col = w.color;
-								}
-									
-								//std::cerr << ppos.x << " " << ppos.y << " word: " << w.word << "\n";
-								if (is_selected || board_is_hovered || is_hovered || w.color) {
-									ImVec2 xpa, xpb{ w.box.min };
-
-									//ImVec2 wbox_size = pdf2board(pdf_win_, pdf_img_, w.box.max, !(boardview()->m_current_side || pdf_win_.sticky));
-									
-									//std::cerr << wbox_size.y << " font " << ImGui::GetFontSize() << "\n";
-
-									float box_height = 0;
-									
-									for (int i = 0; i < 4; ++i) {
-										xpa = xpb;
-										if (i == 0)      { xpb = { w.box.max.x, w.box.min.y }; }
-										else if (i == 1) { xpb = { w.box.max.x, w.box.max.y }; }
-										else if (i == 2) { xpb = { w.box.min.x, w.box.max.y }; }
-										else if (i == 3) { xpb = { w.box.min.x, w.box.min.y }; }
-											
-										ImVec2 bpa = pdf2board(pdf_win_, pdf_img_, xpa, !(boardview()->m_current_side || pdf_win_.sticky));
-										ImVec2 bpb = pdf2board(pdf_win_, pdf_img_, xpb, !(boardview()->m_current_side || pdf_win_.sticky));
-
-										
-										if (in(pdf_win_.box, bpa) || in(pdf_win_.box, bpb)) {
-											bpa = std::clamp(bpa, pdf_win_.box.min, pdf_win_.box.max);
-											bpb = std::clamp(bpb, pdf_win_.box.min, pdf_win_.box.max);
-
-											if (pdf_win_.sticky) {
-												//std::cerr << "line " << bpa << " " << bpb << "\n";
-												box_height = std::max(box_height, abs(bpb.y - bpa.y));
-												draw->AddLine(bpa, bpb, col, 5);
-											} else {
-													
-												ImVec2 spa = boardview()->CoordToScreen(bpa);// + boardview()->m_boardHeight);
-													
-												ImVec2 spb = boardview()->CoordToScreen(bpb);// + boardview()->m_boardHeight);
-
-												box_height = std::max(box_height, abs(bpb.y - bpa.y));
-												draw->AddLine(spa, spb, col, 5);
-											}
-										}
-									}
-									if (hovered_word == &w) {
-										if (this_page > 1 || other_pages) {
-											draw->AddText(nullptr, ImGui::GetFontSize(), ImVec2(0, -ImGui::GetFontSize() * 0) + pdf2board(pdf_win_, pdf_img_, ImVec2{ w.box.min.x, w.box.max.y }, !(boardview()->m_current_side || pdf_win_.sticky)),
-														  col, (std::to_string(this_page) + (other_pages ? " +" + std::to_string(other_pages) : "")).c_str());
-										}
-									}
-
-									if (is_hovered && is_visible) currently_hovered_part_ = w.cell;
-									//break;
-								}
-								if (is_hovered && mouse_release && c_shptr) {
-									mouse_click_handled = true;
-									if (! ctrl) {
-										boardview()->m_partHighlighted.clear();
-									}
-									boardview()->m_partHighlighted.push_back(*c_shptr);
-								}
-							}
-						}
-					}
-					if (mouse_release && ! mouse_click_handled) {
-						if (! ctrl) {
-							boardview()->m_partHighlighted.clear();
+				pdf_win_.mouse_released = false;
+			}
+			auto & phi   = pdf_highlight_;
+			ImVec2 ppos = board2pdf(pdf_win_, pdf_img_, pos, (boardview()->m_current_side || pdf_win_.sticky));
+			
+			if (false && (boardview()->m_current_side || pdf_win_.sticky)) {
+				ppos.y = phi.pdim.y - ppos.y;
+			}
+			
+			auto it = sch->words.find(phi.page);
+			if (it != sch->words.end()) {
+				pdf_txt_bbox const * hovered_word = nullptr;
+				
+				if (in(pdf_win_.box, pos)) {
+					for (auto & w : it->second) {
+						if (in(w.box, ppos)) {
+							hovered_word = &w;
+							break;
 						}
 					}
 				}
+
+				if (hovered_word != schem_word_tooltip_word_) {
+					if (hovered_word) {
+						auto res = eval("schem_hover_tooltip", phi.page, tcli->makeobj(hovered_word));
+						if (res.ok) {
+							schem_word_tooltip_ = res.str;
+						}
+						schem_word_tooltip_word_ = hovered_word;
+					} else {
+						schem_word_tooltip_word_ = nullptr;
+						schem_word_tooltip_.clear();
+					}
+				}
+				
+				for (auto & w : it->second) {
+					if (! w.hoverable && ! w.color) { continue; }
+					
+					uint32_t col = 0xff8080ff;
+					auto c_shptr = lookup(w.cell);
+					bool is_selected = false;
+					bool is_hovered = hovered_word && hovered_word->word == w.word; //!seen_hovered && in(pdf_win_.box, pos) && in(w.box, ppos);// > w.box.min && ppos < w.box.max;
+					bool is_visible = false;
+					bool board_is_hovered = false;
+					if (c_shptr) {
+						if (!boardview()->BoardElementIsVisible(*c_shptr)) {
+							col = 0xffff8080;
+						} else {
+							is_visible = true;
+						}
+						
+						if ((is_selected = boardview()->PartIsHighlighted(*c_shptr))) {
+							col = 0xff0000ff;
+						}
+						board_is_hovered = boardview()->currentlyHoveredPart.get() == w.cell;
+					}
+					if (w.color && ! is_hovered) {
+						col = w.color;
+					}
+					
+					//std::cerr << ppos.x << " " << ppos.y << " word: " << w.word << "\n";
+					if (is_selected || board_is_hovered || is_hovered || w.color) {
+						ImVec2 xpa, xpb{ w.box.min };
+						
+						float box_height = 0;
+						
+						for (int i = 0; i < 4; ++i) {
+							xpa = xpb;
+							if (i == 0)      { xpb = { w.box.max.x, w.box.min.y }; }
+							else if (i == 1) { xpb = { w.box.max.x, w.box.max.y }; }
+							else if (i == 2) { xpb = { w.box.min.x, w.box.max.y }; }
+							else if (i == 3) { xpb = { w.box.min.x, w.box.min.y }; }
+							
+							ImVec2 bpa = pdf2board(pdf_win_, pdf_img_, xpa, !(boardview()->m_current_side || pdf_win_.sticky));
+							ImVec2 bpb = pdf2board(pdf_win_, pdf_img_, xpb, !(boardview()->m_current_side || pdf_win_.sticky));
+							
+							if (in(pdf_win_.box, bpa) || in(pdf_win_.box, bpb)) {
+								bpa = std::clamp(bpa, pdf_win_.box.min, pdf_win_.box.max);
+								bpb = std::clamp(bpb, pdf_win_.box.min, pdf_win_.box.max);
+								
+								if (pdf_win_.sticky) {
+									box_height = std::max(box_height, abs(bpb.y - bpa.y));
+									draw->AddLine(bpa, bpb, col, 5);
+								} else {
+									ImVec2 spa = boardview()->CoordToScreen(bpa);// + boardview()->m_boardHeight);
+									ImVec2 spb = boardview()->CoordToScreen(bpb);// + boardview()->m_boardHeight);
+									
+									box_height = std::max(box_height, abs(bpb.y - bpa.y));
+									draw->AddLine(spa, spb, col, 5);
+								}
+							}
+						}
+						if (hovered_word == &w && !schem_word_tooltip_.empty()) {
+							ImVec2 coord = pdf2board(pdf_win_, pdf_img_, ImVec2{ w.box.min.x, w.box.max.y }, !(boardview()->m_current_side || pdf_win_.sticky));
+							if (!pdf_win_.sticky) {
+								coord = boardview()->CoordToScreen(coord);
+							}
+#if 0
+							object cmd;
+							cmd.append(object("draw_something"));
+							cmd.append(tcli->makeobj(draw));
+							cmd.append(tcli->makevalue(&coord));
+							tcli->eval(cmd);
+#endif
+							draw->AddRectFilled(coord + ImVec2{ 0, 5 }, { coord.x + ImGui::GetFontSize() * schem_word_tooltip_.size() / 2, coord.y + ImGui::GetFontSize() }, 0xff000000);
+							draw->AddText(nullptr, ImGui::GetFontSize(), coord,
+										  col, schem_word_tooltip_.c_str());
+						}
+						
+						if (is_hovered && is_visible) currently_hovered_part_ = w.cell;
+					}
+					if (is_hovered && mouse_release && c_shptr) {
+						mouse_click_handled = true;
+						if (! ctrl) {
+							boardview()->m_partHighlighted.clear();
+						}
+						boardview()->m_partHighlighted.push_back(*c_shptr);
+					}
+				}
+			}
+			if (mouse_release && ! mouse_click_handled) {
+				if (! ctrl) {
+					boardview()->m_partHighlighted.clear();
+				}
+			}
+			{
+				auto d = [&](ImVec2 const & pmin, ImVec2 const & pdim) {
+					uint32_t col = ImGui::GetColorU32(true ?
+													  ImVec4(0.5f, 0.5f, 0.5f, 0.8f) :
+													  ImVec4(0.0f, 0.0f, 0.0f, 0.5f)
+													  );
+					if (pdf_win_.sticky) {
+						draw->AddRectFilled(pmin, pmin + pdim, col);
+					} else {
+						draw->AddRectFilled(boardview()->CoordToScreen(pmin), boardview()->CoordToScreen(pmin + pdim), col);
+					}
+				};
+				ImVec2 dim = pdf_win_.box.max - pdf_win_.box.min;
+
+				if (win_hover && ImGui::GetIO().KeyShift) {
+					ImVec2 sz  = dim / 10;
+					
+					d(pdf_win_.box.min, sz);
+					d(pdf_win_.box.min + ImVec2{ dim.x, 0.0f }, sz * ImVec2{ -1.0f, 1.0f });
+					d(pdf_win_.box.max, sz * ImVec2{ -1.0f, -1.0f });
+					d(pdf_win_.box.min + ImVec2{ 0.0f, dim.y }, sz * ImVec2{ 1.0f, -1.0f });
+				}
+				d(pdf_win_.box.min, ImVec2{1.0f, 0.01f} * dim);
+				d(pdf_win_.box.min + ImVec2{ dim.x, 0.0f }, ImVec2{-0.01f, 1.0f} * dim);
+				d(pdf_win_.box.max, ImVec2{-1.0f, -0.01f} * dim);
+				d(pdf_win_.box.min + ImVec2{ 0.0f, dim.y}, ImVec2{0.01f, -1.0f} * dim);
 			}
 		}
 	}
@@ -1835,7 +2010,6 @@ proc preload_schem_pages { quality } {
 			if (! token) token = 1;
 			if (io.KeyShift) {
 				ImVec2 bdrag = pdf_win_.sticky ? drag : boardview()->ScreenToCoord(drag, 0);
-				//std::cerr << (yflip(pos) - pdf_win_.box.min) / pdf_win_.bdim << "\t" << pdf_win_.bdim << "\t" << pdf_win_.box.min << "\t" << pos << "\t" << yflip(pos) << "\n";
 
 				bool at_corner = false;
 				int xi = 0, yi = 0; // 0 = bottom, 1 = top
@@ -1857,6 +2031,8 @@ proc preload_schem_pages { quality } {
 				if ((token & token_drag) || at_corner) {
 					//std::cerr << token << " " << at_corner << " " << xi << " " << yi << " " << bdrag << " " << (yflip(pos) - pdf_win_.box.min) / pdf_win_.bdim << "\n";
 
+					if (bdrag.x || bdrag.y) { pdf_win_.is_docked = false; pdf_win_.is_fullscreen = false; }
+					
 					if (xi || (token & token_x_top)) {
 						pdf_win_.box.max.x += bdrag.x;
 					} else {
@@ -1865,15 +2041,15 @@ proc preload_schem_pages { quality } {
 
 					if (pdf_win_.sticky || boardview()->m_current_side) {
 						if (yi || (token & token_y_top)) {
-							pdf_win_.box.min.y += bdrag.y;
-						} else {
 							pdf_win_.box.max.y += bdrag.y;
+						} else {
+							pdf_win_.box.min.y += bdrag.y;
 						}
 					} else {
 						if (yi || (token & token_y_top)) {
-							pdf_win_.box.max.y += bdrag.y;
-						} else {
 							pdf_win_.box.min.y += bdrag.y;
+						} else {
+							pdf_win_.box.max.y += bdrag.y;
 						}
 					}
 					//std::cerr << "resize\n";
@@ -1887,7 +2063,7 @@ proc preload_schem_pages { quality } {
 				return token;
 			} else if (io.KeyCtrl || pdf_win_.sticky) {
 				pdf_win_.dragging = true;
-				ImVec2 bdrag = pdf_win_.sticky ? drag : ImVec2(1.0f, -1.0f) * boardview()->ScreenToCoord(drag, 0);
+				ImVec2 bdrag = pdf_win_.sticky ? drag : (boardview()->m_current_side ? ImVec2(1.0f, 1.0f) : ImVec2(1.0f, -1.0f)) * boardview()->ScreenToCoord(drag, 0);
 				pdf_img_->scroll(bdrag / pdf_win_.bdim);
 				return token;
 			}
@@ -1905,6 +2081,10 @@ proc preload_schem_pages { quality } {
 		if (mpos > pdf_win_.box.min && mpos < pdf_win_.box.max) {
 			if (io.KeyShift) {
 				ImVec2 pdfsz = pdf_win_.bdim;
+				if (wh) {
+					pdf_win_.is_docked = false;
+					pdf_win_.is_fullscreen = false;
+				}
 				if (wh > 0) {
 					pdf_win_.box.max += pdfsz / 10;
 					pdf_win_.box.min -= pdfsz / 10;
@@ -1914,7 +2094,7 @@ proc preload_schem_pages { quality } {
 				}
 			} else if (io.KeyCtrl || pdf_win_.sticky) {
 				ImVec2 t = (mpos - pdf_win_.box.min) / pdf_win_.bdim;
-				if (! pdf_win_.sticky) {
+				if (! pdf_win_.sticky && ! boardview()->m_current_side) {
 					t.y = 1.0f - t.y;
 				}
 				pdf_img_->zoom(t, wh);
@@ -1935,12 +2115,16 @@ proc preload_schem_pages { quality } {
 			if (! pdf_win_.sticky && newv) {
 				pdf_win_.box.min = boardview()->CoordToScreen(pdf_win_.box.min);
 				pdf_win_.box.max = boardview()->CoordToScreen(pdf_win_.box.max);
-				std::swap(pdf_win_.box.min.y, pdf_win_.box.max.y);
+				if (! boardview()->m_current_side) {
+					std::swap(pdf_win_.box.min.y, pdf_win_.box.max.y);
+				}
 				pdf_win_.reuse = true;
 			} else if (pdf_win_.sticky && !newv) {
 				pdf_win_.box.min = boardview()->ScreenToCoord(pdf_win_.box.min);
 				pdf_win_.box.max = boardview()->ScreenToCoord(pdf_win_.box.max);
-				std::swap(pdf_win_.box.min.y, pdf_win_.box.max.y);
+				if (! boardview()->m_current_side) {
+					std::swap(pdf_win_.box.min.y, pdf_win_.box.max.y);
+				}
 				pdf_win_.reuse = true;
 			}
 
@@ -1968,20 +2152,17 @@ proc preload_schem_pages { quality } {
 		}
 	}
 
-	void TCL::draw_page(getopt<bool> const & background, getopt<float> const & quality, getopt<bool> const & cache, getopt<bool> const & norender, getopt<bool> const & reusewin, getopt<schematic *> const & of, getopt<std::string> const & origin, getopt<float> const & zoom, int page, opt<Component *> const & inside) {
+	void TCL::draw_page(getopt<bool> const & background, getopt<bool> const & prefer_cache, getopt<float> const & quality, getopt<bool> const & cache, getopt<bool> const & norender, getopt<bool> const & reusewin, getopt<schematic *> const & of, getopt<std::string> const & origin, getopt<float> const & zoom, int page, opt<Component *> const & inside) {
 		//if (zoom && center) { }
 		schematic * sch = of ? *of : default_schematic_;
 
 		auto fn = [=] {
-			page_cache * p = render_page(page, quality, sch, norender);
+			int page_before = pdf_win_.page;
+			page_cache * p = render_page(page, quality, sch, norender, prefer_cache);
+			if (!p) return;
 			typedef std::unique_lock<std::mutex> lock_t;
 			lock_t lock;
 
-			p->pdf_img->decode_image(false);
-			auto ret = p->pdf_img->reload(false);
-			if (! ret.empty()) {
-				std::cerr << "reload texture: " << ret << "\n";
-			}
 			
 			if (background) {
 				BoardView::wakeup();
@@ -1990,6 +2171,7 @@ proc preload_schem_pages { quality } {
 			}
 			if (cache) return;
 			if (!p) return;
+			if (pdf_win_.page != page_before) return;
 			
 			for (auto & i : sch->page_cache_) {
 				if (i.first != page) {
@@ -2000,6 +2182,11 @@ proc preload_schem_pages { quality } {
 			if (reusewin && pdf_win_.page == page) {
 				p->pdf_img->zoom(pdf_img_->zoom());
 				p->pdf_img->origin(pdf_img_->origin());
+			}
+			p->pdf_img->decode_image(false);
+			auto ret = p->pdf_img->reload(false);
+			if (! ret.empty()) {
+				std::cerr << "reload texture: " << ret << "\n";
 			}
 			
 			pdf_img_ = p->pdf_img;
@@ -2024,6 +2211,7 @@ proc preload_schem_pages { quality } {
 			pdf_win_.wdim = p->dim;
 			pdf_win_.page = page;
 			pdf_win_.quality = p->quality;
+			pdf_win_.schematic_ = sch;
 			
 			pdf_in_cell_ = nullptr;
 			if (! pdf_win_.reuse && ! reusewin) {
@@ -2080,29 +2268,13 @@ proc preload_schem_pages { quality } {
 		}
 	}
 
-	TCL::page_cache * TCL::render_page(int page, getopt<float> quality, schematic * sch, bool norender) {
-		if (! sch->poppler_doc) {
-			struct stat sbuf;
-			if (stat(sch->filename.c_str(), &sbuf) >= 0) {
-				auto flen  = sbuf.st_size;
-				char * buf = new char[flen];
-				std::ifstream is(sch->filename, std::ios::binary);
-				is.read(buf, flen);
-				GError * err;
-				if ((sch->poppler_doc = poppler_document_new_from_data(buf, flen, nullptr, &err)) == nullptr) {
-					std::cerr << "poppler_document_new: " << err->message << "\n";
-					return nullptr;
-				}
-			} else {
-				std::cerr << "cannot open " << sch->filename << "\n";
-				return nullptr;
-			}
-		}
+	TCL::page_cache * TCL::render_page(int page, getopt<float> quality, schematic * sch, bool norender, bool prefer_cache) {
+		std::unique_lock lock(render_page_mutex_);
 
 		auto pcache = sch->page_cache_.lower_bound(page);
 		
 		if (pcache != sch->page_cache_.end()) {
-			decltype(pcache) best = quality ? sch->page_cache_.end() : pcache;
+			decltype(pcache) best = quality && ! prefer_cache ? sch->page_cache_.end() : pcache;
 			while (pcache != sch->page_cache_.end() && pcache->first == page) {
 				if (quality) {
 					if (pcache->second.quality == *quality) {
@@ -2122,9 +2294,49 @@ proc preload_schem_pages { quality } {
 		}
 
 		if (norender || !quality) return nullptr;
-		
+
+		PopplerDocument * render_doc = nullptr;
+
+		while (sch->render_docs.empty()) {
+			if (sch->render_docs_inflight < schem_render_concurrency_) {
+				struct stat sbuf;
+				if (stat(sch->filename.c_str(), &sbuf) >= 0) {
+					auto flen  = sbuf.st_size;
+					char * buf = new char[flen];
+					std::ifstream is(sch->filename, std::ios::binary);
+					is.read(buf, flen);
+					GError * err;
+					render_doc = poppler_document_new_from_data(buf, flen, nullptr, &err);
+					if (!render_doc) {
+						std::cerr << "poppler_document_new: " << err->message << "\n";
+						return nullptr;
+					}
+					if (! sch->poppler_doc) {
+						sch->poppler_doc = render_doc;
+					}
+					++sch->render_docs_inflight;
+					break;
+				} else {
+					std::cerr << "cannot open " << sch->filename << "\n";
+					return nullptr;
+				}
+			} else {
+				std::cerr << "not rendering it\n";
+				return nullptr;
+			}
+		}
+		if (!render_doc && !sch->render_docs.empty()) {
+			render_doc = sch->render_docs.back();
+			sch->render_docs.pop_back();
+			++sch->render_docs_inflight;
+		}
+		if (! render_doc) {
+			return nullptr;
+		}
+		lock.unlock();
+
 		if (true) {
-			PopplerPage * ppage = poppler_document_get_page(sch->poppler_doc, page - 1);
+			PopplerPage * ppage = poppler_document_get_page(render_doc, page - 1);
 			if (! page) {
 				std::cerr << "get_page\n";
 				return nullptr;
@@ -2143,6 +2355,12 @@ proc preload_schem_pages { quality } {
 			//int img_height = int(p_height * *quality);
 			int img_width  = int(p_width / p_height * 1000 * *quality);
 			int img_height = int(1000 * *quality);
+
+			img_width = img_width - img_width % 24;
+			img_height = img_height - img_height % 24;
+
+			//std::cerr << "stride " << cairo_format_stride_for_width(CAIRO_FORMAT_ARGB32, img_width) << " width " << img_width << "\n";
+			
 			int img_buf_size = img_width * img_height * 4;
 			unsigned char * img_buf = new unsigned char[img_buf_size];
 			cairo_surface_t * surface = cairo_image_surface_create_for_data(img_buf,
@@ -2215,13 +2433,41 @@ proc preload_schem_pages { quality } {
 			//imgp->zoom_factor(boardview()->zoomFactor);
 			//imgp->reload();
 			cairo_surface_destroy(surface);
+			lock.lock();
 			sch->page_cache_.insert(std::make_pair(page, std::move(cache_ent)));
+			sch->render_docs.push_back(render_doc);
+			--sch->render_docs_inflight;
+			lock.unlock();
+			return render_page(page, quality, sch, true, false);
 		}
-		return render_page(page, quality, sch, true);
 
 		//auto pcit = sch->page_cache_.find(page);
 		//return &pcit->second;
 		//pcit->second.pdf_img->reload(false);
+	}
+
+	bool TCL::handle_mouse_click(ImVec2 const & spos) {
+		if (pdf_win_.sticky ? in(pdf_win_.box, spos) : in(pdf_win_.box, boardview()->ScreenToCoord(spos))) {
+			if (pdf_win_.dragging || boardview()->m_draggingLastFrame) {
+				pdf_win_.ignore_one_mouse_release = true;
+			} else {
+				pdf_win_.mouse_released = true;
+				
+				uint64_t now = time_ms();
+				if (last_click_ + 300 > now) {
+					//if (ImGui::IsMouseDoubleClicked(0) || ImGui::GetIO().MouseDoubleClicked[0]) {
+					//std::cerr << "doubleclick\n";
+					this->eval("schem_fullscreen", "-toggle");
+					last_click_ = 0;
+				} else {
+					last_click_ = now;
+				}
+			}
+			pdf_win_.dragging = false;
+			
+			return true;
+		}
+		return false;
 	}
 
 	void TCL::schematic_open_impl(std::string const & fname, bool bg, bool preload, float preload_quality) {
