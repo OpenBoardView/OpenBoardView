@@ -259,6 +259,10 @@ BRDBoard::~BRDBoard() {
 	}
 }
 
+SharedVector<Node> &BRDBoard::Nodes() {
+	return nodes_;
+}
+
 SharedVector<Component> &BRDBoard::Components() {
 	return components_;
 }

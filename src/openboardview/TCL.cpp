@@ -54,7 +54,7 @@ namespace OBV_Tcl {
 		}
 				
 		if (tret != TCL_OK) {
-			//std::cerr << "cannot parse: " << expr << "\n";
+			if (dump) std::cerr << "cannot parse: " << expr << "\n";
 			if (throw_on_error) {
 				throw;
 			} else {
@@ -122,11 +122,9 @@ namespace OBV_Tcl {
 				pdf_win_.reuse  = false;
 				pdf_win_.sticky = false;
 			} else if (kp(SDLK_s)) {
-				eval("schem_sticky -toggle");
-				//pdf_win_.sticky ^= true;
-				//pdf_win_.update();
+				parse_eval("schem_window -sticky -toggle");
 			} else if (kp(SDLK_f)) {
-				parse_eval("schem_fullscreen -toggle");
+				parse_eval("schem_window -fullscreen -toggle");
 			} else if (kp(SDLK_d)) {
 				if (pdf_win_.is_docked) {
 					pdf_win_.box = pdf_win_.saved_box;
@@ -170,30 +168,84 @@ namespace OBV_Tcl {
 		return false;
 	}
 
-	bool TCL::schem_fullscreen(getopt<bool> const & toggle, opt<bool> const & v) {
-		if (toggle || v) {
-			bool newv = toggle ? ! pdf_win_.is_fullscreen : *v;
+	bool TCL::schem_window_cmd(getopt<bool> const & toggle, getopt<bool> const & fullscreen, getopt<bool> const & docked, getopt<bool> const & sticky, getopt<bool> const & get) {
+		if (sticky) {
+			bool newv = toggle ? !pdf_win_.sticky : true;
 
-			if (newv != pdf_win_.is_fullscreen) {
-				if (pdf_win_.is_fullscreen) {
-					pdf_win_.box = pdf_win_.saved_box;
-					pdf_win_.sticky = pdf_win_.saved_sticky;
-					pdf_win_.is_fullscreen = false;
-					pdf_win_.reuse = false;
-				} else {
-					if (true || ! pdf_win_.is_docked) {
-						pdf_win_.saved_box = pdf_win_.box;
-						pdf_win_.saved_sticky = pdf_win_.sticky;
+			if (toggle || !get) {
+				if (! pdf_win_.sticky && newv) {
+					pdf_win_.box.min = boardview()->CoordToScreen(pdf_win_.box.min);
+					pdf_win_.box.max = boardview()->CoordToScreen(pdf_win_.box.max);
+					if (! boardview()->m_current_side) {
+						std::swap(pdf_win_.box.min.y, pdf_win_.box.max.y);
 					}
-					pdf_win_.is_fullscreen = true;
-					pdf_win_.is_docked = false;
-					pdf_win_.sticky = true;
-					pdf_win_.box = { { 0.0f, boardview()->m_menu_height }, { boardview()->m_board_surface.x, boardview()->m_menu_height + boardview()->m_board_surface.y } };
+					pdf_win_.reuse = true;
+				} else if (pdf_win_.sticky && !newv) {
+					pdf_win_.box.min = boardview()->ScreenToCoord(pdf_win_.box.min);
+					pdf_win_.box.max = boardview()->ScreenToCoord(pdf_win_.box.max);
+					if (! boardview()->m_current_side) {
+						std::swap(pdf_win_.box.min.y, pdf_win_.box.max.y);
+					}
+					pdf_win_.reuse = true;
 				}
+				
+				pdf_win_.sticky = newv;
+				pdf_win_.update();
 			}
-			pdf_win_.update();
+			return pdf_win_.sticky;
+		} else if (fullscreen && !docked) {
+			if (toggle || !get) {
+				bool newv = toggle ? ! pdf_win_.is_fullscreen : true;
+				
+				if (newv != pdf_win_.is_fullscreen) {
+					if (pdf_win_.is_fullscreen) {
+						pdf_win_.box = pdf_win_.saved_box;
+						pdf_win_.sticky = pdf_win_.saved_sticky;
+						pdf_win_.is_fullscreen = false;
+						pdf_win_.reuse = false;
+					} else {
+						if (true || ! pdf_win_.is_docked) {
+							pdf_win_.saved_box = pdf_win_.box;
+							pdf_win_.saved_sticky = pdf_win_.sticky;
+						}
+						pdf_win_.is_fullscreen = true;
+						pdf_win_.is_docked = false;
+						pdf_win_.sticky = true;
+						pdf_win_.box = { { 0.0f, boardview()->m_menu_height }, { boardview()->m_board_surface.x, boardview()->m_menu_height + boardview()->m_board_surface.y } };
+						
+					}
+				}
+				pdf_win_.update();
+			}
+			return pdf_win_.is_fullscreen;
+		} else if (docked && !fullscreen) {
+			if (toggle || !get) {
+				bool newv = toggle ? ! pdf_win_.is_docked : true;
+				
+				if (newv != pdf_win_.is_docked) {
+					if (pdf_win_.is_docked) {
+						pdf_win_.box = pdf_win_.saved_box;
+						pdf_win_.sticky = pdf_win_.saved_sticky;
+						pdf_win_.is_docked = false;
+						pdf_win_.reuse = false;
+					} else {
+						if (true || ! pdf_win_.is_docked) {
+							pdf_win_.saved_box = pdf_win_.box;
+							pdf_win_.saved_sticky = pdf_win_.sticky;
+						}
+						pdf_win_.is_fullscreen = false;
+						pdf_win_.is_docked = true;
+						pdf_win_.sticky = true;
+						pdf_win_.box = { { boardview()->m_board_surface.x / 2, boardview()->m_menu_height }, { boardview()->m_board_surface.x, boardview()->m_menu_height + boardview()->m_board_surface.y } };
+						
+					}
+				}
+				pdf_win_.update();
+			}
+			return pdf_win_.is_docked;
+		} else {
+			throw tcl_error("invalid arguments");
 		}
-		return pdf_win_.is_fullscreen;
 	}
 		
 	std::vector<uint32_t> TCL::get_schem_word_colors(pdf_txt_bbox *) {
@@ -202,6 +254,7 @@ namespace OBV_Tcl {
 	}
 	
 	std::optional<TCL::schem_pos_t> TCL::schem_position() {
+		if (! pdf_img_) return { };
 		ImVec2 mposs = ImGui::GetMousePos();
 		ImVec2 mpos = pdf_win_.sticky ? mposs : boardview()->ScreenToCoord(mposs);
 		if (in(pdf_win_.box, mpos)) {
@@ -220,6 +273,25 @@ namespace OBV_Tcl {
 			return ret;
 		}
 		return {};
+	}
+
+	void TCL::add_node(getopt<bool> const & top, getopt<bool> const & bottom, getopt<bool> const & stub, Pin * p1, Pin * p2, Net * n) {
+		bool is_top = false;
+
+		if (! top && ! bottom) {
+			if (p1->component->board_side == p2->component->board_side) {
+				if (p1->component->board_side == kBoardSideTop) {
+					is_top = true;
+				}
+			} else {
+				throw tcl_error("cannot deduce board side for node");
+			}
+		} else if (top) {
+			is_top = true;
+		}
+		
+		std::lock_guard lck(boardview()->m_DrawNodes_mutex);
+		boardview()->m_board->Nodes().push_back(obv_shared_ptr<Node>(new Node {p1->position, p2->position, n, is_top, bool(stub) }));
 	}
 	
 #ifdef OBV_USE_POPPLER
@@ -481,7 +553,7 @@ namespace OBV_Tcl {
 	}
 
 
-	object TCL::get_pins(interpreter * tcli, getopt<bool> const & use_regex, getopt<bool> const & all, getopt<bool> const & parallel, getopt<std::string> const & filter_arg, getopt<any<list<Component>, list<Net>, list<Pin>, list<BRDBoard> > > const & of, getopt<Pin *> const & ref, getopt<std::string> const & sort, getopt<bool> const & brief, variadic<std::string> const & match) {
+	object TCL::get_pins(interpreter * tcli, getopt<bool> const & use_regex, getopt<bool> const & all, getopt<bool> const & parallel, getopt<std::string> const & filter_arg, getopt<bool> const & via, getopt<any<list<Component>, list<Net>, list<Pin>, list<BRDBoard> > > const & of, getopt<any<list<Component>, list<Net>, list<Pin>, list<BRDBoard> > > const & notof, getopt<list<Pin> > const & not_, getopt<Pin *> const & ref, getopt<std::string> const & sort, getopt<bool> const & brief, variadic<std::string> const & match) {
 		if (brief) { }
 
 		object r;
@@ -501,6 +573,16 @@ namespace OBV_Tcl {
 			sort_o = object(std::string("namespace eval ") + sort_ns + " { expr { " + *sort + " } }");
 		}
 		auto sort_nshold = make_namespace_holder(tcli, sort_ns);
+
+		std::set<Pin *> not_set;
+
+		if (not_ && *not_) {
+			for (std::size_t i = 0; i < not_->size(); ++i) {
+				if (auto n = not_->at(i)) {
+					not_set.insert(n);
+				}
+			}
+		}
 		
 		std::regex re;
 		if (use_regex && match.size() == 1) re = match[0];
@@ -522,18 +604,42 @@ namespace OBV_Tcl {
 			}
 			if ((all || dup.find(c) == dup.end())
 				&& matches(match ? match : variadic<std::string>{}, re, m, use_regex)
-				&& filter_match(tcli, filter_ns, filter_vars, filter_o, c)) {
+				&& not_set.find(c) == not_set.end()
+				&& (via || c->component.get() && c->component->component_type != Component::kComponentTypeDummy)
+				&& filter_match(tcli, filter_ns, filter_vars, filter_o, c, nullptr, ref ? *ref : nullptr)) {
 
-				if (sort) {
-					ret.push_back(std::pair(c, obj));
-				} else {
-					if (obj) {
-						r.append(object(obj));
-					} else {
-						r.append(tcli->makeobj(c));
-					}
+				bool keep = true;
+				if (notof) {
+					notof->visit([&, c](Net * n) {
+									 for (auto && pi : n->pins) {
+										 if (c == pi.get()) { keep = false; return false; }
+									 }
+									 return true;
+								 },
+								 [&, c](Component * cc) {
+									 for (auto && pi : cc->pins) {
+										 if (c == pi.get()) { keep = false; return false; }
+									 }
+									 return true;
+								 },
+								 [&, c](Pin * p) {
+									 if (p == c) { keep = false; return false; }
+									 return true;
+								 });
+					
 				}
-				if (!all) dup.insert(c);
+				if (keep) {
+					if (sort) {
+						ret.push_back(std::pair(c, obj));
+					} else {
+						if (obj) {
+							r.append(object(obj));
+						} else {
+							r.append(tcli->makeobj(c));
+						}
+					}
+					if (!all) dup.insert(c);
+				}
 			}
 			return true;
 		};
@@ -800,7 +906,11 @@ namespace OBV_Tcl {
 							 [&](Pin * p) {
 								 for (auto && pi : brd()->Pins()) {
 									 if (pi.get() == p) {
-										 boardview()->m_pinHighlighted.push_back(pi);
+										 if (inten) {
+											 pi->intensity_delta_ = *inten;
+										 } else {
+											 boardview()->m_pinHighlighted.push_back(pi);
+										 }
 										 break;
 									 }
 								 }
@@ -864,17 +974,36 @@ namespace OBV_Tcl {
 		return tcli->objinfo(obj);
 	}
 	
-	object TCL::create_thread(interpreter * tcli, getopt<bool> const & detach, std::string const & code, opt<list<std::string> > const & export_vars) {
+	object TCL::create_thread(interpreter * tcli, getopt<bool> const & detach, getopt_d<bool> const & noscanvars, std::string const & code, opt<list<std::string> > const & export_vars) {
 		std::map<std::string, object> * evars = nullptr;
 
 		if (export_vars) {
 			evars = new typename std::remove_pointer<decltype(evars)>::type();
 			for (auto const & v : *export_vars) {
 				if (v[0] == '=') {
-					object var = tcli->getVar(v.substr(1));
-					evars->insert(std::pair(v.substr(1), var.duplicate()));
+					std::string vv = v.substr(1);
+					if (tcli->exists(vv)) {
+						evars->insert(std::pair(vv, ((object) tcli->getVar(vv)).duplicate()));
+					}
 				} else {
-					evars->insert(std::pair(v, tcli->getVar(v)));
+					if (tcli->exists(v)) {
+						evars->insert(std::pair(v, tcli->getVar(v)));
+					}
+				}
+			}
+		}
+		if (false && ! noscanvars) {
+			std::cerr << "scan " << code << "\n";
+			auto scan = get_variables_from_expr(tcli, code);
+			if (scan) {
+				for (auto & vi : *scan) {
+					std::string const & v = vi.first;
+					std::cerr << "auto var " << v << "\n";
+					if (! evars->count(v)) {
+						if (tcli->exists(v)) {
+							evars->insert(std::pair(v, tcli->getVar(v)));
+						}
+					}
 				}
 			}
 		}
@@ -886,7 +1015,7 @@ namespace OBV_Tcl {
 		if (false && evars) {
 			thr->cleanup = [evars] { delete evars; };
 		}
-		
+
 		thr->thread = new std::thread([thr, this, code, evars, detach] {
 										  try {
 											  interpreter * tcli = thr->interp = new interpreter(nullptr, true);
@@ -897,7 +1026,7 @@ namespace OBV_Tcl {
 												  }
 												  delete evars;
 											  }
-											  thr->interp->eval(code);
+											  thr->result = (object) thr->interp->eval(code);
 										  } catch (tcl_aborted &) {
 										  } catch (std::exception & e) {
 											  std::cerr << "ERROR: " << e.what() << "\n";
@@ -915,7 +1044,9 @@ namespace OBV_Tcl {
 		threads_.push_back(thr);
 		return tcli->makeobj(thr);
 	}
-	void TCL::join_thread(getopt<bool> const & try_, list<tcl_thread> const & threads) {
+	object TCL::join_thread(getopt<bool> const & try_, list<tcl_thread> const & threads) {
+		object ret;
+
 		for (auto * thr : threads) {
 			thr->exit_mutex.unlock();
 			if (!try_ || thr->finished) {
@@ -928,9 +1059,11 @@ namespace OBV_Tcl {
 				if (it != threads_.end()) {
 					threads_.erase(it);
 				}
+				ret.append(thr->result);
 				delete thr;
 			}
 		}
+		return ret;
 	}
 	object TCL::get_threads() {
 		object r;
@@ -1231,13 +1364,13 @@ namespace OBV_Tcl {
 			.def("make_imvec2",       &this_t::make_imvec2)
 			.def("print_imvec2",      &this_t::print_imvec2)
 			//.def("draw_something",    &this_t::draw_something)
-			
+
+			.def("add_node",          &this_t::add_node,          options(add_node_opt))
 #ifdef OBV_USE_POPPLER
 			.def("get_schematics",    &this_t::get_schematics,    options(get_schematics_opt))
 			.def("get_schem_words",   &this_t::get_schem_words,   options(get_schem_words_opt))
 			.def("schem_open",        &this_t::schematic_open,    options(schematic_open_opt))
-			.def("schem_sticky",      &this_t::pdf_sticky,        options("toggle"))
-			.def("schem_fullscreen",  &this_t::schem_fullscreen,  options("toggle"))
+			.def("schem_window",      &this_t::schem_window_cmd,  options(schem_window_opt))
 			.def("schem_invert",      &this_t::pdf_invert)
 			.def("draw_page",         &this_t::draw_page,         options(draw_page_opt))
 			.def("undraw_page",       &this_t::undraw_page)
@@ -1462,6 +1595,8 @@ proc preload_schem_pages { quality { threads 1 } } {
 			std::ostringstream oss;
 			oss << c->component_type;
 			ret = oss.str();
+		} else if (icmp(prop, "top")) {
+			ret = c->board_side == kBoardSideTop;
 		} else if (icmp(prop, "pins")) {
 			//std::cerr << "P" << ret.get_object()->refCount << "\n";
 			ret = (int) c->pins.size();
@@ -1632,14 +1767,28 @@ proc preload_schem_pages { quality { threads 1 } } {
 					str_impl(o, std::to_string(thr->id));
 				}
 			};
+			struct interpreter_ops : public interpreter::type_ops<interpreter> {
+				static void str(Tcl_Obj * o) {
+					auto * interp = (interpreter *) o->internalRep.twoPtrValue.ptr1;
+					std::ostringstream oss;
+					oss << "interpreter@" << interp;
+					str_impl(o, oss.str());
+				}
+				static void free(Tcl_Obj * o) {
+					auto * interp = (interpreter *) o->internalRep.twoPtrValue.ptr1;
+					//interp->clear_definitions();
+					delete interp;
+				}
+			};
 
-			interpreter::type<cell_ops, false>      ("cell",       (Component    *) nullptr);
-			interpreter::type<net_ops, false>       ("net",        (Net          *) nullptr);
-			interpreter::type<pin_ops, false>       ("pin",        (Pin          *) nullptr);
-			interpreter::type<board_ops, false>     ("board",      (BRDBoard     *) nullptr);
-			interpreter::type<schem_word_ops, false>("schem_word", (pdf_txt_bbox *) nullptr);
-			interpreter::type<schematic_ops, false> ("schematic",  (schematic    *) nullptr);
-			interpreter::type<thread_ops, false>    ("thread",     (tcl_thread   *) nullptr);
+			interpreter::type<cell_ops, false>       ("cell",        (Component    *) nullptr);
+			interpreter::type<net_ops, false>        ("net",         (Net          *) nullptr);
+			interpreter::type<pin_ops, false>        ("pin",         (Pin          *) nullptr);
+			interpreter::type<board_ops, false>      ("board",       (BRDBoard     *) nullptr);
+			interpreter::type<schem_word_ops, false> ("schem_word",  (pdf_txt_bbox *) nullptr);
+			interpreter::type<schematic_ops, false>  ("schematic",   (schematic    *) nullptr);
+			interpreter::type<thread_ops, false>     ("thread",      (tcl_thread   *) nullptr);
+			interpreter::type<interpreter_ops, false>("interpreter", (interpreter  *) nullptr);
 			//ntcli->type<ImVec2>        ("ImVec2",     (ImVec2       *) nullptr);
 
 			struct imvec2_ops : public interpreter::type_ops<ImVec2> {
@@ -1659,6 +1808,12 @@ proc preload_schem_pages { quality { threads 1 } } {
 			};
 			interpreter::type<imvec2_ops, true>("ImVec2", (ImVec2 *) nullptr);
 
+			interpreter::capture_callback = [](interpreter * tcli) {
+				if (this_s_) {
+					this_s_->imbue_interpreter(tcli, false);
+				}
+				tcli->setVar("this_interpreter", tcli->makeobj(tcli));
+			};
 		}
 		static_initialized_ = true;
 	}
@@ -1685,19 +1840,26 @@ proc preload_schem_pages { quality { threads 1 } } {
 	float TCL::distance_fun(getopt<bool> const & norm, getopt<bool> border, any<Component, Pin, pdf_txt_bbox> const & a, any<Component, Pin, pdf_txt_bbox> const & b) {
 		if (norm) { }
 
-		pdf_txt_bbox * ap = a.as<pdf_txt_bbox>(),
-			* bp = b.as<pdf_txt_bbox>();
-		if (ap && bp) {
-			if (border) {
-				throw tcl_error("-border not implemented");
-			} else { // center
-				ImVec2 ca = center(ap->box), cb = center(bp->box);
-				ImVec2 d = ca - cb;
-				return sqrtf(d.x * d.x + d.y * d.y);
+		{
+			pdf_txt_bbox * ap = a.as<pdf_txt_bbox>(),
+				* bp = b.as<pdf_txt_bbox>();
+			if (ap && bp) {
+				if (border) {
+					throw tcl_error("-border not implemented");
+				} else { // center
+					ImVec2 ca = center(ap->box), cb = center(bp->box);
+					ImVec2 d = ca - cb;
+					return sqrtf(d.x * d.x + d.y * d.y);
+				}
 			}
-		} else {
-			std::cerr << std::hex << tcli->get_objtype<Component>() << std::dec << "\n";
-			throw tcl_error("argument type not implemented");
+		}
+		
+		{
+			Pin * ap = a.as<Pin>(), * bp = b.as<Pin>();
+			if (ap && bp) {
+				ImVec2 v(abs(ap->position.x - bp->position.x), abs(ap->position.y - bp->position.y));
+				return sqrtf(v.x * v.x + v.y * v.y);
+			}
 		}
 #if 0
 		else if (a.as<Component>()) {
@@ -1712,24 +1874,48 @@ proc preload_schem_pages { quality { threads 1 } } {
 		return 0;
 	}
 
-	float TCL::angle(getopt<bool> const & ortho, getopt<float> const & decay, pdf_txt_bbox * a, pdf_txt_bbox * b) {
+	float TCL::angle(getopt<bool> const & ortho, getopt<float> const & decay, any<pdf_txt_bbox, Pin> const & a, any<pdf_txt_bbox, Pin> const & b) {
 		if (decay) {
 			throw tcl_error("angle -decay not implemented");
 		}
 
-		ImVec2 v = center(a->box) - center(b->box);
-		if (v.y == 0) {
-			return 0.0f;
-		} else {
-			float deg = atanf(v.x / v.y) * 180 / M_PI;
-			if (ortho) {
-				int m1 = int(abs(deg)) % 90;
-				int m2 = 90 - int(abs(deg)) % 90;
-				return float(m1 < m2 ? m1 : m2);
-			} else {
-				return deg;
+		{
+			pdf_txt_bbox * ap = a.as<pdf_txt_bbox>(), * bp = b.as<pdf_txt_bbox>();
+			if (ap && bp) {
+				ImVec2 v = center(ap->box) - center(bp->box);
+				if (v.y == 0) {
+					return 0.0f;
+				} else {
+					float deg = atanf(v.x / v.y) * 180 / M_PI;
+					if (ortho) {
+						int m1 = int(abs(deg)) % 90;
+						int m2 = 90 - int(abs(deg)) % 90;
+						return float(m1 < m2 ? m1 : m2);
+					} else {
+						return deg;
+					}
+				}
 			}
 		}
+		{
+			Pin * ap = a.as<Pin>(), * bp = b.as<Pin>();
+			if (ap && bp) {
+				ImVec2 v = ap->position - bp->position;
+				if (v.y == 0) {
+					return 0.0f;
+				} else {
+					float deg = atanf(v.x / v.y) * 180 / M_PI;
+					if (ortho) {
+						int m1 = int(abs(deg)) % 90;
+						int m2 = 90 - int(abs(deg)) % 90;
+						return float(m1 < m2 ? m1 : m2);
+					} else {
+						return deg;
+					}
+				}
+			}
+		}
+		throw tcl_error("arguments do not match any supported object types");
 	}
 	object TCL::enclosed_box(list<pdf_txt_bbox> const & words) {
 		pdf_txt_bbox ret_o;
@@ -1827,6 +2013,12 @@ proc preload_schem_pages { quality { threads 1 } } {
 			ImVec2 spos = ImGui::GetMousePos();
 			ImVec2 pos  = pdf_win_.sticky ? spos : boardview()->ScreenToCoord(spos);
 			bool win_hover = in(pdf_win_.box, pos);
+			ImVec2 win_pos_norm = (pos - pdf_win_.box.min) / pdf_win_.bdim;
+			bool needflip = false;
+			if (! pdf_win_.sticky && ! boardview()->m_current_side) {
+				needflip = true;
+				win_pos_norm.y = 1.0f - win_pos_norm.y;
+			}
 			
 			bool mouse_release = win_hover &&  pdf_win_.mouse_released; //ImGui::IsMouseReleased(0) && ! boardview()->m_draggingLastFrame;
 			bool ctrl = ImGui::GetIO().KeyCtrl;
@@ -1968,10 +2160,10 @@ proc preload_schem_pages { quality { threads 1 } } {
 				}
 			}
 			{
-				auto d = [&](ImVec2 const & pmin, ImVec2 const & pdim) {
+				auto d = [&](ImVec2 const & pmin, ImVec2 const & pdim, bool blueish = false) {
 					uint32_t col = ImGui::GetColorU32(true ?
-													  ImVec4(0.5f, 0.5f, 0.5f, 0.8f) :
-													  ImVec4(0.0f, 0.0f, 0.0f, 0.5f)
+													  ImVec4(0.5f, 0.5f, 0.5f + (blueish ? 0.2f : 0.0f), 0.8f) :
+													  ImVec4(0.0f, 0.0f, 0.0f + (blueish ? 0.2f : 0.0f), 0.5f)
 													  );
 					if (pdf_win_.sticky) {
 						draw->AddRectFilled(pmin, pmin + pdim, col);
@@ -1980,8 +2172,18 @@ proc preload_schem_pages { quality { threads 1 } } {
 					}
 				};
 				ImVec2 dim = pdf_win_.box.max - pdf_win_.box.min;
+				bool corner = (win_pos_norm.x < 0.1f || win_pos_norm.x > 0.9f) &&
+					(win_pos_norm.y < 0.1f || win_pos_norm.y > 0.9f);
+				bool top = (win_pos_norm.x > 0.1f && win_pos_norm.x < 0.9f) &&
+					(win_pos_norm.y < 0.1f);
 
-				if (win_hover && ImGui::GetIO().KeyShift) {
+				if (win_hover && (ImGui::GetIO().KeyShift || top)) {
+					const bool blue = true;
+					//std::cerr << pdf_win_.box.min << " " << dim << "\n";
+					d(pdf_win_.box.min + ImVec2{ dim.x / 10, needflip ? dim.y * 0.9f : 0.0f }, { dim.x / 10 * 8, dim.y / 10 }, blue);
+				}
+				
+				if (win_hover && (ImGui::GetIO().KeyShift || corner)) {
 					ImVec2 sz  = dim / 10;
 					
 					d(pdf_win_.box.min, sz);
@@ -1989,10 +2191,13 @@ proc preload_schem_pages { quality { threads 1 } } {
 					d(pdf_win_.box.max, sz * ImVec2{ -1.0f, -1.0f });
 					d(pdf_win_.box.min + ImVec2{ 0.0f, dim.y }, sz * ImVec2{ 1.0f, -1.0f });
 				}
-				d(pdf_win_.box.min, ImVec2{1.0f, 0.01f} * dim);
-				d(pdf_win_.box.min + ImVec2{ dim.x, 0.0f }, ImVec2{-0.01f, 1.0f} * dim);
-				d(pdf_win_.box.max, ImVec2{-1.0f, -0.01f} * dim);
-				d(pdf_win_.box.min + ImVec2{ 0.0f, dim.y}, ImVec2{0.01f, -1.0f} * dim);
+				if (!pdf_win_.is_fullscreen) {
+					const bool blue = pdf_win_.sticky;
+					d(pdf_win_.box.min, ImVec2{1.0f, 0.01f} * dim, blue);
+					d(pdf_win_.box.min + ImVec2{ dim.x, 0.0f }, ImVec2{-0.01f, 1.0f} * dim, blue);
+					d(pdf_win_.box.max, ImVec2{-1.0f, -0.01f} * dim, blue);
+					d(pdf_win_.box.min + ImVec2{ 0.0f, dim.y}, ImVec2{0.01f, -1.0f} * dim, blue);
+				}
 			}
 		}
 	}
@@ -2004,16 +2209,37 @@ proc preload_schem_pages { quality { threads 1 } } {
 		static const int token_x_top = 8;
 		static const int token_y_top = 16;
 		static const int token_drag  = 128;
-			
+		static const int token_move  = 64;
+		
 		if (token || in(pdf_win_.box, pos)) {
 			pdf_win_.dragging = true;
 			if (! token) token = 1;
-			if (io.KeyShift) {
+
+			bool at_corner = false;
+			bool at_top    = false;
+			int xi = 0, yi = 0; // 0 = bottom, 1 = top
+			for (xi = 0; xi < 2; ++xi) {
+				for (yi = 0; yi < 2; ++yi) {
+					// 10% sized corners enable resize
+					bbox box( { { 0.9f * xi, 0.9f * yi }, { 0.1f + 0.9f * xi, 0.1f + 0.9f * yi } } );
+					if (in(box, (yflip(pos) - pdf_win_.box.min) / pdf_win_.bdim)) {
+						at_corner = true;
+						break;
+					}
+				}
+				if (at_corner) break;
+			}
+			if (((yflip(pos) - pdf_win_.box.min) / pdf_win_.bdim).y < 0.1f) {
+				at_top = true;
+			}
+
+			
+			if (io.KeyShift || at_corner || at_top || (token & token_move) || (token & token_drag)) {
 				ImVec2 bdrag = pdf_win_.sticky ? drag : boardview()->ScreenToCoord(drag, 0);
 
-				bool at_corner = false;
-				int xi = 0, yi = 0; // 0 = bottom, 1 = top
+				//bool at_corner = false;
 					
+#if 0
 				if (!(token & token_drag)) {
 					for (xi = 0; xi < 2; ++xi) {
 						for (yi = 0; yi < 2; ++yi) {
@@ -2027,26 +2253,27 @@ proc preload_schem_pages { quality { threads 1 } } {
 						if (at_corner) break;
 					}
 				}
-					
-				if ((token & token_drag) || at_corner) {
+#endif
+				
+				if ((token & token_drag) || !(token & token_move) && at_corner) {
 					//std::cerr << token << " " << at_corner << " " << xi << " " << yi << " " << bdrag << " " << (yflip(pos) - pdf_win_.box.min) / pdf_win_.bdim << "\n";
 
 					if (bdrag.x || bdrag.y) { pdf_win_.is_docked = false; pdf_win_.is_fullscreen = false; }
 					
-					if (xi || (token & token_x_top)) {
+					if (!(token & token_drag) && xi || (token & token_x_top)) {
 						pdf_win_.box.max.x += bdrag.x;
 					} else {
 						pdf_win_.box.min.x += bdrag.x;
 					}
 
 					if (pdf_win_.sticky || boardview()->m_current_side) {
-						if (yi || (token & token_y_top)) {
+						if (!(token & token_drag) && yi || (token & token_y_top)) {
 							pdf_win_.box.max.y += bdrag.y;
 						} else {
 							pdf_win_.box.min.y += bdrag.y;
 						}
 					} else {
-						if (yi || (token & token_y_top)) {
+						if (!(token & token_drag) && yi || (token & token_y_top)) {
 							pdf_win_.box.min.y += bdrag.y;
 						} else {
 							pdf_win_.box.max.y += bdrag.y;
@@ -2054,10 +2281,11 @@ proc preload_schem_pages { quality { threads 1 } } {
 					}
 					//std::cerr << "resize\n";
 					pdf_win_.update();
-					if (token < 2) token = 128 + token_x_top * xi + token_y_top * yi;
-				} else {
+					if (token < 2 && !(token & token_drag)) token = token_drag + token_x_top * xi + token_y_top * yi;
+				} else if ((token & token_move) || at_top || io.KeyShift) {
 					pdf_win_.box.min += bdrag;
 					pdf_win_.box.max += bdrag;
+					if (token < 2) token = token_move;
 				}
 				pdf_win_.reuse = true;
 				return token;
@@ -2108,32 +2336,6 @@ proc preload_schem_pages { quality { threads 1 } } {
 		return false;
 	}
 
-	bool TCL::pdf_sticky(getopt<bool> const & toggle, opt<bool> const & v) {
-		bool newv = toggle ? !pdf_win_.sticky : false;
-		newv = v ? *v : newv;
-		if (toggle || v) {
-			if (! pdf_win_.sticky && newv) {
-				pdf_win_.box.min = boardview()->CoordToScreen(pdf_win_.box.min);
-				pdf_win_.box.max = boardview()->CoordToScreen(pdf_win_.box.max);
-				if (! boardview()->m_current_side) {
-					std::swap(pdf_win_.box.min.y, pdf_win_.box.max.y);
-				}
-				pdf_win_.reuse = true;
-			} else if (pdf_win_.sticky && !newv) {
-				pdf_win_.box.min = boardview()->ScreenToCoord(pdf_win_.box.min);
-				pdf_win_.box.max = boardview()->ScreenToCoord(pdf_win_.box.max);
-				if (! boardview()->m_current_side) {
-					std::swap(pdf_win_.box.min.y, pdf_win_.box.max.y);
-				}
-				pdf_win_.reuse = true;
-			}
-
-			pdf_win_.sticky = newv;
-			pdf_win_.update();
-		}
-		return pdf_win_.sticky;
-	}
-
 	void TCL::schem_highlight(list<float> x, opt<float> y, opt<float> w, opt<float> h) {	
 		pdf_bbox & ref = pdf_highlight_;
 
@@ -2152,7 +2354,7 @@ proc preload_schem_pages { quality { threads 1 } } {
 		}
 	}
 
-	void TCL::draw_page(getopt<bool> const & background, getopt<bool> const & prefer_cache, getopt<float> const & quality, getopt<bool> const & cache, getopt<bool> const & norender, getopt<bool> const & reusewin, getopt<schematic *> const & of, getopt<std::string> const & origin, getopt<float> const & zoom, int page, opt<Component *> const & inside) {
+	void TCL::draw_page(getopt<bool> const & fullscreen, getopt<bool> const & docked, getopt<bool> const & background, getopt<bool> const & prefer_cache, getopt<float> const & quality, getopt<bool> const & cache, getopt<bool> const & norender, getopt<bool> const & reusewin, getopt<schematic *> const & of, getopt<std::string> const & origin, getopt<float> const & zoom, int page, opt<Component *> const & inside) {
 		//if (zoom && center) { }
 		schematic * sch = of ? *of : default_schematic_;
 
@@ -2243,8 +2445,13 @@ proc preload_schem_pages { quality { threads 1 } } {
 					pdf_win_.box.min = omin;
 					pdf_win_.box.max = omax;
 				} else {
-					pdf_win_.box.min = { 0, float(boardview()->m_boardHeight) };
-					pdf_win_.box.max = { float(boardview()->m_boardWidth), 2 * float(boardview()->m_boardHeight) };
+					if (fullscreen) {
+						eval("schem_window", "-fullscreen");
+					} else if (docked) {
+						eval("schem_window", "-docked");
+					}
+					//pdf_win_.box.min = { 0, float(boardview()->m_boardHeight) };
+					//pdf_win_.box.max = { float(boardview()->m_boardWidth), 2 * float(boardview()->m_boardHeight) };
 				}
 			} else {
 				pdf_win_.restore();
@@ -2457,7 +2664,7 @@ proc preload_schem_pages { quality { threads 1 } } {
 				if (last_click_ + 300 > now) {
 					//if (ImGui::IsMouseDoubleClicked(0) || ImGui::GetIO().MouseDoubleClicked[0]) {
 					//std::cerr << "doubleclick\n";
-					this->eval("schem_fullscreen", "-toggle");
+					this->eval("schem_window", "-fullscreen", "-toggle");
 					last_click_ = 0;
 				} else {
 					last_click_ = now;
@@ -2619,5 +2826,12 @@ proc preload_schem_pages { quality { threads 1 } } {
 	
 	
 }
+
+//extern "C" void cpptcl_thread_interpreter_hook(Tcl_Interp * tcl) {
+////std::cerr << "thread_interpreter_hook\n";
+//	Tcl::interpreter * tcli = new Tcl::interpreter(tcl, true);
+//	TCL::this_s_->imbue_interpreter(tcli, false);
+//	tcli->setVar("this_interpreter", tcli->makeobj(tcli));
+//}
 
 #pragma GCC diagnostic pop

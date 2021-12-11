@@ -328,12 +328,15 @@ namespace OBV_Tcl {
 			ImVec2 d = ca - cb;
 			return sqrt(abs(d.x * d.x) + abs(d.y * d.y));
 		}
+
+		static constexpr const char * add_node_opt = "top bottom stub";
+		void add_node(getopt<bool> const & top, getopt<bool> const & bottom, getopt<bool> const & stub, Pin * p1, Pin * p2, Net * n);
 		
 #ifdef OBV_USE_POPPLER
 		static constexpr char const * distance_opt = "norm border";
 		float distance_fun(getopt<bool> const & norm, getopt<bool> border, any<Component, Pin, pdf_txt_bbox> const & a, any<Component, Pin, pdf_txt_bbox> const & b);
 		static constexpr char const * angle_opt = "ortho decay";
-		float angle(getopt<bool> const & ortho, getopt<float> const & decay, pdf_txt_bbox * a, pdf_txt_bbox * b);
+		float angle(getopt<bool> const & ortho, getopt<float> const & decay, any<pdf_txt_bbox, Pin> const & a, any<pdf_txt_bbox, Pin> const & b);
 		object enclosed_box(list<pdf_txt_bbox> const & words);
 #endif
 		
@@ -348,8 +351,8 @@ namespace OBV_Tcl {
 		object get_schem_words(interpreter *, getopt<int> const & page, getopt<std::string> const & filter_arg, getopt<bool> const & use_regex, getopt<pdf_txt_bbox *> const & ref, getopt<std::string> const & sort, getopt<list<pdf_txt_bbox> > const & not_, getopt<any<list<Component> , list<Pin>, list<Net>, list<pdf_txt_bbox> > > const & of, getopt<std::string> const & exact, getopt<std::string> const & color, getopt<list<pdf_txt_bbox> > const & bbox, getopt<float> const & radius, getopt<int> const & nearest, variadic<std::string> const & match);
 		static constexpr const char * get_nets_opt = "re all not gnd of filter";
 		object get_nets(interpreter *, getopt<bool> const & use_regex, getopt<bool> const & all, getopt<list<Net> > const & not_, getopt<bool> const & gnd, getopt<any<list<Component>, list<Pin>, list<Net>, list<BRDBoard> > > const & of, getopt<std::string> const & filter_arg, variadic<std::string> const & match);
-		static constexpr const char * get_pins_opt = "re all parallel filter of ref sort brief";
-		object get_pins(interpreter *, getopt<bool> const & use_regex, getopt<bool> const & all, getopt<bool> const & parallel, getopt<std::string> const & filter_arg, getopt<any<list<Component>, list<Net>, list<Pin>, list<BRDBoard> > > const & of, getopt<Pin *> const & ref, getopt<std::string> const & sort, getopt<bool> const & brief, variadic<std::string> const & match);
+		static constexpr const char * get_pins_opt = "re all parallel filter via of notof not ref sort brief";
+		object get_pins(interpreter *, getopt<bool> const & use_regex, getopt<bool> const & all, getopt<bool> const & parallel, getopt<std::string> const & filter_arg, getopt<bool> const & via, getopt<any<list<Component>, list<Net>, list<Pin>, list<BRDBoard> > > const & of, getopt<any<list<Component>, list<Net>, list<Pin>, list<BRDBoard> > > const & notof, getopt<list<Pin> > const & not_, getopt<Pin *> const & ref, getopt<std::string> const & sort, getopt<bool> const & brief, variadic<std::string> const & match);
 		static constexpr const char * highlight_opt = "save toggle un all color colorindex intensity";
 		void highlight(getopt<bool> const & save, getopt<bool> const & toggle, getopt<bool> const & un, getopt<bool> const & all, getopt<std::string> const & color, getopt<int> const & colorindex, getopt<float> const & inten, opt<list<any<Component, Pin, pdf_txt_bbox> > > const & obj);
 		const char * get_cells_opt = "filter sort re of all top bottom not ref";
@@ -815,6 +818,7 @@ namespace OBV_Tcl {
 			interpreter * interp;
 			std::thread * thread;
 			int id;
+			object result;
 			std::mutex exit_mutex;
 			std::atomic<bool> finished;
 			std::function<void(void)> cleanup;
@@ -823,11 +827,11 @@ namespace OBV_Tcl {
 		static inline int threadid_alloc_ = 0;
 
 		std::string varinfo(interpreter *, std::string const & var);
-		static constexpr const char * create_thread_opt = "detach";
-		object create_thread(interpreter *, getopt<bool> const & detach, std::string const &, opt<list<std::string> > const &);
+		static constexpr const char * create_thread_opt = "detach noscanvars";
+		object create_thread(interpreter *, getopt<bool> const & detach, getopt_d<bool> const & noscanvars, std::string const &, opt<list<std::string> > const &);
 
 		static constexpr const char * join_thread_opt = "try";
-		void join_thread(getopt<bool> const & try_, list<tcl_thread> const &);
+		object join_thread(getopt<bool> const & try_, list<tcl_thread> const &);
 		object get_threads();
 		
 		
@@ -947,10 +951,6 @@ namespace OBV_Tcl {
 			return v > b.min && v < b.max;
 		}
 #ifdef OBV_USE_POPPLER
-		//PDFDoc * pdf_ = nullptr;
-		//std::string pdf_filename_;
-		//PopplerDocument * pdoc_ = nullptr;
-
 		Image * pdf_img_ = nullptr;
 		unsigned char * pdf_img_buf_ = nullptr;
 
@@ -973,21 +973,21 @@ namespace OBV_Tcl {
 				//box = saved_box;
 			}
 			
-			ImVec2 bdim;     // derived
-			float  aspect;   // derived
-			ImVec2 wb_ratio; // derived
-			int    page;
-			bool   valid = false;
-			bool   reuse = false;
-			bool   sticky = false;
-			bool   saved_sticky = false;
-			bool   is_fullscreen = false;
-			bool   is_docked = false;
-			bool   ignore_one_mouse_release = false;
-			bool   dragging = false;
-			bool   mouse_released = false;
-			float  quality = 0.0f;
-			schematic * schematic_ = nullptr;
+			ImVec2      bdim;     // derived
+			float       aspect;   // derived
+			ImVec2      wb_ratio; // derived
+			int         page;
+			bool        valid          = false;
+			bool        reuse          = false;
+			bool        sticky         = false;
+			bool        saved_sticky   = false;
+			bool        is_fullscreen  = false;
+			bool        is_docked      = false;
+			bool        ignore_one_mouse_release = false;
+			bool        dragging       = false;
+			bool        mouse_released = false;
+			float       quality        = 0.0f;
+			schematic * schematic_     = nullptr;
 		};
 		
 		ImVec2 pdf2board(pdf_window const & w, Image * pdf, ImVec2 c, bool flip) {
@@ -1084,8 +1084,8 @@ namespace OBV_Tcl {
 			return pdf_invert_;
 		}
 		
-		bool pdf_sticky(getopt<bool> const & toggle, opt<bool> const & v);
-		bool schem_fullscreen(getopt<bool> const & toggle, opt<bool> const & v);
+		static constexpr const char * schem_window_opt = "toggle fullscreen docked sticky get";
+		bool schem_window_cmd(getopt<bool> const & toggle, getopt<bool> const & fullscreen, getopt<bool> const & docked, getopt<bool> const & sticky, getopt<bool> const & get);
 		
 		void schem_highlight(list<float> x, opt<float> y, opt<float> w, opt<float> h);
 		void undraw_page() {
@@ -1109,8 +1109,8 @@ namespace OBV_Tcl {
 		std::atomic<bool> draw_page_in_progress_ = false;
 		std::mutex * draw_page_mutex_ = nullptr;
 		
-		static constexpr const char * draw_page_opt = "background prefer_cache quality cache norender reusewin of origin zoom";
-		void draw_page(getopt<bool> const & background, getopt<bool> const & prefer_cache, getopt<float> const & quality, getopt<bool> const & cache, getopt<bool> const & norender, getopt<bool> const & reusewin, getopt<schematic *> const & of, getopt<std::string> const & center, getopt<float> const & zoom, int page, opt<Component *> const & inside);
+		static constexpr const char * draw_page_opt = "fullscreen docked background prefer_cache quality cache norender reusewin of origin zoom";
+		void draw_page(getopt<bool> const & fullscreen, getopt<bool> const & docked, getopt<bool> const & background, getopt<bool> const & prefer_cache, getopt<float> const & quality, getopt<bool> const & cache, getopt<bool> const & norender, getopt<bool> const & reusewin, getopt<schematic *> const & of, getopt<std::string> const & center, getopt<float> const & zoom, int page, opt<Component *> const & inside);
 
 		static constexpr const char * history_opt = "auto";
 		object history(getopt<bool> const & automatic);
@@ -1211,27 +1211,12 @@ namespace OBV_Tcl {
 		}
 		void notify_part_hover(Component * now, Component * before) {
 			if (before) { }
-			//std::cerr << "hover cell " << now << " " << (now ? now->name : "") << " " << before << " " << (before ? before->name : "") << "\n";
-			object argv;
-			argv.append(object("cell_hover_call"));
-			if (now) {
-				argv.append(tcli->makeobj(now));
-			} else {
-				argv.append(object(""));
-			}
-			
-			//std::cerr << argv.get<std::string>() << "\n";
-			try {
-				tcli->eval(argv);
-			} catch (std::exception & e) {
-				std::cerr << e.what() << "\n";
-			}
+			eval("cell_hover_call", now ? tcli->makeobj(now) : object(""));
 		}
 
 		void notify_load_file() {
 			if (! startup_script.empty()) {
 				tcli->eval(startup_script);
-				//std::cerr << (std::string) r << "\n";
 				startup_script.clear();
 			}
 		}

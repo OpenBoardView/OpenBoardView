@@ -1,4 +1,5 @@
 package require struct::set
+package require Thread
 
 set trace_frame 0
 
@@ -69,6 +70,36 @@ proc pin_counts { cell } {
 		dict incr ret $n
 	}
 	return [lsort -index 1 -stride 2 -integer -decreasing $ret]
+}
+
+proc draw_nodes { { top_bot -top } } {
+	foreach cell [ get_cells $top_bot ] {
+		foreach pin [ get_pins -of $cell ] {
+			set n [ get_nets -of $pin ]
+			set allnearpins [ lrange [ get_pins -of $n -ref $pin -not $pin -notof $cell -filter { [ distance $r $_ ] < 200 } -sort { [ distance $a $r ] < [ distance $b $r ] }] 0 0 ]
+			if { $n == "+VCCIOP_LX" } {
+				#puts "$allnearpins $pin $cell"
+			}
+			foreach pp $allnearpins {
+				#puts "$pp $cell $pin [ objinfo $pp ] [ objinfo $cell ] [ objinfo $pin ] [ llength [ get_cells -top -of $pp -not $cell ] ]"
+				set num_cells [ llength [ get_cells $top_bot -of $pp -not $cell ] ]
+				if { $num_cells } {
+					#puts "add"
+					add_node $pin $pp $n
+				}
+				if { $num_cells == 1 } {
+					#highlight -intensity 0.5 $pp
+				}
+			}
+			continue
+			set alldistpins [ lrange [ get_pins -of $n -ref $pin -filter { [ distance $r $_] >= 200 } ] 0 10 ]
+			foreach pp $alldistpins {
+				if { [ llength [ get_cells $top_bot -of $pp -not $cell ] ] > 0 } {
+					add_node -stub $pin $pp $n
+				}
+			}
+		}
+	}
 }
 
 proc is_high_current { pins } {

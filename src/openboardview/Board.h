@@ -195,7 +195,7 @@ struct Pin : BoardElement {
 	string UniqueId() const {
 		return kBoardPinPrefix + number;
 	}
-
+	float intensity_delta_ = 1.0f;
 };
 
 // A component on the board having multiple Pins.
@@ -283,12 +283,20 @@ struct Component : BoardElement {
 
 };
 
+struct Node {
+	ImVec2 p1, p2;
+	Net * net;
+	bool top;
+	bool stub;
+};
+
 class Board {
   public:
 	enum EBoardType { kBoardTypeUnknown = 0, kBoardTypeBRD = 0x01, kBoardTypeBDV = 0x02 };
 
 	virtual ~Board() {}
 
+	virtual SharedVector<Node> &Nodes()           = 0;
 	virtual SharedVector<Net> &Nets()             = 0;
 	virtual SharedVector<Component> &Components() = 0;
 	virtual SharedVector<Pin> &Pins()             = 0;

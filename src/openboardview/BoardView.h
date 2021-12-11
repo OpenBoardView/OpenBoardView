@@ -331,6 +331,8 @@ struct BoardView {
 			m_is_fullscreen = true;
 		}
 	}
+
+	std::mutex m_DrawNodes_mutex;
 	
 	void ShowNetList(bool *p_open);
 	void ShowPartList(bool *p_open);
@@ -342,6 +344,7 @@ struct BoardView {
 	void DrawPinTooltips(ImDrawList *draw);
 	void DrawAnnotations(ImDrawList *draw);
 	void DrawOutline(ImDrawList *draw);
+	void DrawNodes(ImDrawList * draw);
 	void DrawPins(ImDrawList *draw);
 	void DrawParts(ImDrawList *draw);
 	bool DrawPartSymbol(ImDrawList * draw, Component * c);

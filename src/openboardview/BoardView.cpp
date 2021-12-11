@@ -3116,6 +3116,27 @@ void BoardView::DrawNetWeb(ImDrawList *draw) {
 	return;
 }
 
+void BoardView::DrawNodes(ImDrawList * draw) {
+	std::lock_guard lck(m_DrawNodes_mutex);
+	float stub_len = m_pinDiameter;
+	for (auto n : m_board->Nodes()) {
+		if (bool(m_current_side) != n->top) {
+			if (n->stub) {
+				ImVec2 v = n->p1 - n->p2;
+				float deg;
+				if (v.y == 0) {
+					deg = 0;
+				} else {
+					deg = atanf(v.x / v.y);
+				}
+				draw->AddLine(CoordToScreen(n->p1), CoordToScreen({ n->p1.x + cosf(deg) * stub_len, n->p1.y + sin(deg) * stub_len }), m_colors.pinDefaultColor, 3);
+			} else {
+				draw->AddLine(CoordToScreen(n->p1), CoordToScreen(n->p2), m_colors.pinDefaultColor, 3);
+			}
+		}
+	}
+}
+
 inline void BoardView::DrawPins(ImDrawList *draw) {
 
 	uint32_t cmask  = 0xFFFFFFFF;
@@ -3280,7 +3301,7 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 			if (pin->type == Pin::kPinTypeTestPad) show_text = false;
 		}
 
-		color = apply_shade(color, 0, pin->component->intensity_delta_ * m_default_intensity);
+		color = apply_shade(color, 0, pin->intensity_delta_ * m_default_intensity);
 		
 		// Drawing
 		{
@@ -3418,29 +3439,85 @@ bool BoardView::DrawPartSymbol(ImDrawList * draw, Component * c) {
 			}
 			return true;
 		} else if (c->component_type == Component::kComponentTypeResistor || c->name[0] == 'R' || c->name[1] == 'R') {
-			const int npeaks = 5;
-
-			ImVec2 pe1 = rot(p1, p2, 60 * PI / 180) / npeaks;
-			ImVec2 pe2 = rot(p1, p2, -60 * PI / 180) / npeaks;
-			ImVec2 pe3 = pe1 * 2;
-			ImVec2 pe4 = pe2 * 2;
-
-			if (false && c->name == "PR8168") {
-				std::cerr << p1 << " " << p2 << " " << (p1 - p2) << " " << sinf(60 * PI / 180) << " " << cosf(60 * PI / 180) << " " << pe1 << " " << pe2 << " " << pe3 << " " << pe4 << "\n";
+			static int npeaks = 3;
+			
+			if (npeaks == 0) {
+				npeaks = 1;
+			} else if (npeaks == 1) {
+				npeaks = 3;
+			} else if (npeaks == 3) {
+				npeaks = 5;
+			} else if (npeaks == 5) {
+				npeaks = 13;
+			} else if (npeaks == 9) {
+				npeaks = 13;
+			} else if (npeaks == 13) {
+				npeaks = 25;
+			} else if (npeaks == 25) {
+				npeaks = 0;
 			}
 			
-			ImVec2 pprev = p1;
-			ImVec2 pnext = p1 + pe1;
-			//float sign = 1.0f;
-			for (int pi = 0; pi < npeaks + 1; ++pi) {
-				draw->AddLine(CoordToScreen(pprev), CoordToScreen(pnext), color, thick);
-				pprev = pnext;
-				if (pi == npeaks - 1) {
-					pnext = pnext + pe2;
-				} else if (pi % 2 == 0) {
-					pnext = pnext + pe4;
-				} else {
-					pnext = pnext + pe3;
+			int angle;
+			if (npeaks == 3) {
+				angle = 45;
+				thick = 8;
+			} else if (npeaks == 5) {
+				angle = 60;
+				thick = 5;
+			} else if (npeaks == 7) {
+				angle = 70;
+				thick = 4;
+			} else if (npeaks == 9) {
+				angle = 75;
+				thick = 3;
+			} else if (npeaks == 11) {
+				angle = 78;
+				thick = 2;
+			} else if (npeaks == 13) {
+				angle = 78;
+				thick = 2;
+			} else if (npeaks == 25) {
+				angle = 84;
+				thick = 2;
+			}
+			//const int npeaks = 7;
+			//const int angle  = 70;
+			
+			if (npeaks == 0) {
+				draw->AddLine(CoordToScreen(p1), CoordToScreen(p2), color, 10);
+			} else if (npeaks == 1) {
+				ImVec2 m1 = p1 + (p2 - p1) / 3;
+				ImVec2 m2 = p2 + (p1 - p2) / 3;
+				float thick = 8;
+
+				draw->AddLine(CoordToScreen(p1), CoordToScreen(m1), color, thick);
+				draw->AddLine(CoordToScreen(p2), CoordToScreen(m2), color, thick);
+				draw->AddLine(CoordToScreen(m1), CoordToScreen(m1 + rot(p1, p2, 60 * PI / 180) / 3), color, thick);
+				draw->AddLine(CoordToScreen(m2), CoordToScreen(m2 + rot(p2, p1, -60 * PI / 180) / 3), color, thick);
+				
+			} else {
+				ImVec2 pe1 = rot(p1, p2,  angle * PI / 180) / npeaks * 0.5f / cosf(angle * PI / 180);
+				ImVec2 pe2 = rot(p1, p2, -angle * PI / 180) / npeaks * 0.5f / cosf(angle * PI / 180);
+				ImVec2 pe3 = pe1 * 2;
+				ImVec2 pe4 = pe2 * 2;
+				
+				if (false && c->name == "PR8168") {
+					std::cerr << p1 << " " << p2 << " " << (p1 - p2) << " " << sinf(60 * PI / 180) << " " << cosf(60 * PI / 180) << " " << pe1 << " " << pe2 << " " << pe3 << " " << pe4 << "\n";
+				}
+				
+				ImVec2 pprev = p1;
+				ImVec2 pnext = p1 + pe1;
+				//float sign = 1.0f;
+				for (int pi = 0; pi < npeaks + 1; ++pi) {
+					draw->AddLine(CoordToScreen(pprev), CoordToScreen(pnext), color, thick);
+					pprev = pnext;
+					if (pi == npeaks - 1) {
+						pnext = pnext + pe2;
+					} else if (pi % 2 == 0) {
+						pnext = pnext + pe4;
+					} else {
+						pnext = pnext + pe3;
+					}
 				}
 			}
 			return true;
@@ -4245,6 +4322,7 @@ void BoardView::DrawBoard() {
 	DrawParts(draw);
 	//	DrawSelectedPins(draw);
 	DrawPins(draw);
+	DrawNodes(draw);
 	// DrawPinTooltips(draw);
 	DrawPartTooltips(draw);
 	DrawAnnotations(draw);
