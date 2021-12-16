@@ -1889,7 +1889,24 @@ void BoardView::Update() {
 			if (ImGui::MenuItem("Mirror Board", keybindings.getKeyNames("Mirror").c_str())) {
 				Mirror();
 			}
+			if (ImGui::MenuItem("Split Vertical")) {
+				if (m_split_view_y) {
+					m_split_view_y = m_split_view_x = 0.0f;
+				} else {
+					m_split_view_y = 0.5f;
+					m_split_view_x = 0.0f;
+				}
+			}
+			if (ImGui::MenuItem("Split Horizontal")) {
+				if (m_split_view_x) {
+					m_split_view_x = m_split_view_y = 0.0f;
+				} else {
+					m_split_view_x = 0.5f;
+					m_split_view_y = 0.0f;
+				}
+			}
 
+			
 			if (ImGui::MenuItem("Toggle Pin Display", keybindings.getKeyNames("TogglePins").c_str())) {
 				showPins ^= 1;
 				m_needsRedraw = true;
@@ -2023,7 +2040,6 @@ void BoardView::Update() {
 		if (ImGui::Button(" ^ ")) {
 			FlipBoard();
 		}
-
 		ImGui::SameLine();
 		if (ImGui::Button(" > ")) {
 			Rotate(1);
@@ -2039,6 +2055,27 @@ void BoardView::Update() {
 			ClearAllHighlights();
 		}
 
+		ImGui::SameLine();
+		if (ImGui::Button("=")) {
+			if (m_split_view_y) {
+				m_split_view_y = 0.0f;
+				m_split_view_x = 0.0f;
+			} else {
+				m_split_view_x = 0.0f;
+				m_split_view_y = 0.5f;
+			}
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("||")) {
+			if (m_split_view_x) {
+				m_split_view_x = 0.0f;
+				m_split_view_y = 0.0f;
+			} else {
+				m_split_view_x = 0.5f;
+				m_split_view_y = 0.0f;
+			}
+		}
+		
 		/*
 		ImGui::SameLine();
 		ImVec2 tz = ImGui::CalcTextSize("Search             ");
@@ -2163,21 +2200,35 @@ void BoardView::Update() {
 			ImGui::SameLine();
 		}
 
+		float status_bar_x_at = 0.0f;
 		if (showPosition == true) {
 			auto schem_pos = m_tcl->schem_position();
+			char left_text[1024];
 			if (schem_pos) {
-				ImGui::Text("Position: %0.3f, %0.3f (page %d)", schem_pos->point.x, schem_pos->point.y, schem_pos->page);
+				snprintf(left_text, sizeof(left_text), "Position: %0.3f, %0.3f (page %d)", schem_pos->point.x, schem_pos->point.y, schem_pos->page);
 			} else {
-				ImGui::Text("Position: %0.3f\", %0.3f\" (%0.2f, %0.2fmm)", pos.x / 1000, pos.y / 1000, pos.x * 0.0254, pos.y * 0.0254);
+				snprintf(left_text, sizeof(left_text), "Position: %0.3f\", %0.3f\" (%0.2f, %0.2fmm)", pos.x / 1000, pos.y / 1000, pos.x * 0.0254, pos.y * 0.0254);
 			}
+			ImGui::Text(left_text);
+			status_bar_x_at = ImGui::CalcTextSize(left_text).x;
 			ImGui::SameLine();
 		}
 		{
 			if (m_validBoard) {
-				ImVec2 s = ImGui::CalcTextSize(fhistory.history[0]);
-				ImGui::SameLine(ImGui::GetWindowWidth() - s.x - 20);
-				ImGui::Text("%s", fhistory.history[0]);
-				ImGui::SameLine();
+				int slen = strlen(fhistory.history[0]);
+				float dots_size = 0;
+
+				for (std::size_t spos = 0; spos < slen; ++spos) {
+					ImVec2 s = ImGui::CalcTextSize(fhistory.history[0] + spos);
+					if (s.x + dots_size + status_bar_x_at + 20 < ImGui::GetWindowWidth()) {
+						ImGui::SameLine(ImGui::GetWindowWidth() - 20 - s.x - dots_size);
+						//ImGui::SameLine(status_bar_x_at);
+						ImGui::Text(spos == 0 ? "%s" : "...%s", fhistory.history[0] + spos);
+						ImGui::SameLine();
+						break;
+					}
+					dots_size = ImGui::CalcTextSize("...").x;
+				}
 			}
 		}
 		ImGui::Text(" ");
@@ -2192,72 +2243,88 @@ void BoardView::Update() {
 	} else {
 		m_board_surface = ImVec2(io.DisplaySize.x - m_info_surface.x, io.DisplaySize.y - (m_status_height + m_menu_height));
 	}
-	/*
-	 * Drawing surface, where the actual PCB/board is plotted out
-	 */
-	ImGui::SetNextWindowPos(ImVec2(0, m_menu_height));
-
 	//if (io.DisplaySize.x != m_lastWidth || io.DisplaySize.y != m_lastHeight) {
 	if (m_board_surface.x != m_lastWidth || m_board_surface.y != m_lastHeight) {
-	//		m_lastWidth   = io.DisplaySize.x;
-		//		m_lastHeight  = io.DisplaySize.y;
+		//		m_lastWidth   = io.DisplaySize.x;
+			//		m_lastHeight  = io.DisplaySize.y;
 		m_lastWidth   = m_board_surface.x;
 		m_lastHeight  = m_board_surface.y;
 		m_needsRedraw = true;
 	}
-	ImGui::SetNextWindowSize(m_board_surface);
 
-	ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
-	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1.0f);
-	ImGui::PushStyleColor(ImGuiCol_WindowBg, m_colors.backgroundColor);
+	float dy_off = 0;
+	float dx_off = 0;
 
-	ImGui::Begin("surface", nullptr, draw_surface_flags);
-	HandleInput();
+	dual_draw_side2 = false;
+	bool split_x = m_split_view_x != 0.0f;
+	bool split_y = m_split_view_y != 0.0f && m_split_view_x == 0.0f;
+	
+	// e__l
 
-	if (m_validBoard) {
-		backgroundImage.render(*ImGui::GetWindowDrawList(),
-			CoordToScreen(backgroundImage.x0(), backgroundImage.y0()),
-			CoordToScreen(backgroundImage.x1(), backgroundImage.y1()),
-			m_rotation);
-		DrawBoard();
+	for (int draw_side = 0; draw_side < (split_x || split_y ? 2 : 1); ++draw_side) {
+		//m_current_side ^= draw_side;
+		m_needsRedraw = true;
 
-		if (m_draw_both_sides) {
-			m_current_side ^= 1;
-			//m_dx = -m_dx;
-			if (m_current_side) {
-				//m_mx += 10000;
-			} else {
-				//m_mx -= 10000;
-			}
-			//m_y_offset = m_boardHeight;
-			m_dy -= m_boardHeight;
-			m_dx = - m_dx; //-= m_boardWidth;
+		if (draw_side) {
+			dual_draw_side2 = true;
+			dual_draw_offset = { dx_off, dy_off };
+			//ImGui::SetNextWindowFocus();
+		}
+		/*
+		 * Drawing surface, where the actual PCB/board is plotted out
+		 */
+
+		if (split_y) {
+			m_board_surface_active.min = ImVec2(0, m_menu_height + draw_side * m_board_surface.y * m_split_view_y);
+			m_board_surface_active.max = m_board_surface_active.min + ImVec2(m_board_surface.x, m_board_surface.y * (draw_side ? 1.0f - m_split_view_y : m_split_view_y));
+		} else if (split_x) {
+			m_board_surface_active.min = ImVec2(draw_side * m_board_surface.x * m_split_view_x, m_menu_height);
+			m_board_surface_active.max = m_board_surface_active.min + ImVec2{ m_board_surface.x * (draw_side ? 1.0f - m_split_view_x : m_split_view_x), m_board_surface.y };
+		} else {
+			m_board_surface_active.min = ImVec2(0.0f, m_menu_height);
+			m_board_surface_active.max = { m_board_surface.x, m_menu_height + m_board_surface.y };
+		}
+		ImGui::SetNextWindowPos(m_board_surface_active.min);
+		ImGui::SetNextWindowSize(m_board_surface_active.dim());
+
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1.0f);
+		ImGui::PushStyleColor(ImGuiCol_WindowBg, m_colors.backgroundColor);
+		
+		ImGui::Begin(("surface" + std::to_string(draw_side)).c_str(), nullptr, draw_surface_flags);
+		HandleInput();
 			
-			m_needsRedraw = true;
+		if (m_validBoard) {
+			backgroundImage.render(*ImGui::GetWindowDrawList(),
+								   CoordToScreen(backgroundImage.x0(), backgroundImage.y0()),
+								   CoordToScreen(backgroundImage.x1(), backgroundImage.y1()),
+								   m_rotation);
 			DrawBoard();
 			
-			m_y_offset = 0;
-			m_current_side ^= 1;
-			m_dy += m_boardHeight;
-			//m_dx += m_boardWidth;
-			m_dx = -m_dx;
-			if (m_current_side) {
-				//m_mx -= 10000;
-			} else {
-				//m_mx += 10000;
+			if (m_draw_both_sides) {
+				dual_draw_side2 = true;
+				dual_draw_offset = ImVec2{ 0.0f, float(m_boardHeight) };
+				m_needsRedraw = true;
+				DrawBoard();
 			}
 		}
+		ImGui::End();
+		
+		ImGui::PopStyleColor();
+		ImGui::PopStyleVar();
+
+		// Overlay
+		RenderOverlay();
+		
+		ImGui::PopStyleVar();
+
+		if (split_y) {
+			dy_off = (ScreenToCoord(ImVec2(0, m_menu_height)) - ScreenToCoord(ImVec2(0, m_menu_height + m_board_surface.y * m_split_view_y))).y;
+		} else if (split_x) {
+			dx_off = (ScreenToCoord(ImVec2(0, m_menu_height)) - ScreenToCoord(ImVec2(m_board_surface.x * m_split_view_x, 0.0f))).x;
+		}
 	}
-	ImGui::End();
-
-	ImGui::PopStyleColor();
-	ImGui::PopStyleVar();
-
-	// Overlay
-	RenderOverlay();
-
-	ImGui::PopStyleVar();
-
+	dual_draw_offset = { 0, 0 };
 } // main menu bar
 
 void BoardView::Zoom(float osd_x, float osd_y, float zoom) {
@@ -2269,14 +2336,26 @@ void BoardView::Zoom(float osd_x, float osd_y, float zoom) {
 
 	target.x = osd_x;
 	target.y = osd_y;
+	if (dual_draw_side2) { // e__l
+		target -= ImVec2{m_board_surface.x * m_split_view_x, m_board_surface.y * m_split_view_y };
+	}
 	coord    = ScreenToCoord(target.x, target.y);
+	//std::cerr << "target=" << ImVec2{ target.x, target.y } << " target_coord=" << coord << " ";
 
+	
 	// Adjust the scale of the whole view, then get the new coordinates ( as
 	// CoordToScreen utilises m_scale )
 	m_scale        = m_scale * powf(2.0f, zoom);
 	ImVec2 dtarget = CoordToScreen(coord.x, coord.y);
+	if (dual_draw_side2) { // e__l
+		//dtarget -= m_board_surface_active.min;
+	}
+	//std::cerr << " screen_off=" << dtarget << " ";
+
 
 	ImVec2 td = ScreenToCoord(target.x - dtarget.x, target.y - dtarget.y, 0);
+	//std::cerr << " coord_off=" << td << " ddraw_off=" << dual_draw_offset << "\n";
+
 	m_dx += td.x;
 	m_dy += td.y;
 	m_needsRedraw = true;
@@ -2538,13 +2617,22 @@ void BoardView::HandleInput() {
 		}
 	}
 
-	if ((!io.WantCaptureKeyboard) && ! m_tcl->handle_keypress()) {
+	if (! dual_draw_side2 && (!io.WantCaptureKeyboard) && ! m_tcl->handle_keypress()) {
 		
 		if (keybindings.isPressed("Mirror")) {
 			Mirror();
 			CenterView();
 			m_needsRedraw = true;
 
+		} else if (keybindings.isPressed("DualDraw")) {
+			if (m_split_view_x) {
+				m_split_view_x = 0.0f;
+				m_split_view_y = 0.5f;
+			} else if (m_split_view_y) {
+				m_split_view_x = m_split_view_y = 0.0f;
+			} else {
+				m_split_view_x = 0.5f;
+			}
 		} else if (keybindings.isPressed("RotateCW")) {
 			// Rotate board: R and period rotate clockwise; comma rotates
 			// counter-clockwise
@@ -3182,6 +3270,12 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 
 	if (m_pinSelected) DrawNetWeb(draw);
 
+	// e__l
+	BBox coord_vis = ScreenToCoord(m_board_surface_active);
+	//coord_vis.min -= dual_draw_offset;
+	//coord_vis.max -= dual_draw_offset;
+	//std::cerr << dual_draw_side2 << " " << coord_vis.min << " " << coord_vis.max << "\n";
+	
 	for (auto &pin : m_board->Pins()) {
 		float psz           = pin->diameter * m_scale;
 		uint32_t fill_color = 0xFFFF8888; // fallback fill colour
@@ -3194,7 +3288,11 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 		// continue if pin is not visible anyway
 		if (!BoardElementIsVisible(pin)) continue;
 
+		if (!coord_vis.contains(pin->position, psz))
+			continue;
+		
 		ImVec2 pos = CoordToScreen(pin->position);
+		if (false)
 		{
 			if (!IsVisibleScreen(pos.x, pos.y, psz, io)) continue;
 		}
@@ -3439,7 +3537,7 @@ bool BoardView::DrawPartSymbol(ImDrawList * draw, Component * c) {
 			}
 			return true;
 		} else if (c->component_type == Component::kComponentTypeResistor || c->name[0] == 'R' || c->name[1] == 'R') {
-			static int npeaks = 3;
+			static int npeaks = 5;
 			
 			if (npeaks == 0) {
 				npeaks = 1;
@@ -3456,6 +3554,7 @@ bool BoardView::DrawPartSymbol(ImDrawList * draw, Component * c) {
 			} else if (npeaks == 25) {
 				npeaks = 0;
 			}
+			npeaks = 5;
 			
 			int angle;
 			if (npeaks == 3) {
@@ -4002,6 +4101,16 @@ void BoardView::DrawPartTooltips(ImDrawList *draw) {
 	//	if (m_parent_occluded) return;
 	if (!m_tooltips_enabled) return;
 	if (spos.x > m_board_surface.x) return;
+
+	if (dual_draw_side2 && spos.x > m_board_surface.x * m_split_view_x && spos.y > m_board_surface.y * m_split_view_y) {
+		//std::cerr << 1;
+	} else if (!dual_draw_side2 && !m_split_view_y && (!m_split_view_x || spos.x < m_board_surface.x * m_split_view_x)) {
+		//std::cerr << 2;
+	} else if (!dual_draw_side2 && !m_split_view_x && (!m_split_view_y || spos.y < m_board_surface.y * m_split_view_y)) {
+		//std::cerr << 3;
+	} else {
+		return;
+	}
 	/*
 	 * I am loathing that I have to add this, but basically check every pin on the board so we can
 	 * determine if we're hovering over a testpad
@@ -4327,7 +4436,7 @@ void BoardView::DrawBoard() {
 	DrawPartTooltips(draw);
 	DrawAnnotations(draw);
 
-	m_tcl->imgui_draw(draw);//ImGui::GetWindowDrawList());
+	m_tcl->imgui_draw(draw);
 
 	draw->ChannelsMerge();
 
@@ -4455,11 +4564,14 @@ void BoardView::SetFile(obv_shared_ptr<BRDFile> file, obv_shared_ptr<BRDBoard> b
 	m_needsRedraw = true;
 }
 
+// e__l
 ImVec2 BoardView::CoordToScreen(float x, float y, float w) {
-	float side = m_current_side ? -1.0f : 1.0f;
-
-	float tx   = side  * m_scale * ((m_y_offset ? m_boardWidth - x : x)       + w * (m_dx - m_mx));
-	float ty   = -1.0f * m_scale * ((m_y_offset ? 0 * 2 * m_y_offset + y : y) + w * (m_dy - m_my));
+	//float side  = m_current_side ? (dual_draw_side2 ? +1.0f : -1.0f) : 1.0f;
+	float side  = m_current_side ? (-1.0f) : 1.0f;
+	float sidey = dual_draw_side2 ? -1.0f : -1.0f;
+	
+	float tx   = side  * m_scale * (x + w * (m_dx - (dual_draw_side2 ? dual_draw_offset.x : 0.0f) - m_mx));
+	float ty   = sidey * m_scale * (y + w * (m_dy - (dual_draw_side2 ? dual_draw_offset.y : 0.0f) - m_my));
 
 	switch (m_rotation) {
 		case 0:  return ImVec2(tx, ty);
@@ -4504,7 +4616,11 @@ ImVec2 BoardView::ScreenToCoord(float x, float y, float w) {
 	} else {
 		tx = tx * side  * invscale + w * (m_mx - m_dx);
 	}
-	return ImVec2(tx, ty);
+	if (dual_draw_side2 && y >= m_board_surface.y * m_split_view_y && x >= m_board_surface.x * m_split_view_x ) {
+		return ImVec2{ tx + dual_draw_offset.x, ty + dual_draw_offset.y };
+	} else {
+		return ImVec2(tx, ty);
+	}
 }
 
 void BoardView::Rotate(int count) {
@@ -4594,10 +4710,11 @@ void BoardView::SetTarget(float x, float y) {
 inline bool BoardView::BoardElementIsVisible(const obv_shared_ptr<BoardElement> be) {
 	if (!be) return true; // no element? => no board side info
 
-	if (be->board_side == m_current_side) return true;
+	if (dual_draw_side2 && be->board_side != m_current_side || !dual_draw_side2 && be->board_side == m_current_side) return true;
 
 	if (be->board_side == kBoardSideBoth) return true;
 
+	
 	return false;
 }
 

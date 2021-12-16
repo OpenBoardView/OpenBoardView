@@ -73,6 +73,7 @@ void KeyBindings::reset() {
 	keybindings["Clear"] = {KeyBinding(SDLK_ESCAPE)};
 
 	keybindings["Fullscreen"] = { KeyBinding(SDLK_f) };
+	keybindings["DualDraw"] = { { KeyBinding(SDLK_d, {keyModifiers.fromName("Shift")}) } };
 }
 
 

@@ -472,7 +472,6 @@ namespace OBV_Tcl {
 		if (filter_arg) {
 			filter = filter_ns_ix++ % 1000;
 			filter_ns = namespace_str(filter);
-			//namespace_open(*tcli, filter_ns);
 			filter_o = object(std::string("namespace eval ") + filter_ns + " { expr { " + *filter_arg + " } }");
 		}
 		auto filt_nshold = make_namespace_holder(tcli, filter_ns);
@@ -700,7 +699,6 @@ namespace OBV_Tcl {
 						  return sort_less(*tcli, sort_ns, vars ? &*vars : nullptr, sort_o, a.first, b.first, ref ? *ref : nullptr);
 					  });
 			for (auto & p : ret) {
-				//std::cerr << "ret " << p->word << "\n";
 				if (p.second) {
 					r.append(object(p.second));
 				} else {
@@ -1015,7 +1013,6 @@ namespace OBV_Tcl {
 		if (false && evars) {
 			thr->cleanup = [evars] { delete evars; };
 		}
-
 		thr->thread = new std::thread([thr, this, code, evars, detach] {
 										  try {
 											  interpreter * tcli = thr->interp = new interpreter(nullptr, true);
@@ -1403,6 +1400,9 @@ namespace OBV_Tcl {
 		
 		ntcli->defvar("default_intensity", boardview()->m_default_intensity);
 		ntcli->defvar("dual_draw", boardview()->m_draw_both_sides);
+
+		ntcli->defvar("split_view_x", boardview()->m_split_view_x);
+		ntcli->defvar("split_view_y", boardview()->m_split_view_y);
 		//ntcli->def("test_lambda",       [](int val) { std::cerr << val; });
 		ntcli->defvar("schem_render_concurrency", schem_render_concurrency_);
 		//ntcli->def("render_status", [this] { std::cerr << "inflight: " << render_docs_inflight_ << " vector: " << default_schematic_.render_docs.size() << "\n"; });
@@ -1484,14 +1484,6 @@ namespace OBV_Tcl {
 		}
 	}
 
-#if 0
-	TCL::TCL() {
-		tcl = Tcl_CreateInterp();
-		tcli = new interpreter(tcl, true);
-		imbue_interpreter(tcli, false);
-	}
-#endif
-	
 	TCL::TCL(BoardView * bvv, bool * d, std::string const & script) : b(bvv), done_(d) {
 		tcl = Tcl_CreateInterp();
 
@@ -1767,11 +1759,11 @@ proc preload_schem_pages { quality { threads 1 } } {
 					str_impl(o, std::to_string(thr->id));
 				}
 			};
-			struct interpreter_ops : public interpreter::type_ops<interpreter> {
+			struct interpreter_delete_ops : public interpreter::type_ops<interpreter> {
 				static void str(Tcl_Obj * o) {
 					auto * interp = (interpreter *) o->internalRep.twoPtrValue.ptr1;
 					std::ostringstream oss;
-					oss << "interpreter@" << interp;
+					oss << "interpreter_delete@" << interp;
 					str_impl(o, oss.str());
 				}
 				static void free(Tcl_Obj * o) {
@@ -1781,14 +1773,14 @@ proc preload_schem_pages { quality { threads 1 } } {
 				}
 			};
 
-			interpreter::type<cell_ops, false>       ("cell",        (Component    *) nullptr);
-			interpreter::type<net_ops, false>        ("net",         (Net          *) nullptr);
-			interpreter::type<pin_ops, false>        ("pin",         (Pin          *) nullptr);
-			interpreter::type<board_ops, false>      ("board",       (BRDBoard     *) nullptr);
-			interpreter::type<schem_word_ops, false> ("schem_word",  (pdf_txt_bbox *) nullptr);
-			interpreter::type<schematic_ops, false>  ("schematic",   (schematic    *) nullptr);
-			interpreter::type<thread_ops, false>     ("thread",      (tcl_thread   *) nullptr);
-			interpreter::type<interpreter_ops, false>("interpreter", (interpreter  *) nullptr);
+			interpreter::type<cell_ops, false>              ("cell",               (Component    *) nullptr);
+			interpreter::type<net_ops, false>               ("net",                (Net          *) nullptr);
+			interpreter::type<pin_ops, false>               ("pin",                (Pin          *) nullptr);
+			interpreter::type<board_ops, false>             ("board",              (BRDBoard     *) nullptr);
+			interpreter::type<schem_word_ops, false>        ("schem_word",         (pdf_txt_bbox *) nullptr);
+			interpreter::type<schematic_ops, false>         ("schematic",          (schematic    *) nullptr);
+			interpreter::type<thread_ops, false>            ("thread",             (tcl_thread   *) nullptr);
+			interpreter::type<interpreter_delete_ops, false>("interpreter_delete", (interpreter  *) nullptr);
 			//ntcli->type<ImVec2>        ("ImVec2",     (ImVec2       *) nullptr);
 
 			struct imvec2_ops : public interpreter::type_ops<ImVec2> {
@@ -1948,17 +1940,6 @@ proc preload_schem_pages { quality { threads 1 } } {
 		auto * ins = sch->add(ret_o);
 		return tcli->makeobj(ins, true, [this, sch](pdf_txt_bbox * p) {
 								 sch->del(*p);
-#if 0
-								 auto it = sch->words.find(p->page);
-								 if (it != sch->words.end()) {
-									 for (auto it2 = it->second.begin(); it2 != it->second.end(); ++it2) {
-										 if (& (*it2) == p) {
-											 it->second.erase(it2);
-											 break;
-										 }
-									 }
-								 }
-#endif
 							 });
 	}
 
@@ -2138,7 +2119,8 @@ proc preload_schem_pages { quality { threads 1 } } {
 							cmd.append(tcli->makevalue(&coord));
 							tcli->eval(cmd);
 #endif
-							draw->AddRectFilled(coord + ImVec2{ 0, 5 }, { coord.x + ImGui::GetFontSize() * schem_word_tooltip_.size() / 2, coord.y + ImGui::GetFontSize() }, 0xff000000);
+							ImVec2 tsize = ImGui::CalcTextSize(schem_word_tooltip_.c_str());
+							draw->AddRectFilled(coord, coord + tsize, 0xff000000);
 							draw->AddText(nullptr, ImGui::GetFontSize(), coord,
 										  col, schem_word_tooltip_.c_str());
 						}

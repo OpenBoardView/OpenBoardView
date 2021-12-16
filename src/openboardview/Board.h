@@ -3,6 +3,8 @@
 #include "FileFormats/BRDFile.h"
 
 #include "imgui/imgui.h"
+#include "imgui_operators.h"
+
 #include <algorithm>
 #include <functional>
 #include <map>
@@ -109,6 +111,21 @@ inline void remove(T &element, vector<T> &v) {
 		v.pop_back();
 	}
 }
+
+struct BBox {
+	ImVec2 min, max;
+
+	ImVec2 dim() const {
+		return max - min;
+	}
+	bool contains(ImVec2 const & c) {
+		return c >= min && c < max;
+	}
+	bool contains(ImVec2 const & c, float sz) {
+		return c.x + sz >= min.x && c.y + sz >= min.y
+			&& c.x - sz < max.x && c.y - sz < max.y;
+	}
+};
 
 // Any element being on the board.
 struct BoardElement {

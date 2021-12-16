@@ -149,6 +149,9 @@ struct BoardView {
 	int panModifier              = 5;
 	int flipMode                 = 0;
 	bool startFullscreen         = false;
+
+	bool dual_draw_side2 = false;
+	ImVec2 dual_draw_offset;
 	
 	int annotationBoxOffset = 10;
 	int annotationBoxSize   = 10;
@@ -256,6 +259,9 @@ struct BoardView {
 	float m_y_offset = 0;
 	bool  m_draw_both_sides = false;
 
+	float m_split_view_x = 0.0f;
+	float m_split_view_y = 0.0f;
+	
 	float m_scale       = 1.0f;
 	float m_scale_floor = 1.0f; // scale which displays the entire board
 	float m_lastWidth;          // previously checked on-screen window size; use to redraw
@@ -268,6 +274,8 @@ struct BoardView {
 	float m_menu_height;
 	float m_status_height;
 	ImVec2 m_board_surface;
+	BBox m_board_surface_active;
+
 	ImVec2 m_info_surface;
 	int m_dragging_token = 0; // 1 = board window, 2 = side pane
 	int m_tcl_drag = 0;
@@ -357,6 +365,15 @@ struct BoardView {
 	ImVec2 ScreenToCoord(float x, float y, float w = 1.0f);
 	ImVec2 CoordToScreen(ImVec2 xy, float w = 1.0f) { return CoordToScreen(xy.x, xy.y, w); }
 	ImVec2 ScreenToCoord(ImVec2 xy, float w = 1.0f) { return ScreenToCoord(xy.x, xy.y, w); }
+	BBox   CoordToScreen(BBox const & box) {
+		return { CoordToScreen(box.min), CoordToScreen(box.max) };
+	}
+	BBox   ScreenToCoord(BBox const & box) {
+		ImVec2 p1 = ScreenToCoord(box.min), p2 = ScreenToCoord(box.max);
+		return { { std::min(p1.x, p2.x), std::min(p1.y, p2.y) },
+				{ std::max(p1.x, p2.x), std::max(p1.y, p2.y) } };
+	}
+
 	// void Move(float x, float y);
 	void Rotate(int count);
 	void DrawSelectedPins(ImDrawList *draw);

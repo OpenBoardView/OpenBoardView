@@ -41,7 +41,6 @@
 
 #include "BoardView.h"
 #include "platform.h"
-#include "imgui_operators.h"
 #include <regex>
 #include <atomic>
 
