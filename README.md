@@ -34,6 +34,17 @@ replacement for the "Test_Link" software and "Landrex".
 
 ### Prerequisites
 
+#### macOS
+	$ brew install cmake sdl2
+
+If you get the following error after running `build.sh`:
+
+	urllib.error.URLError: <urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:997)>
+
+
+Run the script at `/Applications/Python3.x/Install Certificates.command`.
+
+
 #### Ubuntu
 
 For Ubuntu developers, you'll need the following packages at a minimum;
