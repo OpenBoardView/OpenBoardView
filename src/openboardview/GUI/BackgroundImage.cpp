@@ -104,6 +104,15 @@ std::string BackgroundImage::reload() {
 	return error;
 }
 
+Image &BackgroundImage::selectedImage() {
+	switch (*side) {
+		case Side::TOP:
+			return topImage;
+		case Side::BOTTOM:
+		default:
+			return bottomImage;
+	}
+}
 const Image &BackgroundImage::selectedImage() const {
 	switch (*side) {
 		case Side::TOP:

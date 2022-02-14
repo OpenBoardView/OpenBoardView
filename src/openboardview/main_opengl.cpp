@@ -15,6 +15,7 @@
 #include "BoardView.h"
 #include "history.h"
 
+#include "TCL.h"
 #include "FileFormats/FZFile.h"
 #include "confparse.h"
 #include "resource.h"
@@ -46,7 +47,8 @@ struct globals {
 	double font_size;
 	bool debug;
 	Renderers::Renderer renderer;
-
+	std::string startup_tcl_script;
+	
 	globals() {
 		this->input_file  = NULL;
 		this->config_file = NULL;
@@ -75,7 +77,8 @@ char help[] =
 	-z <pixels> : Set font size\n\
 	-p <dpi> : Set the dpi\n\
 	-r <renderer> : Set the renderer [ OPENGL1 = 1; OPENGL3 = 2; OPENGLES2 = 3 ]\n\
-	-d : Debug mode\n\
+	-e script : execute script on startup\n\
+	-d : Debug mode\n							\
 ";
 
 int parse_parameters(int argc, char **argv, struct globals *g) {
@@ -172,6 +175,14 @@ int parse_parameters(int argc, char **argv, struct globals *g) {
 		} else if (strcmp(p, "-d") == 0) {
 			g->debug = true;
 
+		} else if (strcmp(p, "-e") == 0) {
+			++param;
+			if ((param < argc)&&(argv[param][0] != '-')) {
+				g->startup_tcl_script = argv[param];
+			} else {
+				SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Not enough paramters for -e <script>\n\n%s %s", argv[0], help );
+				exit(1);
+			}
 		} else if (argc == 2) {
 			/*
 			 * When we're using file-associations, the OS usually just
@@ -203,6 +214,8 @@ int main(int argc, char **argv) {
 	globals g; // because some things we have to store *before* we load the config file in BoardView app.obvconf
 	BoardView app{};
 
+	app.sleep_mutex_lock();
+	
 	// Log all messages
 	SDL_LogSetAllPriority(SDL_LOG_PRIORITY_VERBOSE);
 
@@ -266,8 +279,10 @@ int main(int argc, char **argv) {
 		cleanupAndExit(1);
 	}
 
+#ifdef SDL_DROPFILE
 	SDL_EventState(SDL_DROPFILE, SDL_ENABLE);
-
+#endif
+	
 	// SDL disables screen saver by default which doesn't make sense for us.
 	SDL_EnableScreenSaver();
 
@@ -352,82 +367,130 @@ int main(int argc, char **argv) {
 	 * If you find some things aren't working properly without you having to move
 	 * the mouse or 'waking up' OBV then increase to 5 or more.
 	 */
-	sleepout = 30;
-	while (!done) {
+	const int snooze = 30;
+	sleepout = snooze;
+	bool wakeup = false;
 
-		SDL_Event event;
-		while (SDL_PollEvent(&event)) {
-			sleepout = 30;
-			Renderers::current->processEvent(event);
+	bool tcl_available = false;
+	{
+		//std::cerr << 0;
+		//Tcl_InitStubs(nullptr, "8.6", 0);
+		//std::cerr <<1;
+		//Tcl_Interp * tcl1 = Tcl_CreateInterp();
+		//std::cerr << 2;
+		//Tcl_InitStubs(tcl1, "8.6", 0);
+		//std::cerr << 3;
+		//Tcl_Interp * tcl = Tcl_CreateInterp();
 
-			if (event.type == SDL_DROPFILE) {
-				app.LoadFile(filesystem::u8path(event.drop.file));
-			}
-
-			if (event.type == SDL_QUIT) done = true;
-		}
-
-		if (app.reloadConfig) {
-			app.reloadConfig = false;
-			app.obvconfig.Load(configDir + "obv.conf");
-			app.ConfigParse();
-			clear_color = ImColor(app.m_colors.backgroundColor);
-		}
-
-		if (!(sleepout--)) {
-#ifdef _WIN32
-			Sleep(50);
-#else
-			usleep(50000);
-#endif
-			sleepout = 0;
-			continue;
-		} // puts OBV to sleep if nothing is happening.
-		// Prepare frame
-		Renderers::current->initFrame();
-		ImGui::NewFrame();
-
-		// If we have a board to view being passed from command line, then "inject"
-		// it here.
-		if (preload_required) {
-			app.LoadFile(filesystem::u8path(g.input_file));
-			preload_required = false;
-		}
-
-		app.Update();
-		if (app.m_wantsQuit) {
-			SDL_Event sdlevent;
-			sdlevent.type = SDL_QUIT;
-			SDL_PushEvent(&sdlevent);
-		}
-
-		// Update the title of the SDL app if the board filename has changed. -
-		// PLD20160618
-		if (app.history_file_has_changed) {
-			char scratch[1024];
-			snprintf(scratch, sizeof(scratch), "%s - %s", OBV_NAME, app.fhistory.history[0]);
-			SDL_SetWindowTitle(window, scratch);
-			app.history_file_has_changed = 0;
-		}
-
-		// Render frame
-		ImGui::Render();
-		Renderers::current->renderFrame(clear_color);
-
-		// vsync disabled, manual FPS limiting
-		if (!SDL_GL_GetSwapInterval()) {
-			static const int FPS = 30;
-			static const std::chrono::duration<std::intmax_t, std::ratio<1, FPS>> frameDuration{1};
-			static auto nextFrame = std::chrono::steady_clock::now() + frameDuration;
-
-			std::this_thread::sleep_until(nextFrame);
-			nextFrame += frameDuration;
+		// load stubs in OBV
+		Tcl_Interp * tcl = Tcl_CreateInterpWithStubs("8.6", 0);
+		if (tcl) {
+			tcl_available = true;
+			// load stubs in library
+			Tcl::interpreter tcli(tcl, true);
 		}
 	}
+	{
+		std::unique_ptr<TCL> tcl = nullptr;
 
+		if (tcl_available) {
+			tcl = std::unique_ptr<TCL>(new TCL(&app, &done, g.startup_tcl_script));
+			app.set_tcl(tcl.get());
+		}
+		app.sdl_window(window);
+		
+		while (!done) {
+			
+			SDL_Event event;
+			while (SDL_PollEvent(&event)) {
+				sleepout = snooze;
+				Renderers::current->processEvent(event);
+				
+#ifdef SDL_DROPFILE
+				if (event.type == SDL_DROPFILE) {
+					app.LoadFile(filesystem::u8path(event.drop.file));
+					tcl->notify_load_file();
+				}
+#endif
+				
+				if (event.type == SDL_QUIT) done = true;
+			}
+			
+			if (app.reloadConfig) {
+				app.reloadConfig = false;
+				app.obvconfig.Load(configDir + "obv.conf");
+				app.ConfigParse();
+				clear_color = ImColor(app.m_colors.backgroundColor);
+			}
+			
+			if (tcl) {
+				wakeup = tcl->pollfd(!sleepout ? 50000 : 0);
+				if (wakeup) {
+					sleepout = snooze;
+				}
+				if (!(sleepout--)) {
+					sleepout = 0;
+					continue;
+				}
+			} else {
+				if (!(sleepout--)) {
+#ifdef _WIN32
+					Sleep(50);
+#else
+					usleep(50000);
+#endif
+					sleepout = 0;
+					continue;
+				}
+			} // puts OBV to sleep if nothing is happening.
+			// Prepare frame
+			
+			Renderers::current->initFrame();
+			ImGui::NewFrame();
+
+			// If we have a board to view being passed from command line, then "inject"
+			// it here.
+			if (preload_required) {
+				app.LoadFile(filesystem::u8path(g.input_file));
+				tcl->notify_load_file();
+				preload_required = false;
+			}
+			
+			app.Update();
+			if (app.m_wantsQuit) {
+				SDL_Event sdlevent;
+				sdlevent.type = SDL_QUIT;
+				SDL_PushEvent(&sdlevent);
+			}
+			
+			// Update the title of the SDL app if the board filename has changed. -
+			// PLD20160618
+			if (app.history_file_has_changed) {
+				char scratch[1024];
+				if (snprintf(scratch, sizeof(scratch), "%s - %s", OBV_NAME, app.fhistory.history[0])) { }
+				SDL_SetWindowTitle(window, scratch);
+				app.history_file_has_changed = 0;
+			}
+			
+			// Render frame
+			ImGui::Render();
+			Renderers::current->renderFrame(clear_color);
+			
+			// vsync disabled, manual FPS limiting
+			if (!SDL_GL_GetSwapInterval()) {
+				static const int FPS = 30;
+				//static const std::chrono::duration<std::intmax_t, std::ratio<1, FPS>> frameDuration{1};
+				static const std::chrono::duration<int, std::ratio<1, FPS>> frameDuration{1};
+				static auto nextFrame = std::chrono::steady_clock::now() + frameDuration;
+				
+				std::this_thread::sleep_until(nextFrame);
+				nextFrame += frameDuration;
+			}
+		}
+	}		
 	// Cleanup
 	Renderers::current->shutdown();
-
+	
 	ImGui::DestroyContext();
 
 	cleanupAndExit(0);

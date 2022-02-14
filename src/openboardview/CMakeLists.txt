@@ -8,6 +8,8 @@ if(ENABLE_GLES2)
 	add_definitions(-DENABLE_GLES2)
 endif()
 
+#add_definitions(-DIMGUI_DEFINE_MATH_OPERATORS)
+
 # Platform-specific configuration
 if(WIN32)
 	add_definitions(-DUNICODE)
@@ -49,6 +51,10 @@ include_directories(
 	${OPENGL_INCLUDE_DIR}
 	${ZLIB_INCLUDE_DIRS}
 	${FONTCONFIG_INCLUDE_DIRS}
+	#${POPPLER_INCLUDE_DIRS}	
+	/usr/include/tcl8.6
+	${CPPTCL_INCLUDE_DIRS}
+	#${CMAKE_CURRENT_SOURCE_DIR}/../cpptcl
 )
 
 
@@ -83,6 +89,7 @@ set(SOURCES
 	GUI/Image.cpp
 	GUI/Preferences/BackgroundImage.cpp
 	GUI/Preferences/Keyboard.cpp
+	TCL.cpp
 	main_opengl.cpp
 )
 
@@ -131,7 +138,17 @@ endif()
 
 target_link_libraries(${PROJECT_NAME_LOWER}
 	imgui
+	#tcl8.6
+	tclstub8.6
+	gd
+	readline
+	cpptcl_static
+	cpptcl_runtime
+	tcl.a
 	SQLite::SQLite3
+	poppler
+	poppler-glib
+	cairo
 	${GLAD_LIBRARIES}
 	${COCOA_LIBRARY}
 	${ZLIB_LIBRARIES}

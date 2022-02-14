@@ -13,12 +13,16 @@
 #include "GUI/Preferences/BackgroundImage.h"
 #include <cstdint>
 #include <vector>
+#include <mutex>
 
 #define DPIF(x) (((x)*dpi) / 100.f)
 #define DPI(x) (((x)*dpi) / 100)
 
 struct BRDPart;
 class BRDFile;
+namespace OBV_Tcl {
+	struct TCL;
+}
 
 struct BitVec {
 	uint32_t *m_bits;
@@ -117,8 +121,8 @@ enum DrawChannel {
 enum FlipModes { flipModeVP = 0, flipModeMP = 1, NUM_FLIP_MODES };
 
 struct BoardView {
-	BRDFile *m_file;
-	Board *m_board;
+	obv_shared_ptr<BRDFile> m_file;
+	obv_shared_ptr<Board> m_board;
 	BackgroundImage backgroundImage{m_current_side};
 
 	Confparse obvconfig;
@@ -127,8 +131,12 @@ struct BoardView {
 	SpellCorrector scnets;
 	SpellCorrector scparts;
 	KeyBindings keybindings;
+	KeyBindings * tcl_keybindings = nullptr;
+
 	Preferences::Keyboard keyboardPreferences{keybindings, obvconfig};
 	Preferences::BackgroundImage backgroundImagePreferences{keybindings, backgroundImage};
+	Preferences::Keyboard * tcl_keyboardPreferences = nullptr;
+	
 	bool debug                   = false;
 	int history_file_has_changed = 0;
 	int dpi                      = 0;
@@ -140,7 +148,11 @@ struct BoardView {
 	int panFactor                = 30;
 	int panModifier              = 5;
 	int flipMode                 = 0;
+	bool startFullscreen         = false;
 
+	bool dual_draw_side2 = false;
+	ImVec2 dual_draw_offset;
+	
 	int annotationBoxOffset = 10;
 	int annotationBoxSize   = 10;
 
@@ -171,7 +183,7 @@ struct BoardView {
 	uint32_t FZKey[44] = {0};
 
 	int ConfigParse(void);
-	uint32_t byte4swap(uint32_t x);
+	static uint32_t byte4swap(uint32_t x);
 	void CenterView(void);
 	void Pan(int direction, int amount);
 	void Zoom(float osd_x, float osd_y, float zoom);
@@ -223,13 +235,13 @@ struct BoardView {
 	void ShowInfoPane(void);
 
 	bool HighlightedPinIsHovered(void);
-	std::shared_ptr<Pin> m_pinHighlightedHovered    = nullptr;
-	std::shared_ptr<Pin> currentlyHoveredPin        = nullptr;
-	std::shared_ptr<Component> currentlyHoveredPart = nullptr;
+	obv_shared_ptr<Pin> m_pinHighlightedHovered    = nullptr;
+	obv_shared_ptr<Pin> currentlyHoveredPin        = nullptr;
+	obv_shared_ptr<Component> currentlyHoveredPart = nullptr;
 
 	ImVec2 m_showContextMenuPos;
 
-	std::shared_ptr<Pin> m_pinSelected = nullptr;
+	obv_shared_ptr<Pin> m_pinSelected = nullptr;
 	//	vector<Net *> m_netHiglighted;
 	SharedVector<Pin> m_pinHighlighted;
 	SharedVector<Component> m_partHighlighted;
@@ -243,6 +255,13 @@ struct BoardView {
 	float m_dy;
 	float m_mx; // board MID POINTS
 	float m_my;
+	float m_x_offset = 0;
+	float m_y_offset = 0;
+	bool  m_draw_both_sides = false;
+
+	float m_split_view_x = 0.0f;
+	float m_split_view_y = 0.0f;
+	
 	float m_scale       = 1.0f;
 	float m_scale_floor = 1.0f; // scale which displays the entire board
 	float m_lastWidth;          // previously checked on-screen window size; use to redraw
@@ -255,11 +274,19 @@ struct BoardView {
 	float m_menu_height;
 	float m_status_height;
 	ImVec2 m_board_surface;
+	BBox m_board_surface_active;
+
 	ImVec2 m_info_surface;
 	int m_dragging_token = 0; // 1 = board window, 2 = side pane
+	int m_tcl_drag = 0;
 
+	static void wakeup();
+	static int m_wakeup_pipe[2];
+	
 	ColorScheme m_colors;
 
+	float m_default_intensity = 1.0;
+	
 	// TODO: save settings to disk
 	// pinDiameter: diameter for all pins.  Unit scale: 1 = 0.025mm, boards are
 	// done in "thou" (1/1000" = 0.0254mm)
@@ -290,8 +317,31 @@ struct BoardView {
 	bool m_validBoard = false;
 	bool m_wantsQuit;
 
+	std::mutex m_sleep_mutex;
+
+	void sleep_mutex_lock() {
+		m_sleep_mutex.lock();
+	}
+	void sleep_mutex_unlock() {
+		m_sleep_mutex.unlock();
+	}
+	
 	~BoardView();
 
+	OBV_Tcl::TCL * m_tcl;
+	void set_tcl(OBV_Tcl::TCL * t);
+	SDL_Window * m_sdl_window = nullptr;
+	bool m_is_fullscreen = false;
+	void sdl_window(SDL_Window * w) {
+		m_sdl_window = w;
+		if (startFullscreen) {
+			SDL_MaximizeWindow(m_sdl_window);
+			m_is_fullscreen = true;
+		}
+	}
+
+	std::mutex m_DrawNodes_mutex;
+	
 	void ShowNetList(bool *p_open);
 	void ShowPartList(bool *p_open);
 
@@ -302,14 +352,28 @@ struct BoardView {
 	void DrawPinTooltips(ImDrawList *draw);
 	void DrawAnnotations(ImDrawList *draw);
 	void DrawOutline(ImDrawList *draw);
+	void DrawNodes(ImDrawList * draw);
 	void DrawPins(ImDrawList *draw);
 	void DrawParts(ImDrawList *draw);
+	bool DrawPartSymbol(ImDrawList * draw, Component * c);
 	void DrawBoard();
 	void DrawNetWeb(ImDrawList *draw);
-	void SetFile(BRDFile *file);
+	void SetFile(obv_shared_ptr<BRDFile> file, obv_shared_ptr<BRDBoard> board = nullptr);
 	int LoadFile(const filesystem::path &filepath);
+	BRDFile * loadBoard(const filesystem::path &filepath);
 	ImVec2 CoordToScreen(float x, float y, float w = 1.0f);
 	ImVec2 ScreenToCoord(float x, float y, float w = 1.0f);
+	ImVec2 CoordToScreen(ImVec2 xy, float w = 1.0f) { return CoordToScreen(xy.x, xy.y, w); }
+	ImVec2 ScreenToCoord(ImVec2 xy, float w = 1.0f) { return ScreenToCoord(xy.x, xy.y, w); }
+	BBox   CoordToScreen(BBox const & box) {
+		return { CoordToScreen(box.min), CoordToScreen(box.max) };
+	}
+	BBox   ScreenToCoord(BBox const & box) {
+		ImVec2 p1 = ScreenToCoord(box.min), p2 = ScreenToCoord(box.max);
+		return { { std::min(p1.x, p2.x), std::min(p1.y, p2.y) },
+				{ std::max(p1.x, p2.x), std::max(p1.y, p2.y) } };
+	}
+
 	// void Move(float x, float y);
 	void Rotate(int count);
 	void DrawSelectedPins(ImDrawList *draw);
@@ -317,17 +381,18 @@ struct BoardView {
 
 	// Sets the center of the screen to (x,y) in board space
 	void SetTarget(float x, float y);
-
+	void SetTarget(ImVec2 xy) { SetTarget(xy.x, xy.y); }
+	
 	// Returns true if the part is shown on the currently displayed side of the
 	// board.
-	bool BoardElementIsVisible(const std::shared_ptr<BoardElement> be);
+	bool BoardElementIsVisible(const obv_shared_ptr<BoardElement> be);
 	bool IsVisibleScreen(float x, float y, float radius, const ImGuiIO &io);
 	// Returns true if the circle described by screen coordinates x, y, and radius
 	// is visible in the
 	// ImGuiIO screen rect.
 	// bool IsVisibleScreen(float x, float y, float radius = 0.0f);
 
-	bool PartIsHighlighted(const std::shared_ptr<Component> component);
+	bool PartIsHighlighted(const obv_shared_ptr<Component> component);
 	void FindNet(const char *net);
 	void FindNetNoClear(const char *name);
 	void FindComponent(const char *name);

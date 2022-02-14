@@ -20,8 +20,14 @@ const std::unordered_map<std::string, std::string> KeyBindings::deserializeName 
 	{"Equals", "="}
 };
 
-KeyBindings::KeyBindings() {
-	reset();
+KeyBindings::KeyBindings(std::vector<std::string> const * actions) {
+	if (actions) {
+		for (auto && it : *actions) {
+			keybindings[it] = { };
+		}
+	} else {
+		reset();
+	}
 }
 
 bool KeyBindings::isPressed(const std::string &name) const {
@@ -65,6 +71,9 @@ void KeyBindings::reset() {
 	keybindings["PartList"] = {KeyBinding(SDLK_k)};
 	keybindings["TogglePins"] = {KeyBinding(SDLK_p)};
 	keybindings["Clear"] = {KeyBinding(SDLK_ESCAPE)};
+
+	keybindings["Fullscreen"] = { KeyBinding(SDLK_f) };
+	keybindings["DualDraw"] = { { KeyBinding(SDLK_d, {keyModifiers.fromName("Shift")}) } };
 }
 
 

@@ -1,8 +1,9 @@
 #include "ImGuiRendererSDL.h"
 
 #include <sstream>
+#include <iostream>
 #include <glad/glad.h>
-#define STB_IMAGE_IMPLEMENTATION
+//#define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
 #include "backends/imgui_impl_sdl.h"
@@ -90,6 +91,74 @@ void ImGuiRendererSDL::renderFrame(const ImVec4 &clear_color) {
 void ImGuiRendererSDL::shutdown() {
 	ImGui_ImplSDL2_Shutdown();
 }
+
+void ImGuiRendererSDL::unloadTexture(GLuint t, unsigned char * p) {
+	if (t) {
+		glDeleteTextures(1, &t);
+		if (p) {
+			stbi_image_free(p);
+		}
+	}
+}
+
+std::string ImGuiRendererSDL::loadTextureFromData(unsigned char * image_data_arg, int image_data_size, int * image_width_arg, int * image_height_arg, GLuint* out_texture, unsigned char ** image_buffer, bool use_image_loader) {
+	// Load from file
+	int image_width = 0;
+	int image_height = 0;
+
+	//auto buf = file_as_buffer(filepath);
+	unsigned char* image_data = image_data_arg;
+	if (use_image_loader) {
+		std::cerr << "ST";
+		image_data = stbi_load_from_memory(image_data_arg, image_data_size, &image_width, &image_height, NULL, 4);
+		std::cerr << "BI\n";
+	} else {
+		image_width = *image_width_arg;
+		image_height = *image_height_arg;
+	}
+	
+	int glMaxTextureSize;
+	glGetIntegerv(GL_MAX_TEXTURE_SIZE, &glMaxTextureSize);
+	if (image_width > glMaxTextureSize) {
+		return "width of " + std::to_string(image_width) + "px is too large for this GPU. Maximum allowed: " + std::to_string(glMaxTextureSize);
+	}
+
+	if (image_height > glMaxTextureSize) {
+		return "height of " + std::to_string(image_width) + "px is too large for this GPU. Maximum allowed: " + std::to_string(glMaxTextureSize);
+	}
+
+	// Create a OpenGL texture identifier
+	GLuint image_texture;
+	glGenTextures(1, &image_texture);
+	glBindTexture(GL_TEXTURE_2D, image_texture);
+
+	// Setup filtering parameters for display
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	// Upload pixels into texture
+	glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image_width, image_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image_data);
+
+	GLenum code = glGetError();
+	if (code == GL_OUT_OF_MEMORY) {
+		return "image too large to fit in the GPU memory.";
+	}
+	if (code != GL_NO_ERROR) {
+		return "error " + std::to_string(code) + " when loading the image into GPU memory.";
+	}
+
+	//stbi_image_free(image_data);
+
+	*image_buffer = image_data;
+	*out_texture = image_texture;
+	*image_width_arg  = image_width;
+	*image_height_arg = image_height;
+
+	return {};
+}
+	
+
 
 std::string ImGuiRendererSDL::loadTextureFromFile(const filesystem::path &filepath, GLuint* out_texture, int* out_width, int* out_height)
 {

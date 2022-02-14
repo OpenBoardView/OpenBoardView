@@ -17,6 +17,7 @@ class BRDBoard : public Board {
 
 	EBoardType BoardType();
 
+	SharedVector<Node> &Nodes();
 	SharedVector<Net> &Nets();
 	SharedVector<Component> &Components();
 	SharedVector<Pin> &Pins();
@@ -26,6 +27,7 @@ class BRDBoard : public Board {
 	static const string kNetUnconnectedPrefix;
 	static const string kComponentDummyName;
 
+	SharedVector<Node> nodes_;
 	SharedVector<Net> nets_;
 	SharedVector<Component> components_;
 	SharedVector<Pin> pins_;

@@ -4,6 +4,7 @@
 #include "utf8/utf8.h"
 #include "utils.h"
 #include "version.h"
+#include "imgui_operators.h"
 
 #include <cmath>
 #include <iostream>
@@ -23,11 +24,13 @@
 #include "FileFormats/BRDFile.h"
 #include "FileFormats/BVRFile.h"
 #include "FileFormats/CADFile.h"
+//#include "FileFormats/CAMCADFile.h"
 #include "FileFormats/CSTFile.h"
 #include "FileFormats/FZFile.h"
 #include "annotations.h"
 #include "imgui/imgui.h"
 
+#include "TCL.h"
 #include "NetList.h"
 #include "PartList.h"
 #include "vectorhulls.h"
@@ -48,12 +51,18 @@ BoardView::~BoardView() {
 		for (auto &p : m_board->Components()) {
 			if (p->hull) free(p->hull);
 		}
-		m_board->Nets().clear();
-		m_board->Pins().clear();
-		m_board->Components().clear();
 		m_board->OutlinePoints().clear();
-		delete m_file;
-		delete m_board;
+
+		if constexpr (! std::is_same<obv_shared_ptr<Component>, std::shared_ptr<Component> >::value) {
+			delete m_file.get();
+			delete m_board.get();
+			m_file = nullptr;
+			m_board = nullptr;
+		} else {
+			m_board->Nets().clear();
+			m_board->Pins().clear();
+			m_board->Components().clear();
+		}
 		m_annotations.Close();
 		m_validBoard = false;
 	}
@@ -64,195 +73,221 @@ uint32_t BoardView::byte4swap(uint32_t x) {
 	 */
 	return (((x & 0x000000ff) << 24) | ((x & 0x0000ff00) << 8) | ((x & 0x00ff0000) >> 8) | ((x & 0xff000000) >> 24));
 }
+
+template <typename F>
+inline void cfg_color_visit_each(ColorScheme & c, F f) {
+	// config key name            ColorScheme field name      dark        light
+	f("backgroundColor",          c.backgroundColor,          0x000000ff, 0xffffffff);
+	f("boardFillColor",           c.boardFillColor,           0x2a2a2aff, 0xddddddff);
+	f("partHullColor",            c.partHullColor,            0x80808080, 0x80808080);
+	f("partOutlineColor",         c.partOutlineColor,         0x999999ff, 0x444444ff);
+	f("partFillColor",            c.partFillColor,            0x111111ff, 0xffffff77);
+	f("partHighlightedColor",     c.partHighlightedColor,     0xffffffff, 0xff0000ff);
+	f("partHighlightedFillColor", c.partHighlightedFillColor, 0x333333ff, 0xf0f0f0ff);
+	f("partTextColor",            c.partTextColor,            0x000000ff, 0xff3030ff);
+	f("partTextBackgroundColor",  c.partTextBackgroundColor,  0xcccc22ff, 0xffff00ff);
+	f("boardOutlineColor",        c.boardOutlineColor,        0xcc2222ff, 0x444444ff);
+	f("pinDefaultColor",          c.pinDefaultColor,          0x4040ffff, 0x22aa33ff);
+	f("pinDefaultTextColor",      c.pinDefaultTextColor,      0xccccccff, 0x666688ff);
+	f("pinGroundColor",           c.pinGroundColor,           0x0300c0ff, 0x2222aaff);
+	f("pinNotConnectedColor",     c.pinNotConnectedColor,     0xaaaaaaff, 0xaaaaaaff);
+	f("pinTestPadColor",          c.pinTestPadColor,          0x888888ff, 0x888888ff);
+	f("pinTestPadFillColor",      c.pinTestPadFillColor,      0x6c5b1fff, 0xd6c68dff);
+	f("pinA1PadColor",            c.pinA1PadColor,            0xdd0000ff, 0xdd0000ff);
+	f("pinSelectedTextColor",     c.pinSelectedTextColor,     0xffffffff, 0xffffffff);
+	f("pinSelectedFillColor",     c.pinSelectedFillColor,     0x8888ffff, 0x8888ffff);
+	f("pinSelectedColor",         c.pinSelectedColor,         0x00ff00ff, 0x00000000);
+	f("pinSameNetTextColor",      c.pinSameNetTextColor,      0x111111ff, 0x111111ff);
+	f("pinSameNetFillColor",      c.pinSameNetFillColor,      0x9999ffff, 0x9999ffff);
+	f("pinSameNetColor",          c.pinSameNetColor,          0x0000ffff, 0x888888ff);
+	f("pinHaloColor",             c.pinHaloColor,             0xffffff88, 0x22ff2288);
+	f("pinNetWebColor",           c.pinNetWebColor,           0x8888ff88, 0x0000ff33);
+	f("annotationPartAliasColor", c.annotationPartAliasColor, 0xffff00ff, 0xffff00ff);
+	f("annotationBoxColor",       c.annotationBoxColor,       0xcccc88ff, 0xff0000aa);
+	f("annotationStalkColor",     c.annotationStalkColor,     0xaaaaaaff, 0x000000ff);
+	f("annotationPopupTextColor", c.annotationPopupTextColor, 0xffffffff, 0x000000ff);
+	f("selectedMaskPins",         c.selectedMaskPins,         0xffffffff, 0xffffffff);
+	f("selectedMaskParts",        c.selectedMaskParts,        0xffffffff, 0xffffffff);
+	f("selectedMaskOutline",      c.selectedMaskOutline,      0xffffffff, 0xffffffff);
+	f("orMaskPins",               c.orMaskPins,               0x00000000, 0x00000000);
+	f("orMaskParts",              c.orMaskParts,              0x00000000, 0x00000000);
+	f("orMaskOutline",            c.orMaskOutline,            0x00000000, 0x00000000);
+
+	f("annotationPopupBackgroundColor", c.annotationPopupBackgroundColor, 0x888888ff, 0xeeeeeeff);
+}	
+
 void BoardView::ThemeSetStyle(const char *name) {
 	ImGuiStyle &style = ImGui::GetStyle();
 
 	// non color-related settings
 	style.WindowBorderSize = 0.0f;
 
-	if (strcmp(name, "dark") == 0) {
-		style.Colors[ImGuiCol_Text]          = ImVec4(0.90f, 0.90f, 0.90f, 1.00f);
-		style.Colors[ImGuiCol_TextDisabled]  = ImVec4(0.60f, 0.60f, 0.60f, 1.00f);
-		style.Colors[ImGuiCol_WindowBg]      = ImVec4(0.00f, 0.00f, 0.00f, 0.70f);
-		style.Colors[ImGuiCol_ChildBg]       = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
-		style.Colors[ImGuiCol_PopupBg]       = ImVec4(0.05f, 0.05f, 0.10f, 0.90f);
-		style.Colors[ImGuiCol_Border]        = ImVec4(0.70f, 0.70f, 0.70f, 0.65f);
-		style.Colors[ImGuiCol_BorderShadow]  = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
-		style.Colors[ImGuiCol_FrameBg] =
-		    ImVec4(0.30f, 0.30f, 0.30f, 1.0f); // Background of checkbox, radio button, plot, slider, text input
-		style.Colors[ImGuiCol_FrameBgHovered]       = ImVec4(0.90f, 0.80f, 0.80f, 0.40f);
-		style.Colors[ImGuiCol_FrameBgActive]        = ImVec4(0.90f, 0.65f, 0.65f, 0.45f);
-		style.Colors[ImGuiCol_TitleBg]              = ImVec4(0.27f, 0.27f, 0.54f, 0.83f);
-		style.Colors[ImGuiCol_TitleBgCollapsed]     = ImVec4(0.40f, 0.40f, 0.80f, 0.20f);
-		style.Colors[ImGuiCol_TitleBgActive]        = ImVec4(0.32f, 0.32f, 0.63f, 0.87f);
-		style.Colors[ImGuiCol_MenuBarBg]            = ImVec4(0.40f, 0.40f, 0.55f, 0.80f);
-		style.Colors[ImGuiCol_ScrollbarBg]          = ImVec4(0.20f, 0.25f, 0.30f, 0.60f);
-		style.Colors[ImGuiCol_ScrollbarGrab]        = ImVec4(0.40f, 0.40f, 0.80f, 0.30f);
-		style.Colors[ImGuiCol_ScrollbarGrabHovered] = ImVec4(0.40f, 0.40f, 0.80f, 0.40f);
-		style.Colors[ImGuiCol_ScrollbarGrabActive]  = ImVec4(0.80f, 0.50f, 0.50f, 0.40f);
-		style.Colors[ImGuiCol_CheckMark]            = ImVec4(0.90f, 0.90f, 0.90f, 0.50f);
-		style.Colors[ImGuiCol_SliderGrab]           = ImVec4(1.00f, 1.00f, 1.00f, 0.30f);
-		style.Colors[ImGuiCol_SliderGrabActive]     = ImVec4(0.80f, 0.50f, 0.50f, 1.00f);
-		style.Colors[ImGuiCol_Button]               = ImVec4(0.67f, 0.40f, 0.40f, 0.60f);
-		style.Colors[ImGuiCol_ButtonHovered]        = ImVec4(0.67f, 0.40f, 0.40f, 1.00f);
-		style.Colors[ImGuiCol_ButtonActive]         = ImVec4(0.80f, 0.50f, 0.50f, 1.00f);
-		style.Colors[ImGuiCol_Header]               = ImVec4(0.40f, 0.40f, 0.90f, 0.45f);
-		style.Colors[ImGuiCol_HeaderHovered]        = ImVec4(0.45f, 0.45f, 0.90f, 0.80f);
-		style.Colors[ImGuiCol_HeaderActive]         = ImVec4(0.53f, 0.53f, 0.87f, 0.80f);
-		style.Colors[ImGuiCol_Separator]            = ImVec4(0.50f, 0.50f, 0.50f, 1.00f);
-		style.Colors[ImGuiCol_SeparatorHovered]     = ImVec4(0.70f, 0.60f, 0.60f, 1.00f);
-		style.Colors[ImGuiCol_SeparatorActive]      = ImVec4(0.90f, 0.70f, 0.70f, 1.00f);
-		style.Colors[ImGuiCol_ResizeGrip]           = ImVec4(1.00f, 1.00f, 1.00f, 0.30f);
-		style.Colors[ImGuiCol_ResizeGripHovered]    = ImVec4(1.00f, 1.00f, 1.00f, 0.60f);
-		style.Colors[ImGuiCol_ResizeGripActive]     = ImVec4(1.00f, 1.00f, 1.00f, 0.90f);
-		style.Colors[ImGuiCol_PlotLines]            = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
-		style.Colors[ImGuiCol_PlotLinesHovered]     = ImVec4(0.90f, 0.70f, 0.00f, 1.00f);
-		style.Colors[ImGuiCol_PlotHistogram]        = ImVec4(0.90f, 0.70f, 0.00f, 1.00f);
-		style.Colors[ImGuiCol_PlotHistogramHovered] = ImVec4(1.00f, 0.60f, 0.00f, 1.00f);
-		style.Colors[ImGuiCol_TextSelectedBg]       = ImVec4(0.00f, 0.00f, 1.00f, 0.35f);
-		style.Colors[ImGuiCol_ModalWindowDarkening] = ImVec4(0.20f, 0.20f, 0.20f, 0.35f);
-		style.Colors[ImGuiCol_TableRowBg]           = ImVec4(0.05f, 0.05f, 0.10f, 0.90f);
-		style.Colors[ImGuiCol_TableRowBgAlt]        = ImVec4(0.10f, 0.10f, 0.20f, 0.90f);
+	bool dark = strcmp(name, "dark") == 0;
+	auto f = [&style, dark](ImGuiCol icol,
+					 float dr, float dg, float db, float da,
+					 float lr, float lg, float lb, float la) {
+		if (dark) {
+			style.Colors[icol] = ImVec4(dr, dg, db, da);
+		} else {
+			style.Colors[icol] = ImVec4(lr, lg, lb, la);
+		}
+	};
 
-		m_colors.backgroundColor          = byte4swap(0x000000ff);
-		m_colors.boardFillColor           = byte4swap(0x2a2a2aff);
-		m_colors.boardOutlineColor        = byte4swap(0xcc2222ff);
-		m_colors.partHullColor            = byte4swap(0x80808080);
-		m_colors.partOutlineColor         = byte4swap(0x999999ff);
-		m_colors.partFillColor            = byte4swap(0x111111ff);
-		m_colors.partHighlightedColor     = byte4swap(0xffffffff);
-		m_colors.partHighlightedFillColor = byte4swap(0x333333ff);
-		m_colors.partTextColor            = byte4swap(0x000000ff);
-		m_colors.partTextBackgroundColor  = byte4swap(0xcccc22ff);
-		m_colors.pinDefaultColor          = byte4swap(0x4040ffff);
-		m_colors.pinDefaultTextColor      = byte4swap(0xccccccff);
-		m_colors.pinGroundColor           = byte4swap(0x0300C3ff);
-		m_colors.pinNotConnectedColor     = byte4swap(0xaaaaaaff);
-		m_colors.pinTestPadColor          = byte4swap(0x888888ff);
-		m_colors.pinTestPadFillColor      = byte4swap(0x6c5b1fff);
-		m_colors.pinA1PadColor            = byte4swap(0xdd0000ff);
+	//                               ------RGBA DARK-----------    -------RGBA LIGHT----------
 
-		m_colors.pinSelectedColor     = byte4swap(0x00ff00ff);
-		m_colors.pinSelectedFillColor = byte4swap(0x8888ffff);
-		m_colors.pinSelectedTextColor = byte4swap(0xffffffff);
-
-		m_colors.pinSameNetColor     = byte4swap(0x0000ffff);
-		m_colors.pinSameNetFillColor = byte4swap(0x9999ffff);
-		m_colors.pinSameNetTextColor = byte4swap(0x111111ff);
-
-		m_colors.pinHaloColor     = byte4swap(0xffffff88);
-		m_colors.pinNetWebColor   = byte4swap(0xff888888);
-		m_colors.pinNetWebOSColor = byte4swap(0x8888ff88);
-
-		m_colors.annotationPartAliasColor       = byte4swap(0xffff00ff);
-		m_colors.annotationBoxColor             = byte4swap(0xcccc88ff);
-		m_colors.annotationStalkColor           = byte4swap(0xaaaaaaff);
-		m_colors.annotationPopupBackgroundColor = byte4swap(0x888888ff);
-		m_colors.annotationPopupTextColor       = byte4swap(0xffffffff);
-
-		m_colors.selectedMaskPins    = byte4swap(0xffffffff);
-		m_colors.selectedMaskParts   = byte4swap(0xffffffff);
-		m_colors.selectedMaskOutline = byte4swap(0xffffffff);
-
-		m_colors.orMaskPins    = byte4swap(0x0);
-		m_colors.orMaskParts   = byte4swap(0x0);
-		m_colors.orMaskOutline = byte4swap(0x0);
-
+	f(ImGuiCol_Text,                 0.90f, 0.90f, 0.90f, 1.00f,   0.00f, 0.00f, 0.00f, 1.00f);
+	f(ImGuiCol_TextDisabled,         0.60f, 0.60f, 0.60f, 1.00f,   0.60f, 0.60f, 0.60f, 1.00f);
+	f(ImGuiCol_WindowBg,             0.00f, 0.00f, 0.00f, 0.70f,   0.94f, 0.94f, 0.94f, 1.00f);
+	f(ImGuiCol_ChildBg,              0.00f, 0.00f, 0.00f, 0.00f,   0.00f, 0.00f, 0.00f, 0.00f);
+	f(ImGuiCol_PopupBg,              0.05f, 0.05f, 0.10f, 0.90f,   0.94f, 0.94f, 0.94f, 1.00f);
+	f(ImGuiCol_Border,               0.70f, 0.70f, 0.70f, 0.65f,   0.00f, 0.00f, 0.00f, 0.39f);
+	f(ImGuiCol_BorderShadow,         0.00f, 0.00f, 0.00f, 0.00f,   1.00f, 1.00f, 1.00f, 0.10f);
+	f(ImGuiCol_FrameBg, 		     0.30f, 0.30f, 0.30f, 1.00f,   1.00f, 1.00f, 1.00f, 1.00f);
+	f(ImGuiCol_FrameBgHovered,       0.90f, 0.80f, 0.80f, 0.40f,   0.26f, 0.59f, 0.98f, 0.40f);
+	f(ImGuiCol_FrameBgActive,        0.90f, 0.65f, 0.65f, 0.45f,   0.26f, 0.59f, 0.98f, 0.67f);
+	f(ImGuiCol_TitleBg,              0.27f, 0.27f, 0.54f, 0.83f,   0.96f, 0.96f, 0.96f, 1.00f);
+	f(ImGuiCol_TitleBgCollapsed,     0.40f, 0.40f, 0.80f, 0.20f,   1.00f, 1.00f, 1.00f, 0.51f);
+	f(ImGuiCol_TitleBgActive,        0.32f, 0.32f, 0.63f, 0.87f,   0.82f, 0.82f, 0.82f, 1.00f);
+	f(ImGuiCol_MenuBarBg,            0.40f, 0.40f, 0.55f, 0.80f,   0.82f, 0.82f, 0.82f, 1.00f);
+	f(ImGuiCol_ScrollbarBg,          0.20f, 0.25f, 0.30f, 0.60f,   0.98f, 0.98f, 0.98f, 0.53f);
+	f(ImGuiCol_ScrollbarGrab,        0.40f, 0.40f, 0.80f, 0.30f,   0.69f, 0.69f, 0.69f, 0.80f);
+	f(ImGuiCol_ScrollbarGrabHovered, 0.40f, 0.40f, 0.80f, 0.40f,   0.49f, 0.49f, 0.49f, 0.80f);
+	f(ImGuiCol_ScrollbarGrabActive,  0.80f, 0.50f, 0.50f, 0.40f,   0.49f, 0.49f, 0.49f, 1.00f);
+	f(ImGuiCol_CheckMark,            0.90f, 0.90f, 0.90f, 0.50f,   0.26f, 0.59f, 0.98f, 1.00f);
+	f(ImGuiCol_SliderGrab,           1.00f, 1.00f, 1.00f, 0.30f,   0.26f, 0.59f, 0.98f, 0.78f);
+	f(ImGuiCol_SliderGrabActive,     0.80f, 0.50f, 0.50f, 1.00f,   0.26f, 0.59f, 0.98f, 1.00f);
+	f(ImGuiCol_Button,               0.67f, 0.40f, 0.40f, 0.60f,   0.26f, 0.59f, 0.98f, 0.40f);
+	f(ImGuiCol_ButtonHovered,        0.67f, 0.40f, 0.40f, 1.00f,   0.26f, 0.59f, 0.98f, 1.00f);
+	f(ImGuiCol_ButtonActive,         0.80f, 0.50f, 0.50f, 1.00f,   0.06f, 0.53f, 0.98f, 1.00f);
+	f(ImGuiCol_Header,               0.40f, 0.40f, 0.90f, 0.45f,   0.26f, 0.59f, 0.98f, 0.31f);
+	f(ImGuiCol_HeaderHovered,        0.45f, 0.45f, 0.90f, 0.80f,   0.26f, 0.59f, 0.98f, 0.80f);
+	f(ImGuiCol_HeaderActive,         0.53f, 0.53f, 0.87f, 0.80f,   0.26f, 0.59f, 0.98f, 1.00f);
+	f(ImGuiCol_Separator,            0.50f, 0.50f, 0.50f, 1.00f,   0.39f, 0.39f, 0.39f, 1.00f);
+	f(ImGuiCol_SeparatorHovered,     0.70f, 0.60f, 0.60f, 1.00f,   0.26f, 0.59f, 0.98f, 0.78f);
+	f(ImGuiCol_SeparatorActive,      0.90f, 0.70f, 0.70f, 1.00f,   0.26f, 0.59f, 0.98f, 1.00f);
+	f(ImGuiCol_ResizeGrip,           1.00f, 1.00f, 1.00f, 0.30f,   1.00f, 1.00f, 1.00f, 0.00f);
+	f(ImGuiCol_ResizeGripHovered,    1.00f, 1.00f, 1.00f, 0.60f,   0.26f, 0.59f, 0.98f, 0.67f);
+	f(ImGuiCol_ResizeGripActive,     1.00f, 1.00f, 1.00f, 0.90f,   0.26f, 0.59f, 0.98f, 0.95f);
+	f(ImGuiCol_PlotLines,            1.00f, 1.00f, 1.00f, 1.00f,   0.39f, 0.39f, 0.39f, 1.00f);
+	f(ImGuiCol_PlotLinesHovered,     0.90f, 0.70f, 0.00f, 1.00f,   1.00f, 0.43f, 0.35f, 1.00f);
+	f(ImGuiCol_PlotHistogram,        0.90f, 0.70f, 0.00f, 1.00f,   0.90f, 0.70f, 0.00f, 1.00f);
+	f(ImGuiCol_PlotHistogramHovered, 1.00f, 0.60f, 0.00f, 1.00f,   1.00f, 0.60f, 0.00f, 1.00f);
+	f(ImGuiCol_TextSelectedBg,       0.00f, 0.00f, 1.00f, 0.35f,   0.26f, 0.59f, 0.98f, 0.35f);
+	f(ImGuiCol_ModalWindowDarkening, 0.20f, 0.20f, 0.20f, 0.35f,   0.20f, 0.20f, 0.20f, 0.35f);
+	f(ImGuiCol_TableRowBg,           0.05f, 0.05f, 0.10f, 0.90f,   0.94f, 0.94f, 0.94f, 1.00f);
+	f(ImGuiCol_TableRowBgAlt,        0.10f, 0.10f, 0.20f, 0.90f,   0.82f, 0.82f, 0.82f, 1.00f);
+	
+	if (dark) {
+		cfg_color_visit_each(m_colors, [](const char *, uint32_t & c, uint32_t dark, uint32_t) {
+								 c = byte4swap(dark);
+							 });
 	} else {
-		// light theme default
-		style.Colors[ImGuiCol_Text]                 = ImVec4(0.00f, 0.00f, 0.00f, 1.00f);
-		style.Colors[ImGuiCol_TextDisabled]         = ImVec4(0.60f, 0.60f, 0.60f, 1.00f);
-		style.Colors[ImGuiCol_PopupBg]              = ImVec4(0.94f, 0.94f, 0.94f, 1.00f);
-		style.Colors[ImGuiCol_WindowBg]             = ImVec4(0.94f, 0.94f, 0.94f, 1.00f);
-		style.Colors[ImGuiCol_ChildBg]              = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
-		style.Colors[ImGuiCol_Border]               = ImVec4(0.00f, 0.00f, 0.00f, 0.39f);
-		style.Colors[ImGuiCol_BorderShadow]         = ImVec4(1.00f, 1.00f, 1.00f, 0.10f);
-		style.Colors[ImGuiCol_FrameBg]              = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
-		style.Colors[ImGuiCol_FrameBgHovered]       = ImVec4(0.26f, 0.59f, 0.98f, 0.40f);
-		style.Colors[ImGuiCol_FrameBgActive]        = ImVec4(0.26f, 0.59f, 0.98f, 0.67f);
-		style.Colors[ImGuiCol_TitleBg]              = ImVec4(0.96f, 0.96f, 0.96f, 1.00f);
-		style.Colors[ImGuiCol_TitleBgCollapsed]     = ImVec4(1.00f, 1.00f, 1.00f, 0.51f);
-		style.Colors[ImGuiCol_TitleBgActive]        = ImVec4(0.82f, 0.82f, 0.82f, 1.00f);
-		style.Colors[ImGuiCol_MenuBarBg]            = ImVec4(0.82f, 0.82f, 0.82f, 1.00f);
-		style.Colors[ImGuiCol_ScrollbarBg]          = ImVec4(0.98f, 0.98f, 0.98f, 0.53f);
-		style.Colors[ImGuiCol_ScrollbarGrab]        = ImVec4(0.69f, 0.69f, 0.69f, 0.80f);
-		style.Colors[ImGuiCol_ScrollbarGrabHovered] = ImVec4(0.49f, 0.49f, 0.49f, 0.80f);
-		style.Colors[ImGuiCol_ScrollbarGrabActive]  = ImVec4(0.49f, 0.49f, 0.49f, 1.00f);
-		style.Colors[ImGuiCol_CheckMark]            = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
-		style.Colors[ImGuiCol_SliderGrab]           = ImVec4(0.26f, 0.59f, 0.98f, 0.78f);
-		style.Colors[ImGuiCol_SliderGrabActive]     = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
-		style.Colors[ImGuiCol_Button]               = ImVec4(0.26f, 0.59f, 0.98f, 0.40f);
-		style.Colors[ImGuiCol_ButtonHovered]        = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
-		style.Colors[ImGuiCol_ButtonActive]         = ImVec4(0.06f, 0.53f, 0.98f, 1.00f);
-		style.Colors[ImGuiCol_Header]               = ImVec4(0.26f, 0.59f, 0.98f, 0.31f);
-		style.Colors[ImGuiCol_HeaderHovered]        = ImVec4(0.26f, 0.59f, 0.98f, 0.80f);
-		style.Colors[ImGuiCol_HeaderActive]         = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
-		style.Colors[ImGuiCol_Separator]            = ImVec4(0.39f, 0.39f, 0.39f, 1.00f);
-		style.Colors[ImGuiCol_SeparatorHovered]     = ImVec4(0.26f, 0.59f, 0.98f, 0.78f);
-		style.Colors[ImGuiCol_SeparatorActive]      = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
-		style.Colors[ImGuiCol_ResizeGrip]           = ImVec4(1.00f, 1.00f, 1.00f, 0.00f);
-		style.Colors[ImGuiCol_ResizeGripHovered]    = ImVec4(0.26f, 0.59f, 0.98f, 0.67f);
-		style.Colors[ImGuiCol_ResizeGripActive]     = ImVec4(0.26f, 0.59f, 0.98f, 0.95f);
-		style.Colors[ImGuiCol_PlotLines]            = ImVec4(0.39f, 0.39f, 0.39f, 1.00f);
-		style.Colors[ImGuiCol_PlotLinesHovered]     = ImVec4(1.00f, 0.43f, 0.35f, 1.00f);
-		style.Colors[ImGuiCol_PlotHistogram]        = ImVec4(0.90f, 0.70f, 0.00f, 1.00f);
-		style.Colors[ImGuiCol_PlotHistogramHovered] = ImVec4(1.00f, 0.60f, 0.00f, 1.00f);
-		style.Colors[ImGuiCol_TextSelectedBg]       = ImVec4(0.26f, 0.59f, 0.98f, 0.35f);
-		style.Colors[ImGuiCol_ModalWindowDarkening] = ImVec4(0.20f, 0.20f, 0.20f, 0.35f);
-		style.Colors[ImGuiCol_TableRowBg]           = ImVec4(0.94f, 0.94f, 0.94f, 1.00f);
-		style.Colors[ImGuiCol_TableRowBgAlt]        = ImVec4(0.82f, 0.82f, 0.82f, 1.00f);
-
-		m_colors.backgroundColor          = byte4swap(0xffffffff);
-		m_colors.boardFillColor           = byte4swap(0xddddddff);
-		m_colors.partHullColor            = byte4swap(0x80808080);
-		m_colors.partOutlineColor         = byte4swap(0x444444ff);
-		m_colors.partFillColor            = byte4swap(0xffffff77);
-		m_colors.partHighlightedColor     = byte4swap(0xff0000ff);
-		m_colors.partHighlightedFillColor = byte4swap(0xf0f0f0ff);
-		m_colors.partTextColor            = byte4swap(0xff3030ff);
-		m_colors.partTextBackgroundColor  = byte4swap(0xffff00ff);
-		m_colors.boardOutlineColor        = byte4swap(0x444444ff);
-		m_colors.pinDefaultColor          = byte4swap(0x22aa33ff);
-		m_colors.pinDefaultTextColor      = byte4swap(0x666688ff);
-		m_colors.pinGroundColor           = byte4swap(0x2222aaff);
-		m_colors.pinNotConnectedColor     = byte4swap(0xaaaaaaff);
-		m_colors.pinTestPadColor          = byte4swap(0x888888ff);
-		m_colors.pinTestPadFillColor      = byte4swap(0xd6c68dff);
-		m_colors.pinA1PadColor            = byte4swap(0xdd0000ff);
-
-		m_colors.pinSelectedColor     = byte4swap(0x00000000);
-		m_colors.pinSelectedFillColor = byte4swap(0x8888ffff);
-		m_colors.pinSelectedTextColor = byte4swap(0xffffffff);
-
-		m_colors.pinSameNetColor     = byte4swap(0x888888ff);
-		m_colors.pinSameNetFillColor = byte4swap(0x9999ffff);
-		m_colors.pinSameNetTextColor = byte4swap(0x111111ff);
-
-		m_colors.pinHaloColor     = byte4swap(0x22FF2288);
-		m_colors.pinNetWebColor   = byte4swap(0xff0000aa);
-		m_colors.pinNetWebOSColor = byte4swap(0x0000ff33);
-
-		m_colors.annotationPartAliasColor       = byte4swap(0xffff00ff);
-		m_colors.annotationBoxColor             = byte4swap(0xff0000aa);
-		m_colors.annotationStalkColor           = byte4swap(0x000000ff);
-		m_colors.annotationPopupBackgroundColor = byte4swap(0xeeeeeeff);
-		m_colors.annotationPopupTextColor       = byte4swap(0x000000ff);
-
-		m_colors.selectedMaskPins    = byte4swap(0xffffffff);
-		m_colors.selectedMaskParts   = byte4swap(0xffffffff);
-		m_colors.selectedMaskOutline = byte4swap(0xffffffff);
-
-		m_colors.orMaskPins    = byte4swap(0x0);
-		m_colors.orMaskParts   = byte4swap(0x0);
-		m_colors.orMaskOutline = byte4swap(0x0);
+		cfg_color_visit_each(m_colors, [](const char *, uint32_t & c, uint32_t, uint32_t lite) {
+								 c = byte4swap(lite);
+							 });
 	}
 }
+
+void BoardView::set_tcl(TCL * t) {
+	m_tcl = t;
+	if (t) {
+		auto p = m_tcl->keybind_targets();
+		if (!p.empty()) {
+			tcl_keybindings = new KeyBindings(&p);
+			tcl_keyboardPreferences = new Preferences::Keyboard(*tcl_keybindings, obvconfig);
+			tcl_keybindings->readFromConfig(obvconfig);
+		}
+	}		
+}
+
 
 int BoardView::ConfigParse(void) {
 	ImGuiStyle &style = ImGui::GetStyle();
 	const char *v     = obvconfig.ParseStr("colorTheme", "light");
 	ThemeSetStyle(v);
 
+
+#if 1
+	auto f = [&](const char * optname, auto & dest) {
+		typedef typename std::remove_reference<decltype(dest)>::type dt;
+		if constexpr (std::is_same<dt, bool>::value) {
+			dest = obvconfig.ParseBool(optname, dest);
+		} else if constexpr (std::is_floating_point<dt>::value) {
+			dest = obvconfig.ParseDouble(optname, dest);
+		} else if constexpr (std::is_integral<dt>::value) {
+			dest = obvconfig.ParseInt(optname, dest);
+		} else if constexpr (std::is_convertible<const char *, dt>::value) {
+			dest = obvconfig.ParseStr(optname, dest);
+		} else {
+			throw;
+		}
+	};
+
+#ifdef M
+#error fix this
+#endif
+#define M(name) f(#name , name)
+	M(fontSize);
+	M(pinSizeThresholdLow);
+	M(pinShapeSquare);
+	if (!pinShapeCircle && !pinShapeSquare) {
+		pinShapeSquare = true;
+	}
+	// Special test here, in case we've already set the dpi from external
+	// such as command line.
+	if (!dpi) dpi = obvconfig.ParseInt("dpi", 100);
+	if (dpi < 50) dpi = 50;
+	if (dpi > 400) dpi = 400;
+	dpiscale = dpi / 100.0f;
+	
+	M(pinHalo);
+	M(pinHaloDiameter);
+	M(pinHaloThickness);
+	M(pinSelectMasks);
+	M(startFullscreen);
+	M(pinA1threshold);
+	M(showFPS);
+	M(showInfoPanel);
+
+	M(infoPanelSelectPartsOnNet);
+	M(infoPanelCenterZoomNets);
+	M(partZoomScaleOutFactor);
+
+	//f("infoPanelWidth", m_info_surface.x);
+	m_info_surface.x          = obvconfig.ParseInt("infoPanelWidth", 350);
+
+	M(showPins);
+	M(showPosition);
+	M(showNetWeb);
+	M(showAnnotations);
+	f("showBackgroundImage", backgroundImage.enabled);
+	M(fillParts);
+	f("centerZoomSearchResults", m_centerZoomSearchResults); // = obvconfig.ParseBool("centerZoomSearchResults", true);
+	M(flipMode);
+
+	M(boardFill);
+	M(boardFillSpacing);
+
+	zoomFactor   = obvconfig.ParseInt("zoomFactor", 10) / 10.0f;
+	M(zoomModifier);
+
+	M(panFactor);
+	panFactor = DPI(panFactor);
+
+	M(panModifier);
+
+	M(annotationBoxSize);
+	annotationBoxSize = DPI(annotationBoxSize);
+
+	M(annotationBoxOffset);
+	annotationBoxOffset = DPI(annotationBoxOffset);
+
+	M(netWebThickness);
+
+	
+#undef M
+
+#else
 	fontSize            = obvconfig.ParseDouble("fontSize", 20);
 	pinSizeThresholdLow = obvconfig.ParseDouble("pinSizeThresholdLow", 0);
 	pinShapeSquare      = obvconfig.ParseBool("pinShapeSquare", false);
@@ -274,6 +309,8 @@ int BoardView::ConfigParse(void) {
 	pinHaloThickness = obvconfig.ParseDouble("pinHaloThickness", 2.0);
 	pinSelectMasks   = obvconfig.ParseBool("pinSelectMasks", true);
 
+	startFullscreen  = obvconfig.ParseBool("startFullscreen", false);
+	
 	pinA1threshold	  = obvconfig.ParseInt("pinA1threshold", 3);
 
 	showFPS                   = obvconfig.ParseBool("showFPS", false);
@@ -310,7 +347,8 @@ int BoardView::ConfigParse(void) {
 	annotationBoxOffset = DPI(annotationBoxOffset);
 
 	netWebThickness = obvconfig.ParseInt("netWebThickness", 2);
-
+#endif
+	
 	/*
 	 * Some machines (Atom etc) don't have enough CPU/GPU
 	 * grunt to cope with the large number of AA'd circles
@@ -333,59 +371,9 @@ int BoardView::ConfigParse(void) {
 	 * it comes to assigning the actual colour to ImGui.
 	 */
 
-	/*
-	 * XRayBlue theme
-	 */
-
-	m_colors.backgroundColor = byte4swap(obvconfig.ParseHex("backgroundColor", byte4swap(m_colors.backgroundColor)));
-	m_colors.boardFillColor  = byte4swap(obvconfig.ParseHex("boardFillColor", byte4swap(m_colors.boardFillColor)));
-
-	m_colors.partHullColor        = byte4swap(obvconfig.ParseHex("partHullColor", byte4swap(m_colors.partHullColor)));
-	m_colors.partOutlineColor     = byte4swap(obvconfig.ParseHex("partOutlineColor", byte4swap(m_colors.partOutlineColor)));
-	m_colors.partFillColor        = byte4swap(obvconfig.ParseHex("partFillColor", byte4swap(m_colors.partFillColor)));
-	m_colors.partHighlightedColor = byte4swap(obvconfig.ParseHex("partHighlightedColor", byte4swap(m_colors.partHighlightedColor)));
-	m_colors.partHighlightedFillColor =
-	    byte4swap(obvconfig.ParseHex("partHighlightedFillColor", byte4swap(m_colors.partHighlightedFillColor)));
-	m_colors.partTextColor = byte4swap(obvconfig.ParseHex("partTextColor", byte4swap(m_colors.partTextColor)));
-	m_colors.partTextBackgroundColor =
-	    byte4swap(obvconfig.ParseHex("partTextBackgroundColor", byte4swap(m_colors.partTextBackgroundColor)));
-	m_colors.boardOutlineColor    = byte4swap(obvconfig.ParseHex("boardOutlineColor", byte4swap(m_colors.boardOutlineColor)));
-	m_colors.pinDefaultColor      = byte4swap(obvconfig.ParseHex("pinDefaultColor", byte4swap(m_colors.pinDefaultColor)));
-	m_colors.pinDefaultTextColor  = byte4swap(obvconfig.ParseHex("pinDefaultTextColor", byte4swap(m_colors.pinDefaultTextColor)));
-	m_colors.pinGroundColor       = byte4swap(obvconfig.ParseHex("pinGroundColor", byte4swap(m_colors.pinGroundColor)));
-	m_colors.pinNotConnectedColor = byte4swap(obvconfig.ParseHex("pinNotConnectedColor", byte4swap(m_colors.pinNotConnectedColor)));
-	m_colors.pinTestPadColor      = byte4swap(obvconfig.ParseHex("pinTestPadColor", byte4swap(m_colors.pinTestPadColor)));
-	m_colors.pinTestPadFillColor  = byte4swap(obvconfig.ParseHex("pinTestPadFillColor", byte4swap(m_colors.pinTestPadFillColor)));
-	m_colors.pinA1PadColor        = byte4swap(obvconfig.ParseHex("pinA1PadColor", byte4swap(m_colors.pinA1PadColor)));
-
-	m_colors.pinSelectedTextColor = byte4swap(obvconfig.ParseHex("pinSelectedTextColor", byte4swap(m_colors.pinSelectedTextColor)));
-	m_colors.pinSelectedFillColor = byte4swap(obvconfig.ParseHex("pinSelectedFillColor", byte4swap(m_colors.pinSelectedFillColor)));
-	m_colors.pinSelectedColor     = byte4swap(obvconfig.ParseHex("pinSelectedColor", byte4swap(m_colors.pinSelectedColor)));
-
-	m_colors.pinSameNetTextColor = byte4swap(obvconfig.ParseHex("pinSameNetTextColor", byte4swap(m_colors.pinSameNetTextColor)));
-	m_colors.pinSameNetFillColor = byte4swap(obvconfig.ParseHex("pinSameNetFillColor", byte4swap(m_colors.pinSameNetFillColor)));
-	m_colors.pinSameNetColor     = byte4swap(obvconfig.ParseHex("pinSameNetColor", byte4swap(m_colors.pinSameNetColor)));
-
-	m_colors.pinHaloColor   = byte4swap(obvconfig.ParseHex("pinHaloColor", byte4swap(m_colors.pinHaloColor)));
-	m_colors.pinNetWebColor = byte4swap(obvconfig.ParseHex("pinNetWebColor", byte4swap(m_colors.pinNetWebColor)));
-
-	m_colors.annotationPartAliasColor =
-	    byte4swap(obvconfig.ParseHex("annotationPartAliasColor", byte4swap(m_colors.annotationPartAliasColor)));
-	m_colors.annotationBoxColor   = byte4swap(obvconfig.ParseHex("annotationBoxColor", byte4swap(m_colors.annotationBoxColor)));
-	m_colors.annotationStalkColor = byte4swap(obvconfig.ParseHex("annotationStalkColor", byte4swap(m_colors.annotationStalkColor)));
-	m_colors.annotationPopupBackgroundColor =
-	    byte4swap(obvconfig.ParseHex("annotationPopupBackgroundColor", byte4swap(m_colors.annotationPopupBackgroundColor)));
-	m_colors.annotationPopupTextColor =
-	    byte4swap(obvconfig.ParseHex("annotationPopupTextColor", byte4swap(m_colors.annotationPopupTextColor)));
-
-	m_colors.selectedMaskPins    = byte4swap(obvconfig.ParseHex("selectedMaskPins", byte4swap(m_colors.selectedMaskPins)));
-	m_colors.selectedMaskParts   = byte4swap(obvconfig.ParseHex("selectedMaskParts", byte4swap(m_colors.selectedMaskParts)));
-	m_colors.selectedMaskOutline = byte4swap(obvconfig.ParseHex("selectedMaskOutline", byte4swap(m_colors.selectedMaskOutline)));
-
-	m_colors.orMaskPins    = byte4swap(obvconfig.ParseHex("orMaskPins", byte4swap(m_colors.orMaskPins)));
-	m_colors.orMaskParts   = byte4swap(obvconfig.ParseHex("orMaskParts", byte4swap(m_colors.orMaskParts)));
-	m_colors.orMaskOutline = byte4swap(obvconfig.ParseHex("orMaskOutline", byte4swap(m_colors.orMaskOutline)));
-
+	cfg_color_visit_each(m_colors, [this](const char * cfg, uint32_t & c, uint32_t, uint32_t) {
+							 c = byte4swap(obvconfig.ParseHex(cfg, byte4swap(c)));
+						 });
 	/*
 	 * The asus .fz file formats require a specific key to be decoded.
 	 *
@@ -396,8 +384,40 @@ int BoardView::ConfigParse(void) {
 	SetFZKey(obvconfig.ParseStr("FZKey", ""));
 
 	keybindings.readFromConfig(obvconfig);
-
 	return 0;
+}
+
+BRDFile * BoardView::loadBoard(const filesystem::path &filepath) {
+	std::vector<char> buffer = file_as_buffer(filepath);
+	if (!buffer.empty()) {
+		BRDFile *file = nullptr;
+		
+		if (check_fileext(filepath, ".fz")) { // Since it is encrypted we cannot use the below logic. Trust the ext.
+			file = new FZFile(buffer, FZKey);
+		} else if (check_fileext(filepath, ".bom") || check_fileext(filepath, ".asc"))
+			file = new ASCFile(buffer, filepath);
+		else if (ADFile::verifyFormat(buffer))
+			file = new ADFile(buffer);
+		else if (CADFile::verifyFormat(buffer))
+			file = new CADFile(buffer);
+		//			else if (CAMCADFile::verifyFormat(buffer))
+		//	file = new CAMCADFile(buffer);
+		else if (check_fileext(filepath, ".cst"))
+			file = new CSTFile(buffer);
+		else if (BRDFile::verifyFormat(buffer))
+			file = new BRDFile(buffer);
+		else if (BRD2File::verifyFormat(buffer))
+			file = new BRD2File(buffer);
+		else if (BDVFile::verifyFormat(buffer))
+			file = new BDVFile(buffer);
+		else if (BVRFile::verifyFormat(buffer))
+			file = new BVRFile(buffer);
+		
+		if (file && file->valid) {
+			return file; //return new BRDBoard(file);
+		}
+	}
+	return nullptr;
 }
 
 int BoardView::LoadFile(const filesystem::path &filepath) {
@@ -412,12 +432,17 @@ int BoardView::LoadFile(const filesystem::path &filepath) {
 			m_pinHighlighted.clear();
 			m_partHighlighted.clear();
 			m_annotations.Close();
-			m_board->Nets().clear();
-			m_board->Pins().clear();
-			m_board->Components().clear();
 			m_board->OutlinePoints().clear();
-			//	delete m_file;
-			// delete m_board;
+			if constexpr (! std::is_same<obv_shared_ptr<Component>, std::shared_ptr<Component> >::value) {
+				delete m_file.get();
+				delete m_board.get();
+				m_file = nullptr;
+				m_board = nullptr;
+			} else {
+				m_board->Nets().clear();
+				m_board->Pins().clear();
+				m_board->Components().clear();
+			}
 		}
 
 		SetLastFileOpenName(filepath.string());
@@ -433,6 +458,8 @@ int BoardView::LoadFile(const filesystem::path &filepath) {
 				file = new ADFile(buffer);
 			else if (CADFile::verifyFormat(buffer))
 				file = new CADFile(buffer);
+			//			else if (CAMCADFile::verifyFormat(buffer))
+			//	file = new CAMCADFile(buffer);
 			else if (check_fileext(filepath, ".cst"))
 				file = new CSTFile(buffer);
 			else if (BRDFile::verifyFormat(buffer))
@@ -445,7 +472,7 @@ int BoardView::LoadFile(const filesystem::path &filepath) {
 				file = new BVRFile(buffer);
 
 			if (file && file->valid) {
-				SetFile(file);
+				SetFile(obv_shared_ptr<BRDFile>(file));
 				fhistory.Prepend_save(filepath.string());
 				history_file_has_changed = 1; // used by main to know when to update the window title
 				boardMinMaxDone          = false;
@@ -554,44 +581,11 @@ void BoardView::ColorPreferencesItem(
 	ImGui::PopItemWidth();
 }
 
-void BoardView::SaveAllColors(void) {
 
-	obvconfig.WriteHex("backgroundColor", byte4swap(m_colors.backgroundColor));
-	obvconfig.WriteHex("boardFillColor", byte4swap(m_colors.boardFillColor));
-	obvconfig.WriteHex("boardOutlineColor", byte4swap(m_colors.boardOutlineColor));
-	obvconfig.WriteHex("partOutlineColor", byte4swap(m_colors.partOutlineColor));
-	obvconfig.WriteHex("partHullColor", byte4swap(m_colors.partHullColor));
-	obvconfig.WriteHex("partFillColor", byte4swap(m_colors.partFillColor));
-	obvconfig.WriteHex("partTextColor", byte4swap(m_colors.partTextColor));
-	obvconfig.WriteHex("partTextBackgroundColor", byte4swap(m_colors.partTextBackgroundColor));
-	obvconfig.WriteHex("partHighlightedColor", byte4swap(m_colors.partHighlightedColor));
-	obvconfig.WriteHex("partHighlightedFillColor", byte4swap(m_colors.partHighlightedFillColor));
-	obvconfig.WriteHex("pinDefaultColor", byte4swap(m_colors.pinDefaultColor));
-	obvconfig.WriteHex("pinDefaultTextColor", byte4swap(m_colors.pinDefaultTextColor));
-	obvconfig.WriteHex("pinGroundColor", byte4swap(m_colors.pinGroundColor));
-	obvconfig.WriteHex("pinNotConnectedColor", byte4swap(m_colors.pinNotConnectedColor));
-	obvconfig.WriteHex("pinTestPadColor", byte4swap(m_colors.pinTestPadColor));
-	obvconfig.WriteHex("pinTestPadFillColor", byte4swap(m_colors.pinTestPadFillColor));
-	obvconfig.WriteHex("pinA1PadColor", byte4swap(m_colors.pinA1PadColor));
-	obvconfig.WriteHex("pinSelectedColor", byte4swap(m_colors.pinSelectedColor));
-	obvconfig.WriteHex("pinSelectedTextColor", byte4swap(m_colors.pinSelectedTextColor));
-	obvconfig.WriteHex("pinSelectedFillColor", byte4swap(m_colors.pinSelectedFillColor));
-	obvconfig.WriteHex("pinSameNetColor", byte4swap(m_colors.pinSameNetColor));
-	obvconfig.WriteHex("pinSameNetTextColor", byte4swap(m_colors.pinSameNetTextColor));
-	obvconfig.WriteHex("pinSameNetFillColor", byte4swap(m_colors.pinSameNetFillColor));
-	obvconfig.WriteHex("pinHaloColor", byte4swap(m_colors.pinHaloColor));
-	obvconfig.WriteHex("pinNetWebColor", byte4swap(m_colors.pinNetWebColor));
-	obvconfig.WriteHex("pinNetWebOSColor", byte4swap(m_colors.pinNetWebOSColor));
-	obvconfig.WriteHex("annotationPopupTextColor", byte4swap(m_colors.annotationPopupTextColor));
-	obvconfig.WriteHex("annotationPopupBackgroundColor", byte4swap(m_colors.annotationPopupBackgroundColor));
-	obvconfig.WriteHex("annotationBoxColor", byte4swap(m_colors.annotationBoxColor));
-	obvconfig.WriteHex("annotationStalkColor", byte4swap(m_colors.annotationStalkColor));
-	obvconfig.WriteHex("selectedMaskOutline", byte4swap(m_colors.selectedMaskOutline));
-	obvconfig.WriteHex("selectedMaskParts", byte4swap(m_colors.selectedMaskParts));
-	obvconfig.WriteHex("selectedMaskPins", byte4swap(m_colors.selectedMaskPins));
-	obvconfig.WriteHex("orMaskPins", byte4swap(m_colors.orMaskPins));
-	obvconfig.WriteHex("orMaskParts", byte4swap(m_colors.orMaskParts));
-	obvconfig.WriteHex("orMaskOutline", byte4swap(m_colors.orMaskOutline));
+void BoardView::SaveAllColors(void) {
+	cfg_color_visit_each(m_colors, [this](const char * cfg, uint32_t c, uint32_t, uint32_t) {
+							 obvconfig.WriteHex(cfg, byte4swap(c));
+						 });
 }
 
 void BoardView::ColorPreferences(void) {
@@ -776,6 +770,11 @@ void BoardView::Preferences(void) {
 		if (ImGui::InputInt("##dpi", &t)) {
 			if ((t > 25) && (t < 600)) obvconfig.WriteInt("dpi", t);
 		}
+
+		if (ImGui::Checkbox("Start in Fullscreen", &startFullscreen)) {
+			obvconfig.WriteBool("startFullscreen", startFullscreen);
+		}
+
 		ImGui::PushStyleColor(ImGuiCol_Text, 0xff4040ff);
 		ImGui::Text("(Program restart is required to properly apply font and DPI changes)");
 		ImGui::PopStyleColor();
@@ -1199,7 +1198,20 @@ void BoardView::ShowInfoPane(void) {
 
 			ImGui::Text(" ");
 
+			bool center_comp = false;
 			if (ImGui::SmallButton(part->name.c_str())) {
+				center_comp = true;
+			}
+			ImGui::SameLine();
+			{
+				char bn[128];
+				snprintf(bn, sizeof(bn), "Z##%s", part->name.c_str());
+				if (ImGui::SmallButton(bn)) {
+					center_comp = true;
+				}
+			}
+
+			if (center_comp) {
 				if (!BoardElementIsVisible(part)) FlipBoard();
 				if (part->centerpoint.x && part->centerpoint.y) {
 					ImVec2 psz;
@@ -1207,8 +1219,7 @@ void BoardView::ShowInfoPane(void) {
 					/*
 					 * Check to see if we need to zoom BACK a bit to fit the part in to view
 					 */
-					psz = ImVec2(abs(part->outline[2].x - part->outline[0].x) * m_scale / m_board_surface.x,
-					             abs(part->outline[2].y - part->outline[0].y) * m_scale / m_board_surface.y);
+					psz = abs(part->outline[2] - part->outline[0]) * m_scale / m_board_surface;
 					if ((psz.x > 1) || (psz.y > 1)) {
 						if (psz.x > psz.y) {
 							m_scale /= (partZoomScaleOutFactor * psz.x);
@@ -1217,38 +1228,11 @@ void BoardView::ShowInfoPane(void) {
 						}
 					}
 
-					SetTarget(part->centerpoint.x, part->centerpoint.y);
+					SetTarget(part->centerpoint);
 				} else {
-					SetTarget(part->pins[0]->position.x, part->pins[0]->position.y);
+					SetTarget(part->pins[0]->position);
 				}
 				m_needsRedraw = 1;
-			}
-			ImGui::SameLine();
-			{
-				char bn[128];
-				snprintf(bn, sizeof(bn), "Z##%s", part->name.c_str());
-				if (ImGui::SmallButton(bn)) {
-					if (!BoardElementIsVisible(part)) FlipBoard();
-					if (part->centerpoint.x && part->centerpoint.y) {
-						ImVec2 psz;
-
-						/*
-						 * Check to see if we need to zoom BACK a bit to fit the part in to view
-						 */
-						psz = ImVec2(abs(part->outline[2].x - part->outline[0].x) * m_scale / m_board_surface.x,
-						             abs(part->outline[2].y - part->outline[0].y) * m_scale / m_board_surface.y);
-						if (psz.x > psz.y) {
-							m_scale /= (partZoomScaleOutFactor * psz.x);
-						} else {
-							m_scale /= (partZoomScaleOutFactor * psz.y);
-						}
-
-						SetTarget(part->centerpoint.x, part->centerpoint.y);
-					} else {
-						SetTarget(part->pins[0]->position.x, part->pins[0]->position.y);
-					}
-					m_needsRedraw = 1;
-				}
 			}
 
 			ImGui::SameLine();
@@ -1293,9 +1277,10 @@ void BoardView::ShowInfoPane(void) {
 							//
 						} else {
 							m_pinSelected = pin;
-							for (auto p : m_partHighlighted) {
-								pin->component->visualmode = pin->component->CVMNormal;
-							};
+							//for (auto p : m_partHighlighted) {
+							//	pin->component->visualmode = pin->component->CVMNormal;
+							//};
+							pin->component->visualmode = pin->component->CVMNormal;
 							m_partHighlighted.push_back(pin->component);
 							CenterZoomNet(pin->net->name);
 						}
@@ -1793,7 +1778,7 @@ void BoardView::ClearAllHighlights(void) {
 	m_search[2][0]     = '\0';
 	m_needsRedraw      = true;
 	m_tooltips_enabled = true;
-	if (m_board != NULL) {
+	if (m_board) {
 		for (auto part : m_board->Components()) part->visualmode = part->CVMNormal;
 	}
 	m_partHighlighted.clear();
@@ -1809,7 +1794,7 @@ void BoardView::ClearAllHighlights(void) {
 void BoardView::Update() {
 	bool open_file = false;
 	// ImGuiIO &io = ImGui::GetIO();
-	char *preset_filename = NULL;
+	char *preset_filename = nullptr;
 	ImGuiIO &io           = ImGui::GetIO();
 
 	/**
@@ -1876,6 +1861,9 @@ void BoardView::Update() {
 			}
 
 			keyboardPreferences.menuItem();
+			if (tcl_keyboardPreferences) {
+				tcl_keyboardPreferences->menuItem("TCL shortcuts");
+			}
 			backgroundImagePreferences.menuItem();
 
 			ImGui::Separator();
@@ -1901,7 +1889,24 @@ void BoardView::Update() {
 			if (ImGui::MenuItem("Mirror Board", keybindings.getKeyNames("Mirror").c_str())) {
 				Mirror();
 			}
+			if (ImGui::MenuItem("Split Vertical")) {
+				if (m_split_view_y) {
+					m_split_view_y = m_split_view_x = 0.0f;
+				} else {
+					m_split_view_y = 0.5f;
+					m_split_view_x = 0.0f;
+				}
+			}
+			if (ImGui::MenuItem("Split Horizontal")) {
+				if (m_split_view_x) {
+					m_split_view_x = m_split_view_y = 0.0f;
+				} else {
+					m_split_view_x = 0.5f;
+					m_split_view_y = 0.0f;
+				}
+			}
 
+			
 			if (ImGui::MenuItem("Toggle Pin Display", keybindings.getKeyNames("TogglePins").c_str())) {
 				showPins ^= 1;
 				m_needsRedraw = true;
@@ -2035,7 +2040,6 @@ void BoardView::Update() {
 		if (ImGui::Button(" ^ ")) {
 			FlipBoard();
 		}
-
 		ImGui::SameLine();
 		if (ImGui::Button(" > ")) {
 			Rotate(1);
@@ -2051,6 +2055,27 @@ void BoardView::Update() {
 			ClearAllHighlights();
 		}
 
+		ImGui::SameLine();
+		if (ImGui::Button("=")) {
+			if (m_split_view_y) {
+				m_split_view_y = 0.0f;
+				m_split_view_x = 0.0f;
+			} else {
+				m_split_view_x = 0.0f;
+				m_split_view_y = 0.5f;
+			}
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("||")) {
+			if (m_split_view_x) {
+				m_split_view_x = 0.0f;
+				m_split_view_y = 0.0f;
+			} else {
+				m_split_view_x = 0.5f;
+				m_split_view_y = 0.0f;
+			}
+		}
+		
 		/*
 		ImGui::SameLine();
 		ImVec2 tz = ImGui::CalcTextSize("Search             ");
@@ -2085,6 +2110,10 @@ void BoardView::Update() {
 		keyboardPreferences.render();
 		backgroundImagePreferences.render();
 
+		if (tcl_keyboardPreferences) {
+			tcl_keyboardPreferences->render("TCL shortcuts");
+		}
+		
 		if (m_showSearch && m_file) {
 			ImGui::OpenPopup("Search for Component / Network");
 		}
@@ -2160,7 +2189,7 @@ void BoardView::Update() {
 		            pin->component->mount_type_str().c_str());
 	} else {
 		ImVec2 spos = ImGui::GetMousePos();
-		ImVec2 pos  = ScreenToCoord(spos.x, spos.y);
+		ImVec2 pos  = ScreenToCoord(spos);
 		if (showFPS == true) {
 			ImGui::Text("FPS: %0.0f ", ImGui::GetIO().Framerate);
 			ImGui::SameLine();
@@ -2171,17 +2200,35 @@ void BoardView::Update() {
 			ImGui::SameLine();
 		}
 
+		float status_bar_x_at = 0.0f;
 		if (showPosition == true) {
-			ImGui::Text("Position: %0.3f\", %0.3f\" (%0.2f, %0.2fmm)", pos.x / 1000, pos.y / 1000, pos.x * 0.0254, pos.y * 0.0254);
+			auto schem_pos = m_tcl->schem_position();
+			char left_text[1024];
+			if (schem_pos) {
+				snprintf(left_text, sizeof(left_text), "Position: %0.3f, %0.3f (page %d)", schem_pos->point.x, schem_pos->point.y, schem_pos->page);
+			} else {
+				snprintf(left_text, sizeof(left_text), "Position: %0.3f\", %0.3f\" (%0.2f, %0.2fmm)", pos.x / 1000, pos.y / 1000, pos.x * 0.0254, pos.y * 0.0254);
+			}
+			ImGui::Text(left_text);
+			status_bar_x_at = ImGui::CalcTextSize(left_text).x;
 			ImGui::SameLine();
 		}
-
 		{
 			if (m_validBoard) {
-				ImVec2 s = ImGui::CalcTextSize(fhistory.history[0]);
-				ImGui::SameLine(ImGui::GetWindowWidth() - s.x - 20);
-				ImGui::Text("%s", fhistory.history[0]);
-				ImGui::SameLine();
+				int slen = strlen(fhistory.history[0]);
+				float dots_size = 0;
+
+				for (std::size_t spos = 0; spos < slen; ++spos) {
+					ImVec2 s = ImGui::CalcTextSize(fhistory.history[0] + spos);
+					if (s.x + dots_size + status_bar_x_at + 20 < ImGui::GetWindowWidth()) {
+						ImGui::SameLine(ImGui::GetWindowWidth() - 20 - s.x - dots_size);
+						//ImGui::SameLine(status_bar_x_at);
+						ImGui::Text(spos == 0 ? "%s" : "...%s", fhistory.history[0] + spos);
+						ImGui::SameLine();
+						break;
+					}
+					dots_size = ImGui::CalcTextSize("...").x;
+				}
 			}
 		}
 		ImGui::Text(" ");
@@ -2196,42 +2243,88 @@ void BoardView::Update() {
 	} else {
 		m_board_surface = ImVec2(io.DisplaySize.x - m_info_surface.x, io.DisplaySize.y - (m_status_height + m_menu_height));
 	}
-	/*
-	 * Drawing surface, where the actual PCB/board is plotted out
-	 */
-	ImGui::SetNextWindowPos(ImVec2(0, m_menu_height));
-	if (io.DisplaySize.x != m_lastWidth || io.DisplaySize.y != m_lastHeight) {
+	//if (io.DisplaySize.x != m_lastWidth || io.DisplaySize.y != m_lastHeight) {
+	if (m_board_surface.x != m_lastWidth || m_board_surface.y != m_lastHeight) {
 		//		m_lastWidth   = io.DisplaySize.x;
-		//		m_lastHeight  = io.DisplaySize.y;
+			//		m_lastHeight  = io.DisplaySize.y;
 		m_lastWidth   = m_board_surface.x;
 		m_lastHeight  = m_board_surface.y;
 		m_needsRedraw = true;
 	}
 
-	ImGui::SetNextWindowSize(m_board_surface);
+	float dy_off = 0;
+	float dx_off = 0;
 
-	ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
-	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1.0f);
-	ImGui::PushStyleColor(ImGuiCol_WindowBg, m_colors.backgroundColor);
+	dual_draw_side2 = false;
+	bool split_x = m_split_view_x != 0.0f;
+	bool split_y = m_split_view_y != 0.0f && m_split_view_x == 0.0f;
+	
+	// e__l
 
-	ImGui::Begin("surface", nullptr, draw_surface_flags);
-	if (m_validBoard) {
+	for (int draw_side = 0; draw_side < (split_x || split_y ? 2 : 1); ++draw_side) {
+		//m_current_side ^= draw_side;
+		m_needsRedraw = true;
+
+		if (draw_side) {
+			dual_draw_side2 = true;
+			dual_draw_offset = { dx_off, dy_off };
+			//ImGui::SetNextWindowFocus();
+		}
+		/*
+		 * Drawing surface, where the actual PCB/board is plotted out
+		 */
+
+		if (split_y) {
+			m_board_surface_active.min = ImVec2(0, m_menu_height + draw_side * m_board_surface.y * m_split_view_y);
+			m_board_surface_active.max = m_board_surface_active.min + ImVec2(m_board_surface.x, m_board_surface.y * (draw_side ? 1.0f - m_split_view_y : m_split_view_y));
+		} else if (split_x) {
+			m_board_surface_active.min = ImVec2(draw_side * m_board_surface.x * m_split_view_x, m_menu_height);
+			m_board_surface_active.max = m_board_surface_active.min + ImVec2{ m_board_surface.x * (draw_side ? 1.0f - m_split_view_x : m_split_view_x), m_board_surface.y };
+		} else {
+			m_board_surface_active.min = ImVec2(0.0f, m_menu_height);
+			m_board_surface_active.max = { m_board_surface.x, m_menu_height + m_board_surface.y };
+		}
+		ImGui::SetNextWindowPos(m_board_surface_active.min);
+		ImGui::SetNextWindowSize(m_board_surface_active.dim());
+
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1.0f);
+		ImGui::PushStyleColor(ImGuiCol_WindowBg, m_colors.backgroundColor);
+		
+		ImGui::Begin(("surface" + std::to_string(draw_side)).c_str(), nullptr, draw_surface_flags);
 		HandleInput();
-		backgroundImage.render(*ImGui::GetWindowDrawList(),
-			CoordToScreen(backgroundImage.x0(), backgroundImage.y0()),
-			CoordToScreen(backgroundImage.x1(), backgroundImage.y1()),
-			m_rotation);
-		DrawBoard();
+			
+		if (m_validBoard) {
+			backgroundImage.render(*ImGui::GetWindowDrawList(),
+								   CoordToScreen(backgroundImage.x0(), backgroundImage.y0()),
+								   CoordToScreen(backgroundImage.x1(), backgroundImage.y1()),
+								   m_rotation);
+			DrawBoard();
+			
+			if (m_draw_both_sides) {
+				dual_draw_side2 = true;
+				dual_draw_offset = ImVec2{ 0.0f, float(m_boardHeight) };
+				m_needsRedraw = true;
+				DrawBoard();
+			}
+		}
+		ImGui::End();
+		
+		ImGui::PopStyleColor();
+		ImGui::PopStyleVar();
+
+		// Overlay
+		RenderOverlay();
+		
+		ImGui::PopStyleVar();
+
+		if (split_y) {
+			dy_off = (ScreenToCoord(ImVec2(0, m_menu_height)) - ScreenToCoord(ImVec2(0, m_menu_height + m_board_surface.y * m_split_view_y))).y;
+		} else if (split_x) {
+			dx_off = (ScreenToCoord(ImVec2(0, m_menu_height)) - ScreenToCoord(ImVec2(m_board_surface.x * m_split_view_x, 0.0f))).x;
+		}
 	}
-	ImGui::End();
-	ImGui::PopStyleColor();
-	ImGui::PopStyleVar();
-
-	// Overlay
-	RenderOverlay();
-
-	ImGui::PopStyleVar();
-
+	dual_draw_offset = { 0, 0 };
 } // main menu bar
 
 void BoardView::Zoom(float osd_x, float osd_y, float zoom) {
@@ -2243,14 +2336,26 @@ void BoardView::Zoom(float osd_x, float osd_y, float zoom) {
 
 	target.x = osd_x;
 	target.y = osd_y;
+	if (dual_draw_side2) { // e__l
+		target -= ImVec2{m_board_surface.x * m_split_view_x, m_board_surface.y * m_split_view_y };
+	}
 	coord    = ScreenToCoord(target.x, target.y);
+	//std::cerr << "target=" << ImVec2{ target.x, target.y } << " target_coord=" << coord << " ";
 
+	
 	// Adjust the scale of the whole view, then get the new coordinates ( as
 	// CoordToScreen utilises m_scale )
 	m_scale        = m_scale * powf(2.0f, zoom);
 	ImVec2 dtarget = CoordToScreen(coord.x, coord.y);
+	if (dual_draw_side2) { // e__l
+		//dtarget -= m_board_surface_active.min;
+	}
+	//std::cerr << " screen_off=" << dtarget << " ";
+
 
 	ImVec2 td = ScreenToCoord(target.x - dtarget.x, target.y - dtarget.y, 0);
+	//std::cerr << " coord_off=" << td << " ddraw_off=" << dual_draw_offset << "\n";
+
 	m_dx += td.x;
 	m_dy += td.y;
 	m_needsRedraw = true;
@@ -2269,7 +2374,8 @@ void BoardView::Pan(int direction, int amount) {
 
 	switch (direction) {
 		case DIR_UP: amount = -amount;
-		case DIR_DOWN:
+			// fall through
+	    case DIR_DOWN:
 			if ((m_current_side) && (m_rotation % 2)) amount = -amount;
 			switch (m_rotation) {
 				case 0: m_dy += amount; break;
@@ -2279,7 +2385,8 @@ void BoardView::Pan(int direction, int amount) {
 			}
 			break;
 		case DIR_LEFT: amount = -amount;
-		case DIR_RIGHT:
+			// fall through
+	    case DIR_RIGHT:
 			if ((m_current_side) && ((m_rotation % 2) == 0)) amount = -amount;
 			switch (m_rotation) {
 				case 0: m_dx -= amount; break;
@@ -2305,7 +2412,6 @@ void BoardView::HandleInput() {
 	const ImGuiIO &io = ImGui::GetIO();
 
 	if (ImGui::IsWindowHovered()) {
-
 		if (ImGui::IsMouseDragging(0)) {
 			if ((m_dragging_token == 0) && (io.MouseClickedPos[0].x < m_board_surface.x)) m_dragging_token = 1; // own it.
 			if (m_dragging_token == 1) {
@@ -2317,17 +2423,23 @@ void BoardView::HandleInput() {
 				} // If the delta values are crazy just drop them (happens when panning
 				// off screen). 500 arbritary chosen
 				ImGui::ResetMouseDragDelta();
-				ImVec2 td = ScreenToCoord(delta.x, delta.y, 0);
-				m_dx += td.x;
-				m_dy += td.y;
+
+				if (! (m_tcl_drag = m_tcl->handle_mouse_drag(io.MouseClickedPos[0], delta, m_tcl_drag))) {
+					ImVec2 td = ScreenToCoord(delta.x, delta.y, 0);
+
+					m_dx += td.x;
+					m_dy += td.y;
+				}
 				m_draggingLastFrame = true;
 				m_needsRedraw       = true;
 			}
 		} else if (m_dragging_token >= 0) {
 			m_dragging_token = 0;
-
+			m_tcl_drag = false;
+			
 			if (m_lastFileOpenWasInvalid == false) {
 				// Conext menu
+
 				if (!m_lastFileOpenWasInvalid && m_file && m_board && ImGui::IsMouseClicked(1)) {
 					if (showAnnotations) {
 						// Build context menu here, for annotations and inspection
@@ -2348,7 +2460,7 @@ void BoardView::HandleInput() {
 					FlipBoard();
 
 					// Else, click to select pin
-				} else if (!m_lastFileOpenWasInvalid && m_file && m_board && ImGui::IsMouseReleased(0) && !m_draggingLastFrame) {
+				} else if (!m_lastFileOpenWasInvalid && m_file && m_board && ImGui::IsMouseReleased(0) && !m_draggingLastFrame && !m_tcl->handle_mouse_click(io.MouseClickedPos[0])) {
 					ImVec2 spos = ImGui::GetMousePos();
 					ImVec2 pos  = ScreenToCoord(spos.x, spos.y);
 
@@ -2358,7 +2470,7 @@ void BoardView::HandleInput() {
 					// float min_dist = m_pinDiameter * 1.0f;
 					float min_dist = m_pinDiameter / 2.0f;
 					min_dist *= min_dist; // all distance squared
-					std::shared_ptr<Pin> selection = nullptr;
+					obv_shared_ptr<Pin> selection = nullptr;
 					for (auto &pin : m_board->Pins()) {
 						if (BoardElementIsVisible(pin->component)) {
 							float dx   = pin->position.x - pos.x;
@@ -2438,7 +2550,9 @@ void BoardView::HandleInput() {
 										part->visualmode = part->CVMSelected;
 									}
 								}
+								m_tcl->component_select_event();
 
+								
 								/*
 								 * If this part has a non-selected visual mode (normal)
 								 * AND it's not in the existing part list, then add it
@@ -2494,18 +2608,31 @@ void BoardView::HandleInput() {
 			if (mwheel != 0.0f) {
 				mwheel *= zoomFactor;
 
-				Zoom(io.MousePos.x, io.MousePos.y, mwheel);
+				if (! m_tcl->handle_mouse_wheel(io.MousePos.x, io.MousePos.y, io.MouseWheel)) {
+					Zoom(io.MousePos.x, io.MousePos.y, mwheel);
+				} else {
+					m_needsRedraw = true;
+				}
 			}
 		}
 	}
 
-	if ((!io.WantCaptureKeyboard)) {
-
+	if (! dual_draw_side2 && (!io.WantCaptureKeyboard) && ! m_tcl->handle_keypress()) {
+		
 		if (keybindings.isPressed("Mirror")) {
 			Mirror();
 			CenterView();
 			m_needsRedraw = true;
 
+		} else if (keybindings.isPressed("DualDraw")) {
+			if (m_split_view_x) {
+				m_split_view_x = 0.0f;
+				m_split_view_y = 0.5f;
+			} else if (m_split_view_y) {
+				m_split_view_x = m_split_view_y = 0.0f;
+			} else {
+				m_split_view_x = 0.5f;
+			}
 		} else if (keybindings.isPressed("RotateCW")) {
 			// Rotate board: R and period rotate clockwise; comma rotates
 			// counter-clockwise
@@ -2569,10 +2696,30 @@ void BoardView::HandleInput() {
 		} else if (keybindings.isPressed("Clear")) {
 			ClearAllHighlights();
 
+		} else if (keybindings.isPressed("Fullscreen")) {
+			//SDL_SetWindowFullscreen(m_sdl_window, m_is_fullscreen ? 0 : SDL_WINDOW_FULLSCREEN_DESKTOP);
+			if (m_is_fullscreen) {
+				SDL_RestoreWindow(m_sdl_window);
+			} else {
+				SDL_MaximizeWindow(m_sdl_window);
+			}
+			m_is_fullscreen = !m_is_fullscreen;
 		} else {
+			bool handled = false;
+			if (tcl_keybindings) {
+				for (auto && ii : m_tcl->keybind_targets()) {
+					if (tcl_keybindings->isPressed(ii)) {
+						m_tcl->keypress(ii);
+						handled = true;
+					}
+				}
+			}
+
+			if (! handled) {
 			/*
 			 * Do what ever is required for unhandled key presses.
 			 */
+			}
 		}
 	}
 }
@@ -2585,12 +2732,12 @@ void BoardView::HandleInput() {
  */
 void BoardView::ShowNetList(bool *p_open) {
 	static NetList netList(bind(&BoardView::FindNet, this, _1));
-	netList.Draw("Net List", p_open, m_board);
+	netList.Draw("Net List", p_open, m_board.get());
 }
 
 void BoardView::ShowPartList(bool *p_open) {
 	static PartList partList(bind(&BoardView::FindComponent, this, _1));
-	partList.Draw("Part List", p_open, m_board);
+	partList.Draw("Part List", p_open, m_board.get());
 }
 
 void BoardView::RenderOverlay() {
@@ -2860,7 +3007,7 @@ void BoardView::OutlineGenFillDraw(ImDrawList *draw, int ydelta, double thicknes
 
 	// Get the viewport limits, so we don't waste time scanning what we don't need
 	ImVec2 vpa = ScreenToCoord(0, 0);
-	ImVec2 vpb = ScreenToCoord(io.DisplaySize.x, io.DisplaySize.y);
+	ImVec2 vpb = ScreenToCoord(io.DisplaySize);
 
 	if (vpa.y > vpb.y) {
 		ystart = vpb.y;
@@ -2982,7 +3129,7 @@ inline void BoardView::DrawOutline(ImDrawList *draw) {
 	Point fp;
 
 	auto &outline = m_board->OutlinePoints();
-	if (outline.size() < 1) { // Nothing to draw
+	if (outline.empty()) {
 		return;
 	}
 
@@ -2997,12 +3144,12 @@ inline void BoardView::DrawOutline(ImDrawList *draw) {
 		Point &pb = *outline[i + 1];
 
 		// jump double/dud points
-		if (pa.x == pb.x && pa.y == pb.y) continue;
+		if (pa == pb) continue;
 
 		// if we encounter our hull/poly start point, then we've now created the
 		// closed
 		// hull, jump the next segment and reset the first-point
-		if ((!jump) && (fp.x == pb.x) && (fp.y == pb.y)) {
+		if (!jump && fp == pb) {
 			if (i < outline.size() - 2) {
 				fp   = *outline[i + 2];
 				jump = 1;
@@ -3012,8 +3159,8 @@ inline void BoardView::DrawOutline(ImDrawList *draw) {
 			jump = 0;
 		}
 
-		ImVec2 spa = CoordToScreen(pa.x, pa.y);
-		ImVec2 spb = CoordToScreen(pb.x, pb.y);
+		ImVec2 spa = CoordToScreen(pa);
+		ImVec2 spb = CoordToScreen(pb);
 
 		/*
 		 * If we have a pin selected, we mask off the colour to shade out
@@ -3044,17 +3191,38 @@ void BoardView::DrawNetWeb(ImDrawList *draw) {
 			uint32_t col = m_colors.pinNetWebColor;
 			if (!BoardElementIsVisible(p->component)) {
 				col = m_colors.pinNetWebOSColor;
-				draw->AddCircle(CoordToScreen(p->position.x, p->position.y), p->diameter * m_scale, col, 16);
+				draw->AddCircle(CoordToScreen(p->position), p->diameter * m_scale, col, 16);
 			}
 
-			draw->AddLine(CoordToScreen(m_pinSelected->position.x, m_pinSelected->position.y),
-			              CoordToScreen(p->position.x, p->position.y),
+			draw->AddLine(CoordToScreen(m_pinSelected->position),
+			              CoordToScreen(p->position),
 			              ImColor(col),
 			              netWebThickness);
 		}
 	}
 
 	return;
+}
+
+void BoardView::DrawNodes(ImDrawList * draw) {
+	std::lock_guard lck(m_DrawNodes_mutex);
+	float stub_len = m_pinDiameter;
+	for (auto n : m_board->Nodes()) {
+		if (bool(m_current_side) != n->top) {
+			if (n->stub) {
+				ImVec2 v = n->p1 - n->p2;
+				float deg;
+				if (v.y == 0) {
+					deg = 0;
+				} else {
+					deg = atanf(v.x / v.y);
+				}
+				draw->AddLine(CoordToScreen(n->p1), CoordToScreen({ n->p1.x + cosf(deg) * stub_len, n->p1.y + sin(deg) * stub_len }), m_colors.pinDefaultColor, 3);
+			} else {
+				draw->AddLine(CoordToScreen(n->p1), CoordToScreen(n->p2), m_colors.pinDefaultColor, 3);
+			}
+		}
+	}
 }
 
 inline void BoardView::DrawPins(ImDrawList *draw) {
@@ -3066,6 +3234,20 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 
 	if (!showPins) return;
 
+	auto apply_shade = [] (uint32_t c, uint32_t s, float i) {
+		uint32_t cc = c;
+		if (s) {
+			cc = s;
+		}
+		auto f = [i, cc] (int sh) {
+			uint32_t ret = (cc >> sh & 0xff) * i;
+			if (ret > 255) return uint32_t(255) << sh;
+			return ret << sh;
+		};
+
+		return f(0) | f(8) | f(16) | f(24);
+	};
+	
 	/*
 	 * If we have a pin selected, then it makes it
 	 * easier to see where the associated pins are
@@ -3088,6 +3270,12 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 
 	if (m_pinSelected) DrawNetWeb(draw);
 
+	// e__l
+	BBox coord_vis = ScreenToCoord(m_board_surface_active);
+	//coord_vis.min -= dual_draw_offset;
+	//coord_vis.max -= dual_draw_offset;
+	//std::cerr << dual_draw_side2 << " " << coord_vis.min << " " << coord_vis.max << "\n";
+	
 	for (auto &pin : m_board->Pins()) {
 		float psz           = pin->diameter * m_scale;
 		uint32_t fill_color = 0xFFFF8888; // fallback fill colour
@@ -3100,7 +3288,11 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 		// continue if pin is not visible anyway
 		if (!BoardElementIsVisible(pin)) continue;
 
-		ImVec2 pos = CoordToScreen(pin->position.x, pin->position.y);
+		if (!coord_vis.contains(pin->position, psz))
+			continue;
+		
+		ImVec2 pos = CoordToScreen(pin->position);
+		if (false)
 		{
 			if (!IsVisibleScreen(pos.x, pos.y, psz, io)) continue;
 		}
@@ -3207,6 +3399,8 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 			if (pin->type == Pin::kPinTypeTestPad) show_text = false;
 		}
 
+		color = apply_shade(color, 0, pin->intensity_delta_ * m_default_intensity);
+		
 		// Drawing
 		{
 			int segments;
@@ -3273,6 +3467,164 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 	}
 }
 
+bool BoardView::DrawPartSymbol(ImDrawList * draw, Component * c) {
+	auto rot = [](ImVec2 const & a, ImVec2 const & b, float angle) -> ImVec2 {
+		ImVec2 ret = b - a;
+		return { ret.x * cosf(angle) - ret.y * sinf(angle), ret.x * sinf(angle) + ret.y * cosf(angle) };
+	};
+
+	auto apply_shade = [] (uint32_t c, uint32_t s, float i) {
+		uint32_t cc = c;
+		if (s) {
+			cc = s;
+		}
+		auto f = [i, cc] (int sh) {
+			uint32_t ret = (cc >> sh & 0xff) * i;
+			if (ret > 255) return uint32_t(255) << sh;
+			return ret << sh;
+		};
+
+		return f(0) | f(8) | f(16) | f(24);
+	};
+
+	
+	const float PI = M_PI;
+	uint32_t color = apply_shade(0xff666666, c->shade_color_, m_default_intensity * c->intensity_delta_);
+	float thick = 5;
+	
+	if (c->pins.size() == 2) {
+		Point pp1 = c->pins[0]->position, pp2 = c->pins[1]->position;
+		
+		ImVec2 p1 = { pp1.x, pp1.y }, p2 = { pp2.x, pp2.y };
+		
+		if (c->component_type == Component::kComponentTypeCapacitor || c->name[0] == 'C' || c->name[1] == 'C') {
+			const float leadlen  = 0.4f;
+			const float platelen = 0.8f;
+
+			ImVec2 mp1 = p1 - (p1 - p2) * leadlen, mp2 = p2 - (p2 - p1) * leadlen;
+			
+			draw->AddLine(CoordToScreen(p1), CoordToScreen(mp1), color, thick);
+			draw->AddLine(CoordToScreen(p2), CoordToScreen(mp2), color, thick);
+			
+			ImVec2 rp1 = rot(p1, mp1, PI / 2);
+			ImVec2 rp2 = rot(p2, mp2, PI / 2);
+			
+			draw->AddLine(CoordToScreen(mp1), CoordToScreen(mp1 + rp1 * platelen), color, thick);
+			draw->AddLine(CoordToScreen(mp2), CoordToScreen(mp2 + rp2 * platelen), color, thick);
+			
+			ImVec2 rp11 = rot(p1, mp1, - PI / 2);
+			ImVec2 rp21 = rot(p2, mp2, - PI / 2);
+			draw->AddLine(CoordToScreen(mp1), CoordToScreen(mp1 + rp11 * platelen), color, thick);
+			draw->AddLine(CoordToScreen(mp2), CoordToScreen(mp2 + rp21 * platelen), color, thick);
+
+			ImVec2 dp1 = (p1 - p2) * 0.1f;
+			ImVec2 dp2 = (p2 - p1) * 0.1f;
+
+			auto dgnd = [this, draw, color, thick](ImVec2 const & p, ImVec2 const & dir, ImVec2 rp1, ImVec2 rp2) {
+				for (int i = 0; i < 3; ++i) {
+					rp1 = rp1 * 0.7f;
+					rp2 = rp2 * 0.7f;
+					draw->AddLine(CoordToScreen(p + dir * i), CoordToScreen(p + dir * i + rp1), color, thick);
+					draw->AddLine(CoordToScreen(p + dir * i), CoordToScreen(p + dir * i + rp2), color, thick);
+				}
+			};
+			
+			if (c->pins[0]->net->is_ground) {
+				dgnd(p1, dp1, rp1, rp2);
+			}
+			if (c->pins[1]->net->is_ground) {
+				dgnd(p2, dp2, rp11, rp21);
+			}
+			return true;
+		} else if (c->component_type == Component::kComponentTypeResistor || c->name[0] == 'R' || c->name[1] == 'R') {
+			static int npeaks = 5;
+			
+			if (npeaks == 0) {
+				npeaks = 1;
+			} else if (npeaks == 1) {
+				npeaks = 3;
+			} else if (npeaks == 3) {
+				npeaks = 5;
+			} else if (npeaks == 5) {
+				npeaks = 13;
+			} else if (npeaks == 9) {
+				npeaks = 13;
+			} else if (npeaks == 13) {
+				npeaks = 25;
+			} else if (npeaks == 25) {
+				npeaks = 0;
+			}
+			npeaks = 5;
+			
+			int angle;
+			if (npeaks == 3) {
+				angle = 45;
+				thick = 8;
+			} else if (npeaks == 5) {
+				angle = 60;
+				thick = 5;
+			} else if (npeaks == 7) {
+				angle = 70;
+				thick = 4;
+			} else if (npeaks == 9) {
+				angle = 75;
+				thick = 3;
+			} else if (npeaks == 11) {
+				angle = 78;
+				thick = 2;
+			} else if (npeaks == 13) {
+				angle = 78;
+				thick = 2;
+			} else if (npeaks == 25) {
+				angle = 84;
+				thick = 2;
+			}
+			//const int npeaks = 7;
+			//const int angle  = 70;
+			
+			if (npeaks == 0) {
+				draw->AddLine(CoordToScreen(p1), CoordToScreen(p2), color, 10);
+			} else if (npeaks == 1) {
+				ImVec2 m1 = p1 + (p2 - p1) / 3;
+				ImVec2 m2 = p2 + (p1 - p2) / 3;
+				float thick = 8;
+
+				draw->AddLine(CoordToScreen(p1), CoordToScreen(m1), color, thick);
+				draw->AddLine(CoordToScreen(p2), CoordToScreen(m2), color, thick);
+				draw->AddLine(CoordToScreen(m1), CoordToScreen(m1 + rot(p1, p2, 60 * PI / 180) / 3), color, thick);
+				draw->AddLine(CoordToScreen(m2), CoordToScreen(m2 + rot(p2, p1, -60 * PI / 180) / 3), color, thick);
+				
+			} else {
+				ImVec2 pe1 = rot(p1, p2,  angle * PI / 180) / npeaks * 0.5f / cosf(angle * PI / 180);
+				ImVec2 pe2 = rot(p1, p2, -angle * PI / 180) / npeaks * 0.5f / cosf(angle * PI / 180);
+				ImVec2 pe3 = pe1 * 2;
+				ImVec2 pe4 = pe2 * 2;
+				
+				if (false && c->name == "PR8168") {
+					std::cerr << p1 << " " << p2 << " " << (p1 - p2) << " " << sinf(60 * PI / 180) << " " << cosf(60 * PI / 180) << " " << pe1 << " " << pe2 << " " << pe3 << " " << pe4 << "\n";
+				}
+				
+				ImVec2 pprev = p1;
+				ImVec2 pnext = p1 + pe1;
+				//float sign = 1.0f;
+				for (int pi = 0; pi < npeaks + 1; ++pi) {
+					draw->AddLine(CoordToScreen(pprev), CoordToScreen(pnext), color, thick);
+					pprev = pnext;
+					if (pi == npeaks - 1) {
+						pnext = pnext + pe2;
+					} else if (pi % 2 == 0) {
+						pnext = pnext + pe4;
+					} else {
+						pnext = pnext + pe3;
+					}
+				}
+			}
+			return true;
+		}
+	}
+	return false;
+}
+
 inline void BoardView::DrawParts(ImDrawList *draw) {
 	// float psz = (float)m_pinDiameter * 0.5f * m_scale;
 	double angle;
@@ -3282,6 +3634,21 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 	//	int rendered   = 0;
 	char p0, p1; // first two characters of the part name, code-writing
 	             // convenience more than anything else
+
+	auto apply_shade = [] (uint32_t c, uint32_t s, float i) {
+		uint32_t cc = c;
+		if (s) {
+			cc = s;
+		}
+		auto f = [i, cc] (int sh) {
+			uint32_t ret = (cc >> sh & 0xff) * i;
+			if (ret > 255) return uint32_t(255) << sh;
+			return ret << sh;
+		};
+
+		return f(0) | f(8) | f(16) | f(24);
+	};
+	
 
 	draw->ChannelsSetCurrent(kChannelPolylines);
 	/*
@@ -3355,7 +3722,7 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 
 			part->omin        = ImVec2(min_x, min_y);
 			part->omax        = ImVec2(max_x, max_y);
-			part->centerpoint = ImVec2((max_x - min_x) / 2 + min_x, (max_y - min_y) / 2 + min_y);
+			part->centerpoint = part->omin + (part->omax - part->omin) / 2; //ImVec2((max_x - min_x) / 2 + min_x, (max_y - min_y) / 2 + min_y);
 
 			distance = sqrt((max_x - min_x) * (max_x - min_x) + (max_y - min_y) * (max_y - min_y));
 
@@ -3632,22 +3999,25 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 
 		if (part->outline_done) {
 
+			auto f = [this] (ImVec2 const & v) {
+				return CoordToScreen(v);
+			};
+			ImVec2 * p = part->outline;
+			ImVec2 a = f(p[0]), b = f(p[1]), c = f(p[2]), d = f(p[3]);
+
 			/*
 			 * Draw the bounding box for the part
 			 */
-			ImVec2 a, b, c, d;
-
-			a = ImVec2(CoordToScreen(part->outline[0].x, part->outline[0].y));
-			b = ImVec2(CoordToScreen(part->outline[1].x, part->outline[1].y));
-			c = ImVec2(CoordToScreen(part->outline[2].x, part->outline[2].y));
-			d = ImVec2(CoordToScreen(part->outline[3].x, part->outline[3].y));
 
 			// if (fillParts) draw->AddQuadFilled(a, b, c, d, color & 0xffeeeeee);
-			if (fillParts && !slowCPU) draw->AddQuadFilled(a, b, c, d, m_colors.partFillColor);
-			draw->AddQuad(a, b, c, d, color);
-			if (PartIsHighlighted(part)) {
-				if (fillParts && !slowCPU) draw->AddQuadFilled(a, b, c, d, m_colors.partHighlightedFillColor);
-				draw->AddQuad(a, b, c, d, m_colors.partHighlightedColor);
+			if (! DrawPartSymbol(draw, part.get())) {
+				
+				if (fillParts && !slowCPU) draw->AddQuadFilled(a, b, c, d, apply_shade(m_colors.partFillColor, part->shade_color_, part->intensity_delta_ * m_default_intensity));
+				draw->AddQuad(a, b, c, d, apply_shade(color, 0, part->intensity_delta_ * m_default_intensity));
+				if (PartIsHighlighted(part)) {
+					if (fillParts && !slowCPU) draw->AddQuadFilled(a, b, c, d, m_colors.partHighlightedFillColor);
+					draw->AddQuad(a, b, c, d, apply_shade(m_colors.partHighlightedColor, part->shade_color_, part->intensity_delta_ * m_default_intensity));
+				}
 			}
 
 			/*
@@ -3657,12 +4027,13 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 				int i;
 				draw->PathClear();
 				for (i = 0; i < part->hull_count; i++) {
-					ImVec2 p = CoordToScreen(part->hull[i].x, part->hull[i].y);
+					ImVec2 p = CoordToScreen(part->hull[i]);
 					draw->PathLineTo(p);
 				}
 				draw->PathStroke(m_colors.partHullColor, true, 1.0f);
 			}
 
+#if 0
 			/*
 			 * Draw any icon/mark featuers to illustrate the part better
 			 */
@@ -3677,7 +4048,8 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 					                segments);
 				}
 			}
-
+#endif
+			
 			/*
 			 * Draw the text associated with the box or pins if required
 			 */
@@ -3729,6 +4101,16 @@ void BoardView::DrawPartTooltips(ImDrawList *draw) {
 	//	if (m_parent_occluded) return;
 	if (!m_tooltips_enabled) return;
 	if (spos.x > m_board_surface.x) return;
+
+	if (dual_draw_side2 && spos.x > m_board_surface.x * m_split_view_x && spos.y > m_board_surface.y * m_split_view_y) {
+		//std::cerr << 1;
+	} else if (!dual_draw_side2 && !m_split_view_y && (!m_split_view_x || spos.x < m_board_surface.x * m_split_view_x)) {
+		//std::cerr << 2;
+	} else if (!dual_draw_side2 && !m_split_view_x && (!m_split_view_y || spos.y < m_board_surface.y * m_split_view_y)) {
+		//std::cerr << 3;
+	} else {
+		return;
+	}
 	/*
 	 * I am loathing that I have to add this, but basically check every pin on the board so we can
 	 * determine if we're hovering over a testpad
@@ -3754,86 +4136,116 @@ void BoardView::DrawPartTooltips(ImDrawList *draw) {
 		}
 	}
 
+	Component * previousHoveredPart = currentlyHoveredPart.get();
+	Pin * previousHoveredPin = currentlyHoveredPin.get();
 	currentlyHoveredPart = nullptr;
-	for (auto &part : m_board->Components()) {
-		int hit = 0;
-		//		auto p_part = part.get();
 
-		if (!BoardElementIsVisible(part)) continue;
 
-		// Work out if the point is inside the hull
-		{
-			int i, j, n;
-			outline_pt *poly;
-
-			n    = 4;
-			poly = part->outline;
-
-			for (i = 0, j = n - 1; i < n; j = i++) {
-				if (((poly[i].y > pos.y) != (poly[j].y > pos.y)) &&
-				    (pos.x < (poly[j].x - poly[i].x) * (pos.y - poly[i].y) / (poly[j].y - poly[i].y) + poly[i].x))
-					hit ^= 1;
+	if (Component * part = m_tcl->currently_hovered_part()) {
+		for (auto && ci : m_board->Components()) {
+			if (ci.get() == part) {
+				currentlyHoveredPart = ci;
+				break;
 			}
 		}
-
-		// If we're inside a part
-		if (hit) {
-			currentlyHoveredPart = part;
-			//			fprintf(stderr,"InPart: %s\n", currentlyHoveredPart->name.c_str());
-			if (part->outline_done) {
-
-				/*
-				 * Draw the bounding box for the part
-				 */
-				ImVec2 a, b, c, d;
-
-				a = ImVec2(CoordToScreen(part->outline[0].x, part->outline[0].y));
-				b = ImVec2(CoordToScreen(part->outline[1].x, part->outline[1].y));
-				c = ImVec2(CoordToScreen(part->outline[2].x, part->outline[2].y));
-				d = ImVec2(CoordToScreen(part->outline[3].x, part->outline[3].y));
-				draw->AddQuad(a, b, c, d, m_colors.partHighlightedColor, 2);
-			}
-
-			float min_dist = m_pinDiameter / 2.0f;
-			min_dist *= min_dist; // all distance squared
-			currentlyHoveredPin = nullptr;
-
-			for (auto &pin : currentlyHoveredPart->pins) {
-				// auto p     = pin;
-				float dx   = pin->position.x - pos.x;
-				float dy   = pin->position.y - pos.y;
-				float dist = dx * dx + dy * dy;
-				if ((dist < (pin->diameter * pin->diameter)) && (dist < min_dist)) {
-					currentlyHoveredPin = pin;
-					//					fprintf(stderr,"Pinhit: %s\n",pin->number.c_str());
-					min_dist = dist;
-				} // if in the required diameter
-			}     // for each pin in the part
-
-			draw->ChannelsSetCurrent(kChannelAnnotations);
-
-			if (currentlyHoveredPin)
-				draw->AddCircle(CoordToScreen(currentlyHoveredPin->position.x, currentlyHoveredPin->position.y),
-				                currentlyHoveredPin->diameter * m_scale,
-				                m_colors.pinHaloColor,
-				                32,
-				                pinHaloThickness);
-			ImGui::PushStyleColor(ImGuiCol_Text, m_colors.annotationPopupTextColor);
-			ImGui::PushStyleColor(ImGuiCol_PopupBg, m_colors.annotationPopupBackgroundColor);
-			ImGui::BeginTooltip();
-			if (currentlyHoveredPin) {
-				ImGui::Text("%s\n[%s]%s",
-				            currentlyHoveredPart->name.c_str(),
-				            (currentlyHoveredPin ? currentlyHoveredPin->name.c_str() : " "),
-				            (currentlyHoveredPin ? currentlyHoveredPin->net->name.c_str() : " "));
-			} else {
-				ImGui::Text("%s", currentlyHoveredPart->name.c_str());
-			}
-			ImGui::EndTooltip();
-			ImGui::PopStyleColor(2);
+		if (part->outline_done) {
+			/*
+			 * Draw the bounding box for the part
+			 */
+			auto f = [this](ImVec2 const & v) {
+				return CoordToScreen(v);
+			};
+			ImVec2 * p = part->outline;
+			draw->AddQuad(f(p[0]), f(p[1]), f(p[2]), f(p[3]), m_colors.partHighlightedColor, 2);
 		}
+	} else if (m_tcl->grab_mouse_hover()) {
+	} else {
+		for (auto &part : m_board->Components()) {
+			int hit = 0;
+			//		auto p_part = part.get();
+			
+			if (!BoardElementIsVisible(part)) continue;
+			
+			// Work out if the point is inside the hull
+			{
+				int i, j, n;
+				outline_pt *poly;
+				
+				n    = 4;
+				poly = part->outline;
+				
+				for (i = 0, j = n - 1; i < n; j = i++) {
+					if (((poly[i].y > pos.y) != (poly[j].y > pos.y)) &&
+						(pos.x < (poly[j].x - poly[i].x) * (pos.y - poly[i].y) / (poly[j].y - poly[i].y) + poly[i].x))
+						hit ^= 1;
+				}
+			}
+			
+			// If we're inside a part
+			if (hit) {
+				currentlyHoveredPart = part;
+				if (part->outline_done) {
+					/*
+					 * Draw the bounding box for the part
+					 */
+					auto f = [this](ImVec2 const & v) {
+						return CoordToScreen(v);
+					};
+					ImVec2 * p = part->outline;
+					draw->AddQuad(f(p[0]), f(p[1]), f(p[2]), f(p[3]), m_colors.partHighlightedColor, 2);
+				}
+				
+				float min_dist = m_pinDiameter / 2.0f;
+				min_dist *= min_dist; // all distance squared
+				
+				currentlyHoveredPin = nullptr;
+				
+				for (auto &pin : currentlyHoveredPart->pins) {
+					// auto p     = pin;
+					float dx   = pin->position.x - pos.x;
+					float dy   = pin->position.y - pos.y;
+					float dist = dx * dx + dy * dy;
+					if ((dist < (pin->diameter * pin->diameter)) && (dist < min_dist)) {
+						currentlyHoveredPin = pin;
+						//					fprintf(stderr,"Pinhit: %s\n",pin->number.c_str());
+						min_dist = dist;
+					} // if in the required diameter
+				}     // for each pin in the part
+				
+				draw->ChannelsSetCurrent(kChannelAnnotations);
+				
+				
+				
+				if (currentlyHoveredPin)
+					draw->AddCircle(CoordToScreen(currentlyHoveredPin->position.x, currentlyHoveredPin->position.y),
+									currentlyHoveredPin->diameter * m_scale,
+									m_colors.pinHaloColor,
+									32,
+									pinHaloThickness);
+				ImGui::PushStyleColor(ImGuiCol_Text, m_colors.annotationPopupTextColor);
+				ImGui::PushStyleColor(ImGuiCol_PopupBg, m_colors.annotationPopupBackgroundColor);
+				ImGui::BeginTooltip();
+				if (currentlyHoveredPin) {
+					ImGui::Text("%s\n[%s]%s",
+								currentlyHoveredPart->name.c_str(),
+								(currentlyHoveredPin ? currentlyHoveredPin->name.c_str() : " "),
+								(currentlyHoveredPin ? currentlyHoveredPin->net->name.c_str() : " "));
+				} else {
+					ImGui::Text("%s", currentlyHoveredPart->name.c_str());
+				}
+				ImGui::EndTooltip();
+				ImGui::PopStyleColor(2);
+			}
+			
+		} // for each part on the board
+	}
+	if (currentlyHoveredPin.get() != previousHoveredPin) {
+		m_tcl->notify_pin_hover(currentlyHoveredPin.get(), previousHoveredPin);
+	}
+	if (currentlyHoveredPart.get() != previousHoveredPart) {
+		m_tcl->notify_part_hover(currentlyHoveredPart.get(), previousHoveredPart);
+	}
 
-	} // for each part on the board
 }
 
 inline void BoardView::DrawPinTooltips(ImDrawList *draw) {
@@ -4002,8 +4414,8 @@ void BoardView::DrawBoard() {
 
 	ImDrawList *draw = ImGui::GetWindowDrawList();
 	if (!m_needsRedraw) {
-		memcpy(draw, m_cachedDrawList, sizeof(ImDrawList));
-		memcpy(draw->CmdBuffer.Data, m_cachedDrawCommands.Data, m_cachedDrawCommands.Size);
+		memcpy((void *) draw, (void *) m_cachedDrawList, sizeof(ImDrawList));
+		memcpy((void *) draw->CmdBuffer.Data, (void *) m_cachedDrawCommands.Data, m_cachedDrawCommands.Size);
 		return;
 	}
 
@@ -4019,9 +4431,12 @@ void BoardView::DrawBoard() {
 	DrawParts(draw);
 	//	DrawSelectedPins(draw);
 	DrawPins(draw);
+	DrawNodes(draw);
 	// DrawPinTooltips(draw);
 	DrawPartTooltips(draw);
 	DrawAnnotations(draw);
+
+	m_tcl->imgui_draw(draw);
 
 	draw->ChannelsMerge();
 
@@ -4064,9 +4479,9 @@ void BoardView::CenterView(void) {
 	m_needsRedraw = true;
 }
 
-void BoardView::SetFile(BRDFile *file) {
-	delete m_file;
-	delete m_board;
+void BoardView::SetFile(obv_shared_ptr<BRDFile> file, obv_shared_ptr<BRDBoard> board) {
+	//delete m_file;
+	//delete m_board;
 
 	// Check board outline (format) point count.
 	//		If we don't have an outline, generate one
@@ -4099,7 +4514,11 @@ void BoardView::SetFile(BRDFile *file) {
 	}
 
 	m_file  = file;
-	m_board = new BRDBoard(file);
+	if (board.get()) {
+		m_board = board;
+	} else {
+		m_board = obv_make_shared<BRDBoard>(file.get());
+	}
 	searcher.setParts(m_board->Components());
 	searcher.setNets(m_board->Nets());
 
@@ -4145,14 +4564,19 @@ void BoardView::SetFile(BRDFile *file) {
 	m_needsRedraw = true;
 }
 
+// e__l
 ImVec2 BoardView::CoordToScreen(float x, float y, float w) {
-	float side = m_current_side ? -1.0f : 1.0f;
-	float tx   = side * m_scale * (x + w * (m_dx - m_mx));
-	float ty   = -1.0f * m_scale * (y + w * (m_dy - m_my));
+	//float side  = m_current_side ? (dual_draw_side2 ? +1.0f : -1.0f) : 1.0f;
+	float side  = m_current_side ? (-1.0f) : 1.0f;
+	float sidey = dual_draw_side2 ? -1.0f : -1.0f;
+	
+	float tx   = side  * m_scale * (x + w * (m_dx - (dual_draw_side2 ? dual_draw_offset.x : 0.0f) - m_mx));
+	float ty   = sidey * m_scale * (y + w * (m_dy - (dual_draw_side2 ? dual_draw_offset.y : 0.0f) - m_my));
+
 	switch (m_rotation) {
-		case 0: return ImVec2(tx, ty);
-		case 1: return ImVec2(-ty, tx);
-		case 2: return ImVec2(-tx, -ty);
+		case 0:  return ImVec2(tx, ty);
+		case 1:  return ImVec2(-ty, tx);
+		case 2:  return ImVec2(-tx, -ty);
 		default: return ImVec2(ty, -tx);
 	}
 }
@@ -4181,10 +4605,22 @@ ImVec2 BoardView::ScreenToCoord(float x, float y, float w) {
 	float side     = m_current_side ? -1.0f : 1.0f;
 	float invscale = 1.0f / m_scale;
 
-	tx = tx * side * invscale + w * (m_mx - m_dx);
 	ty = ty * -1.0f * invscale + w * (m_my - m_dy);
 
-	return ImVec2(tx, ty);
+	if (m_draw_both_sides && ty < 0) {// m_boardHeight) {
+		//ty = 2 * m_boardHeight - ty;
+		ty = -ty;
+		tx = tx * side  * invscale + w * (m_mx - m_dx);
+
+		//tx = m_boardWidth - tx;
+	} else {
+		tx = tx * side  * invscale + w * (m_mx - m_dx);
+	}
+	if (dual_draw_side2 && y >= m_board_surface.y * m_split_view_y && x >= m_board_surface.x * m_split_view_x ) {
+		return ImVec2{ tx + dual_draw_offset.x, ty + dual_draw_offset.y };
+	} else {
+		return ImVec2(tx, ty);
+	}
 }
 
 void BoardView::Rotate(int count) {
@@ -4271,25 +4707,33 @@ void BoardView::SetTarget(float x, float y) {
 	m_dy += coord.y - y;
 }
 
-inline bool BoardView::BoardElementIsVisible(const std::shared_ptr<BoardElement> be) {
+inline bool BoardView::BoardElementIsVisible(const obv_shared_ptr<BoardElement> be) {
 	if (!be) return true; // no element? => no board side info
 
-	if (be->board_side == m_current_side) return true;
+	if (dual_draw_side2 && be->board_side != m_current_side || !dual_draw_side2 && be->board_side == m_current_side) return true;
 
 	if (be->board_side == kBoardSideBoth) return true;
 
+	
 	return false;
 }
 
 inline bool BoardView::IsVisibleScreen(float x, float y, float radius, const ImGuiIO &io) {
 	// if (x < -radius || y < -radius || x - radius > io.DisplaySize.x || y - radius > io.DisplaySize.y) return false;
+	[&io] { }();
 	if (x < -radius || y < -radius || x - radius > m_board_surface.x || y - radius > m_board_surface.y) return false;
 	return true;
 }
 
-bool BoardView::PartIsHighlighted(const std::shared_ptr<Component> component) {
+bool BoardView::PartIsHighlighted(const obv_shared_ptr<Component> component) {
 	bool highlighted = contains(component, m_partHighlighted);
 
+	if (false && highlighted) {
+		std::cerr << "contains " << highlighted << " " << component.get() << " " << m_partHighlighted.size() << " " << m_partHighlighted[0].get() << "\n";
+		char * p = nullptr;
+		*p = 0;
+	}
+	
 	// is any pin of this part selected?
 	if (m_pinSelected) highlighted |= m_pinSelected->component == component;
 
@@ -4422,3 +4866,12 @@ void BitVec::Resize(uint32_t new_size) {
 	}
 	m_size = new_size;
 }
+
+void BoardView::wakeup() {
+	if (m_wakeup_pipe[0] < 0) {
+		pipe(m_wakeup_pipe);
+	}
+	write(m_wakeup_pipe[1], "\0", 1);
+}
+
+int BoardView::m_wakeup_pipe[2] = { -1, -1 };

@@ -9,17 +9,18 @@ namespace Preferences {
 Keyboard::Keyboard(KeyBindings &keybindings, Confparse &obvconfig) : keybindings(keybindings), obvconfig(obvconfig) {
 }
 
-void Keyboard::menuItem() {
-	if (ImGui::MenuItem("Keyboard Preferences")) {
+void Keyboard::menuItem(const char * name) {
+	if (ImGui::MenuItem(name ? name : "Keyboard Preferences")) {
 		shown = true;
 	}
 }
 
-void Keyboard::render() {
+void Keyboard::render(const char * name) {
 	bool close_button_not_clicked = true;
 	auto &io = ImGui::GetIO();
 	ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x * 0.5f, io.DisplaySize.y * 0.5f), 0, ImVec2(0.5f, 0.5f));
-	if (ImGui::BeginPopupModal("Keyboard Preferences", &close_button_not_clicked, ImGuiWindowFlags_AlwaysAutoResize)) {
+
+	if (ImGui::BeginPopupModal(name ? name : "Keyboard Preferences", &close_button_not_clicked, ImGuiWindowFlags_AlwaysAutoResize)) {
 		shown = false;
 
 		// Find how many columns we need to show all the keybindings
@@ -39,7 +40,6 @@ void Keyboard::render() {
 				ImGui::TableNextRow();
 				ImGui::TableSetColumnIndex(0);
 				ImGui::Text("%s", kbs.first.c_str()); // binding name
-
 
 				auto &bindings = kbs.second; // reference because we add/delete from it below
 
@@ -145,7 +145,7 @@ void Keyboard::render() {
 	}
 
 	if (shown) {
-		ImGui::OpenPopup("Keyboard Preferences");
+		ImGui::OpenPopup(name ? name : "Keyboard Preferences");
 	}
 }
 
