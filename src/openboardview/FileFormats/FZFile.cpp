@@ -6,6 +6,7 @@
 #include <clocale>
 #include <cstdint>
 #include <cstring>
+#include <sstream>
 #include <unordered_map>
 #include <zlib.h>
 
@@ -16,6 +17,10 @@
 // This will put out some .bin file you would decompress using zlib.
 // constexpr uint32_t FZFile::key[44];
 uint32_t FZFile::key[44];
+
+#if __cplusplus < 201703L
+constexpr const std::array<uint32_t, 44> FZFile::key_parity;
+#endif
 
 static inline uint32_t rotl32(uint32_t a, int32_t b) {
 	return (a << b) | (a >> (32 - b));
