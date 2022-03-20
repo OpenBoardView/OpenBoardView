@@ -99,7 +99,7 @@ int parse_parameters(int argc, char **argv, struct globals *g) {
 		}
 
 		if (strcmp(p, "-V") == 0) {
-			SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "OFBV-BUILD: %s %s\n", OBV_BUILD, __TIMESTAMP__);
+			SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "OFBV-BUILD: %s %s\n", OBV_BUILD, __DATE__ " " __TIME__);
 			exit(0);
 		}
 
