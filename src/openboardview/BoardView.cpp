@@ -20,6 +20,7 @@
 #include "FileFormats/ASCFile.h"
 #include "FileFormats/BDVFile.h"
 #include "FileFormats/BRD2File.h"
+#include "FileFormats/BRDAllegroFile.h"
 #include "FileFormats/BRDFile.h"
 #include "FileFormats/BVRFile.h"
 #include "FileFormats/CADFile.h"
@@ -441,6 +442,8 @@ int BoardView::LoadFile(const filesystem::path &filepath) {
 				m_file = new BRDFile(buffer);
 			else if (BRD2File::verifyFormat(buffer))
 				m_file = new BRD2File(buffer);
+			else if (BRDAllegroFile::verifyFormat(buffer))
+				m_file = new BRDAllegroFile(buffer);
 			else if (BDVFile::verifyFormat(buffer))
 				m_file = new BDVFile(buffer);
 			else if (BVRFile::verifyFormat(buffer))
