@@ -65,7 +65,7 @@ struct FZPartDesc {
 
 class FZFile : public BRDFile {
   public:
-	FZFile(std::vector<char> &buf, uint32_t *fzkey);
+	FZFile(std::vector<char> &buf, uint32_t fzkey[44]);
 	~FZFile() {
 		free(file_buf);
 	}
@@ -74,6 +74,9 @@ class FZFile : public BRDFile {
 
   private:
 	std::vector<FZPartDesc> partsDesc;
+
+	static std::string fz_key_to_string(const uint32_t fzkey[44]);
+	static bool check_fz_key(const uint32_t fzkey[44]);
 
 	static void decode(char *source, size_t size);
 	static char *split(char *file_buf, size_t buffer_size, size_t &content_size, char *&descr, size_t &descr_size);
@@ -86,4 +89,5 @@ class FZFile : public BRDFile {
 	// static constexpr uint32_t key[44] = {0};
 	// static uint32_t key[44] = {0};
 	static uint32_t key[44];
+	static constexpr const std::array<uint32_t, 44> key_parity = {0, 1, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 1, 1, 0, 1, 1, 0, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 1, 0, 1};
 };

@@ -2092,17 +2092,6 @@ void BoardView::Update() {
 
 		if (ImGui::BeginPopupModal("Error opening file")) {
 			ImGui::Text("There was an error opening the file: %s", m_lastFileOpenName.c_str());
-			if (check_fileext(m_lastFileOpenName, ".fz")) {
-				int i;
-				ImGui::Separator();
-				ImGui::Text("FZKey:");
-				for (i = 0; i < 44; i++) {
-					// snprintf(s, sizeof(s), "%08x %08x %08x %08x", FZKey[i], FZKey[i + 1], FZKey[i + 2], FZKey[i + 3]);
-					ImGui::Text("%08x %08x %08x %08x", FZKey[i], FZKey[i + 1], FZKey[i + 2], FZKey[i + 3]);
-					//					ImGui::Text(s);
-					i += 3;
-				}
-			}
 			if (!m_error_msg.empty()) {
 				ImGui::Text("%s", m_error_msg.c_str());
 			}

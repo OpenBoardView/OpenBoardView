@@ -21,6 +21,32 @@ static inline uint32_t rotl32(uint32_t a, int32_t b) {
 	return (a << b) | (a >> (32 - b));
 }
 
+std::string FZFile::fz_key_to_string(const uint32_t fzkey[44]) {
+		std::stringstream sstr;
+		for (size_t i = 0; i < 44; i += 4) {
+			for (size_t j = 0; j < 4; j++) {
+				sstr << " 0x" << std::setfill ('0') << std::setw(8) << std::hex << fzkey[i + j];
+			}
+			sstr << std::endl;
+		}
+		return sstr.str();
+}
+
+bool FZFile::check_fz_key(const uint32_t fzkey[44]) {
+		bool valid_key = true;
+		for (size_t i = 0; i < 44; i++) { // Compute parity for each 32-bit word of FZ key
+			uint32_t tmp = fzkey[i];
+			tmp ^= tmp >> 16;
+			tmp ^= tmp >> 8;
+			tmp ^= tmp >> 4;
+			tmp ^= tmp >> 2;
+			tmp ^= tmp >> 1;
+			tmp = (~tmp) & 1;
+			valid_key = valid_key && (tmp == key_parity[i]);
+		}
+		return valid_key;
+}
+
 /*
  * Decrypt an RC6 encrypted buffer using key
  */
@@ -174,11 +200,19 @@ void FZFile::update_counts() {
 	num_nails  = nails.size();
 }
 
-FZFile::FZFile(std::vector<char> &buf, uint32_t *fzkey) {
+FZFile::FZFile(std::vector<char> &buf, uint32_t fzkey[44]) {
 	auto buffer_size = buf.size();
 	char *saved_locale;
 	float multiplier = 1.0f;
 	saved_locale     = setlocale(LC_NUMERIC, "C"); // Use '.' as delimiter for strtod
+
+	if (!check_fz_key(fzkey)) {
+		valid = false;
+		error_msg = "Invalid FZ key\n";
+		error_msg += "FZ Key:\n";
+		error_msg += fz_key_to_string(fzkey);
+		return;
+	}
 
 	memcpy(key, fzkey, sizeof(key));
 
@@ -410,4 +444,8 @@ FZFile::FZFile(std::vector<char> &buf, uint32_t *fzkey) {
 	setlocale(LC_NUMERIC, saved_locale); // Restore locale
 
 	valid = current_block != 0;
+
+	if (!valid) {
+		error_msg += "FZ Key:\n" + fz_key_to_string(key);
+	}
 }
