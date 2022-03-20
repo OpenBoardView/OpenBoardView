@@ -75,7 +75,7 @@ void ImGuiRendererSDL::processEvent(SDL_Event &event) {
 }
 
 void ImGuiRendererSDL::initFrame() {
-	ImGui_ImplSDL2_NewFrame(window);
+	ImGui_ImplSDL2_NewFrame();
 }
 
 void ImGuiRendererSDL::renderFrame(const ImVec4 &clear_color) {
