@@ -363,14 +363,11 @@ int main(int argc, char **argv) {
 
 			if (event.type == SDL_DROPFILE) {
 				app.LoadFile(filesystem::u8path(event.drop.file));
-			}
-			else if( event.type == SDL_MULTIGESTURE )
-			{
+			} else if(event.type == SDL_MULTIGESTURE && event.mgesture.numFingers == 2 && !ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
 				//Inhibit dragging board area
 				app.m_dragging_token = -1;
 				//Rotation detected, at least 1°
-				if(fabs(event.mgesture.dTheta) > 3.14 / 180.0)
-				{
+				if (fabs(event.mgesture.dTheta) > 3.14 / 180.0) {
 					angleacc += event.mgesture.dTheta;
 					if (angleacc >= 3.14 / 2) {
 						// > 90°
@@ -383,10 +380,8 @@ int main(int argc, char **argv) {
 					}
 				}
 				//Pinch-to-zoom
-				else if(fabs(event.mgesture.dDist) > 0.002)
-				{
-					int w;
-					int h;
+				else if (fabs(event.mgesture.dDist) > 0.002) {
+					int w, h;
 					SDL_GetWindowSize(window, &w, &h);
 					app.Zoom(event.mgesture.x * w, event.mgesture.y * h, event.mgesture.dDist * app.zoomFactor * 10);
 				}
@@ -396,7 +391,7 @@ int main(int argc, char **argv) {
 		}
 
 		// reset rotation angle accumulator
-		if (!io.MouseDown[0]) {
+		if (ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
 			angleacc = 0.0;
 		}
 
