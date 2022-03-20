@@ -223,6 +223,9 @@ int main(int argc, char **argv) {
 		return -1;
 	}
 
+	// Enable touch gestures on multi-touch touchpads
+	SDL_SetHint(SDL_HINT_MOUSE_TOUCH_EVENTS, "1");
+
 	// Load the configuration file
 	configDir = get_user_dir(UserDir::Config);
 	if (!configDir.empty()) app.obvconfig.Load(configDir + "obv.conf", true);
