@@ -36,12 +36,12 @@ std::vector<char> file_as_buffer(const filesystem::path &filepath, std::string &
 
 	file.seekg(0, std::ios_base::end);
 	std::streampos sz = file.tellg();
-	ENSURE(sz >= 0);
+	ENSURE(sz >= 0, error_msg);
 	data.reserve(sz);
 	file.seekg(0, std::ios_base::beg);
 	data.assign(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
 
-	ENSURE(data.size() == static_cast<unsigned int>(sz));
+	ENSURE(data.size() == static_cast<unsigned int>(sz), error_msg);
 	file.close();
 
 	return data;

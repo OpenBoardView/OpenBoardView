@@ -7,7 +7,14 @@
 
 #include "filesystem_impl.h"
 
-#define ENSURE(X) if (!(X)) SDL_LogError(SDL_LOG_CATEGORY_ERROR, "%s:%d: %s: Assertion `%s' failed.", __FILE__, __LINE__, __PRETTY_FUNCTION__, #X);
+// Verify predicate X, if false write error to ERROR_MSG and log and execute ACTION
+#define ENSURE_OR_FAIL(X, ERROR_MSG, ACTION) if (!(X)) { \
+		ERROR_MSG = std::string(__FILE__) + ":" + std::to_string(__LINE__) + ": " + __PRETTY_FUNCTION__ + ": Assertion `" + #X + "' failed."; \
+		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "%s", ERROR_MSG.c_str()); \
+		ACTION; \
+	}
+// Same but no ACTION
+#define ENSURE(X, ERROR_MSG) ENSURE_OR_FAIL(X, ERROR_MSG, )
 
 // Loads an entire file in to memory
 std::vector<char> file_as_buffer(const filesystem::path &filepath, std::string &error_msg);

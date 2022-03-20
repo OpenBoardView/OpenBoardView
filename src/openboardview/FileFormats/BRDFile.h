@@ -10,7 +10,7 @@
 #define READ_UINT                                \
 	[&]() {                                      \
 		int value = strtol(p, &p, 10);           \
-		ENSURE(value >= 0);                      \
+		ENSURE(value >= 0, error_msg);           \
 		return static_cast<unsigned int>(value); \
 	}
 #define READ_DOUBLE() strtod(p, &p);

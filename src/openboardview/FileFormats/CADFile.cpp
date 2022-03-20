@@ -38,10 +38,10 @@ CADFile::CADFile(std::vector<char> &buf) {
 	char *saved_locale;
 	saved_locale  = setlocale(LC_NUMERIC, "C"); // Use '.' as delimiter for strtod
 
-	ENSURE(buffer_size > 4);
+	ENSURE_OR_FAIL(buffer_size > 4, error_msg, return);
 	size_t file_buf_size = 3 * (1 + buffer_size);
 	file_buf             = (char *)calloc(1, file_buf_size);
-	ENSURE(file_buf != nullptr);
+	ENSURE_OR_FAIL(file_buf != nullptr, error_msg, return);
 
 	std::copy(buf.begin(), buf.end(), file_buf);
 	file_buf[buffer_size] = 0;

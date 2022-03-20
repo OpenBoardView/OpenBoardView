@@ -92,10 +92,10 @@ bool BRDFile::verifyFormat(std::vector<char> &buf) {
 
 BRDFile::BRDFile(std::vector<char> &buf) {
 	auto buffer_size = buf.size();
-	ENSURE(buffer_size > 4);
+	ENSURE_OR_FAIL(buffer_size > 4, error_msg, return);
 	size_t file_buf_size = 3 * (1 + buffer_size);
 	file_buf             = (char *)calloc(1, file_buf_size);
-	ENSURE(file_buf != nullptr);
+	ENSURE_OR_FAIL(file_buf != nullptr, error_msg, return);
 
 	std::copy(buf.begin(), buf.end(), file_buf);
 	file_buf[buffer_size] = 0;
@@ -161,14 +161,14 @@ BRDFile::BRDFile(std::vector<char> &buf) {
 				num_nails  = READ_UINT();
 			} break;
 			case 3: { // Format
-				ENSURE(format.size() < num_format);
+				ENSURE(format.size() < num_format, error_msg);
 				BRDPoint fmt;
 				fmt.x = strtol(p, &p, 10);
 				fmt.y = strtol(p, &p, 10);
 				format.push_back(fmt);
 			} break;
 			case 4: { // Parts
-				ENSURE(parts.size() < num_parts);
+				ENSURE(parts.size() < num_parts, error_msg);
 				BRDPart part;
 				part.name      = READ_STR();
 				tmp            = READ_UINT(); // Type and layer, actually.
@@ -176,22 +176,22 @@ BRDFile::BRDFile(std::vector<char> &buf) {
 				if (tmp == 1 || (4 <= tmp && tmp < 8)) part.mounting_side = BRDPartMountingSide::Top;
 				if (tmp == 2 || (8 <= tmp)) part.mounting_side            = BRDPartMountingSide::Bottom;
 				part.end_of_pins                                          = READ_UINT();
-				ENSURE(part.end_of_pins <= num_pins);
+				ENSURE(part.end_of_pins <= num_pins, error_msg);
 				parts.push_back(part);
 			} break;
 			case 5: { // Pins
-				ENSURE(pins.size() < num_pins);
+				ENSURE(pins.size() < num_pins, error_msg);
 				BRDPin pin;
 				pin.pos.x = READ_INT();
 				pin.pos.y = READ_INT();
 				pin.probe = READ_INT(); // Can be negative (-99)
 				pin.part  = READ_UINT();
-				ENSURE(pin.part <= num_parts);
+				ENSURE(pin.part <= num_parts, error_msg);
 				pin.net = READ_STR();
 				pins.push_back(pin);
 			} break;
 			case 6: { // Nails
-				ENSURE(nails.size() < num_nails);
+				ENSURE(nails.size() < num_nails, error_msg);
 				BRDNail nail;
 				nail.probe = READ_UINT();
 				nail.pos.x = READ_INT();

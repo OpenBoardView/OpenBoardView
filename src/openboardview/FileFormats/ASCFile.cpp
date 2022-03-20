@@ -99,10 +99,10 @@ bool ASCFile::read_asc(const filesystem::path &filepath, void (ASCFile::*parser)
 	std::vector<char> buf = file_as_buffer(filepath, error_msg);
 	if (buf.empty()) return false;
 
-	ENSURE(buf.size() > 4);
+	ENSURE_OR_FAIL(buf.size() > 4, error_msg, return false);
 	size_t file_buf_size = 3 * (1 + buf.size());
 	file_buf             = (char *)calloc(1, file_buf_size);
-	ENSURE(file_buf != nullptr);
+	ENSURE_OR_FAIL(file_buf != nullptr, error_msg, return false);
 
 	std::copy(buf.begin(), buf.end(), file_buf);
 	file_buf[buf.size()] = 0;

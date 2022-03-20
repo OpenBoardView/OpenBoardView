@@ -182,10 +182,11 @@ FZFile::FZFile(std::vector<char> &buf, uint32_t *fzkey) {
 
 	memcpy(key, fzkey, sizeof(key));
 
-	ENSURE(buffer_size > 4);
+
+	ENSURE_OR_FAIL(buffer_size > 4, error_msg, return);
 	size_t file_buf_size = 3 * (1 + buffer_size);
 	file_buf             = (char *)calloc(1, file_buf_size);
-	ENSURE(file_buf != nullptr);
+	ENSURE_OR_FAIL(file_buf != nullptr, error_msg, return);
 
 	std::copy(buf.begin(), buf.end(), file_buf);
 	file_buf[buffer_size] = 0;
@@ -230,17 +231,17 @@ FZFile::FZFile(std::vector<char> &buf, uint32_t *fzkey) {
   }
   */
 
-	ENSURE(content != nullptr);
-	ENSURE(content_size > 0);
+	ENSURE_OR_FAIL(content != nullptr, error_msg, return);
+	ENSURE_OR_FAIL(content_size > 0, error_msg, return);
 	content = FZFile::decompress(content, content_size, content_size); // decompress zlib content data
-	ENSURE(content != nullptr);
-	ENSURE(content_size > 0);
+	ENSURE_OR_FAIL(content != nullptr, error_msg, return);
+	ENSURE_OR_FAIL(content_size > 0, error_msg, return);
 
-	ENSURE(content != descr);
-	ENSURE(descr_size > 0);
+	ENSURE_OR_FAIL(content != descr, error_msg, return);
+	ENSURE_OR_FAIL(descr_size > 0, error_msg, return);
 	descr = FZFile::decompress(descr, descr_size, descr_size);
-	ENSURE(descr != nullptr);
-	ENSURE(descr_size > 0);
+	ENSURE_OR_FAIL(descr != nullptr, error_msg, return);
+	ENSURE_OR_FAIL(descr_size > 0, error_msg, return);
 
 	int current_block = 0;
 	std::unordered_map<std::string, int> parts_id; // map between part name and part number

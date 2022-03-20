@@ -18,7 +18,7 @@
 	[&]() {                                      \
 		int value = strtol(p, &p, 10);           \
 		if (*p == '!') p++;                      \
-		ENSURE(value >= 0);                      \
+		ENSURE(value >= 0, error_msg);           \
 		return static_cast<unsigned int>(value); \
 	}
 #define READ_DOUBLE                 \
@@ -42,7 +42,7 @@
 	[&]() {                                      \
 		int value = strtol(p, &p, 10);           \
 		if (*p == '\t') p++;                     \
-		ENSURE(value >= 0);                      \
+		ENSURE(value >= 0, error_msg);           \
 		return static_cast<unsigned int>(value); \
 	}
 #define READ_DESCR_STR                                              \

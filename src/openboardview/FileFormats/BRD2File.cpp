@@ -17,10 +17,10 @@ BRD2File::BRD2File(std::vector<char> &buf) {
 	unsigned int num_nets = 0;
 	BRDPoint max{0, 0}; // Top-right board boundary
 
-	ENSURE(buffer_size > 4);
+	ENSURE_OR_FAIL(buffer_size > 4, error_msg, return);
 	size_t file_buf_size = 3 * (1 + buffer_size);
 	file_buf             = (char *)calloc(1, file_buf_size);
-	ENSURE(file_buf != nullptr);
+	ENSURE_OR_FAIL(file_buf != nullptr, error_msg, return);
 
 	std::copy(buf.begin(), buf.end(), file_buf);
 	file_buf[buffer_size] = 0;
@@ -76,23 +76,23 @@ BRD2File::BRD2File(std::vector<char> &buf) {
 
 		switch (current_block) {
 			case 1: { // Format
-				ENSURE(format.size() < num_format);
+				ENSURE(format.size() < num_format, error_msg);
 				BRDPoint point;
 				point.x = READ_INT();
 				point.y = READ_INT();
-				ENSURE(point.x <= max.x);
-				ENSURE(point.y <= max.y);
+				ENSURE(point.x <= max.x, error_msg);
+				ENSURE(point.y <= max.y, error_msg);
 				format.push_back(point);
 			} break;
 
 			case 2: { // Nets
-				ENSURE(nets.size() < num_nets);
+				ENSURE(nets.size() < num_nets, error_msg);
 				int id   = READ_UINT();
 				nets[id] = READ_STR();
 			} break;
 
 			case 3: { // PARTS
-				ENSURE(parts.size() < num_parts);
+				ENSURE(parts.size() < num_parts, error_msg);
 				BRDPart part;
 
 				part.name        = READ_STR();
@@ -112,7 +112,7 @@ BRD2File::BRD2File(std::vector<char> &buf) {
 			} break;
 
 			case 4: { // PINS
-				ENSURE(pins.size() < num_pins);
+				ENSURE(pins.size() < num_pins, error_msg);
 				BRDPin pin;
 
 				pin.pos.x = READ_INT();
@@ -132,7 +132,7 @@ BRD2File::BRD2File(std::vector<char> &buf) {
 			} break;
 
 			case 5: { // NAILS
-				ENSURE(nails.size() < num_nails);
+				ENSURE(nails.size() < num_nails, error_msg);
 				BRDNail nail;
 
 				nail.probe = READ_UINT();
@@ -156,11 +156,11 @@ BRD2File::BRD2File(std::vector<char> &buf) {
 		}
 	}
 
-	ENSURE(num_format == format.size());
-	ENSURE(num_nets == nets.size());
-	ENSURE(num_parts == parts.size());
-	ENSURE(num_pins == pins.size());
-	ENSURE(num_nails == nails.size());
+	ENSURE(num_format == format.size(), error_msg);
+	ENSURE(num_nets == nets.size(), error_msg);
+	ENSURE(num_parts == parts.size(), error_msg);
+	ENSURE(num_pins == pins.size(), error_msg);
+	ENSURE(num_nails == nails.size(), error_msg);
 
 	/*
 	 * Postprocess the data.  Specifically we need to allocate
