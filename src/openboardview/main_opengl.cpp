@@ -395,14 +395,6 @@ int main(int argc, char **argv) {
 			angleacc = 0.0;
 		}
 
-		// Drag to scroll
-		if (ImGui::IsMouseDragging(0)) {
-			ImVec2 delta = ImGui::GetMouseDragDelta();
-			io.MouseWheelH = delta.x / 100;
-			io.MouseWheel = delta.y / 100;
-			ImGui::ResetMouseDragDelta();
-		}
-
 		if (app.reloadConfig) {
 			app.reloadConfig = false;
 			app.obvconfig.Load(configDir + "obv.conf");
