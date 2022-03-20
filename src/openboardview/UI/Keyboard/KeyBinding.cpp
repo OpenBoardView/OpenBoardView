@@ -8,31 +8,31 @@
 KeyBinding::KeyBinding() {
 }
 
-KeyBinding::KeyBinding(const SDL_Keycode keycode) : KeyBinding(keycode, {}) {
+KeyBinding::KeyBinding(const ImGuiKey key) : KeyBinding(key, {}) {
 }
 
-KeyBinding::KeyBinding(const SDL_Keycode keycode, std::vector<KeyModifier> modifiers) : keycode(keycode), modifiers(modifiers) {
+KeyBinding::KeyBinding(const ImGuiKey key, std::vector<ImGuiKey> modifiers) : key(key), modifiers(modifiers) {
 }
 
 bool KeyBinding::isPressed() const {
-	auto scancode = SDL_GetScancodeFromKey(keycode);
-	return std::all_of(modifiers.begin(), modifiers.end(), [](const KeyModifier &keyModifier){return keyModifier.isPressed();}) && ImGui::IsKeyPressed(scancode);
+	// Modifiers are held down while non-modifier key is pressed once
+	return std::all_of(modifiers.begin(), modifiers.end(), [](const ImGuiKey &keyModifier){return (keyModifier != ImGuiKey_None) && ImGui::IsKeyDown(keyModifier);}) && (key != ImGuiKey_None) && ImGui::IsKeyPressed(key);
 }
 
-SDL_Keycode KeyBinding::getKeycode() const {
-	return keycode;
+ImGuiKey KeyBinding::getKey() const {
+	return key;
 }
 
-std::vector<KeyModifier> KeyBinding::getModifiers() const {
+std::vector<ImGuiKey> KeyBinding::getModifiers() const {
 	return modifiers;
 }
 
 std::string KeyBinding::to_string() const {
-	std::string keys = SDL_GetKeyName(this->getKeycode());
+	std::string keys = ImGui::GetKeyName(this->getKey());
 
 	auto modifiers = this->getModifiers();
 	for (auto im = modifiers.rbegin(); im != modifiers.rend(); ++im ) {
-		keys = im->name + "+" + keys;
+		keys = std::string(ImGui::GetKeyName(*im)) + "+" + keys;
 	}
 
 	return keys;

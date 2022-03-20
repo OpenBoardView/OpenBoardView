@@ -3,29 +3,24 @@
 #include <algorithm>
 
 #if __cplusplus < 201703L
-constexpr const std::array<SDL_Keycode, 8> KeyModifiers::SDLKModifiers;
+constexpr const std::array<ImGuiKey, 12> KeyModifiers::modifiers;
+constexpr const std::array<ImGuiKey, 4> KeyModifiers::modifiers;
 #endif
 
 KeyModifiers::KeyModifiers() {
-	std::transform(keyModifiers.begin(), keyModifiers.end(), std::inserter(nameToKeyModifier, nameToKeyModifier.begin()), [](const KeyModifier &keyModifier){
-		return std::pair<std::string, KeyModifier>{keyModifier.name, keyModifier};
-	});
 }
 
-const KeyModifier &KeyModifiers::fromName(const std::string &name) const {
-	return nameToKeyModifier.at(name);
+bool KeyModifiers::isModifier(ImGuiKey key) const {
+	return std::find(modifiers.begin(), modifiers.end(), key) != std::end(modifiers);
 }
 
-std::vector<KeyModifier> KeyModifiers::pressed() const {
-	std::vector<KeyModifier> pressed;
-	for (auto &keyModifier: keyModifiers) {
-		if (keyModifier.isPressed()) {
+std::vector<ImGuiKey> KeyModifiers::pressed() const {
+	std::vector<ImGuiKey> pressed;
+	for (auto &keyModifier: handledModifiers) {
+		// Modifiers are held down
+		if (ImGui::IsKeyDown(keyModifier)) {
 			pressed.push_back(keyModifier);
 		}
 	}
 	return pressed;
-}
-
-bool KeyModifiers::isSDLKModifier(SDL_Keycode kc) const {
-	return std::find(SDLKModifiers.begin(), SDLKModifiers.end(), kc) != std::end(SDLKModifiers);
 }

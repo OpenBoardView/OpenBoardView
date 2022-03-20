@@ -21,6 +21,10 @@ const std::unordered_map<std::string, std::string> KeyBindings::deserializeName 
 };
 
 KeyBindings::KeyBindings() {
+	for (ImGuiKey key = ImGuiKey_NamedKey_BEGIN; key < ImGuiKey_NamedKey_END; key++) {
+		nameToKey.insert({ImGui::GetKeyName(key), key});
+	}
+
 	reset();
 }
 
@@ -34,37 +38,37 @@ bool KeyBindings::isPressed(const std::string &name) const {
 
 void KeyBindings::reset() {
 #ifdef __APPLE__
-	keybindings["Quit"] = {KeyBinding(SDLK_q, {keyModifiers.fromName("Super")})};
-	keybindings["Open"] = {KeyBinding(SDLK_o, {keyModifiers.fromName("Super")})};
-	keybindings["Search"] = {KeyBinding(SDLK_f, {keyModifiers.fromName("Super")}), KeyBinding(SDLK_SLASH)};
+	keybindings["Quit"] = {KeyBinding(ImGuiKey_Q, {ImGuiKey_ModSuper})};
+	keybindings["Open"] = {KeyBinding(ImGuiKey_O, {ImGuiKey_ModSuper})};
+	keybindings["Search"] = {KeyBinding(ImGuiKey_F, {ImGuiKey_ModSuper}), KeyBinding(ImGuiKey_Slash)};
 #else
-	keybindings["Quit"] = {KeyBinding(SDLK_q, {keyModifiers.fromName("Ctrl")})};
-	keybindings["Open"] = {KeyBinding(SDLK_o, {keyModifiers.fromName("Ctrl")})};
-	keybindings["Search"] = {KeyBinding(SDLK_f, {keyModifiers.fromName("Ctrl")}), KeyBinding(SDLK_SLASH)};
+	keybindings["Quit"] = {KeyBinding(ImGuiKey_Q, {ImGuiKey_ModCtrl})};
+	keybindings["Open"] = {KeyBinding(ImGuiKey_O, {ImGuiKey_ModCtrl})};
+	keybindings["Search"] = {KeyBinding(ImGuiKey_F, {ImGuiKey_ModCtrl}), KeyBinding(ImGuiKey_Slash)};
 #endif
-	keybindings["CloseDialog"] = {KeyBinding(SDLK_ESCAPE)};
-	keybindings["Validate"] = {KeyBinding(SDLK_RETURN, {keyModifiers.fromName("Shift")})};
-	keybindings["Accept"] = {KeyBinding(SDLK_RETURN)};
+	keybindings["CloseDialog"] = {KeyBinding(ImGuiKey_Escape)};
+	keybindings["Validate"] = {KeyBinding(ImGuiKey_Enter, {ImGuiKey_ModShift})};
+	keybindings["Accept"] = {KeyBinding(ImGuiKey_Enter)};
 
-	keybindings["Flip"] = {KeyBinding(SDLK_SPACE)};
-	keybindings["Mirror"] = {KeyBinding(SDLK_m)};
-	keybindings["RotateCW"] = {KeyBinding(SDLK_r), KeyBinding(SDLK_PERIOD), KeyBinding(SDLK_KP_PERIOD)};
-	keybindings["RotateCCW"] = {KeyBinding(SDLK_COMMA), KeyBinding(SDLK_KP_0)};
-	keybindings["ZoomIn"] = {KeyBinding(SDLK_KP_PLUS), KeyBinding(SDLK_EQUALS)}; // Due to config parsing quirk, = must be specified last
-	keybindings["ZoomOut"] = {KeyBinding(SDLK_MINUS), KeyBinding(SDLK_KP_MINUS)};
+	keybindings["Flip"] = {KeyBinding(ImGuiKey_Space)};
+	keybindings["Mirror"] = {KeyBinding(ImGuiKey_M)};
+	keybindings["RotateCW"] = {KeyBinding(ImGuiKey_R), KeyBinding(ImGuiKey_Period), KeyBinding(ImGuiKey_KeypadDecimal)};
+	keybindings["RotateCCW"] = {KeyBinding(ImGuiKey_Comma), KeyBinding(ImGuiKey_Keypad0)};
+	keybindings["ZoomIn"] = {KeyBinding(ImGuiKey_KeypadAdd), KeyBinding(ImGuiKey_Equal)}; // Due to config parsing quirk, = must be specified last
+	keybindings["ZoomOut"] = {KeyBinding(ImGuiKey_Minus), KeyBinding(ImGuiKey_KeypadSubtract)};
 
-	keybindings["PanDown"] = {KeyBinding(SDLK_s), KeyBinding(SDLK_KP_2)};
-	keybindings["PanUp"] = {KeyBinding(SDLK_w), KeyBinding(SDLK_KP_8)};
-	keybindings["PanLeft"] = {KeyBinding(SDLK_a), KeyBinding(SDLK_KP_4)};
-	keybindings["PanRight"] = {KeyBinding(SDLK_d), KeyBinding(SDLK_KP_6)};
-	keybindings["Center"] = {KeyBinding(SDLK_x), KeyBinding(SDLK_KP_5)};
+	keybindings["PanDown"] = {KeyBinding(ImGuiKey_S), KeyBinding(ImGuiKey_Keypad2)};
+	keybindings["PanUp"] = {KeyBinding(ImGuiKey_W), KeyBinding(ImGuiKey_Keypad8)};
+	keybindings["PanLeft"] = {KeyBinding(ImGuiKey_A), KeyBinding(ImGuiKey_Keypad4)};
+	keybindings["PanRight"] = {KeyBinding(ImGuiKey_D), KeyBinding(ImGuiKey_Keypad6)};
+	keybindings["Center"] = {KeyBinding(ImGuiKey_X), KeyBinding(ImGuiKey_Keypad5)};
 
 
-	keybindings["InfoPanel"] = {KeyBinding(SDLK_i)};
-	keybindings["NetList"] = {KeyBinding(SDLK_l)};
-	keybindings["PartList"] = {KeyBinding(SDLK_k)};
-	keybindings["TogglePins"] = {KeyBinding(SDLK_p)};
-	keybindings["Clear"] = {KeyBinding(SDLK_ESCAPE)};
+	keybindings["InfoPanel"] = {KeyBinding(ImGuiKey_I)};
+	keybindings["NetList"] = {KeyBinding(ImGuiKey_L)};
+	keybindings["PartList"] = {KeyBinding(ImGuiKey_K)};
+	keybindings["TogglePins"] = {KeyBinding(ImGuiKey_P)};
+	keybindings["Clear"] = {KeyBinding(ImGuiKey_Escape)};
 }
 
 
@@ -79,25 +83,33 @@ void KeyBindings::readFromConfig(Confparse &obvconfig) {
 		std::vector<KeyBinding> bindings;
 		for (auto &kbs : split_string(confline, bindingSeparator)) {
 			//Modifiers combined with modifierSeparator '~' to key, key always specified last
-			auto keys = split_string(kbs, modifierSeparator);
-			if (keys.empty())
+			auto keyNames = split_string(kbs, modifierSeparator);
+			if (keyNames.empty())
 				continue;
-			std::vector<std::string> modifiers(keys.begin(), keys.end()-1);
-			std::vector<KeyModifier> vkeyModifiers;
 
-			vkeyModifiers.reserve(modifiers.size());
-			std::transform(modifiers.begin(), modifiers.end(), std::back_inserter(vkeyModifiers), [this](const std::string &modifier){return keyModifiers.fromName(modifier);});
+			std::vector<ImGuiKey> keys;
+			keys.reserve(keyNames.size());
 
-			std::string key = keys.back();
-			// Replace some serialization-compatible keys with the SDL-compatible name
-			auto deserializedNameIt = deserializeName.find(key);
-			if (deserializedNameIt != deserializeName.end()) {
-				key = deserializedNameIt->second;
-			}
+			// Parse key names to ImGui keys
+			std::transform(keyNames.begin(), keyNames.end(), std::back_inserter(keys), [this](std::string &keyName) -> ImGuiKey {
+				// Replace some serialization-compatible keys with the ImGui-compatible name
+				auto deserializedNameIt = deserializeName.find(keyName);
+				if (deserializedNameIt != deserializeName.end()) {
+					keyName = deserializedNameIt->second;
+				}
 
-			auto sdlKey = SDL_GetKeyFromName(key.c_str());
+				auto key = nameToKey.find(keyName);
+				if (key == nameToKey.end()) {
+					SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Unknown key name: %s", keyName.c_str());
+					return ImGuiKey_None;
+				} else {
+					return key->second;
+				}
+			});
 
-			bindings.push_back({sdlKey, vkeyModifiers});
+			std::vector<ImGuiKey> modifiers(keys.begin(), keys.end()-1);
+
+			bindings.push_back({keys.back(), modifiers});
 		}
 		keybinding.second = bindings;
 	}
@@ -109,23 +121,29 @@ void KeyBindings::writeToConfig(Confparse &obvconfig) {
 	for (auto &keybinding : keybindings) {
 		std::string line;
 		for (auto &kbs : keybinding.second) {
-			std::string binding = SDL_GetKeyName(kbs.getKeycode());
+			std::vector<ImGuiKey> keys = kbs.getModifiers();
+			keys.push_back(kbs.getKey());
 
-			// Replace some keys with a serialization-compatible variant
-			auto serializedNameIt = serializeName.find(binding);
-			if (serializedNameIt != serializeName.end()) {
-				binding = serializedNameIt->second;
-			}
+			std::string keyNames;
 
-			// Prepend modifiers so that key is always last, reverse to keep in same order
-			auto modifiers = kbs.getModifiers();
-			for (auto im = modifiers.rbegin(); im != modifiers.rend(); ++im ) {
-				binding = im->name + modifierSeparator + binding;
+			for (const auto &key: keys) {
+				std::string keyName = ImGui::GetKeyName(key);
+
+				// Replace some keys with a serialization-compatible variant
+				auto serializedNameIt = serializeName.find(keyName);
+				if (serializedNameIt != serializeName.end()) {
+					keyName = serializedNameIt->second;
+				}
+
+				if (!keyNames.empty()) {
+					keyNames += modifierSeparator;
+				}
+				keyNames += keyName;
 			}
 
 			if (!line.empty())
 				line += bindingSeparator;
-			line += binding;
+			line += keyNames;
 		}
 		obvconfig.WriteStr(("KeyBinding" + keybinding.first).c_str(), line.c_str());
 	}

@@ -5,39 +5,41 @@
 #include <unordered_map>
 #include <vector>
 
-#include "SDL.h"
 #include "imgui/imgui.h"
-
-#include "KeyModifier.h"
 
 class KeyModifiers {
 private:
-	const std::array<KeyModifier, 4> keyModifiers{{
-		{"Ctrl", &ImGuiIO::KeyCtrl},
-		{"Shift", &ImGuiIO::KeyShift},
-		{"Alt", &ImGuiIO::KeyAlt},
-		{"Super", &ImGuiIO::KeySuper}
-	}};
-
-	constexpr static const std::array<SDL_Keycode, 8> SDLKModifiers{
-		SDLK_LCTRL,
-		SDLK_RCTRL,
-		SDLK_LSHIFT,
-		SDLK_RSHIFT,
-		SDLK_LALT,
-		SDLK_RALT,
-		SDLK_LGUI,
-		SDLK_RGUI
+	// All modifiers key that should not be treated as regular keys
+	constexpr static const std::array<ImGuiKey, 12> modifiers{
+		ImGuiKey_ModCtrl,
+		ImGuiKey_ModShift,
+		ImGuiKey_ModAlt,
+		ImGuiKey_ModSuper,
+		ImGuiKey_LeftCtrl,
+		ImGuiKey_LeftShift,
+		ImGuiKey_LeftAlt,
+		ImGuiKey_LeftSuper,
+		ImGuiKey_RightCtrl,
+		ImGuiKey_RightShift,
+		ImGuiKey_RightAlt,
+		ImGuiKey_RightSuper,
 	};
 
-	std::unordered_map<std::string, KeyModifier> nameToKeyModifier;
+	// Modifier keys to handle as modifiers
+	// Only ImGuiKey_Mod* are used here in order to handle both Left and Right modifiers the same way
+	// If handling them separately is required, ImGuiKey_Left* and ImGuiKey_Right* should be specified instead
+	constexpr static const std::array<ImGuiKey, 4> handledModifiers{
+		ImGuiKey_ModCtrl,
+		ImGuiKey_ModShift,
+		ImGuiKey_ModAlt,
+		ImGuiKey_ModSuper,
+	};
 
 public:
 	KeyModifiers();
 
-	const KeyModifier &fromName(const std::string &name) const;
-	std::vector<KeyModifier> pressed() const;
-	bool isSDLKModifier(SDL_Keycode kc) const;
+	bool isModifier(ImGuiKey key) const;
+	std::vector<ImGuiKey> pressed() const;
 };
 
 #endif

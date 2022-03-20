@@ -16,6 +16,8 @@ private:
 	static const std::unordered_map<std::string, std::string> serializeName;
 	static const std::unordered_map<std::string, std::string> deserializeName;
 
+	std::unordered_map<std::string, ImGuiKey> nameToKey;
+
 public:
 	std::unordered_map<std::string, std::vector<KeyBinding>> keybindings;
 	KeyModifiers keyModifiers;

@@ -69,15 +69,12 @@ void Keyboard::render() {
 				// Add new binding after pressing add button, keep that after showing all bindings
 				if (addingName == kbs.first) {
 					// Check if a key is pressed
-					for (int i = 0; i < IM_ARRAYSIZE(io.KeysDown); i++) {
-						if (io.KeysDown[i]) {
-							auto scancode = static_cast<SDL_Scancode>(i);
-							SDL_Keycode kc = SDL_GetKeyFromScancode(scancode);
-
+					for (ImGuiKey key = ImGuiKey_NamedKey_BEGIN; key < ImGuiKey_NamedKey_END; key++) {
+						if (ImGui::IsKeyDown(key)) {
 							// Ignore modifier keys, cannot be a final key
-							if (!keybindings.keyModifiers.isSDLKModifier(kc)) {
-								addingScancode = scancode;
-								addingBinding = KeyBinding(kc);
+							if (!keybindings.keyModifiers.isModifier(key)) {
+								addingKey = key;
+								addingBinding = KeyBinding(key);
 							}
 						}
 					}
@@ -85,10 +82,10 @@ void Keyboard::render() {
 					addingBinding.modifiers = keybindings.keyModifiers.pressed();
 
 					// Add binding once non-modifier key is released
-					if (addingScancode != SDL_SCANCODE_UNKNOWN && ImGui::IsKeyReleased(addingScancode)) {
+					if (addingKey != ImGuiKey_None && ImGui::IsKeyReleased(addingKey)) {
 						bindings.push_back(addingBinding);
 
-						addingScancode = SDL_SCANCODE_UNKNOWN;
+						addingKey = ImGuiKey_None;
 						addingName = {};
 						addingBinding = {};
 					}
@@ -100,7 +97,7 @@ void Keyboard::render() {
 					auto keys = addingBinding.to_string();
 					if (ImGui::SmallButton(("X##adding" + kbs.first).c_str())) {
 						// Stop adding new keybinding
-						addingScancode = SDL_SCANCODE_UNKNOWN;
+						addingKey = ImGuiKey_None;
 						addingName = std::string{};
 						addingBinding = KeyBinding{};
 					}
@@ -122,8 +119,6 @@ void Keyboard::render() {
 
 			ImGui::EndTable();
 		}
-
-		ImGui::Text("Note: %c and %c cannot be used as key bindings.", keybindings.bindingSeparator, keybindings.modifierSeparator);
 
 		if (ImGui::Button("Save")) {
 			keybindings.writeToConfig(obvconfig);

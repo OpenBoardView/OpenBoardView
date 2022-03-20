@@ -4,24 +4,23 @@
 #include <string>
 #include <vector>
 
-#include "SDL.h"
 #include "imgui/imgui.h"
 
 #include "KeyModifiers.h"
 
 class KeyBinding {
 private:
-	SDL_Keycode keycode = SDLK_UNKNOWN;
+	ImGuiKey key = ImGuiKey_None;
 public:
-	std::vector<KeyModifier> modifiers;
+	std::vector<ImGuiKey> modifiers;
 
 	KeyBinding();
-	KeyBinding(const SDL_Keycode keycode);
-	KeyBinding(const SDL_Keycode keycode, std::vector<KeyModifier> modifiers);
+	KeyBinding(const ImGuiKey key);
+	KeyBinding(const ImGuiKey key, std::vector<ImGuiKey> modifiers);
 
 	bool isPressed() const;
-	SDL_Keycode getKeycode() const;
-	std::vector<KeyModifier> getModifiers() const;
+	ImGuiKey getKey() const;
+	std::vector<ImGuiKey> getModifiers() const;
 	std::string to_string() const;
 };
 

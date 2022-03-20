@@ -1823,9 +1823,10 @@ void BoardView::Update() {
 	if (keybindings.isPressed("Open")) {
 		open_file = true;
 		// the dialog will likely eat our WM_KEYUP message for CTRL and O:
-		io.KeysDown[SDL_SCANCODE_RCTRL] = false;
-		io.KeysDown[SDL_SCANCODE_LCTRL] = false;
-		io.KeysDown[SDL_SCANCODE_O]     = false;
+		io.AddKeyEvent(ImGuiKey_RightCtrl, false);
+		io.AddKeyEvent(ImGuiKey_LeftCtrl, false);
+		io.AddKeyEvent(ImGuiKey_O, false);
+
 	}
 
 	if (keybindings.isPressed("Quit")) {

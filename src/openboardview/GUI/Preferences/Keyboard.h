@@ -11,7 +11,7 @@ private:
 	Confparse &obvconfig;
 	std::string addingName;
 	KeyBinding addingBinding;
-	SDL_Scancode addingScancode = SDL_SCANCODE_UNKNOWN;
+	ImGuiKey addingKey = ImGuiKey_None;
 public:
 	Keyboard(KeyBindings &keybindings, Confparse &obvconfig);
 

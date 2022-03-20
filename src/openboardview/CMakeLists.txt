@@ -77,7 +77,6 @@ set(SOURCES
 	SpellCorrector.cpp
 	UI/Keyboard/KeyBinding.cpp
 	UI/Keyboard/KeyBindings.cpp
-	UI/Keyboard/KeyModifier.cpp
 	UI/Keyboard/KeyModifiers.cpp
 	GUI/BackgroundImage.cpp
 	GUI/Image.cpp
