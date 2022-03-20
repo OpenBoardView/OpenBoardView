@@ -96,7 +96,7 @@ void ASCFile::parse_nail(char *&p, char *&s, char *&arena, char *&arena_end, lin
  */
 bool ASCFile::read_asc(const filesystem::path &filepath, void (ASCFile::*parser)(char *&, char *&, char *&, char *&, line_iterator_t&)) {
 	if (filepath.empty()) return false;
-	std::vector<char> buf = file_as_buffer(filepath);
+	std::vector<char> buf = file_as_buffer(filepath, error_msg);
 	if (buf.empty()) return false;
 
 	ENSURE(buf.size() > 4);

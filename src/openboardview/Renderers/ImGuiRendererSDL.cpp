@@ -97,7 +97,11 @@ std::string ImGuiRendererSDL::loadTextureFromFile(const filesystem::path &filepa
 	int image_width = 0;
 	int image_height = 0;
 
-	auto buf = file_as_buffer(filepath);
+	std::string error_msg;
+	auto buf = file_as_buffer(filepath, error_msg);
+	if (buf.empty() || !error_msg.empty()) {
+		return filepath.string() + ": " + error_msg;
+	}
 	unsigned char* image_data = stbi_load_from_memory(reinterpret_cast<unsigned char*>(buf.data()), buf.size(), &image_width, &image_height, NULL, 4);
 
 	if (image_data == nullptr) {

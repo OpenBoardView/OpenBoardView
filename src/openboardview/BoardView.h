@@ -290,6 +290,8 @@ struct BoardView {
 	bool m_validBoard = false;
 	bool m_wantsQuit;
 
+	std::string m_error_msg;
+
 	~BoardView();
 
 	void ShowNetList(bool *p_open);
@@ -306,7 +308,7 @@ struct BoardView {
 	void DrawParts(ImDrawList *draw);
 	void DrawBoard();
 	void DrawNetWeb(ImDrawList *draw);
-	void SetFile(BRDFile *file);
+	void LoadBoard(BRDFile *file);
 	int LoadFile(const filesystem::path &filepath);
 	ImVec2 CoordToScreen(float x, float y, float w = 1.0f);
 	ImVec2 ScreenToCoord(float x, float y, float w = 1.0f);

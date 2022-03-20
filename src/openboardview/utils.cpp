@@ -16,11 +16,12 @@
 #include <sys/types.h>
 
 // Loads an entire file in to memory
-std::vector<char> file_as_buffer(const filesystem::path &filepath) {
+std::vector<char> file_as_buffer(const filesystem::path &filepath, std::string &error_msg) {
 	std::vector<char> data;
 
 	if (!filesystem::is_regular_file(filepath)) {
-		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Error opening %s: not a regular file", filepath.string().c_str());
+		error_msg = "Not a regular file";
+		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Error opening %s: %s", filepath.string().c_str(), error_msg.c_str());
 		return data;
 	}
 
@@ -28,7 +29,8 @@ std::vector<char> file_as_buffer(const filesystem::path &filepath) {
 	file.open(filepath, std::ios::in | std::ios::binary | std::ios::ate);
 
 	if (!file.is_open()) {
-		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Error opening %s: %s", filepath.string().c_str(), strerror(errno));
+		error_msg = strerror(errno);
+		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Error opening %s: %s", filepath.string().c_str(), error_msg.c_str());
 		return data;
 	}
 

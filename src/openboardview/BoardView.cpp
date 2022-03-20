@@ -419,33 +419,37 @@ int BoardView::LoadFile(const filesystem::path &filepath) {
 			//	delete m_file;
 			// delete m_board;
 		}
+		delete m_file;
+		m_file = nullptr;
+		m_validBoard = false;
+		m_error_msg.clear();
 
 		SetLastFileOpenName(filepath.string());
-		std::vector<char> buffer = file_as_buffer(filepath);
+		std::vector<char> buffer = file_as_buffer(filepath, m_error_msg);
 		if (!buffer.empty()) {
-			BRDFile *file = nullptr;
-
 			if (check_fileext(filepath, ".fz")) { // Since it is encrypted we cannot use the below logic. Trust the ext.
-				file = new FZFile(buffer, FZKey);
+				m_file = new FZFile(buffer, FZKey);
 			} else if (check_fileext(filepath, ".bom") || check_fileext(filepath, ".asc"))
-				file = new ASCFile(buffer, filepath);
+				m_file = new ASCFile(buffer, filepath);
 			else if (ADFile::verifyFormat(buffer))
-				file = new ADFile(buffer);
+				m_file = new ADFile(buffer);
 			else if (CADFile::verifyFormat(buffer))
-				file = new CADFile(buffer);
+				m_file = new CADFile(buffer);
 			else if (check_fileext(filepath, ".cst"))
-				file = new CSTFile(buffer);
+				m_file = new CSTFile(buffer);
 			else if (BRDFile::verifyFormat(buffer))
-				file = new BRDFile(buffer);
+				m_file = new BRDFile(buffer);
 			else if (BRD2File::verifyFormat(buffer))
-				file = new BRD2File(buffer);
+				m_file = new BRD2File(buffer);
 			else if (BDVFile::verifyFormat(buffer))
-				file = new BDVFile(buffer);
+				m_file = new BDVFile(buffer);
 			else if (BVRFile::verifyFormat(buffer))
-				file = new BVRFile(buffer);
+				m_file = new BVRFile(buffer);
+			else
+				m_error_msg = "Unrecognized file format.";
 
-			if (file && file->valid) {
-				SetFile(file);
+			if (m_file && m_file->valid) {
+				LoadBoard(m_file);
 				fhistory.Prepend_save(filepath.string());
 				history_file_has_changed = 1; // used by main to know when to update the window title
 				boardMinMaxDone          = false;
@@ -472,10 +476,7 @@ int BoardView::LoadFile(const filesystem::path &filepath) {
 				CenterView();
 				m_lastFileOpenWasInvalid = false;
 				m_validBoard             = true;
-
-			} else {
-				m_validBoard = false;
-				delete file;
+				m_error_msg              = false;
 			}
 		}
 	} else {
@@ -2102,7 +2103,12 @@ void BoardView::Update() {
 					i += 3;
 				}
 			}
-			// TODO: error details? -- would need the loader to say what's wrong.
+			if (!m_error_msg.empty()) {
+				ImGui::Text("%s", m_error_msg.c_str());
+			}
+			if (m_file && !m_file->error_msg.empty()) {
+				ImGui::Text("%s", m_file->error_msg.c_str());
+			}
 			if (ImGui::Button("OK")) {
 				ImGui::CloseCurrentPopup();
 			}
@@ -4064,8 +4070,7 @@ void BoardView::CenterView(void) {
 	m_needsRedraw = true;
 }
 
-void BoardView::SetFile(BRDFile *file) {
-	delete m_file;
+void BoardView::LoadBoard(BRDFile *file) {
 	delete m_board;
 
 	// Check board outline (format) point count.
@@ -4098,7 +4103,6 @@ void BoardView::SetFile(BRDFile *file) {
 		file->format.push_back({minx, miny});
 	}
 
-	m_file  = file;
 	m_board = new BRDBoard(file);
 	searcher.setParts(m_board->Components());
 	searcher.setNets(m_board->Nets());

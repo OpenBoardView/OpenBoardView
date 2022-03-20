@@ -80,6 +80,7 @@ class BRDFile {
 	char *file_buf = nullptr;
 
 	bool valid = false;
+	std::string error_msg = "";
 
 	BRDFile(std::vector<char> &buf);
 	BRDFile(){};
