@@ -1284,7 +1284,7 @@ void BoardView::ShowInfoPane(void) {
 			int pc = part->pins.size();
 			if (pc > 20) pc = 20;
 			listSize = ImVec2(m_info_surface.x - DPIF(50), pc * ImGui::GetFontSize() * 1.45);
-			if (ImGui::ListBoxHeader(str.c_str(), listSize)) { //, ImVec2(m_board_surface.x/3 -5, m_board_surface.y/2));
+			if (ImGui::BeginListBox(str.c_str(), listSize)) { //, ImVec2(m_board_surface.x/3 -5, m_board_surface.y/2));
 				for (auto pin : part->pins) {
 					char ss[1024];
 					snprintf(ss, sizeof(ss), "%4s  %s", pin->name.c_str(), pin->net->name.c_str());
@@ -1309,7 +1309,7 @@ void BoardView::ShowInfoPane(void) {
 					ImGui::Separator();
 					ImGui::PopStyleColor();
 				}
-				ImGui::ListBoxFooter();
+				ImGui::EndListBox();
 			}
 			ImGui::PopItemWidth();
 
@@ -1617,7 +1617,7 @@ void BoardView::SearchColumnGenerate(const std::string &title,
                                      std::pair<SharedVector<Component>, SharedVector<Net>> results,
                                      char *search,
                                      int limit) {
-	if (ImGui::ListBoxHeader(title.c_str())) {
+	if (ImGui::BeginListBox(title.c_str())) {
 
 		if (m_searchComponents) {
 			if (results.first.empty() && (!m_searchNets || results.second.empty())) { // show suggestions only if there is no result at all
@@ -1641,7 +1641,7 @@ void BoardView::SearchColumnGenerate(const std::string &title,
 				ShowSearchResults(results.second, search, limit, &BoardView::FindNet);
 		}
 
-		ImGui::ListBoxFooter();
+		ImGui::EndListBox();
 	}
 }
 
