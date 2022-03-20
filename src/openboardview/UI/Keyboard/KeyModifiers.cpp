@@ -4,7 +4,7 @@
 
 #if __cplusplus < 201703L
 constexpr const std::array<ImGuiKey, 12> KeyModifiers::modifiers;
-constexpr const std::array<ImGuiKey, 4> KeyModifiers::modifiers;
+constexpr const std::array<ImGuiKey, 4> KeyModifiers::handledModifiers;
 #endif
 
 KeyModifiers::KeyModifiers() {
