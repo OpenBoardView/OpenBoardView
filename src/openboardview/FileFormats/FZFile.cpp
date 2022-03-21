@@ -6,6 +6,7 @@
 #include <clocale>
 #include <cstdint>
 #include <cstring>
+#include <iomanip>
 #include <sstream>
 #include <unordered_map>
 #include <zlib.h>
