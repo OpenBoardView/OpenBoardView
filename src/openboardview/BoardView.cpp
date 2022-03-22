@@ -123,8 +123,8 @@ void BoardView::ThemeSetStyle(const char *name) {
 		m_colors.partFillColor            = byte4swap(0x111111ff);
 		m_colors.partHighlightedColor     = byte4swap(0xffffffff);
 		m_colors.partHighlightedFillColor = byte4swap(0x333333ff);
-		m_colors.partTextColor            = byte4swap(0x000000ff);
-		m_colors.partTextBackgroundColor  = byte4swap(0xcccc22ff);
+		m_colors.partHighlightedTextColor            = byte4swap(0x000000ff);
+		m_colors.partHighlightedTextBackgroundColor  = byte4swap(0xcccc22ff);
 		m_colors.pinDefaultColor          = byte4swap(0x4040ffff);
 		m_colors.pinDefaultTextColor      = byte4swap(0xccccccff);
 		m_colors.pinGroundColor           = byte4swap(0x0300C3ff);
@@ -210,8 +210,8 @@ void BoardView::ThemeSetStyle(const char *name) {
 		m_colors.partFillColor            = byte4swap(0xffffff77);
 		m_colors.partHighlightedColor     = byte4swap(0xff0000ff);
 		m_colors.partHighlightedFillColor = byte4swap(0xf0f0f0ff);
-		m_colors.partTextColor            = byte4swap(0xff3030ff);
-		m_colors.partTextBackgroundColor  = byte4swap(0xffff00ff);
+		m_colors.partHighlightedTextColor            = byte4swap(0xff3030ff);
+		m_colors.partHighlightedTextBackgroundColor  = byte4swap(0xffff00ff);
 		m_colors.boardOutlineColor        = byte4swap(0x444444ff);
 		m_colors.pinDefaultColor          = byte4swap(0x22aa33ff);
 		m_colors.pinDefaultTextColor      = byte4swap(0x666688ff);
@@ -347,9 +347,9 @@ int BoardView::ConfigParse(void) {
 	m_colors.partHighlightedColor = byte4swap(obvconfig.ParseHex("partHighlightedColor", byte4swap(m_colors.partHighlightedColor)));
 	m_colors.partHighlightedFillColor =
 	    byte4swap(obvconfig.ParseHex("partHighlightedFillColor", byte4swap(m_colors.partHighlightedFillColor)));
-	m_colors.partTextColor = byte4swap(obvconfig.ParseHex("partTextColor", byte4swap(m_colors.partTextColor)));
-	m_colors.partTextBackgroundColor =
-	    byte4swap(obvconfig.ParseHex("partTextBackgroundColor", byte4swap(m_colors.partTextBackgroundColor)));
+	m_colors.partHighlightedTextColor = byte4swap(obvconfig.ParseHex("partHighlightedTextColor", byte4swap(m_colors.partHighlightedTextColor)));
+	m_colors.partHighlightedTextBackgroundColor =
+	    byte4swap(obvconfig.ParseHex("partHighlightedTextBackgroundColor", byte4swap(m_colors.partHighlightedTextBackgroundColor)));
 	m_colors.boardOutlineColor    = byte4swap(obvconfig.ParseHex("boardOutlineColor", byte4swap(m_colors.boardOutlineColor)));
 	m_colors.pinDefaultColor      = byte4swap(obvconfig.ParseHex("pinDefaultColor", byte4swap(m_colors.pinDefaultColor)));
 	m_colors.pinDefaultTextColor  = byte4swap(obvconfig.ParseHex("pinDefaultTextColor", byte4swap(m_colors.pinDefaultTextColor)));
@@ -566,10 +566,10 @@ void BoardView::SaveAllColors(void) {
 	obvconfig.WriteHex("partOutlineColor", byte4swap(m_colors.partOutlineColor));
 	obvconfig.WriteHex("partHullColor", byte4swap(m_colors.partHullColor));
 	obvconfig.WriteHex("partFillColor", byte4swap(m_colors.partFillColor));
-	obvconfig.WriteHex("partTextColor", byte4swap(m_colors.partTextColor));
-	obvconfig.WriteHex("partTextBackgroundColor", byte4swap(m_colors.partTextBackgroundColor));
 	obvconfig.WriteHex("partHighlightedColor", byte4swap(m_colors.partHighlightedColor));
 	obvconfig.WriteHex("partHighlightedFillColor", byte4swap(m_colors.partHighlightedFillColor));
+	obvconfig.WriteHex("partHighlightedTextColor", byte4swap(m_colors.partHighlightedTextColor));
+	obvconfig.WriteHex("partHighlightedTextBackgroundColor", byte4swap(m_colors.partHighlightedTextBackgroundColor));
 	obvconfig.WriteHex("pinDefaultColor", byte4swap(m_colors.pinDefaultColor));
 	obvconfig.WriteHex("pinDefaultTextColor", byte4swap(m_colors.pinDefaultTextColor));
 	obvconfig.WriteHex("pinGroundColor", byte4swap(m_colors.pinGroundColor));
@@ -654,13 +654,13 @@ void BoardView::ColorPreferences(void) {
 		                     "partHighlightedFillColor",
 		                     DPI(150),
 		                     &m_colors.partHighlightedFillColor);
-		ColorPreferencesItem("Text", DPI(200), "##PartText", "partTextColor", DPI(150), &m_colors.partTextColor);
-		ColorPreferencesItem("Text background",
+		ColorPreferencesItem("Text (selected)", DPI(200), "##PartHighlightedText", "partHighlightedTextColor", DPI(150), &m_colors.partHighlightedTextColor);
+		ColorPreferencesItem("Text background (selected)",
 		                     DPI(200),
-		                     "##PartTextBackground",
-		                     "partTextBackgroundColor",
+		                     "##PartHighlightedTextBackground",
+		                     "partHighlightedTextBackgroundColor",
 		                     DPI(150),
-		                     &m_colors.partTextBackgroundColor);
+		                     &m_colors.partHighlightedTextBackgroundColor);
 
 		ImGui::Dummy(ImVec2(1, DPI(10)));
 		ImGui::Text("Pins");
@@ -3677,45 +3677,49 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 				}
 			}
 
-			/*
-			 * Draw the text associated with the box or pins if required
-			 */
-			if (PartIsHighlighted(part) && !part->is_dummy() && !part->name.empty()) {
+			if (!part->is_dummy() && !part->name.empty()) {
 				std::string text  = part->name;
-				std::string mcode = part->mfgcode;
 
-				ImVec2 text_size    = ImGui::CalcTextSize(text.c_str());
-				ImVec2 mfgcode_size = ImGui::CalcTextSize(mcode.c_str());
 
-				if ((!showInfoPanel) && (mfgcode_size.x > text_size.x)) text_size.x = mfgcode_size.x;
+				/*
+				 * Draw the highlighted text for selected part
+				 */
+				if (PartIsHighlighted(part)) {
+					std::string mcode = part->mfgcode;
 
-				float top_y = a.y;
+					ImVec2 text_size    = ImGui::CalcTextSize(text.c_str());
+					ImVec2 mfgcode_size = ImGui::CalcTextSize(mcode.c_str());
 
-				if (c.y < top_y) top_y = c.y;
-				ImVec2 pos = ImVec2((a.x + c.x) * 0.5f, top_y);
+					if ((!showInfoPanel) && (mfgcode_size.x > text_size.x)) text_size.x = mfgcode_size.x;
 
-				pos.y -= text_size.y * 2;
-				if (mcode.size()) pos.y -= text_size.y;
+					float top_y = a.y;
 
-				pos.x -= text_size.x * 0.5f;
-				draw->ChannelsSetCurrent(kChannelText);
+					if (c.y < top_y) top_y = c.y;
+					ImVec2 pos = ImVec2((a.x + c.x) * 0.5f, top_y);
 
-				// This is the background of the part text.
-				draw->AddRectFilled(ImVec2(pos.x - DPIF(2.0f), pos.y - DPIF(2.0f)),
-				                    ImVec2(pos.x + text_size.x + DPIF(2.0f), pos.y + text_size.y + DPIF(2.0f)),
-				                    m_colors.partTextBackgroundColor,
-				                    0.0f);
-				draw->AddText(pos, m_colors.partTextColor, text.c_str());
-				if ((!showInfoPanel) && (mcode.size())) {
-					//	pos.y += text_size.y;
-					pos.y += text_size.y + DPIF(2.0f);
+					pos.y -= text_size.y * 2;
+					if (mcode.size()) pos.y -= text_size.y;
+
+					pos.x -= text_size.x * 0.5f;
+					draw->ChannelsSetCurrent(kChannelText);
+
+					// This is the background of the part text.
 					draw->AddRectFilled(ImVec2(pos.x - DPIF(2.0f), pos.y - DPIF(2.0f)),
-					                    ImVec2(pos.x + text_size.x + DPIF(2.0f), pos.y + text_size.y + DPIF(2.0f)),
-					                    m_colors.annotationPopupBackgroundColor,
-					                    0.0f);
-					draw->AddText(ImVec2(pos.x, pos.y), m_colors.annotationPopupTextColor, mcode.c_str());
+										ImVec2(pos.x + text_size.x + DPIF(2.0f), pos.y + text_size.y + DPIF(2.0f)),
+										m_colors.partHighlightedTextBackgroundColor,
+										0.0f);
+					draw->AddText(pos, m_colors.partHighlightedTextColor, text.c_str());
+					if ((!showInfoPanel) && (mcode.size())) {
+						//	pos.y += text_size.y;
+						pos.y += text_size.y + DPIF(2.0f);
+						draw->AddRectFilled(ImVec2(pos.x - DPIF(2.0f), pos.y - DPIF(2.0f)),
+											ImVec2(pos.x + text_size.x + DPIF(2.0f), pos.y + text_size.y + DPIF(2.0f)),
+											m_colors.annotationPopupBackgroundColor,
+											0.0f);
+						draw->AddText(ImVec2(pos.x, pos.y), m_colors.annotationPopupTextColor, mcode.c_str());
+					}
+					draw->ChannelsSetCurrent(kChannelPolylines);
 				}
-				draw->ChannelsSetCurrent(kChannelPolylines);
 			}
 		}
 	} // for each part

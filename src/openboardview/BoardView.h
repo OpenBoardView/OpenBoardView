@@ -56,13 +56,13 @@ struct ColorScheme {
 	 */
 	uint32_t backgroundColor          = 0xffffffff;
 	uint32_t boardFillColor           = 0xffdddddd;
-	uint32_t partTextColor            = 0xff808000;
-	uint32_t partTextBackgroundColor  = 0xff00eeee;
 	uint32_t partOutlineColor         = 0xff444444;
 	uint32_t partHullColor            = 0x80808080;
 	uint32_t partFillColor            = 0xffffffff;
 	uint32_t partHighlightedColor     = 0xff0000ee;
 	uint32_t partHighlightedFillColor = 0xf4f0f0ff;
+	uint32_t partHighlightedTextColor            = 0xff808000;
+	uint32_t partHighlightedTextBackgroundColor  = 0xff00eeee;
 	uint32_t boardOutlineColor        = 0xff00ffff;
 
 	//	uint32_t boxColor = 0xffcccccc;
