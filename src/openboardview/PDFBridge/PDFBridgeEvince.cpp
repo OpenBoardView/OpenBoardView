@@ -24,6 +24,11 @@ PDFBridgeEvince::~PDFBridgeEvince() {
 }
 
 void PDFBridgeEvince::OpenDocument(const filesystem::path &pdfPath) {
+	if (!filesystem::exists(pdfPath)) { // PDF file does not exist, do not attempt to load
+		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "PDFBridgeEvince PDF file does not exist");
+		return;
+	}
+
 	GError *error = nullptr;
 
 	daemonProxy = g_dbus_proxy_new_sync(dbusConnection, G_DBUS_PROXY_FLAGS_NONE, NULL, "org.gnome.evince.Daemon", "/org/gnome/evince/Daemon", "org.gnome.evince.Daemon", NULL, &error);
