@@ -71,7 +71,13 @@ void PDFBridgeEvince::OpenDocument(const filesystem::path &pdfPath) {
 	//const gchar *ownerStr = g_variant_get_type_string(owner);
 	g_variant_get(owner, "(s)", &ownerStr);
 
-	SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "PDFBridgeEvince FindDocuemnt owner: %s", ownerStr);
+	if (ownerStr[0] == '\0') {
+		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "PDFBridgeEvince empty owner");
+		g_variant_unref(owner);
+		return;
+	}
+
+	SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "PDFBridgeEvince FindDocument owner: %s", ownerStr);
 
 	windowProxy = g_dbus_proxy_new_sync(dbusConnection, G_DBUS_PROXY_FLAGS_NONE, NULL, ownerStr, "/org/gnome/evince/Window/0", "org.gnome.evince.Window", NULL, &error);
 	if (!windowProxy) {
@@ -82,7 +88,6 @@ void PDFBridgeEvince::OpenDocument(const filesystem::path &pdfPath) {
 		} else {
 			SDL_LogError(SDL_LOG_CATEGORY_ERROR, "PDFBridgeEvince windowProxy error");
 		}
-		return;
 	}
 
 	g_variant_unref(owner);
