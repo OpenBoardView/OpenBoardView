@@ -43,9 +43,15 @@ void PDFBridgeEvince::OpenDocument(const filesystem::path &pdfPath) {
 		return;
 	}
 
-	std::string uri = "file://" + filesystem::canonical(pdfPath).string();
+	std::string canonical_path = filesystem::canonical(pdfPath).string();
 
-	GVariant *owner = g_dbus_proxy_call_sync(daemonProxy, "FindDocument", g_variant_new("(sb)", uri.c_str(), true), G_DBUS_CALL_FLAGS_NONE, 15/*timeout*/, NULL, &error);
+	GFile *gfile = g_file_new_for_path(canonical_path.c_str());
+	char *uri = g_file_get_uri(gfile);
+	g_object_unref(gfile);
+
+	SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "PDFBridgeEvince FindDocument: %s", uri);
+
+	GVariant *owner = g_dbus_proxy_call_sync(daemonProxy, "FindDocument", g_variant_new("(sb)", uri, true), G_DBUS_CALL_FLAGS_NONE, 30/*timeout*/, NULL, &error);
 	if (!owner) {
 		if (error) {
 			SDL_LogError(SDL_LOG_CATEGORY_ERROR, "PDFBridgeEvince FindDocument error: %s", error->message);
@@ -56,6 +62,9 @@ void PDFBridgeEvince::OpenDocument(const filesystem::path &pdfPath) {
 		}
 		return;
 	}
+
+	g_free(uri);
+	uri = nullptr;
 
 	const gchar *ownerStr;
 	//= g_variant_get_string(owner, NULL);
