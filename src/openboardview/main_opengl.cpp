@@ -318,6 +318,8 @@ int main(int argc, char **argv) {
 		if (!ttf.empty()) {
 			io.Fonts->AddFontFromMemoryTTF(
 			    const_cast<void *>(reinterpret_cast<const void *>(ttf.data())), ttf.size(), g.font_size, &font_cfg);
+			io.Fonts->AddFontFromMemoryTTF(
+			    const_cast<void *>(reinterpret_cast<const void *>(ttf.data())), ttf.size(), g.font_size * 8, &font_cfg); // Larger font for resizeable (zoomed) text
 			break;
 		}
 #else
@@ -325,6 +327,7 @@ int main(int argc, char **argv) {
 		if (fontpath.empty()) continue;        // Font not found
 		if (check_fileext(fontpath, ".ttf")) { // ImGui handles only TrueType fonts so exclude anything which has a different ext
 			io.Fonts->AddFontFromFileTTF(fontpath.c_str(), g.font_size);
+			io.Fonts->AddFontFromFileTTF(fontpath.c_str(), g.font_size * 8); // Larger font for resizeable (zoomed) text
 			break;
 		}
 #endif
