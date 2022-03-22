@@ -16,7 +16,7 @@ public:
 
 	void OpenDocument(const filesystem::path &pdfPath);
 	void CloseDocument();
-	void DocumentSearch(const std::string &str);
+	void DocumentSearch(const std::string &str, bool wholeWordsOnly, bool caseSensitive);
 };
 
 #endif//_PDFBRIDGEEVINCE_H_

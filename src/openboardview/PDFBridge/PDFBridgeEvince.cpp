@@ -51,7 +51,7 @@ void PDFBridgeEvince::OpenDocument(const filesystem::path &pdfPath) {
 
 	SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "PDFBridgeEvince FindDocument: %s", uri);
 
-	GVariant *owner = g_dbus_proxy_call_sync(daemonProxy, "FindDocument", g_variant_new("(sb)", uri, true), G_DBUS_CALL_FLAGS_NONE, 30/*timeout*/, NULL, &error);
+	GVariant *owner = g_dbus_proxy_call_sync(daemonProxy, "FindDocument", g_variant_new("(sb)", uri, true), G_DBUS_CALL_FLAGS_NONE, 10000/*10 seconds timeout*/, NULL, &error);
 	if (!owner) {
 		if (error) {
 			SDL_LogError(SDL_LOG_CATEGORY_ERROR, "PDFBridgeEvince FindDocument error: %s", error->message);
@@ -102,7 +102,7 @@ void PDFBridgeEvince::CloseDocument() {
 	windowProxy = nullptr;
 }
 
-void PDFBridgeEvince::DocumentSearch(const std::string &str) {
+void PDFBridgeEvince::DocumentSearch(const std::string &str, bool wholeWordsOnly, bool caseSensitive) {
 	GError *error = nullptr;
 
 	if (dbusConnection == nullptr) {
@@ -115,7 +115,7 @@ void PDFBridgeEvince::DocumentSearch(const std::string &str) {
 		return;
 	}
 
-	g_dbus_proxy_call_sync(windowProxy, "Search", g_variant_new("(s)", str.c_str()), G_DBUS_CALL_FLAGS_NONE, 5/*timeout*/, NULL, &error);
+	g_dbus_proxy_call_sync(windowProxy, "Search", g_variant_new("(sbb)", str.c_str(), wholeWordsOnly, caseSensitive), G_DBUS_CALL_FLAGS_NONE, 5000/*5 seconds timeout*/, NULL, &error);
 
 	if (error) {
 		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "PDFBridgeEvince Search error: %s", error->message);

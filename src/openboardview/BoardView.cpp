@@ -1308,10 +1308,18 @@ void BoardView::ShowInfoPane(void) {
 					ImGui::SetClipboardText(to_copy.c_str());
 				}
 			}
-			ImGui::SameLine();
-			std::string pdfButtonName = "PDF Search##" + part->name;
-			if (ImGui::SmallButton(pdfButtonName.c_str())) {
-				pdfBridge.DocumentSearch(part->name);
+
+			{
+				static bool wholeWordsOnly = true;
+				static bool caseSensitive = false;
+				std::string pdfButtonName = "PDF Search##" + part->name;
+				if (ImGui::SmallButton(pdfButtonName.c_str())) {
+					pdfBridge.DocumentSearch(part->name, wholeWordsOnly, caseSensitive);
+				}
+				ImGui::SameLine();
+				ImGui::Checkbox("Whole words only", &wholeWordsOnly);
+				ImGui::SameLine();
+				ImGui::Checkbox("Case sensitive", &caseSensitive);
 			}
 
 			if (part->mfgcode.size()) ImGui::TextWrapped("%s", part->mfgcode.c_str());

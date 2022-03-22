@@ -11,7 +11,7 @@ public:
 
 	virtual void OpenDocument(const filesystem::path &pdfPath) = 0;
 	virtual void CloseDocument() = 0;
-	virtual void DocumentSearch(const std::string &str) = 0;
+	virtual void DocumentSearch(const std::string &str, bool wholeWordsOnly, bool caseSensitive) = 0;
 };
 
 #endif//_PDFBRIDGE_H_
