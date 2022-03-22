@@ -49,6 +49,7 @@ pinHaloDiameter = 1.1\r\n\
 pinHaloThickness = 4\r\n\
 \r\n\
 fillParts =		true\r\n\
+showPartName =  true\r\n\
 boardFill =		true\r\n\
 boardFillSpacing = 3\r\n\
 \r\n\
@@ -86,6 +87,7 @@ boardFillColor	= 0xddddddff\r\n\
 partOutlineColor = 0x444444ff\r\n\
 partHullColor			= 0x80808080\r\n\
 partFillColor = 0xffffff77\r\n\
+partTextColor			= 0x80808080\r\n\
 partHighlightedFillColor = 0xf4f0f0ff\r\n\
 partHighlightedColor = 0xff0000ee\r\n\
 partHighlightedTextColor			= 0xff3030ff\r\n\
@@ -162,6 +164,7 @@ slowCPU =       false\r\n\
 showFPS =       false\r\n\
 pinHalo =       true\r\n\
 fillParts =		true\r\n\
+showPartName =  true \r\n\
 \r\n\
 zoomFactor = 5\r\n\
 zoomModifier = 5\r\n\
@@ -172,6 +175,7 @@ panModifier = 5\r\n\
 # Colors, format is 0xRRGGBBAA\r\n\
 lightTheme	= false\r\n\
 backgroundColor		= 0x000000a0\r\n\
+partTextColor			= 0x80808080r\n\
 partHighlightedTextColor			= 0x008080ff\r\n\
 partHighlightedTextBackgroundColor	= 0xeeee00ff\r\n\
 boardOutline			= 0xffff00ff\r\n\

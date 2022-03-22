@@ -59,6 +59,7 @@ struct ColorScheme {
 	uint32_t partOutlineColor         = 0xff444444;
 	uint32_t partHullColor            = 0x80808080;
 	uint32_t partFillColor            = 0xffffffff;
+	uint32_t partTextColor            = 0x80808080;
 	uint32_t partHighlightedColor     = 0xff0000ee;
 	uint32_t partHighlightedFillColor = 0xf4f0f0ff;
 	uint32_t partHighlightedTextColor            = 0xff808000;
@@ -162,6 +163,7 @@ struct BoardView {
 	float pinHaloThickness    = 4.00;
 	bool fillParts            = true;
 	bool boardFill            = true;
+	bool showPartName         = true;
 	int boardFillSpacing      = 3;
 	bool boardMinMaxDone      = false;
 

@@ -121,6 +121,7 @@ void BoardView::ThemeSetStyle(const char *name) {
 		m_colors.partHullColor            = byte4swap(0x80808080);
 		m_colors.partOutlineColor         = byte4swap(0x999999ff);
 		m_colors.partFillColor            = byte4swap(0x111111ff);
+		m_colors.partTextColor            = byte4swap(0x80808080);
 		m_colors.partHighlightedColor     = byte4swap(0xffffffff);
 		m_colors.partHighlightedFillColor = byte4swap(0x333333ff);
 		m_colors.partHighlightedTextColor            = byte4swap(0x000000ff);
@@ -208,6 +209,7 @@ void BoardView::ThemeSetStyle(const char *name) {
 		m_colors.partHullColor            = byte4swap(0x80808080);
 		m_colors.partOutlineColor         = byte4swap(0x444444ff);
 		m_colors.partFillColor            = byte4swap(0xffffff77);
+		m_colors.partTextColor            = byte4swap(0x80808080);
 		m_colors.partHighlightedColor     = byte4swap(0xff0000ff);
 		m_colors.partHighlightedFillColor = byte4swap(0xf0f0f0ff);
 		m_colors.partHighlightedTextColor            = byte4swap(0xff3030ff);
@@ -290,6 +292,7 @@ int BoardView::ConfigParse(void) {
 	showAnnotations           = obvconfig.ParseBool("showAnnotations", true);
 	backgroundImage.enabled   = obvconfig.ParseBool("showBackgroundImage", true);
 	fillParts                 = obvconfig.ParseBool("fillParts", true);
+	showPartName              = obvconfig.ParseBool("showPartName", true);
 	m_centerZoomSearchResults = obvconfig.ParseBool("centerZoomSearchResults", true);
 	flipMode                  = obvconfig.ParseInt("flipMode", 0);
 
@@ -344,6 +347,7 @@ int BoardView::ConfigParse(void) {
 	m_colors.partHullColor        = byte4swap(obvconfig.ParseHex("partHullColor", byte4swap(m_colors.partHullColor)));
 	m_colors.partOutlineColor     = byte4swap(obvconfig.ParseHex("partOutlineColor", byte4swap(m_colors.partOutlineColor)));
 	m_colors.partFillColor        = byte4swap(obvconfig.ParseHex("partFillColor", byte4swap(m_colors.partFillColor)));
+	m_colors.partTextColor = byte4swap(obvconfig.ParseHex("partTextColor", byte4swap(m_colors.partTextColor)));
 	m_colors.partHighlightedColor = byte4swap(obvconfig.ParseHex("partHighlightedColor", byte4swap(m_colors.partHighlightedColor)));
 	m_colors.partHighlightedFillColor =
 	    byte4swap(obvconfig.ParseHex("partHighlightedFillColor", byte4swap(m_colors.partHighlightedFillColor)));
@@ -566,6 +570,7 @@ void BoardView::SaveAllColors(void) {
 	obvconfig.WriteHex("partOutlineColor", byte4swap(m_colors.partOutlineColor));
 	obvconfig.WriteHex("partHullColor", byte4swap(m_colors.partHullColor));
 	obvconfig.WriteHex("partFillColor", byte4swap(m_colors.partFillColor));
+	obvconfig.WriteHex("partTextColor", byte4swap(m_colors.partTextColor));
 	obvconfig.WriteHex("partHighlightedColor", byte4swap(m_colors.partHighlightedColor));
 	obvconfig.WriteHex("partHighlightedFillColor", byte4swap(m_colors.partHighlightedFillColor));
 	obvconfig.WriteHex("partHighlightedTextColor", byte4swap(m_colors.partHighlightedTextColor));
@@ -646,6 +651,7 @@ void BoardView::ColorPreferences(void) {
 		ColorPreferencesItem("Outline", DPI(200), "##PartOutline", "partOutlineColor", DPI(150), &m_colors.partOutlineColor);
 		ColorPreferencesItem("Hull", DPI(200), "##PartHull", "partHullColor", DPI(150), &m_colors.partHullColor);
 		ColorPreferencesItem("Fill", DPI(200), "##PartFill", "partFillColor", DPI(150), &m_colors.partFillColor);
+		ColorPreferencesItem("Text", DPI(200), "##PartText", "partTextColor", DPI(150), &m_colors.partTextColor);
 		ColorPreferencesItem(
 		    "Selected", DPI(200), "##PartSelected", "partHighlightedColor", DPI(150), &m_colors.partHighlightedColor);
 		ColorPreferencesItem("Fill (selected)",
@@ -912,6 +918,10 @@ void BoardView::Preferences(void) {
 		ImGui::SameLine();
 		if (ImGui::Checkbox("Fill Board", &boardFill)) {
 			obvconfig.WriteBool("boardFill", boardFill);
+		}
+
+		if (ImGui::Checkbox("Show part name", &showPartName)) {
+			obvconfig.WriteBool("showPartName", showPartName);
 		}
 
 		ImGui::Separator();
@@ -1946,6 +1956,11 @@ void BoardView::Update() {
 
 			if (ImGui::Checkbox("Part fill", &fillParts)) {
 				obvconfig.WriteBool("fillParts", fillParts);
+				m_needsRedraw = true;
+			}
+
+			if (ImGui::Checkbox("Part name", &showPartName)) {
+				obvconfig.WriteBool("showPartName", showPartName);
 				m_needsRedraw = true;
 			}
 
@@ -3680,6 +3695,37 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 			if (!part->is_dummy() && !part->name.empty()) {
 				std::string text  = part->name;
 
+				/*
+				 * Draw part name inside part bounding box
+				 */
+				if (showPartName) {
+					ImFont *font = ImGui::GetIO().Fonts->Fonts[1]; // Use larger font
+					ImVec2 text_size_normalized	= font->CalcTextSizeA(1.0f, FLT_MAX, 0.0f, text.c_str());
+
+					// Find max width and height of bounding box, not perfect for non-straight bounding box but good enough
+					float minx = std::min({a.x, b.x, c.x, d.x});
+					float miny = std::min({a.y, b.y, c.y, d.y});
+					float maxx = std::max({a.x, b.x, c.x, d.x});
+					float maxy = std::max({a.y, b.y, c.y, d.y});
+					float maxwidth = abs(maxx - minx) * 0.7; // Bounding box width with 30% padding
+					float maxheight = abs(maxy - miny) * 0.7; // Bounding box height with 30% padding
+
+					// Find max font size to fit text inside bounding box
+					float maxfontwidth = maxwidth / text_size_normalized.x;
+					float maxfontheight = maxheight / text_size_normalized.y;
+					float maxfontsize = min(maxfontwidth, maxfontheight);
+
+					ImVec2 text_size{text_size_normalized.x * maxfontsize, text_size_normalized.y * maxfontsize};
+
+					// Center text
+					ImVec2 pos = CoordToScreen(part->centerpoint.x, part->centerpoint.y); // Computed previously during bounding box generation
+					pos.x -= text_size.x * 0.5f;
+					pos.y -= text_size.y * 0.5f;
+
+					draw->ChannelsSetCurrent(kChannelText);
+					draw->AddText(font, maxfontsize, pos, m_colors.partTextColor, part->name.c_str());
+					draw->ChannelsSetCurrent(kChannelPolylines);
+				}
 
 				/*
 				 * Draw the highlighted text for selected part
