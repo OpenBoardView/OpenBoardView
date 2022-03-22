@@ -25,36 +25,44 @@ PROJECT="$(color 3 OpenBoardView)"
 if [ -z $THREADS ]; then
     THREADS="$(getconf _NPROCESSORS_ONLN 2>/dev/null || getconf NPROCESSORS_ONLN 2>/dev/null || echo 1)"
 fi
-ARG_LENGTH=$#
-if [ "$1" = "--help" ]; then
-  helpMsg
-  exit
-fi
 STRCOMPILE="$(color 2 Compiling)"
+RECOMPILE=false
 COMPILEDIR="release_build"
 COMPILEFLAGS="-DCMAKE_INSTALL_PREFIX="
 export DESTDIR="$(cd "$(dirname "$0")" && pwd)"
 BUILDTYPE="$(color 6 release)"
-SCRIPT_ARGC=1 # number of arguments eaten by this script
-if [ "$ARG_LENGTH" -gt 0 -a "$1" = "--debug" -o "$2" = "--debug" ]; then
-  COMPILEDIR="debug_build"
-  COMPILEFLAGS="$COMPILEFLAGS -DCMAKE_BUILD_TYPE=DEBUG"
-  BUILDTYPE="$(color 1 debug)"
-  SCRIPT_ARGC=$((SCRIPT_ARGC+1))
-fi
-if [ "$ARG_LENGTH" -gt 0 -a "$1" = "--recompile" -o "$2" = "--recompile" ]; then
-  STRCOMPILE="$(color 5 Recompiling)"
-  rm -rf $COMPILEDIR
-  SCRIPT_ARGC=$((SCRIPT_ARGC+1))
-fi
+
+
+for arg in "$@"; do
+  case $arg in
+    --help)
+      helpMsg
+      exit
+    ;;
+    --debug)
+      COMPILEDIR="debug_build"
+      COMPILEFLAGS="$COMPILEFLAGS -DCMAKE_BUILD_TYPE=DEBUG"
+      BUILDTYPE="$(color 1 debug)"
+    ;;
+    --recompile)
+      STRCOMPILE="$(color 5 Recompiling)"
+      RECOMPILE=true
+    ;;
+    *) # pass other arguments to CMAKE
+      COMPILEFLAGS="$COMPILEFLAGS $arg"
+  esac
+done
+
 if [ "$CROSS" = "mingw64" ]; then
   COMPILEFLAGS="$COMPILEFLAGS -DCMAKE_TOOLCHAIN_FILE=../Toolchain-mingw64.cmake"
 fi
-SUBSTRING=$(echo $@ | cut -d ' ' -f ${SCRIPT_ARGC}-)
-COMPILEFLAGS="$COMPILEFLAGS ${SUBSTRING}" # pass other arguments to CMAKE
+
 if [ $THREADS -lt 1 ]; then
   color 1 "Unable to detect number of threads, using 1 thread."
   THREADS=1
+fi
+if [ "$RECOMPILE" = true ]; then
+  rm -rf $COMPILEDIR
 fi
 if [ ! -d $COMPILEDIR ]; then
   mkdir $COMPILEDIR
