@@ -128,6 +128,7 @@ void BoardView::ThemeSetStyle(const char *name) {
 		m_colors.partHighlightedTextBackgroundColor  = byte4swap(0xcccc22ff);
 		m_colors.pinDefaultColor          = byte4swap(0x4040ffff);
 		m_colors.pinDefaultTextColor      = byte4swap(0xccccccff);
+		m_colors.pinTextBackgroundColor   = byte4swap(0xffffff80);
 		m_colors.pinGroundColor           = byte4swap(0x0300C3ff);
 		m_colors.pinNotConnectedColor     = byte4swap(0xaaaaaaff);
 		m_colors.pinTestPadColor          = byte4swap(0x888888ff);
@@ -217,6 +218,7 @@ void BoardView::ThemeSetStyle(const char *name) {
 		m_colors.boardOutlineColor        = byte4swap(0x444444ff);
 		m_colors.pinDefaultColor          = byte4swap(0x22aa33ff);
 		m_colors.pinDefaultTextColor      = byte4swap(0x666688ff);
+		m_colors.pinTextBackgroundColor   = byte4swap(0xffffff80);
 		m_colors.pinGroundColor           = byte4swap(0x2222aaff);
 		m_colors.pinNotConnectedColor     = byte4swap(0xaaaaaaff);
 		m_colors.pinTestPadColor          = byte4swap(0x888888ff);
@@ -293,6 +295,7 @@ int BoardView::ConfigParse(void) {
 	backgroundImage.enabled   = obvconfig.ParseBool("showBackgroundImage", true);
 	fillParts                 = obvconfig.ParseBool("fillParts", true);
 	showPartName              = obvconfig.ParseBool("showPartName", true);
+	showPinName               = obvconfig.ParseBool("showPinName", true);
 	m_centerZoomSearchResults = obvconfig.ParseBool("centerZoomSearchResults", true);
 	flipMode                  = obvconfig.ParseInt("flipMode", 0);
 
@@ -357,6 +360,7 @@ int BoardView::ConfigParse(void) {
 	m_colors.boardOutlineColor    = byte4swap(obvconfig.ParseHex("boardOutlineColor", byte4swap(m_colors.boardOutlineColor)));
 	m_colors.pinDefaultColor      = byte4swap(obvconfig.ParseHex("pinDefaultColor", byte4swap(m_colors.pinDefaultColor)));
 	m_colors.pinDefaultTextColor  = byte4swap(obvconfig.ParseHex("pinDefaultTextColor", byte4swap(m_colors.pinDefaultTextColor)));
+	m_colors.pinTextBackgroundColor  = byte4swap(obvconfig.ParseHex("pinTextBackgroundColor", byte4swap(m_colors.pinTextBackgroundColor)));
 	m_colors.pinGroundColor       = byte4swap(obvconfig.ParseHex("pinGroundColor", byte4swap(m_colors.pinGroundColor)));
 	m_colors.pinNotConnectedColor = byte4swap(obvconfig.ParseHex("pinNotConnectedColor", byte4swap(m_colors.pinNotConnectedColor)));
 	m_colors.pinTestPadColor      = byte4swap(obvconfig.ParseHex("pinTestPadColor", byte4swap(m_colors.pinTestPadColor)));
@@ -577,6 +581,7 @@ void BoardView::SaveAllColors(void) {
 	obvconfig.WriteHex("partHighlightedTextBackgroundColor", byte4swap(m_colors.partHighlightedTextBackgroundColor));
 	obvconfig.WriteHex("pinDefaultColor", byte4swap(m_colors.pinDefaultColor));
 	obvconfig.WriteHex("pinDefaultTextColor", byte4swap(m_colors.pinDefaultTextColor));
+	obvconfig.WriteHex("pinTextBackgroundColor", byte4swap(m_colors.pinTextBackgroundColor));
 	obvconfig.WriteHex("pinGroundColor", byte4swap(m_colors.pinGroundColor));
 	obvconfig.WriteHex("pinNotConnectedColor", byte4swap(m_colors.pinNotConnectedColor));
 	obvconfig.WriteHex("pinTestPadColor", byte4swap(m_colors.pinTestPadColor));
@@ -674,6 +679,8 @@ void BoardView::ColorPreferences(void) {
 		ColorPreferencesItem("Default", DPI(200), "##PinDefault", "pinDefaultColor", DPI(150), &m_colors.pinDefaultColor);
 		ColorPreferencesItem(
 		    "Default text", DPI(200), "##PinDefaultText", "pinDefaultTextColor", DPI(150), &m_colors.pinDefaultTextColor);
+		ColorPreferencesItem(
+		    "Text background", DPI(200), "##PinTextBackground", "pinTextBackgroundColor", DPI(150), &m_colors.pinTextBackgroundColor);
 		ColorPreferencesItem("Ground", DPI(200), "##PinGround", "pinGroundColor", DPI(150), &m_colors.pinGroundColor);
 		ColorPreferencesItem("NC", DPI(200), "##PinNC", "pinNotConnectedColor", DPI(150), &m_colors.pinNotConnectedColor);
 		ColorPreferencesItem("Test pad", DPI(200), "##PinTP", "pinTestPadColor", DPI(150), &m_colors.pinTestPadColor);
@@ -923,6 +930,12 @@ void BoardView::Preferences(void) {
 		if (ImGui::Checkbox("Show part name", &showPartName)) {
 			obvconfig.WriteBool("showPartName", showPartName);
 		}
+
+		ImGui::SameLine();
+		if (ImGui::Checkbox("Show pin name", &showPinName)) {
+			obvconfig.WriteBool("showPinName", showPinName);
+		}
+
 
 		ImGui::Separator();
 		{
@@ -1961,6 +1974,11 @@ void BoardView::Update() {
 
 			if (ImGui::Checkbox("Part name", &showPartName)) {
 				obvconfig.WriteBool("showPartName", showPartName);
+				m_needsRedraw = true;
+			}
+
+			if (ImGui::Checkbox("Pin name", &showPinName)) {
+				obvconfig.WriteBool("showPinName", showPinName);
 				m_needsRedraw = true;
 			}
 
@@ -3275,12 +3293,48 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 			// pinHaloThickness);
 			//		}
 
-			if (show_text) {
-				ImVec2 text_size = ImGui::CalcTextSize(pin->name.c_str());
-				ImVec2 pos_adj   = ImVec2(pos.x - text_size.x * 0.5f, pos.y - text_size.y * 0.5f);
+			// Show all pin names when showPinName is enabled and pin diameter is above threshold or show pin name only for selected part
+			if ((showPinName && psz > 3) || show_text) {
+				std::string text = pin->name + "\n" + pin->net->name;
+				ImFont *font = ImGui::GetIO().Fonts->Fonts[0]; // Default font
+				ImVec2 text_size_normalized = font->CalcTextSizeA(1.0f, FLT_MAX, 0.0f, text.c_str());
+
+				float maxfontwidth = psz * 2.125/ text_size_normalized.x; // Fit horizontally with 6.75% overflow (should still avoid colliding with neighbours)
+				float maxfontheight = psz * 1.5/ text_size_normalized.y; // Fit vertically with 25% top/bottom padding
+				float maxfontsize = min(maxfontwidth, maxfontheight);
+
+				// Font size for pin name only depends on height of text (rather than width of full text incl. net name) to scale to pin bounding box
+				ImVec2 size_pin_name = font->CalcTextSizeA(maxfontheight, FLT_MAX, 0.0f, pin->name.c_str());
+				// Font size for net name also depends on width of full text to avoid overflowing too much and colliding with text from other pin
+				ImVec2 size_net_name = font->CalcTextSizeA(maxfontsize, FLT_MAX, 0.0f, pin->net->name.c_str());
+
+				// Show pin name above net name, full text is centered vertically
+				ImVec2 pos_pin_name   = ImVec2(pos.x - size_pin_name.x * 0.5f, pos.y - size_pin_name.y);
+				ImVec2 pos_net_name   = ImVec2(pos.x - size_net_name.x * 0.5f, pos.y);
+
+				ImFont *font_pin_name = font;
+				if (maxfontheight < font->FontSize * 0.75) {
+					font_pin_name = ImGui::GetIO().Fonts->Fonts[2]; // Use smaller font for pin name
+				} else if (maxfontheight > font->FontSize * 1.5) {
+					font_pin_name = ImGui::GetIO().Fonts->Fonts[1]; // Use larger font for pin name
+				}
+
+				ImFont *font_net_name = font;
+				if (maxfontsize < font->FontSize * 0.75) {
+					font_net_name = ImGui::GetIO().Fonts->Fonts[2]; // Use smaller font for net name
+				} else if (maxfontsize > font->FontSize * 1.5) {
+					font_net_name = ImGui::GetIO().Fonts->Fonts[1]; // Use larger font for net name
+				}
+
+				// Background rectangle
+				draw->AddRectFilled(ImVec2(pos_net_name.x - m_scale * 0.5f, pos_net_name.y), // Begining of text with slight padding
+										ImVec2(pos_net_name.x + size_net_name.x + m_scale * 0.5f, pos_net_name.y + size_net_name.y), // End of text with slight padding
+										m_colors.pinTextBackgroundColor,
+										m_scale * 0.5f/*rounding*/);
 
 				draw->ChannelsSetCurrent(kChannelText);
-				draw->AddText(pos_adj, text_color, pin->name.c_str());
+				draw->AddText(font_pin_name, maxfontheight, pos_pin_name, text_color, pin->name.c_str());
+				draw->AddText(font_net_name, maxfontsize, pos_net_name, text_color, pin->net->name.c_str());
 				draw->ChannelsSetCurrent(kChannelPins);
 			}
 		}

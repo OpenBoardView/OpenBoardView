@@ -50,6 +50,7 @@ pinHaloThickness = 4\r\n\
 \r\n\
 fillParts =		true\r\n\
 showPartName =  true\r\n\
+showPinName =  true\r\n\
 boardFill =		true\r\n\
 boardFillSpacing = 3\r\n\
 \r\n\
@@ -104,6 +105,7 @@ partHighlightedTextBackgroundColor			= 0xffff00ff\r\n\
 boardOutlineColor			= 0x444444ff\r\n\
 pinDefaultColor				= 0x22aa33ff\r\n\
 pinDefaultTextColor			= 0x666688ff\r\n\
+pinTextBackgroundColor		= 0xffffff80\r\n\
 pinGroundColor				= 0x2222aaff\r\n\
 pinNotConnectedColor		= 0xaaaaaaff\r\n\
 pinTestPadColor				= 0x888888ff\r\n\
@@ -165,6 +167,7 @@ showFPS =       false\r\n\
 pinHalo =       true\r\n\
 fillParts =		true\r\n\
 showPartName =  true \r\n\
+showPinName =  true \r\n\
 \r\n\
 zoomFactor = 5\r\n\
 zoomModifier = 5\r\n\

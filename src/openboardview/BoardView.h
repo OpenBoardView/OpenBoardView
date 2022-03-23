@@ -70,6 +70,7 @@ struct ColorScheme {
 
 	uint32_t pinDefaultColor      = 0xff0000ff;
 	uint32_t pinDefaultTextColor  = 0xffcc0000;
+	uint32_t pinTextBackgroundColor  = 0xffffff80;
 	uint32_t pinGroundColor       = 0xff0000bb;
 	uint32_t pinNotConnectedColor = 0xffff0000;
 	uint32_t pinTestPadColor      = 0xff888888;
@@ -164,6 +165,7 @@ struct BoardView {
 	bool fillParts            = true;
 	bool boardFill            = true;
 	bool showPartName         = true;
+	bool showPinName          = true;
 	int boardFillSpacing      = 3;
 	bool boardMinMaxDone      = false;
 
