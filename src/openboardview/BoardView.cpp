@@ -3753,7 +3753,7 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 				 * Draw part name inside part bounding box
 				 */
 				if (showPartName) {
-					ImFont *font = ImGui::GetIO().Fonts->Fonts[1]; // Use larger font
+					ImFont *font = ImGui::GetIO().Fonts->Fonts[0]; // Default font
 					ImVec2 text_size_normalized	= font->CalcTextSizeA(1.0f, FLT_MAX, 0.0f, text.c_str());
 
 					// Find max width and height of bounding box, not perfect for non-straight bounding box but good enough
@@ -3775,6 +3775,12 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 					ImVec2 pos = CoordToScreen(part->centerpoint.x, part->centerpoint.y); // Computed previously during bounding box generation
 					pos.x -= text_size.x * 0.5f;
 					pos.y -= text_size.y * 0.5f;
+
+					if (maxfontsize < font->FontSize * 0.75) {
+						font = ImGui::GetIO().Fonts->Fonts[2]; // Use smaller font for part name
+					} else if (maxfontsize > font->FontSize * 1.5) {
+						font = ImGui::GetIO().Fonts->Fonts[1]; // Use larger font for part name
+					}
 
 					draw->ChannelsSetCurrent(kChannelText);
 					draw->AddText(font, maxfontsize, pos, m_colors.partTextColor, part->name.c_str());
