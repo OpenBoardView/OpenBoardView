@@ -43,7 +43,7 @@ namespace Renderers {
 		bool initialized = false;
 		do {
 			rendererInstance = newInstance(tryrenderer, window);
-			initialized = rendererInstance && rendererInstance->init() && rendererInstance->checkGLVersion(); // initialize and check if we got the correct OpenGL context version
+			initialized = rendererInstance && rendererInstance->init();
 		} while (++tryrenderer != preferred && !initialized); // stop if we looped over or if it initalized successfully
 
 		if (tryrenderer == preferred && !initialized) { // we looped over and it didn't initialize

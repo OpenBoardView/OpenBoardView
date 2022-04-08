@@ -11,6 +11,20 @@ bool ImGuiRendererSDLGL3::checkGLVersion() {
 		SDL_LogError(SDL_LOG_CATEGORY_RENDER, "Minimal OpenGL version required is %d.%d. Got %d.%d.", 3, 2, GLVersion.major, GLVersion.minor);
 		return false;
 	}
+
+	const std::string vendor{reinterpret_cast<const char *>(glGetString(GL_VENDOR))};
+	const std::string strrenderer{reinterpret_cast<const char *>(glGetString(GL_RENDERER))};
+
+	// Check if Tesla with nouveau, buggy with ImGui 1.87 GL3 so should fall back to GL1
+	if (vendor == "nouveau"
+		&& (!strrenderer.compare(0, 3, "NV5")
+			|| !strrenderer.compare(0, 3, "NV8")
+			|| !strrenderer.compare(0, 3, "NV9")
+			|| !strrenderer.compare(0, 3, "NVA"))) {
+		SDL_LogError(SDL_LOG_CATEGORY_RENDER, "OpenGL3 renderer not supported on %s %s", vendor.c_str(), strrenderer.c_str());
+		return false;
+	}
+
 	return true;
 }
 

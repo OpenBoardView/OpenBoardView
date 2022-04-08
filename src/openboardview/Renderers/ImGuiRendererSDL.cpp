@@ -65,6 +65,10 @@ bool ImGuiRendererSDL::init() {
 	if (SDL_GL_SetSwapInterval(1) < 0)
 		SDL_LogWarn(SDL_LOG_CATEGORY_RENDER, "%s: Unable to enable VSync: %s\n", this->name().c_str(), SDL_GetError());
 
+	// check if we got the correct OpenGL context version
+	if (!checkGLVersion())
+		return false;
+
 	ImGui_ImplSDL2_InitForOpenGL(window, glcontext);
 
 	return true;
