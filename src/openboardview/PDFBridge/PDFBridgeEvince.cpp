@@ -23,6 +23,38 @@ PDFBridgeEvince::~PDFBridgeEvince() {
 	dbusConnection = nullptr;
 }
 
+void PDFBridgeEvince::OnSignal(GDBusProxy *proxy, gchar *senderName, gchar *signalName, GVariant *parameters, gpointer userData) {
+	auto &pdfBridge = *reinterpret_cast<PDFBridgeEvince*>(userData); // Unsafe, not much we can do about it since gdbus doesn't provide a proper C++11 API with functors for callback
+
+	SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "PDFBridgeEvince Signal: '%s' from '%s'", signalName, senderName);
+
+	if (std::string{signalName} == "SelectionChanged") {
+		gchar *selectedText = nullptr;
+		g_variant_get(parameters, "(s)", &selectedText);
+
+		SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "PDFBridgeEvince SelectionChanged: '%s'", selectedText);
+
+		pdfBridge.selection = selectedText;
+	}
+}
+
+bool PDFBridgeEvince::HasNewSelection() {
+	auto oldSelection = selection;
+
+	// Process signals
+	g_main_context_iteration(g_main_context_default(), false);
+
+	if (oldSelection != selection) {
+		return true;
+	} else {
+		return false;
+	}
+}
+
+std::string PDFBridgeEvince::GetSelection() const {
+	return selection;
+}
+
 void PDFBridgeEvince::OpenDocument(const filesystem::path &pdfPath) {
 	if (!filesystem::exists(pdfPath)) { // PDF file does not exist, do not attempt to load
 		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "PDFBridgeEvince PDF file does not exist");
@@ -88,6 +120,9 @@ void PDFBridgeEvince::OpenDocument(const filesystem::path &pdfPath) {
 		} else {
 			SDL_LogError(SDL_LOG_CATEGORY_ERROR, "PDFBridgeEvince windowProxy error");
 		}
+	} else {
+		// Connect DBus signal for Evince Selection
+		g_signal_connect(windowProxy, "g-signal", G_CALLBACK(&PDFBridgeEvince::OnSignal), this);
 	}
 
 	g_variant_unref(owner);
