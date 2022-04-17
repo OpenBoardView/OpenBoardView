@@ -3,23 +3,11 @@
 #include <SDL.h>
 
 PDFBridgeEvince::PDFBridgeEvince() {
-	GError *error = nullptr;
-
-	dbusConnection = g_bus_get_sync(G_BUS_TYPE_SESSION, NULL, &error);
-
-	if (!dbusConnection) {
-		if (error) {
-			SDL_LogError(SDL_LOG_CATEGORY_ERROR, "PDFBridgeEvince: could not connect to DBUS, %s", error->message);
-			g_error_free(error);
-			error = nullptr;
-		} else {
-			SDL_LogError(SDL_LOG_CATEGORY_ERROR, "PDFBridgeEvince: could not connect to DBUS");
-		}
-	}
 }
 
 PDFBridgeEvince::~PDFBridgeEvince() {
-	g_object_unref(dbusConnection);
+	if (dbusConnection != nullptr)
+		g_object_unref(dbusConnection);
 	dbusConnection = nullptr;
 }
 
@@ -62,6 +50,20 @@ void PDFBridgeEvince::OpenDocument(const filesystem::path &pdfPath) {
 	}
 
 	GError *error = nullptr;
+
+	if (!dbusConnection)
+		dbusConnection = g_bus_get_sync(G_BUS_TYPE_SESSION, NULL, &error);
+
+	if (!dbusConnection) {
+		if (error) {
+			SDL_LogError(SDL_LOG_CATEGORY_ERROR, "PDFBridgeEvince: could not connect to DBUS, %s", error->message);
+			g_error_free(error);
+			error = nullptr;
+		} else {
+			SDL_LogError(SDL_LOG_CATEGORY_ERROR, "PDFBridgeEvince: could not connect to DBUS");
+		}
+		return;
+	}
 
 	daemonProxy = g_dbus_proxy_new_sync(dbusConnection, G_DBUS_PROXY_FLAGS_NONE, NULL, "org.gnome.evince.Daemon", "/org/gnome/evince/Daemon", "org.gnome.evince.Daemon", NULL, &error);
 	if (!daemonProxy) {
