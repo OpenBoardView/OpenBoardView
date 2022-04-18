@@ -23,6 +23,7 @@
 #include "FileFormats/BRDAllegroFile.h"
 #include "FileFormats/BRDFile.h"
 #include "FileFormats/BVRFile.h"
+#include "FileFormats/BVR3File.h"
 #include "FileFormats/CADFile.h"
 #include "FileFormats/CSTFile.h"
 #include "FileFormats/FZFile.h"
@@ -456,6 +457,8 @@ int BoardView::LoadFile(const filesystem::path &filepath) {
 				m_file = new BDVFile(buffer);
 			else if (BVRFile::verifyFormat(buffer))
 				m_file = new BVRFile(buffer);
+			else if (BVR3File::verifyFormat(buffer))
+				m_file = new BVR3File(buffer);
 			else
 				m_error_msg = "Unrecognized file format.";
 
