@@ -13,6 +13,7 @@
 #include "GUI/Preferences/BackgroundImage.h"
 #include "PDFBridge/PDFBridge.h"
 #include "PDFBridge/PDFBridgeEvince.h"
+#include "PDFBridge/PDFBridgeSumatra.h"
 #include <cstdint>
 #include <vector>
 
@@ -136,6 +137,8 @@ struct BoardView {
 
 #ifdef ENABLE_PDFBRIDGE_EVINCE
 	PDFBridgeEvince pdfBridge;
+#elif defined(_WIN32)
+	PDFBridgeSumatra pdfBridge;
 #else
 	PDFBridge pdfBridge; // Dummy implementation
 #endif

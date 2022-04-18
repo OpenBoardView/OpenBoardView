@@ -117,6 +117,7 @@ endif()
 
 if(WIN32)
 	set(SOURCES ${SOURCES}
+		PDFBridge/PDFBridgeSumatra.cpp
 		win32.cpp
 	)
 else()
