@@ -1,6 +1,7 @@
 #ifdef _WIN32
 
 #include "platform.h" // Should be kept first
+#include "win32.h"
 #include "imgui/imgui.h"
 #include "utf8/utf8.h"
 #include "version.h"
@@ -15,37 +16,12 @@
 #include <SDL.h>
 #endif
 
-const std::string utf16_to_utf8(const std::wstring &text) {
-// See https://connect.microsoft.com/VisualStudio/feedback/details/1348277/link-error-when-using-std-codecvt-utf8-utf16-char16-t
-#if defined(_MSC_VER) && _MSC_VER <= 1911 // Should be fixed "in the next major version"
-	return std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t>{}.to_bytes(
-	    reinterpret_cast<const wchar_t *>(text.c_str()));
-#else
-	return std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>{}.to_bytes(
-	    reinterpret_cast<const char16_t *>(text.c_str()));
-#endif
+const std::string utf16_to_utf8(const std::wstring &wtext) {
+	return std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t>{}.to_bytes(wtext.c_str());
 }
 
-const std::string wchar_to_utf8(const wchar_t *text) {
-	return std::string(utf16_to_utf8(std::wstring(text)));
-}
-
-#if defined(_MSC_VER) && _MSC_VER <= 1911 // Should be fixed "in the next major version"
 const std::wstring utf8_to_utf16(const std::string &text) {
 	return std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t>{}.from_bytes(text.c_str());
-}
-#else
-const std::u16string utf8_to_utf16(const std::string &text) {
-	return std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>{}.from_bytes(text.c_str());
-}
-#endif
-
-#if defined(_MSC_VER) && _MSC_VER <= 1911
-const wchar_t *utf16_to_wchar(const std::wstring &text) {
-#else
-const wchar_t *utf16_to_wchar(const std::u16string &text) {
-#endif
-	return reinterpret_cast<const wchar_t *>(text.c_str());
 }
 
 // Mostly from https://msdn.microsoft.com/en-us/library/windows/desktop/ff485843(v=vs.85).aspx
@@ -91,9 +67,8 @@ const std::vector<char> load_font(const std::string &name) {
 	HFONT fontHandle;
 
 	auto u16name = utf8_to_utf16(name);
-	auto wname   = utf16_to_wchar(u16name);
 
-	fontHandle = CreateFont(0, 0, 0, 0, 0, 0, 0, 0, 0, OUT_TT_ONLY_PRECIS, 0, 0, 0, wname);
+	fontHandle = CreateFont(0, 0, 0, 0, 0, 0, 0, 0, 0, OUT_TT_ONLY_PRECIS, 0, 0, 0, u16name.c_str());
 	if (!fontHandle) {
 		std::cerr << "CreateFont failed" << std::endl;
 		return data;
@@ -109,7 +84,7 @@ const std::vector<char> load_font(const std::string &name) {
 		ncount       = ::GetTextFaceW(hdc, ncount, fname);
 
 		if (!name.empty() &&
-		    ::CompareStringEx(NULL, NORM_IGNORECASE, wname, name.size(), fname, ncount - 1, NULL, NULL, 0) !=
+		    ::CompareStringEx(NULL, NORM_IGNORECASE, u16name.c_str(), name.size(), fname, ncount - 1, NULL, NULL, 0) !=
 		        CSTR_EQUAL) // We didn't get the font we requested
 			return data;
 
@@ -146,7 +121,7 @@ const std::string get_user_dir(const UserDir userdir) {
 		configPath = utf16_to_utf8(envVar);
 		configPath += "\\" OBV_NAME "\\";
 		auto configPathu16 = utf8_to_utf16(configPath);
-		cdret = CreateDirectoryW(utf16_to_wchar(configPathu16), NULL); // Doesn't work recursively but it's not an issue here
+		cdret = CreateDirectoryW(configPathu16.c_str(), NULL); // Doesn't work recursively but it's not an issue here
 	}
 	CoTaskMemFree(envVar);
 
