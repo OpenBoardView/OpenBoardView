@@ -1,6 +1,8 @@
 #ifndef _PDFBRIDGEEVINCE_H_
 #define _PDFBRIDGEEVINCE_H_
 
+#ifdef ENABLE_PDFBRIDGE_EVINCE
+
 #include "PDFBridge.h"
 
 #include <string>
@@ -27,5 +29,7 @@ public:
 	bool HasNewSelection();
 	std::string GetSelection() const;
 };
+
+#endif
 
 #endif//_PDFBRIDGEEVINCE_H_

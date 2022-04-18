@@ -94,6 +94,7 @@ set(SOURCES
 	GUI/Image.cpp
 	GUI/Preferences/BackgroundImage.cpp
 	GUI/Preferences/Keyboard.cpp
+	PDFBridge/PDFBridge.cpp
 	main_opengl.cpp
 )
 
