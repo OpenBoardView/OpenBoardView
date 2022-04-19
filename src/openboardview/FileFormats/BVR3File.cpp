@@ -6,6 +6,7 @@
 #include <clocale>
 #include <cstdint>
 #include <cstring>
+#include <list>
 
 bool BVR3File::verifyFormat(std::vector<char> &buf) {
 	return find_str_in_buf("BVRAW_FORMAT_3", buf);
@@ -28,11 +29,11 @@ BVR3File::BVR3File(std::vector<char> &buf) {
 	char *arena_end = file_buf + file_buf_size - 1;
 	*arena_end      = 0;
 
-	int current_block = 0;
 	BRDPart empty_part;
 	BRDPin empty_pin;
 	BRDPart part;
 	BRDPin pin;
+	std::list<std::pair<BRDPoint, BRDPoint>> outline_segments;
 
 	std::vector<char *> lines;
 	stringfile(file_buf, lines);
@@ -84,7 +85,7 @@ BVR3File::BVR3File(std::vector<char> &buf) {
 		if (!strncmp(line, "PIN_ID ", 7)) {
 			p += 7;
 			pin.snum = READ_STR();
-			pin.part = parts.size() + 1; // Pin is for current part, but will not yet have been added to parts vector
+			pin.part = parts.size() + 1; // pin is for current part, which will not yet have been added to parts vector
 			continue;
 		}
 
@@ -173,21 +174,61 @@ BVR3File::BVR3File(std::vector<char> &buf) {
 		if (!strncmp(line, "OUTLINE_SEGMENTED ", 18)) {
 			p += 18;
 			while (p[0]) {
-				BRDPoint point;
+				std::pair<BRDPoint, BRDPoint> outline_segment;
 				double x = READ_DOUBLE();
-				point.x  = trunc(x);
+				outline_segment.first.x  = trunc(x);
 				double y = READ_DOUBLE();
-				point.y  = trunc(y);
-				//auto existing_point = std::find(format.begin(), format.end(), point);
-				//if (existing_point != format.end())
-				//	format.erase(existing_point);
-				//if (std::find(format.begin(), format.end(), point) == format.end())
-				format.push_back(point);
+				outline_segment.first.y  = trunc(y);
+				x = READ_DOUBLE();
+				outline_segment.second.x = trunc(x);
+				y = READ_DOUBLE();
+				outline_segment.second.y = trunc(y);
+				outline_segments.push_back(outline_segment);
+			}
+
+			if (outline_segments.empty())
+				continue;
+
+			fprintf(stderr, "outline_segments:\n");
+			for (auto outline_segment : outline_segments)
+				fprintf(stderr, "(%d, %d) -> (%d, %d)\n", outline_segment.first.x, outline_segment.first.y, outline_segment.second.x, outline_segment.second.y);
+
+			// Get first segment and add both points to format
+			auto first_outline_segment = outline_segments.front();
+			outline_segments.pop_front();
+			format.push_back(first_outline_segment.first);
+			format.push_back(first_outline_segment.second);
+
+			BRDPoint end_point = first_outline_segment.second;
+			while (!outline_segments.empty()) {
+				auto it = outline_segments.begin();
+				while (it != outline_segments.end()) {
+					if (end_point == it->first) {
+						format.push_back(it->second);
+						end_point = it->second;
+						outline_segments.erase(it);
+						break;
+					} else if (end_point == it->second) {
+						format.push_back(it->first);
+						end_point = it->first;
+						outline_segments.erase(it);
+						break;
+					} else {
+						it++;
+					}
+				}
+
+				if (it == outline_segments.end())
+					break;
 			}
 
 			fprintf(stderr, "format:\n");
 			for (BRDPoint format_point : format)
 				fprintf(stderr, "(%d, %d)\n", format_point.x, format_point.y);
+
+			fprintf(stderr, "outline_segments:\n");
+			for (auto outline_segment : outline_segments)
+				fprintf(stderr, "(%d, %d) -> (%d, %d)\n", outline_segment.first.x, outline_segment.first.y, outline_segment.second.x, outline_segment.second.y);
 			continue;
 		}
 	}
