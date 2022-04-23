@@ -31,6 +31,9 @@ struct BRDPoint {
 	bool operator==(const BRDPoint& point) {
 		return x == point.x && y == point.y;
 	}
+	bool operator!=(const BRDPoint& point) {
+		return x != point.x || y != point.y;
+	}
 };
 
 enum class BRDPartMountingSide { Both, Bottom, Top };
