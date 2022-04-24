@@ -7,6 +7,7 @@
 #include <cstdint>
 #include <cstring>
 #include <list>
+#include <algorithm>
 
 int manhattan_distance(const BRDPoint &p1, const BRDPoint &p2) {
 	return abs(p1.x - p2.x) + abs(p1.y - p2.y);
@@ -72,12 +73,13 @@ BVR3File::BVR3File(std::vector<char> &buf) {
 				part.part_type = BRDPartType::SMD;
 			else
 				part.part_type = BRDPartType::ThroughHole;
+		} else if (!strncmp(line, "PART_OUTLINE_RELATIVE ", 22)) {
+			// Value ignored, custom outline for parts not yet supported
 		} else if (!strncmp(line, "PIN_ID ", 7)) {
-			p += 7;
-			pin.snum = READ_STR();
-			pin.part = parts.size() + 1; // pin is for current part, which will not yet have been added to parts vector
+			// Value ignored for time being
 		} else if (!strncmp(line, "PIN_NUMBER ", 11)) {
-			// Ignored, not sure if relevant for BRDPin
+			p += 11;
+			pin.snum = READ_STR();
 		} else if (!strncmp(line, "PIN_NAME ", 9)) {
 			p += 9;
 			pin.name = READ_STR();
@@ -100,8 +102,9 @@ BVR3File::BVR3File(std::vector<char> &buf) {
 		} else if (!strncmp(line, "PIN_COMMENT ", 12)) {
 			// Ignored, not sure if relevant for BRDPin
 		} else if (!strncmp(line, "PIN_OUTLINE_RELATIVE ", 21)) {
-			// Ignored, not sure if relevant for BRDPin
+			// Value ignored, custom outline for pins not yet supported
 		} else if (!strcmp(line, "PIN_END")) {
+			pin.part = parts.size() + 1; // pin is for current part, which will not yet have been added to parts vector
 			pins.push_back(pin);
 			pin = blank_pin;
 		} else if (!strcmp(line, "PART_END")) {
