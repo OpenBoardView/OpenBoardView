@@ -84,7 +84,12 @@ BVR3File::BVR3File(std::vector<char> &buf) {
 			p += 9;
 			pin.name = READ_STR();
 		} else if (!strncmp(line, "PIN_SIDE ", 9)) {
-			// Ignored, not sure if relevant for BRDPin
+			p += 9;
+			char *side = READ_STR();
+			if (!strcmp(side, "T"))
+				pin.side = 1;
+			else
+				pin.side = 2;
 		} else if (!strncmp(line, "PIN_ORIGIN ", 11)) {
 			p += 11;
 			double origin_x = READ_DOUBLE();
