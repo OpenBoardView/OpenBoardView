@@ -111,6 +111,16 @@ BVR3File::BVR3File(std::vector<char> &buf) {
 			part.end_of_pins = pins.size();
 			parts.push_back(part);
 			part = blank_part;
+		} else if (!strncmp(line, "OUTLINE_POINTS ", 15)) {
+			p += 15;
+			while (p[0]) {
+				BRDPoint point;
+				double x = READ_DOUBLE();
+				point.x  = trunc(x);
+				double y = READ_DOUBLE();
+				point.y  = trunc(y);
+				format.push_back(point);
+			}
 		} else if (!strncmp(line, "OUTLINE_SEGMENTED ", 18)) {
 			p += 18;
 			while (p[0]) {
