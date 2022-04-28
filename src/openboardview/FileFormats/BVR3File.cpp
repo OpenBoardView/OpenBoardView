@@ -58,14 +58,12 @@ BVR3File::BVR3File(std::vector<char> &buf) {
 			char *side = READ_STR();
 			if (!strcmp(side, "T"))
 				part.mounting_side = BRDPartMountingSide::Top;
-			else
+			else if (!strcmp(side, "B"))
 				part.mounting_side = BRDPartMountingSide::Bottom;
+			else if (!strcmp(side, "O"))
+				part.mounting_side = BRDPartMountingSide::Both;
 		} else if (!strncmp(line, "PART_ORIGIN ", 12)) {
-			p += 12;
-			double origin_x = READ_DOUBLE();
-			part.p1.x = trunc(origin_x);
-			double origin_y = READ_DOUBLE();
-			part.p1.y = trunc(origin_y);
+			// Value ignored, used as reference point for relative pin placements, not currently supported
 		} else if (!strncmp(line, "PART_MOUNT ", 11)) {
 			p += 11;
 			char *mount = READ_STR();
@@ -76,7 +74,7 @@ BVR3File::BVR3File(std::vector<char> &buf) {
 		} else if (!strncmp(line, "PART_OUTLINE_RELATIVE ", 22)) {
 			// Value ignored, custom outline for parts not yet supported
 		} else if (!strncmp(line, "PIN_ID ", 7)) {
-			// Value ignored for time being
+			// Value ignored, not currently relevant for BRDPin
 		} else if (!strncmp(line, "PIN_NUMBER ", 11)) {
 			p += 11;
 			pin.snum = READ_STR();
@@ -88,7 +86,7 @@ BVR3File::BVR3File(std::vector<char> &buf) {
 			char *side = READ_STR();
 			if (!strcmp(side, "T"))
 				pin.side = 1;
-			else
+			else if (!strcmp(side, "B"))
 				pin.side = 2;
 		} else if (!strncmp(line, "PIN_ORIGIN ", 11)) {
 			p += 11;
@@ -103,9 +101,9 @@ BVR3File::BVR3File(std::vector<char> &buf) {
 			p += 8;
 			pin.net = READ_STR();
 		} else if (!strncmp(line, "PIN_TYPE ", 9)) {
-			// Ignored, not sure if relevant for BRDPin
+			// Value ignored, not currently relevant for BRDPin
 		} else if (!strncmp(line, "PIN_COMMENT ", 12)) {
-			// Ignored, not sure if relevant for BRDPin
+			// Value ignored, not currently relevant for BRDPin
 		} else if (!strncmp(line, "PIN_OUTLINE_RELATIVE ", 21)) {
 			// Value ignored, custom outline for pins not yet supported
 		} else if (!strcmp(line, "PIN_END")) {
