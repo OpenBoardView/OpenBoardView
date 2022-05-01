@@ -138,7 +138,7 @@ struct BoardView {
 #ifdef ENABLE_PDFBRIDGE_EVINCE
 	PDFBridgeEvince pdfBridge;
 #elif defined(_WIN32)
-	PDFBridgeSumatra pdfBridge;
+	PDFBridgeSumatra &pdfBridge = PDFBridgeSumatra::GetInstance();
 #else
 	PDFBridge pdfBridge; // Dummy implementation
 #endif

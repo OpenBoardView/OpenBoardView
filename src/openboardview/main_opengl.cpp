@@ -36,6 +36,11 @@
 
 #include "filesystem_impl.h"
 
+// Handling of DDE command line argument for PDFBridge
+#ifdef _WIN32
+#include "PDFBridge/PDFBridgeSumatra.h"
+#endif
+
 struct globals {
 	char *input_file;
 	char *config_file;
@@ -171,7 +176,21 @@ int parse_parameters(int argc, char **argv, struct globals *g) {
 
 		} else if (strcmp(p, "-d") == 0) {
 			g->debug = true;
+#ifdef _WIN32
+		} else if (!strncmp(p, "--reversesearch", 5)) {
+			// Handling of DDE command for PDFBridge
+			if ((argc - param - 1 < 2) || (argv[param + 1][0] == '-') || (argv[param + 2][0] == '-')) {
+				SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Not enough paramters for --reversesearch <PDF path> <search string>\n\n%s %s", argv[0], help );
+				exit(1);
+			}
 
+			PDFBridgeSumatra &pdfBrdigeSumatra = PDFBridgeSumatra::GetInstance();
+			if (!pdfBrdigeSumatra.ReverseSearch(argv[param + 1], argv[param + 2])) {
+				exit(2);
+			} else {
+				exit(0);
+			}
+#endif
 		} else if (argc == 2) {
 			/*
 			 * When we're using file-associations, the OS usually just

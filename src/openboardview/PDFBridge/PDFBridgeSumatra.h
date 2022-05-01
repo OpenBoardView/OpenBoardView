@@ -12,23 +12,42 @@
 class PDFBridgeSumatra : public PDFBridge {
 private:
 	std::wstring pdfPathString{};
+	std::string reverseSearchStr{};
+	bool reverseSearchStrChanged = false;
 
-	const wchar_t *szService = L"SUMATRA";
-	const wchar_t *szTopic = L"control";
+	const std::wstring szService{L"SUMATRA"}; // PDF software DDE server name
+	const std::wstring szTopic{L"control"}; // PDF software DDE topic
+
+	const std::wstring szServerService{L"OpenBoardView"}; // OBV DDE server name
+
+	HSZ hszServerService = nullptr;
+	HSZ hszServerTopic = nullptr;
 
 	DWORD idInst = 0L;
 	HCONV hConv = nullptr;
+	HDDEDATA hDataNameService = nullptr; // OBV server name registered
+
+	PDFBridgeSumatra();
 
 	static HDDEDATA CALLBACK DdeCallback(UINT uType, UINT uFmt, HCONV hconv, HSZ hsz1, HSZ hsz2, HDDEDATA hdata, DWORD dwData1, DWORD dwData2);
+	bool InitializeDDE();
+	bool StartDDEServer(const std::wstring &service, const std::wstring &topic);
+	bool ConnectDDEClient(const std::wstring &service, const std::wstring &topic);
+	bool ExecuteDDECommand(std::wstring ddeCmd);
+	std::string GetDDEString(HSZ hsz);
+
 public:
-	PDFBridgeSumatra();
 	~PDFBridgeSumatra();
+
+	static PDFBridgeSumatra &GetInstance();
 
 	void OpenDocument(const filesystem::path &pdfPath);
 	void CloseDocument();
 	void DocumentSearch(const std::string &str, bool wholeWordsOnly, bool caseSensitive);
 	bool HasNewSelection();
 	std::string GetSelection() const;
+
+	bool ReverseSearch(const std::string &pdfPath, const std::string &searchStr);
 };
 
 #endif//_WIN32
