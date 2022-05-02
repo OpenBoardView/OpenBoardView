@@ -146,6 +146,12 @@ CSTFile::CSTFile(std::vector<char> &buf) {
 		pin.pos.x = read_short(p);
 		pin.pos.y = read_short(p);
 
+		switch (parts[pin.part - 1].mounting_side) {
+			case BRDPartMountingSide::Top:    pin.side = BRDPinSide::Top;    break;
+			case BRDPartMountingSide::Bottom: pin.side = BRDPinSide::Bottom; break;
+			case BRDPartMountingSide::Both:   pin.side = BRDPinSide::Both;   break;
+		}
+
 		short shape = read_short(p); // Might correspond to a shape in the CShape section
 
 		pins.push_back(pin);

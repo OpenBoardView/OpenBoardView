@@ -130,7 +130,6 @@ BRDBoard::BRDBoard(const BRDFile *const boardFile)
 				// component is regular / not virtual
 				pin->type       = Pin::kPinTypeComponent;
 				pin->component  = comp;
-				pin->board_side = pin->component->board_side;
 				comp->pins.push_back(pin);
 			}
 
@@ -157,15 +156,20 @@ BRDBoard::BRDBoard(const BRDFile *const boardFile)
 			// copy position
 			pin->position = Point(brd_pin.pos.x, brd_pin.pos.y);
 
+			// Set board side for pins from specific setting
+			if (brd_pin.side == BRDPinSide::Top) {
+				pin->board_side = kBoardSideTop;
+			} else if (brd_pin.side == BRDPinSide::Bottom) {
+				pin->board_side = kBoardSideBottom;
+			} else {
+				pin->board_side = kBoardSideBoth;
+			}
+
 			// set net reference (here's our NET key string again)
 			string net_name = string(brd_pin.net);
 			if (net_map.count(net_name)) {
 				// there is a net with that name in our map
 				pin->net = net_map[net_name].get();
-
-				if (pin->type == Pin::kPinTypeTestPad) {
-					pin->board_side = pin->net->board_side;
-				}
 			} else {
 				// no net with that name registered, so create one
 				if (!net_name.empty()) {

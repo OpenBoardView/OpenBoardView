@@ -464,6 +464,11 @@ ADFile::ADFile(std::vector<char> &buf) {
 				if (ad_pad.type == 1) {
 					part.part_type = BRDPartType::ThroughHole;
 				}
+				switch (part.mounting_side) {
+					case BRDPartMountingSide::Top:    pin.side = BRDPinSide::Top;    break;
+					case BRDPartMountingSide::Bottom: pin.side = BRDPinSide::Bottom; break;
+					case BRDPartMountingSide::Both:   pin.side = BRDPinSide::Both;   break;
+				}
 
 				pins.push_back(pin);
 			} // if part ID and pad.part ID are the same

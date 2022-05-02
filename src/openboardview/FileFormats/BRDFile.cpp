@@ -217,6 +217,11 @@ BRDFile::BRDFile(std::vector<char> &buf) {
 				pin.net = "";
 			}
 		}
+		switch (parts[pin.part - 1].mounting_side) {
+			case BRDPartMountingSide::Top:    pin.side = BRDPinSide::Top;    break;
+			case BRDPartMountingSide::Bottom: pin.side = BRDPinSide::Bottom; break;
+			case BRDPartMountingSide::Both:   pin.side = BRDPinSide::Both;   break;
+		}
 	}
 
 	valid = current_block != 0;
