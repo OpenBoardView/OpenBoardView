@@ -9,15 +9,13 @@ PDFBridgeSumatra::PDFBridgeSumatra() {
 }
 
 PDFBridgeSumatra::~PDFBridgeSumatra() {
+	this->CloseDocument();
+
 	if (this->hszServerService != nullptr) {
 		DdeFreeStringHandle(this->idInst, hszServerService);
 	}
 	if (this->hszServerTopic != nullptr) {
 		DdeFreeStringHandle(this->idInst, hszServerTopic);
-	}
-	if (this->hConv != nullptr) {
-		DdeDisconnect(this->hConv);
-		hConv = nullptr;
 	}
 	if (this->idInst != 0L) {
 		DdeUninitialize(this->idInst);
@@ -206,23 +204,73 @@ void PDFBridgeSumatra::OpenDocument(const filesystem::path &pdfPath) {
 
 	this->StartDDEServer(this->szServerService, this->pdfPathString);
 
-	//TODO: Spawn Sumatra PDF process
-	if (!this->ConnectDDEClient(this->szService, this->szTopic))
-		return;
+	// Spawn Sumatra PDF process if DDE connection failed (processs probably not running)
+	if (!this->ConnectDDEClient(this->szService, this->szTopic)) {
+		// Get path of current executable to use SumatraPDF executable from the same directory
+		std::wstring currentExePathStr(32767, '\0');
+		DWORD ret = GetModuleFileNameW(nullptr, currentExePathStr.data(),  currentExePathStr.capacity());
+		if (ret == 0L) {
+			ret = GetLastError();
+			SDL_LogError(SDL_LOG_CATEGORY_ERROR, "PDFBridgeSumatra OpenDocument GetModuleFileNameW failed: 0x%08lx", ret);
+			return;
+		}
+		filesystem::path currentExePath{currentExePathStr};
 
-	std::wstring ddeCmd = L"[Open(\"" + this->pdfPathString + L"\",0,1,1)]";
+		std::wstring exec = currentExePath.parent_path() / L"SumatraPDF.exe";
+		std::wstring args = L"\"" + exec + L"\"" + L" " + L"\"" + pdfPathString + L"\"";
+		STARTUPINFO si{};
+		si.cb = sizeof(si);
+		PROCESS_INFORMATION pi{};
+		bool success = CreateProcessW(nullptr, args.data(), nullptr, nullptr, false, 0, nullptr, nullptr, &si, &pi);
+		if (!success) {
+			ret = GetLastError();
+			SDL_LogError(SDL_LOG_CATEGORY_ERROR, "PDFBridgeSumatra OpenDocument CreateProcess '%s' failed: 0x%08lx", utf16_to_utf8(args).c_str(), ret);
+		} else {
+			SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "PDFBridgeSumatra spawned '%s'", utf16_to_utf8(args).c_str());
+		}
+	} else {
+		std::wstring ddeCmd = L"[Open(\"" + this->pdfPathString + L"\",0,1,1)]";
 
-	ExecuteDDECommand(ddeCmd);
+		this->ExecuteDDECommand(ddeCmd);
+	}
 }
 
 void PDFBridgeSumatra::CloseDocument() {
-	pdfPathString.clear();
-	//TODO: unregister DDE server, disconnect client
+	SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "%s", "PDFBridgeSumatra CloseDocument");
+
+	this->pdfPathString.clear();
+
+	// Unregister DDE server
+	if (this->idInst != 0L) {
+		HDDEDATA hDataNameService = DdeNameService(this->idInst, nullptr, nullptr, DNS_UNREGISTER);
+
+		if (hDataNameService == nullptr) {
+			UINT ret = DdeGetLastError(this->idInst);
+			SDL_LogError(SDL_LOG_CATEGORY_ERROR, "PDFBridgeSumatra CloseDocument DdeNameService failed: 0x%04x", ret);
+		}
+	}
+
+	// Disconnect from client
+	if (this->hConv != nullptr) {
+		bool success = DdeDisconnect(this->hConv);
+		this->hConv = nullptr;
+
+		if (!success) {
+			UINT ret = DdeGetLastError(this->idInst);
+			SDL_LogError(SDL_LOG_CATEGORY_ERROR, "PDFBridgeSumatra CloseDocument DdeDisconnect failed: 0x%04x", ret);
+		}
+	}
 }
 
 void PDFBridgeSumatra::DocumentSearch(const std::string &str, bool wholeWordsOnly, bool caseSensitive) {
-	if (this->idInst == 0L || this->hConv == nullptr) {
+	if (this->idInst == 0L) {
 		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "%s", "PDFBridgeSumatra DocumentSearch DDE not initialized");
+	}
+
+	if (this->hConv == nullptr) {
+		if (!this->ConnectDDEClient(this->szService, this->szTopic)) {
+			return;
+		}
 	}
 
 	auto strCopy = str;

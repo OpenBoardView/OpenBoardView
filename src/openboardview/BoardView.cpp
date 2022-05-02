@@ -433,6 +433,7 @@ int BoardView::LoadFile(const filesystem::path &filepath) {
 		m_file = nullptr;
 		m_validBoard = false;
 		m_error_msg.clear();
+		pdfBridge.CloseDocument();
 
 		SetLastFileOpenName(filepath.string());
 		std::vector<char> buffer = file_as_buffer(filepath, m_error_msg);
