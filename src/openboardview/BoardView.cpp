@@ -1839,6 +1839,11 @@ void BoardView::Update() {
 	char *preset_filename = NULL;
 	ImGuiIO &io           = ImGui::GetIO();
 
+	// Window is probably minimized, do not attempt to draw anything as our code will not handle screen size of 0 properly and crash (ocornut/imgui@bb2529d)
+	if (io.DisplaySize.x <= 0.0f || io.DisplaySize.y <= 0.0f) {
+		return;
+	}
+
 	/**
 	 * ** FIXME
 	 * This should be handled in the keyboard section, not here
