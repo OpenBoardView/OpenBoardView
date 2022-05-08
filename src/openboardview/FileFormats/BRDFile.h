@@ -27,6 +27,13 @@
 struct BRDPoint {
 	int x;
 	int y;
+
+	bool operator==(const BRDPoint& point) {
+		return x == point.x && y == point.y;
+	}
+	bool operator!=(const BRDPoint& point) {
+		return x != point.x || y != point.y;
+	}
 };
 
 enum class BRDPartMountingSide { Both, Bottom, Top };
@@ -42,11 +49,13 @@ struct BRDPart {
 	BRDPoint p2{0, 0};
 };
 
+enum class BRDPinSide { Both, Bottom, Top };
+
 struct BRDPin {
 	BRDPoint pos;
 	int probe;
 	unsigned int part;
-	unsigned int side = 0;
+	BRDPinSide side;
 	const char *net;
 	double radius    = 0.5f;
 	const char *snum = nullptr;

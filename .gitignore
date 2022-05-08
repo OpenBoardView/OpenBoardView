@@ -59,3 +59,11 @@ CPackSourceConfig.cmake
 
 include/version.h
 share
+
+# macOS specific
+.DS_Store
+*.dmg
+*.app
+
+# VS Code
+.vscode

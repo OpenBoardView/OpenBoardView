@@ -373,6 +373,11 @@ FZFile::FZFile(std::vector<char> &buf, uint32_t fzkey[44]) {
 				radius /= 100;
 				if (radius < 0.5f) radius = 0.5f;
 				pin.radius                = radius * multiplier;
+				switch (parts[pin.part - 1].mounting_side) {
+					case BRDPartMountingSide::Top:    pin.side = BRDPinSide::Top;    break;
+					case BRDPartMountingSide::Bottom: pin.side = BRDPinSide::Bottom; break;
+					case BRDPartMountingSide::Both:   pin.side = BRDPinSide::Both;   break;
+				}
 				pins.push_back(pin);
 			} break;
 			case 3: {   // Nails

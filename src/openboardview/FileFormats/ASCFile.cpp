@@ -58,6 +58,11 @@ void ASCFile::parse_pin(char *&p, char *&s, char *&arena, char *&arena_end, line
 		/*int layer =*/READ_INT(); // uint
 		pin.net   = READ_STR();
 		pin.probe = READ_UINT();
+		switch (parts.back().mounting_side) {
+			case BRDPartMountingSide::Top:    pin.side = BRDPinSide::Top;    break;
+			case BRDPartMountingSide::Bottom: pin.side = BRDPinSide::Bottom; break;
+			case BRDPartMountingSide::Both:   pin.side = BRDPinSide::Both;   break;
+		}
 		pins.push_back(pin);
 		parts.back().end_of_pins = pins.size();
 	}

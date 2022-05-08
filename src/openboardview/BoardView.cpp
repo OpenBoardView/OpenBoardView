@@ -23,6 +23,7 @@
 #include "FileFormats/BRDAllegroFile.h"
 #include "FileFormats/BRDFile.h"
 #include "FileFormats/BVRFile.h"
+#include "FileFormats/BVR3File.h"
 #include "FileFormats/CADFile.h"
 #include "FileFormats/CSTFile.h"
 #include "FileFormats/FZFile.h"
@@ -456,6 +457,8 @@ int BoardView::LoadFile(const filesystem::path &filepath) {
 				m_file = new BDVFile(buffer);
 			else if (BVRFile::verifyFormat(buffer))
 				m_file = new BVRFile(buffer);
+			else if (BVR3File::verifyFormat(buffer))
+				m_file = new BVR3File(buffer);
 			else
 				m_error_msg = "Unrecognized file format.";
 
@@ -3350,7 +3353,7 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 	// float psz = (float)m_pinDiameter * 0.5f * m_scale;
 	double angle;
 	double distance = 0;
-	struct ImVec2 pva[2000], *ppp;
+	struct ImVec2 pva[3000], *ppp;
 	uint32_t color = m_colors.partOutlineColor;
 	//	int rendered   = 0;
 	char p0, p1; // first two characters of the part name, code-writing
@@ -3406,7 +3409,7 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 					max_y = min_y;
 				}
 
-				if (pincount < 2000) {
+				if (pincount < 3000) {
 					ppp->x = pin->position.x;
 					ppp->y = pin->position.y;
 					ppp++;

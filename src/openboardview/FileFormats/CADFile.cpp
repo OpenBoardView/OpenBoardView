@@ -121,6 +121,11 @@ CADFile::CADFile(std::vector<char> &buf) {
 					&netr[0 + 1],
 					sizeof(netr) - 0 - 1);
 				pin.net        = netr;
+				switch (parts[pin.part - 1].mounting_side) {
+					case BRDPartMountingSide::Top:    pin.side = BRDPinSide::Top;    break;
+					case BRDPartMountingSide::Bottom: pin.side = BRDPinSide::Bottom; break;
+					case BRDPartMountingSide::Both:   pin.side = BRDPinSide::Both;   break;
+				}
 				pins.push_back(pin);
 			} break;
 			case Nets: {

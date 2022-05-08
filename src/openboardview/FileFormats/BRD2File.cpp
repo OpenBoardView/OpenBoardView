@@ -118,7 +118,11 @@ BRD2File::BRD2File(std::vector<char> &buf) {
 				pin.pos.x = READ_INT();
 				pin.pos.y = READ_INT();
 				int netid = READ_UINT();
-				pin.side  = READ_UINT();
+				unsigned int side  = READ_UINT();
+				if (side == 1)
+					pin.side = BRDPinSide::Top;
+				else if (side == 2)
+					pin.side = BRDPinSide::Bottom;
 
 				try {
 					pin.net = nets.at(netid);
@@ -186,11 +190,12 @@ BRD2File::BRD2File(std::vector<char> &buf) {
 
 			while (cpi < pei) {
 				pins[cpi].part                           = i + 1;
-				if (pins[cpi].side != 1) pins[cpi].pos.y = max.y - pins[cpi].pos.y;
-				if ((pins[cpi].side == 1 && parts[i].mounting_side == BRDPartMountingSide::Top) ||
-				    (pins[cpi].side == 2 &&
-				     parts[i].mounting_side == BRDPartMountingSide::Bottom)) // Pins on the same side as the part
+				if (pins[cpi].side != BRDPinSide::Top) pins[cpi].pos.y = max.y - pins[cpi].pos.y;
+				if ((pins[cpi].side == BRDPinSide::Top && parts[i].mounting_side == BRDPartMountingSide::Top) ||
+				    (pins[cpi].side == BRDPinSide::Bottom && parts[i].mounting_side == BRDPartMountingSide::Bottom)) {
+					// Pins on the same side as the part
 					isDIP = false;
+				}
 				cpi++;
 			}
 
@@ -218,12 +223,13 @@ BRD2File::BRD2File(std::vector<char> &buf) {
 		pin.pos = nail.pos;
 		if (nail.side == 1) {
 			pin.part = parts.size();
+			pin.side = BRDPinSide::Top;
 		} else {
 			pin.pos.y = max.y - pin.pos.y;
 			pin.part  = parts.size() - 1;
+			pin.side = BRDPinSide::Bottom;
 		}
 		pin.probe = nail.probe;
-		pin.side  = nail.side;
 		pin.net   = nail.net;
 		pins.push_back(pin);
 	}

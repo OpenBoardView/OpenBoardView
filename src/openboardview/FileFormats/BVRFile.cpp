@@ -116,6 +116,11 @@ BVRFile::BVRFile(std::vector<char> &buf) {
 				/*int layer =*/READ_INT(); // uint
 				pin.net = READ_STR();
 				// pin.probe = READ_INT();
+				switch (part.mounting_side) {
+					case BRDPartMountingSide::Top:    pin.side = BRDPinSide::Top;    break;
+					case BRDPartMountingSide::Bottom: pin.side = BRDPinSide::Bottom; break;
+					case BRDPartMountingSide::Both:   pin.side = BRDPinSide::Both;   break;
+				}
 				//
 				pins.push_back(pin);
 				parts.back().end_of_pins = pins.size();
