@@ -552,7 +552,7 @@ void u32tof4(uint32_t c, float *f) {
 }
 void BoardView::ColorPreferencesItem(
     const char *label, int label_width, const char *butlabel, const char *conflabel, int var_width, uint32_t *c) {
-	std::string desc_id = "##" + std::string(label);
+	std::string desc_id = "##ColorButton" + std::string(label);
 	char buf[20];
 	snprintf(buf, sizeof(buf), "%08X", byte4swap(*c));
 	RA(label, label_width);
