@@ -22,7 +22,7 @@ void BackgroundImage::loadFromConfig(const filesystem::path &filepath) {
 	if (!filesystem::exists(filepath)) // Config file doesn't exist, do not attempt to read or write it and load images
 		return;
 
-	auto configDir = filepath.parent_path();
+	auto configDir = filesystem::weakly_canonical(filepath).parent_path();
 
 	Confparse confparse{};
 	confparse.Load(filepath);
@@ -59,7 +59,7 @@ void BackgroundImage::writeToConfig(const filesystem::path &filepath) {
 	auto confparse = Confparse{};
 	confparse.Load(filepath);
 
-	auto configDir = filepath.parent_path();
+	auto configDir = filesystem::weakly_canonical(filepath).parent_path();
 
 	if (!topImage.file.empty()) {
 		auto topImagePath = filesystem::relative(topImage.file, configDir, ec);
