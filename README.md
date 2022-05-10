@@ -62,19 +62,21 @@ For Fedora, you will need the following packages at a minimum;
 ### Installation
 
 1. Clone the project
-
-    $ git clone --recursive 'https://github.com/OpenBoardView/OpenBoardView'
-
+```
+$ git clone --recursive 'https://github.com/OpenBoardView/OpenBoardView'
+```
 2. Build it
-
-    $ ./build.sh
-
+```
+$ ./build.sh
+```
 3. Run it!
-
-	$ ./bin/openboardview
-	...or...
-	$ ./openboardview.sh
-
+```
+$ ./bin/openboardview
+```
+...or...
+```
+$ ./openboardview.sh
+```
 
 ### Usage
 
