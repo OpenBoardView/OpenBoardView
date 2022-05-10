@@ -89,5 +89,5 @@ class FZFile : public BRDFile {
 	// static constexpr uint32_t key[44] = {0};
 	// static uint32_t key[44] = {0};
 	static uint32_t key[44];
-	static constexpr const std::array<uint32_t, 44> key_parity = {0, 1, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 1, 1, 0, 1, 1, 0, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 1, 0, 1};
+	static constexpr const std::array<uint32_t, 44> key_parity = {{0, 1, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 1, 1, 0, 1, 1, 0, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 1, 0, 1}};
 };

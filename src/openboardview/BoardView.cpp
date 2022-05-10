@@ -490,7 +490,7 @@ int BoardView::LoadFile(const filesystem::path &filepath) {
 				CenterView();
 				m_lastFileOpenWasInvalid = false;
 				m_validBoard             = true;
-				m_error_msg              = false;
+				m_error_msg.clear();
 			}
 		}
 	} else {
