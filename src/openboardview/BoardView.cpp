@@ -3328,14 +3328,14 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 				ImFont *font_pin_name = font;
 				if (maxfontheight < font->FontSize * 0.75) {
 					font_pin_name = ImGui::GetIO().Fonts->Fonts[2]; // Use smaller font for pin name
-				} else if (maxfontheight > font->FontSize * 1.5) {
+				} else if (maxfontheight > font->FontSize * 1.5 && ImGui::GetIO().Fonts->Fonts[1]->FontSize > font->FontSize) {
 					font_pin_name = ImGui::GetIO().Fonts->Fonts[1]; // Use larger font for pin name
 				}
 
 				ImFont *font_net_name = font;
 				if (maxfontsize < font->FontSize * 0.75) {
 					font_net_name = ImGui::GetIO().Fonts->Fonts[2]; // Use smaller font for net name
-				} else if (maxfontsize > font->FontSize * 1.5) {
+				} else if (maxfontsize > font->FontSize * 1.5 && ImGui::GetIO().Fonts->Fonts[1]->FontSize > font->FontSize) {
 					font_net_name = ImGui::GetIO().Fonts->Fonts[1]; // Use larger font for net name
 				}
 
@@ -3791,7 +3791,7 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 
 					if (maxfontsize < font->FontSize * 0.75) {
 						font = ImGui::GetIO().Fonts->Fonts[2]; // Use smaller font for part name
-					} else if (maxfontsize > font->FontSize * 1.5) {
+					} else if (maxfontsize > font->FontSize * 1.5 && ImGui::GetIO().Fonts->Fonts[1]->FontSize > font->FontSize) {
 						font = ImGui::GetIO().Fonts->Fonts[1]; // Use larger font for part name
 					}
 
