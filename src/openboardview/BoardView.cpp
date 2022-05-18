@@ -787,7 +787,12 @@ void BoardView::Preferences(void) {
 		RA("Font size", DPI(200));
 		ImGui::SameLine();
 		if (ImGui::InputInt("##fontSize", &t)) {
-			if ((t >= 8) && (t < 60)) obvconfig.WriteInt("fontSize", t);
+			if (t < 8) {
+				t = 8;
+			} else if (t > 50) { // 50 is a value that hopefully should not break with too many fonts and 1024x1024 texture limits
+				t = 50;
+			}
+			obvconfig.WriteInt("fontSize", t);
 		}
 
 		t = obvconfig.ParseInt("dpi", 100);
