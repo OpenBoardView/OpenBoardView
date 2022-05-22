@@ -90,6 +90,11 @@ HDDEDATA CALLBACK PDFBridgeSumatra::DdeCallback(
 				pdfBridgeSumatra.reverseSearchStr = searchStr;
 				pdfBridgeSumatra.reverseSearchStrChanged = true;
 
+				// Push event to SDL queue in order to refresh GUI
+				SDL_Event sdlEvent;
+				sdlEvent.type = SDL_USEREVENT;
+				SDL_PushEvent(&sdlEvent);
+
 				return reinterpret_cast<HDDEDATA>(DDE_FACK);
 			} else {
 				SDL_LogError(SDL_LOG_CATEGORY_ERROR, "PDFBridgeSumatra DdeCallback Client execute unknown request: %s", str.c_str());
