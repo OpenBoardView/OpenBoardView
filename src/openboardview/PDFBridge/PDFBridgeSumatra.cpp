@@ -205,7 +205,7 @@ bool PDFBridgeSumatra::ExecuteDDECommand(std::wstring ddeCmd) {
 
 void PDFBridgeSumatra::OpenDocument(const filesystem::path &pdfPath) {
 	if (!filesystem::exists(pdfPath)) { // PDF file does not exist, do not attempt to load
-		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "PDFBridgeSumatra PDF file does not exist");
+		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "PDFBridgeSumatra PDF file '%s' does not exist", pdfPath.string().c_str());
 		return;
 	}
 	this->pdfPathString = filesystem::canonical(pdfPath).wstring();
@@ -237,6 +237,10 @@ void PDFBridgeSumatra::OpenDocument(const filesystem::path &pdfPath) {
 		std::wstring exec = filesystem::relative(pdfSoftwarePath, currentExePath.parent_path(), ec).wstring();
 		if (ec) {
 			SDL_LogError(SDL_LOG_CATEGORY_ERROR, "PDFBridgeSumatra OpenDocument: %d - %s", ec.value(), ec.message().c_str());
+			return;
+		}
+		if (exec.empty()) {
+			SDL_LogError(SDL_LOG_CATEGORY_ERROR, "PDFBridgeSumatra OpenDocument Executable path empty, PDF software path: %s, current directory: %s", pdfSoftwarePath.string().c_str(), currentExePath.parent_path().string().c_str());
 			return;
 		}
 
