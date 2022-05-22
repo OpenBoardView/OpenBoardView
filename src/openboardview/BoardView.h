@@ -10,10 +10,11 @@
 #include "UI/Keyboard/KeyBindings.h"
 #include "GUI/Preferences/Keyboard.h"
 #include "GUI/BackgroundImage.h"
-#include "GUI/Preferences/BackgroundImage.h"
+#include "GUI/Preferences/BoardSettings/BoardSettings.h"
 #include "PDFBridge/PDFBridge.h"
 #include "PDFBridge/PDFBridgeEvince.h"
 #include "PDFBridge/PDFBridgeSumatra.h"
+#include "PDFBridge/PDFFile.h"
 #include <cstdint>
 #include <vector>
 
@@ -133,8 +134,9 @@ struct BoardView {
 	SpellCorrector scparts;
 	KeyBindings keybindings;
 	Preferences::Keyboard keyboardPreferences{keybindings, obvconfig};
-	Preferences::BackgroundImage backgroundImagePreferences{keybindings, backgroundImage};
+	Preferences::BoardSettings boardSettings{keybindings, backgroundImage, pdfFile};
 
+	PDFFile pdfFile;
 #ifdef ENABLE_PDFBRIDGE_EVINCE
 	PDFBridgeEvince pdfBridge;
 #elif defined(_WIN32)

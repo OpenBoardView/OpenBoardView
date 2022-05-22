@@ -43,7 +43,9 @@ std::string PDFBridgeEvince::GetSelection() const {
 	return selection;
 }
 
-void PDFBridgeEvince::OpenDocument(const filesystem::path &pdfPath) {
+void PDFBridgeEvince::OpenDocument(const PDFFile &pdfFile) {
+	auto pdfPath = pdfFile.getPath();
+
 	if (!filesystem::exists(pdfPath)) { // PDF file does not exist, do not attempt to load
 		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "PDFBridgeEvince PDF file does not exist");
 		return;

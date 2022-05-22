@@ -6,6 +6,7 @@
 #include "platform.h" // Should be kept first
 
 #include "PDFBridge.h"
+#include "PDFFile.h"
 
 #include <string>
 
@@ -46,7 +47,7 @@ public:
 
 	static PDFBridgeSumatra &GetInstance(Confparse &obvConfig);
 
-	void OpenDocument(const filesystem::path &pdfPath);
+	void OpenDocument(const PDFFile &pdfFile);
 	void CloseDocument();
 	void DocumentSearch(const std::string &str, bool wholeWordsOnly, bool caseSensitive);
 	bool HasNewSelection();

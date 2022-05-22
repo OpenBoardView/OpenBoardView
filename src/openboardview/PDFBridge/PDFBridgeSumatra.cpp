@@ -203,7 +203,9 @@ bool PDFBridgeSumatra::ExecuteDDECommand(std::wstring ddeCmd) {
 	return true;
 }
 
-void PDFBridgeSumatra::OpenDocument(const filesystem::path &pdfPath) {
+void PDFBridgeSumatra::OpenDocument(const PDFFile &pdfFile) {
+	auto pdfPath = pdfFile.getPath();
+
 	if (!filesystem::exists(pdfPath)) { // PDF file does not exist, do not attempt to load
 		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "PDFBridgeSumatra PDF file '%s' does not exist", pdfPath.string().c_str());
 		return;

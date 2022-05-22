@@ -7,15 +7,7 @@
 
 namespace Preferences {
 
-BackgroundImage::BackgroundImage(const KeyBindings &keybindings, ::BackgroundImage &backgroundImage) : keybindings(keybindings), backgroundImage(backgroundImage) {
-}
-
-void BackgroundImage::menuItem() {
-	if (ImGui::MenuItem("Background Image Preferences")) {
-		shown = true;
-		erroredFiles.clear(); // make sure to clean the errors
-		backgroundImageCopy = backgroundImage; // Make a copy to be able to restore if cancelled
-	}
+BackgroundImage::BackgroundImage(::BackgroundImage &backgroundImage) : backgroundImage(backgroundImage) {
 }
 
 void BackgroundImage::errorPopup() {
@@ -68,50 +60,47 @@ void BackgroundImage::imageSettings(const std::string &name, Image &image) {
 	ImGui::SliderFloat(("Transparency##" + name).c_str(), &image.transparency, 0.0f, 1.0f);
 }
 
-void BackgroundImage::render() {
-	if (shown) {
-		ImGui::Begin("Background Image Preferences", &shown, ImGuiWindowFlags_AlwaysAutoResize);
+void BackgroundImage::save() {
+	backgroundImage.writeToConfig(backgroundImage.configFilepath);
+	std::string error = backgroundImage.topImage.reload();
+	if (!error.empty()) {
+		erroredFiles.push_back(error);
+	}
+	error = backgroundImage.bottomImage.reload();
+	if (!error.empty()) {
+		erroredFiles.push_back(error);
+	}
+}
 
-		ImGui::Separator();
+void BackgroundImage::cancel() {
+	backgroundImage = backgroundImageCopy;
+	backgroundImage.reload(); // don't care if there is an error here since the user cancelled
+}
+
+void BackgroundImage::clear() {
+	backgroundImage.topImage = {};
+	backgroundImage.bottomImage = {};
+	backgroundImage.reload();
+}
+
+void BackgroundImage::render(bool shown) {
+	static bool wasShown = false;
+
+	if (shown) {
+		if (!wasShown) { // Panel just got opened
+			erroredFiles.clear(); // make sure to clean the errors
+			backgroundImageCopy = backgroundImage; // Make a copy to be able to restore if cancelled
+		}
+
 		imageSettings("Top", backgroundImage.topImage);
 
 		ImGui::Separator();
 		imageSettings("Bottom", backgroundImage.bottomImage);
-
-		ImGui::Separator();
-		ImGui::Text("%s", "Note: background image preferences are stored in the .conf file associated with the boardview file.");
-
-		if (!shown) { // modal just closed after title bar close button clicked, Save/Cancel modify shown so this must stay above
+	} else {
+		if (wasShown) { // modal just closed after title bar close button clicked, Save/Cancel modify shown so this must stay above
 			backgroundImage = backgroundImageCopy;
 			backgroundImage.reload(); // don't care if there is an error here since the user cancelled
 		}
-		if (ImGui::Button("Save")) {
-			shown = false;
-			backgroundImage.writeToConfig(backgroundImage.configFilepath);
-			std::string error = backgroundImage.topImage.reload();
-			if (!error.empty()) {
-				erroredFiles.push_back(error);
-			}
-			error = backgroundImage.bottomImage.reload();
-			if (!error.empty()) {
-				erroredFiles.push_back(error);
-			}
-		}
-		ImGui::SameLine();
-		if (ImGui::Button("Cancel") || this->keybindings.isPressed("CloseDialog")) {
-			shown = false;
-			backgroundImage = backgroundImageCopy;
-			backgroundImage.reload(); // don't care if there is an error here since the user cancelled
-		}
-		ImGui::SameLine();
-		if (ImGui::Button("Clear")) {
-			backgroundImage.topImage = {};
-			backgroundImage.bottomImage = {};
-			backgroundImage.reload();
-		}
-
-		ImGui::End();
-
 	}
 
 
@@ -119,6 +108,8 @@ void BackgroundImage::render() {
 		ImGui::OpenPopup("Error##PreferencesBackgroundImage"); // Open error popup if there was an error
 	}
 	errorPopup(); // Render error popup if opened
+
+	wasShown = shown;
 }
 
 } // namespace Preferences

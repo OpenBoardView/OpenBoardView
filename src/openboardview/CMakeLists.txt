@@ -92,9 +92,12 @@ set(SOURCES
 	UI/Keyboard/KeyModifiers.cpp
 	GUI/BackgroundImage.cpp
 	GUI/Image.cpp
-	GUI/Preferences/BackgroundImage.cpp
+	GUI/Preferences/BoardSettings/BackgroundImage.cpp
+	GUI/Preferences/BoardSettings/BoardSettings.cpp
+	GUI/Preferences/BoardSettings/PDFFile.cpp
 	GUI/Preferences/Keyboard.cpp
 	PDFBridge/PDFBridge.cpp
+	PDFBridge/PDFFile.cpp
 	main_opengl.cpp
 )
 

@@ -3,11 +3,13 @@
 
 #include "filesystem_impl.h"
 
+#include "PDFFile.h"
+
 class PDFBridge {
 public:
 	virtual ~PDFBridge();
 
-	virtual void OpenDocument(const filesystem::path &pdfPath) ;
+	virtual void OpenDocument(const PDFFile &pdfFile);
 	virtual void CloseDocument();
 	virtual void DocumentSearch(const std::string &str, bool wholeWordsOnly, bool caseSensitive);
 	virtual bool HasNewSelection();

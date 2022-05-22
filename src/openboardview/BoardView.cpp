@@ -479,10 +479,9 @@ int BoardView::LoadFile(const filesystem::path &filepath) {
 				auto conffilepath = filepath;
 				conffilepath.replace_extension("conf");
 				backgroundImage.loadFromConfig(conffilepath);
+				pdfFile.loadFromConfig(conffilepath);
 
-				auto pdffilepath = filepath;
-				pdffilepath.replace_extension("pdf");
-				pdfBridge.OpenDocument(pdffilepath);
+				pdfBridge.OpenDocument(pdfFile);
 
 				/*
 				 * Set pins to a known lower size, they get resized
@@ -1951,7 +1950,7 @@ void BoardView::Update() {
 			}
 
 			keyboardPreferences.menuItem();
-			backgroundImagePreferences.menuItem();
+			boardSettings.menuItem();
 
 			ImGui::Separator();
 
@@ -2168,7 +2167,7 @@ void BoardView::Update() {
 		}
 
 		keyboardPreferences.render();
-		backgroundImagePreferences.render();
+		boardSettings.render();
 
 		if (m_showSearch && m_file) {
 			ImGui::OpenPopup("Search for Component / Network");

@@ -11,7 +11,7 @@ std::string PDFBridge::GetSelection() const {
 	return {};
 }
 
-void PDFBridge::OpenDocument(const filesystem::path &pdfPath) {
+void PDFBridge::OpenDocument(const PDFFile &pdfFile) {
 }
 
 void PDFBridge::CloseDocument() {
