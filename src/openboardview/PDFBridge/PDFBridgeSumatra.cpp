@@ -1,11 +1,14 @@
 #include "PDFBridgeSumatra.h"
 
+#include <cassert>
 #include <SDL.h>
 
 #include "win32.h"
 #include "utils.h"
 
-PDFBridgeSumatra::PDFBridgeSumatra() {
+PDFBridgeSumatra *PDFBridgeSumatra::instance = nullptr;
+
+PDFBridgeSumatra::PDFBridgeSumatra(Confparse &obvConfig) : obvConfig(obvConfig) {
 }
 
 PDFBridgeSumatra::~PDFBridgeSumatra() {
@@ -23,8 +26,9 @@ PDFBridgeSumatra::~PDFBridgeSumatra() {
 	}
 }
 
-PDFBridgeSumatra &PDFBridgeSumatra::GetInstance() {
-	static PDFBridgeSumatra instance{};
+PDFBridgeSumatra &PDFBridgeSumatra::GetInstance(Confparse &obvConfig) {
+	static PDFBridgeSumatra instance{obvConfig};
+	PDFBridgeSumatra::instance = &instance;
 	return instance;
 }
 
@@ -46,7 +50,9 @@ HDDEDATA CALLBACK PDFBridgeSumatra::DdeCallback(
     DWORD dwData2) { // Transaction-specific data.
 	SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "PDFBridgeSumatra DdeCallback, uType=%d", uType);
 
-	PDFBridgeSumatra &pdfBridgeSumatra = PDFBridgeSumatra::GetInstance();
+
+	assert(PDFBridgeSumatra::instance != nullptr);
+	PDFBridgeSumatra &pdfBridgeSumatra = *PDFBridgeSumatra::instance;
 
 	switch (uType) {
 		case XTYP_CONNECT: {
@@ -216,7 +222,19 @@ void PDFBridgeSumatra::OpenDocument(const filesystem::path &pdfPath) {
 		}
 		filesystem::path currentExePath{currentExePathStr};
 
-		std::wstring exec = currentExePath.parent_path() / L"SumatraPDF.exe";
+		filesystem::path pdfSoftwarePath{this->obvConfig.ParseStr("pdfSoftwarePath", "SumatraPDF.exe")};
+		if (pdfSoftwarePath.empty()) {
+			SDL_LogError(SDL_LOG_CATEGORY_ERROR, "%s", "PDFBridgeSumatra OpenDocument: PDF software executable path empty");
+			return;
+		}
+
+		std::error_code ec;
+		std::wstring exec = filesystem::relative(pdfSoftwarePath, currentExePath.parent_path(), ec).wstring();
+		if (ec) {
+			SDL_LogError(SDL_LOG_CATEGORY_ERROR, "PDFBridgeSumatra OpenDocument: %d - %s", ec.value(), ec.message().c_str());
+			return;
+		}
+
 		std::wstring args = L"\"" + exec + L"\"" + L" " + L"\"" + pdfPathString + L"\"";
 		STARTUPINFO si{};
 		si.cb = sizeof(si);

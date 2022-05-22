@@ -9,8 +9,13 @@
 
 #include <string>
 
+#include "confparse.h"
+
 class PDFBridgeSumatra : public PDFBridge {
 private:
+	static PDFBridgeSumatra *instance; // Keep a pointer to singleton instance for non-C++-aware DDE callback
+	Confparse &obvConfig;
+
 	std::wstring pdfPathString{};
 	std::string reverseSearchStr{};
 	bool reverseSearchStrChanged = false;
@@ -27,7 +32,7 @@ private:
 	HCONV hConv = nullptr;
 	HDDEDATA hDataNameService = nullptr; // OBV server name registered
 
-	PDFBridgeSumatra();
+	PDFBridgeSumatra(Confparse &obvconfig);
 
 	static HDDEDATA CALLBACK DdeCallback(UINT uType, UINT uFmt, HCONV hconv, HSZ hsz1, HSZ hsz2, HDDEDATA hdata, DWORD dwData1, DWORD dwData2);
 	bool InitializeDDE();
@@ -39,7 +44,7 @@ private:
 public:
 	~PDFBridgeSumatra();
 
-	static PDFBridgeSumatra &GetInstance();
+	static PDFBridgeSumatra &GetInstance(Confparse &obvConfig);
 
 	void OpenDocument(const filesystem::path &pdfPath);
 	void CloseDocument();

@@ -29,6 +29,7 @@
 #include "FileFormats/FZFile.h"
 #include "annotations.h"
 #include "imgui/imgui.h"
+#include "imgui/misc/cpp/imgui_stdlib.h"
 
 #include "NetList.h"
 #include "PartList.h"
@@ -949,6 +950,20 @@ void BoardView::Preferences(void) {
 			obvconfig.WriteBool("showPinName", showPinName);
 		}
 
+		RA("PDF software executable", DPI(200));
+		ImGui::SameLine();
+		static std::string pdfSoftwarePath = obvconfig.ParseStr("pdfSoftwarePath", "SumatraPDF.exe");;
+		if (ImGui::InputText("##pdfSoftwarePath", &pdfSoftwarePath)) {
+			obvconfig.WriteStr("pdfSoftwarePath", pdfSoftwarePath.c_str());
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("Browse##pdfSoftwarePath")) {
+			auto path = show_file_picker();
+			if (!path.empty()) {
+				pdfSoftwarePath = path.string();
+				obvconfig.WriteStr("pdfSoftwarePath", pdfSoftwarePath.c_str());
+			}
+		}
 
 		ImGui::Separator();
 		{
