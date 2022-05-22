@@ -301,7 +301,7 @@ int main(int argc, char **argv) {
 
 	{
 		ImGuiStyle &style = ImGui::GetStyle();
-		style.ScrollbarSize *= app.dpi / 100;
+		style.ScrollbarSize *= app.dpi / 100.0f;
 	}
 
 	// Font selection
