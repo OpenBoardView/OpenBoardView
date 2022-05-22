@@ -16,7 +16,7 @@ set(CMAKE_OSX_DEPLOYMENT_TARGET "10.9" CACHE STRING "Minimum OS X deployment ver
 # VERSION must be up to 4 groups of digits separated by a period.
 # major.90 are alpha releases
 # major.95 are beta releases
-project(OpenBoardView VERSION 9.0.1)
+project(OpenBoardView VERSION 9.0.2)
 
 # Include our project variables
 include("version.cmake")
