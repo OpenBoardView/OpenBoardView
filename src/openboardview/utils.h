@@ -30,7 +30,7 @@ bool find_str_in_buf(const std::string str, const std::vector<char> &buf);
 bool compare_string_insensitive(const std::string &str1, const std::string &str2);
 
 // Case insensitive lookup of a filename at the given path
-filesystem::path lookup_file_insensitive(const filesystem::path &path, const std::string &filename);
+filesystem::path lookup_file_insensitive(const filesystem::path &path, const std::string &filename, std::string &error_msg);
 
 // Split a string in a vector, delimiter is a space (stringstream iterator)
 std::vector<std::string> split_string(const std::string str);

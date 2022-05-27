@@ -68,7 +68,16 @@ bool compare_string_insensitive(const std::string &str1, const std::string &str2
 }
 
 // Case insensitive lookup of a filename at the given path
-filesystem::path lookup_file_insensitive(const filesystem::path &path, const std::string &filename) {
+filesystem::path lookup_file_insensitive(const filesystem::path &path, const std::string &filename, std::string &error_msg) {
+	std::error_code ec;
+	filesystem::directory_iterator di{path, ec};
+
+	if (ec) {
+		error_msg = "Error looking up '" + filename + "' in '" + path.string().c_str() + "': " + ec.message();
+		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Error looking up '%s' in '%s': %d - %s", filename.c_str(), path.string().c_str(), ec.value(), ec.message().c_str());
+		return {};
+	}
+
 	for(auto& p: filesystem::directory_iterator(path)) {
 		if (compare_string_insensitive(p.path().filename().string(), filename)) {
 			return p.path();

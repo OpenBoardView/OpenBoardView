@@ -145,18 +145,36 @@ void ASCFile::update_counts() {
 	num_nails  = nails.size();
 }
 
+bool ASCFile::load_and_parse(const filesystem::path &path, const std::string &filename, void (ASCFile::*parser)(char *&, char *&, char *&, char *&, line_iterator_t&)) {
+	auto filepath = lookup_file_insensitive(path, filename, error_msg);
+	if (filepath.empty() || !error_msg.empty()) {
+		return false;
+	}
+	return read_asc(filepath, parser);
+}
+
 /*
  * buf unused for now, read all files even if one of the supported *.asc was
  * passed
  */
 ASCFile::ASCFile(std::vector<char> &buf, const filesystem::path &filepath) {
-	char *saved_locale;
-	saved_locale = setlocale(LC_NUMERIC, "C"); // Use '.' as delimiter for strtod
+	std::error_code ec;
+	auto directory = filesystem::weakly_canonical(filepath, ec);
+	if (ec) {
+		error_msg = ec.message();
+		return;
+	}
+	directory = directory.parent_path();
 
-	valid = true;
-	if (!read_asc(lookup_file_insensitive(filepath.parent_path(), "format.asc"), &ASCFile::parse_format)) valid = false;
-	if (!read_asc(lookup_file_insensitive(filepath.parent_path(), "pins.asc"), &ASCFile::parse_pin)) valid      = false;
-	if (!read_asc(lookup_file_insensitive(filepath.parent_path(), "nails.asc"), &ASCFile::parse_nail)) valid    = false;
+	char *saved_locale = setlocale(LC_NUMERIC, "C"); // Use '.' as delimiter for strtod
+
+	if (!load_and_parse(directory, "format.asc", &ASCFile::parse_format)
+		|| !load_and_parse(directory, "pins.asc", &ASCFile::parse_pin)
+		|| !load_and_parse(directory, "nails.asc", &ASCFile::parse_nail)) {
+		valid = false;
+	} else {
+		valid = true;
+	}
 
 	update_counts();
 	setlocale(LC_NUMERIC, saved_locale); // Restore locale
