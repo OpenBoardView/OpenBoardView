@@ -175,6 +175,7 @@ execute_process(
 	WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
 )
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/stb)
+add_definitions(-DSTBI_FAILURE_USERMSG)
 
 ## OpenBoardView ##
 add_subdirectory(openboardview)
