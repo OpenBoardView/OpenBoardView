@@ -4,6 +4,26 @@
 
 #include "confparse.h"
 
+PDFFile::PDFFile(PDFBridge &pdfBridge) : pdfBridge(&pdfBridge) {
+}
+
+void PDFFile::reload() {
+	if (this->pdfBridge == nullptr) {
+		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "%s", "PDFFile Could not reload: pdfBridge == nullptr");
+		return;
+	}
+	this->pdfBridge->CloseDocument();
+	this->pdfBridge->OpenDocument(*this);
+}
+
+void PDFFile::close() {
+	if (this->pdfBridge == nullptr) {
+		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "%s", "PDFFile Could not close: pdfBridge == nullptr");
+		return;
+	}
+	this->pdfBridge->CloseDocument();
+}
+
 void PDFFile::loadFromConfig(const filesystem::path &filepath) {
 	configFilepath = filepath; // save filepath for latter use with writeToConfig
 

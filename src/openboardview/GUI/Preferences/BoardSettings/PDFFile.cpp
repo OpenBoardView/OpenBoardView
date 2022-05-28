@@ -7,11 +7,12 @@
 
 namespace Preferences {
 
-PDFFile::PDFFile(::PDFFile &pdfFile) : pdfFile(pdfFile) {
+PDFFile::PDFFile(::PDFFile &pdfFile) : pdfFile(pdfFile), pdfFileCopy(pdfFile) {
 }
 
 void PDFFile::save() {
 	pdfFile.writeToConfig(pdfFile.configFilepath);
+	pdfFile.reload();
 }
 
 void PDFFile::cancel() {
@@ -20,6 +21,7 @@ void PDFFile::cancel() {
 
 void PDFFile::clear() {
 	pdfFile.path = filesystem::path{};
+	pdfFile.close();
 }
 
 void PDFFile::render(bool shown) {

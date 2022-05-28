@@ -4,6 +4,7 @@
 #include "GUI/BackgroundImage.h"
 
 #include <string>
+#include <vector>
 
 namespace Preferences {
 

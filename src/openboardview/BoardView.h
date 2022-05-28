@@ -136,7 +136,6 @@ struct BoardView {
 	Preferences::Keyboard keyboardPreferences{keybindings, obvconfig};
 	Preferences::BoardSettings boardSettings{keybindings, backgroundImage, pdfFile};
 
-	PDFFile pdfFile;
 #ifdef ENABLE_PDFBRIDGE_EVINCE
 	PDFBridgeEvince pdfBridge;
 #elif defined(_WIN32)
@@ -144,6 +143,7 @@ struct BoardView {
 #else
 	PDFBridge pdfBridge; // Dummy implementation
 #endif
+	PDFFile pdfFile{pdfBridge};
 
 	bool debug                   = false;
 	int history_file_has_changed = 0;

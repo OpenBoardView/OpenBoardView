@@ -10,7 +10,7 @@ namespace Preferences {
 class PDFFile {
 private:
 	::PDFFile &pdfFile;
-	::PDFFile pdfFileCopy{};
+	::PDFFile pdfFileCopy;
 public:
 	PDFFile(::PDFFile &PDFFile);
 

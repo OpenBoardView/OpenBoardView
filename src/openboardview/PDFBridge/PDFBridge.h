@@ -5,6 +5,8 @@
 
 #include "PDFFile.h"
 
+class PDFFile; // Forward declaration to solve circular includes
+
 class PDFBridge {
 public:
 	virtual ~PDFBridge();
