@@ -96,11 +96,6 @@ void BackgroundImage::render(bool shown) {
 
 		ImGui::Separator();
 		imageSettings("Bottom", backgroundImage.bottomImage);
-	} else {
-		if (wasShown) { // modal just closed after title bar close button clicked, Save/Cancel modify shown so this must stay above
-			backgroundImage = backgroundImageCopy;
-			backgroundImage.reload(); // don't care if there is an error here since the user cancelled
-		}
 	}
 
 

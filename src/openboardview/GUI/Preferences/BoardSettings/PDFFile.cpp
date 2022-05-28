@@ -46,11 +46,6 @@ void PDFFile::render(bool shown) {
 				pdfFile.path = path;
 			}
 		}
-
-	} else {
-		if (wasShown) { // modal just closed after title bar close button clicked, Save/Cancel modify shown so this must stay above
-			pdfFile = pdfFileCopy;
-		}
 	}
 
 	wasShown = shown;

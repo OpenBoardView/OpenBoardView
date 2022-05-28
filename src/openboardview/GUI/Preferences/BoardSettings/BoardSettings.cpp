@@ -29,6 +29,11 @@ void BoardSettings::render() {
 		ImGui::Separator();
 		ImGui::Text("%s", "Note: board settings are stored in the .conf file associated with the boardview file.");
 
+		if (!shown) { // modal just closed after title bar close button clicked, Save/Cancel modify shown so this must stay above
+			pdfFilePreferences.cancel();
+			backgroundImagePreferences.cancel();
+		}
+
 		if (ImGui::Button("Save")) {
 			shown = false;
 			pdfFilePreferences.save();
