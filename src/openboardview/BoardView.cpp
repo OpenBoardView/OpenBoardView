@@ -949,6 +949,7 @@ void BoardView::Preferences(void) {
 			obvconfig.WriteBool("showPinName", showPinName);
 		}
 
+#ifdef _WIN32
 		RA("PDF software executable", DPI(200));
 		ImGui::SameLine();
 		static std::string pdfSoftwarePath = obvconfig.ParseStr("pdfSoftwarePath", "SumatraPDF.exe");;
@@ -963,6 +964,7 @@ void BoardView::Preferences(void) {
 				obvconfig.WriteStr("pdfSoftwarePath", pdfSoftwarePath.c_str());
 			}
 		}
+#endif
 
 		ImGui::Separator();
 		{
