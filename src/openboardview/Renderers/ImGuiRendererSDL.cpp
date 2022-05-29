@@ -109,7 +109,7 @@ std::string ImGuiRendererSDL::loadTextureFromFile(const filesystem::path &filepa
 	unsigned char* image_data = stbi_load_from_memory(reinterpret_cast<unsigned char*>(buf.data()), buf.size(), &image_width, &image_height, NULL, 4);
 
 	if (image_data == nullptr) {
-		return "Could not load image from " + filepath.string();
+		return "Could not load image from " + filepath.string() + ": " + stbi_failure_reason();
 	}
 
 	int glMaxTextureSize;

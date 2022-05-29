@@ -10,7 +10,11 @@
 #include "UI/Keyboard/KeyBindings.h"
 #include "GUI/Preferences/Keyboard.h"
 #include "GUI/BackgroundImage.h"
-#include "GUI/Preferences/BackgroundImage.h"
+#include "GUI/Preferences/BoardSettings/BoardSettings.h"
+#include "PDFBridge/PDFBridge.h"
+#include "PDFBridge/PDFBridgeEvince.h"
+#include "PDFBridge/PDFBridgeSumatra.h"
+#include "PDFBridge/PDFFile.h"
 #include <cstdint>
 #include <vector>
 
@@ -130,7 +134,17 @@ struct BoardView {
 	SpellCorrector scparts;
 	KeyBindings keybindings;
 	Preferences::Keyboard keyboardPreferences{keybindings, obvconfig};
-	Preferences::BackgroundImage backgroundImagePreferences{keybindings, backgroundImage};
+	Preferences::BoardSettings boardSettings{keybindings, backgroundImage, pdfFile};
+
+#ifdef ENABLE_PDFBRIDGE_EVINCE
+	PDFBridgeEvince pdfBridge;
+#elif defined(_WIN32)
+	PDFBridgeSumatra &pdfBridge = PDFBridgeSumatra::GetInstance(obvconfig);
+#else
+	PDFBridge pdfBridge; // Dummy implementation
+#endif
+	PDFFile pdfFile{pdfBridge};
+
 	bool debug                   = false;
 	int history_file_has_changed = 0;
 	int dpi                      = 0;
@@ -346,4 +360,5 @@ struct BoardView {
 
 	void SetLastFileOpenName(const std::string &name);
 	void FlipBoard(int mode = 0);
+	void HandlePDFBridgeSelection();
 };

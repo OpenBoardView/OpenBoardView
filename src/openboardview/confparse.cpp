@@ -75,6 +75,8 @@ annotationBoxSize = 20\r\n\
 annotationBoxOffset = 8\r\n\
 \r\n\
 netWebThickness = 2\r\n\
+\r\n\
+pdfSoftwarePath = SumatraPDF.exe\r\n\
 #\r\n\
 # \"XRayBlue\" Theme by Inflex (20160724)\r\n\
 # Colors, format is 0xRRGGBBAA\r\n\

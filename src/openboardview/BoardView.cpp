@@ -29,6 +29,7 @@
 #include "FileFormats/FZFile.h"
 #include "annotations.h"
 #include "imgui/imgui.h"
+#include "imgui/misc/cpp/imgui_stdlib.h"
 
 #include "NetList.h"
 #include "PartList.h"
@@ -433,6 +434,7 @@ int BoardView::LoadFile(const filesystem::path &filepath) {
 		m_file = nullptr;
 		m_validBoard = false;
 		m_error_msg.clear();
+		pdfBridge.CloseDocument();
 
 		SetLastFileOpenName(filepath.string());
 		std::vector<char> buffer = file_as_buffer(filepath, m_error_msg);
@@ -477,6 +479,9 @@ int BoardView::LoadFile(const filesystem::path &filepath) {
 				auto conffilepath = filepath;
 				conffilepath.replace_extension("conf");
 				backgroundImage.loadFromConfig(conffilepath);
+				pdfFile.loadFromConfig(conffilepath);
+
+				pdfBridge.OpenDocument(pdfFile);
 
 				/*
 				 * Set pins to a known lower size, they get resized
@@ -944,6 +949,20 @@ void BoardView::Preferences(void) {
 			obvconfig.WriteBool("showPinName", showPinName);
 		}
 
+		RA("PDF software executable", DPI(200));
+		ImGui::SameLine();
+		static std::string pdfSoftwarePath = obvconfig.ParseStr("pdfSoftwarePath", "SumatraPDF.exe");;
+		if (ImGui::InputText("##pdfSoftwarePath", &pdfSoftwarePath)) {
+			obvconfig.WriteStr("pdfSoftwarePath", pdfSoftwarePath.c_str());
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("Browse##pdfSoftwarePath")) {
+			auto path = show_file_picker();
+			if (!path.empty()) {
+				pdfSoftwarePath = path.string();
+				obvconfig.WriteStr("pdfSoftwarePath", pdfSoftwarePath.c_str());
+			}
+		}
 
 		ImGui::Separator();
 		{
@@ -1304,6 +1323,20 @@ void BoardView::ShowInfoPane(void) {
 					ImGui::SetClipboardText(to_copy.c_str());
 				}
 			}
+
+			{
+				static bool wholeWordsOnly = true;
+				static bool caseSensitive = false;
+				std::string pdfButtonName = "PDF Search##" + part->name;
+				if (ImGui::SmallButton(pdfButtonName.c_str())) {
+					pdfBridge.DocumentSearch(part->name, wholeWordsOnly, caseSensitive);
+				}
+				ImGui::SameLine();
+				ImGui::Checkbox("Whole words only", &wholeWordsOnly);
+				ImGui::SameLine();
+				ImGui::Checkbox("Case sensitive", &caseSensitive);
+			}
+
 			if (part->mfgcode.size()) ImGui::TextWrapped("%s", part->mfgcode.c_str());
 
 			/*
@@ -1917,7 +1950,7 @@ void BoardView::Update() {
 			}
 
 			keyboardPreferences.menuItem();
-			backgroundImagePreferences.menuItem();
+			boardSettings.menuItem();
 
 			ImGui::Separator();
 
@@ -2134,7 +2167,7 @@ void BoardView::Update() {
 		}
 
 		keyboardPreferences.render();
-		backgroundImagePreferences.render();
+		boardSettings.render();
 
 		if (m_showSearch && m_file) {
 			ImGui::OpenPopup("Search for Component / Network");
@@ -2276,6 +2309,8 @@ void BoardView::Update() {
 	RenderOverlay();
 
 	ImGui::PopStyleVar();
+
+	HandlePDFBridgeSelection();
 
 } // main menu bar
 
@@ -4520,6 +4555,19 @@ void BoardView::FlipBoard(int mode) {
 		}
 	}
 	m_needsRedraw = true;
+}
+
+void BoardView::HandlePDFBridgeSelection() {
+	if (pdfBridge.HasNewSelection()) {
+		auto selection = pdfBridge.GetSelection();
+		if (selection.empty()) {
+			m_pinHighlighted.clear();
+			m_partHighlighted.clear();
+		} else {
+			SearchCompound(selection.c_str());
+			CenterZoomSearchResults();
+		}
+	};
 }
 
 BitVec::~BitVec() {

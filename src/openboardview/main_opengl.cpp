@@ -36,28 +36,25 @@
 
 #include "filesystem_impl.h"
 
-struct globals {
-	char *input_file;
-	char *config_file;
-	bool slowCPU;
-	int width;
-	int height;
-	int dpi;
-	double font_size;
-	bool debug;
-	Renderers::Renderer renderer;
+// Handling of DDE command line argument for PDFBridge
+#ifdef _WIN32
+#include "PDFBridge/PDFBridgeSumatra.h"
+#endif
 
-	globals() {
-		this->input_file  = NULL;
-		this->config_file = NULL;
-		this->slowCPU     = false;
-		this->width       = 0;
-		this->height      = 0;
-		this->dpi         = 0;
-		this->font_size   = 0.0f;
-		this->debug       = false;
-		this->renderer    = Renderers::Renderer::DEFAULT;
-	}
+struct globals {
+	char *input_file = nullptr;
+	char *config_file = nullptr;
+	bool slowCPU = false;
+	int width = 0;
+	int height = 0;
+	int dpi = 0;
+	double font_size = 0.0f;
+	bool debug = false;
+	Renderers::Renderer renderer = Renderers::Renderer::DEFAULT;
+#ifdef _WIN32
+	char *pdfBridgePdfPath = nullptr;
+	char *pdfBridgeSearchStr = nullptr;
+#endif
 };
 
 static SDL_Window *window      = nullptr;
@@ -171,7 +168,19 @@ int parse_parameters(int argc, char **argv, struct globals *g) {
 
 		} else if (strcmp(p, "-d") == 0) {
 			g->debug = true;
+#ifdef _WIN32
+		} else if (!strncmp(p, "--reversesearch", 15)) {
+			// Handling of DDE command for PDFBridge
+			if ((argc - param - 1 < 2) || (argv[param + 1][0] == '-') || (argv[param + 2][0] == '-')) {
+				SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Not enough paramters for --reversesearch <PDF path> <search string>\n\n%s %s", argv[0], help );
+				exit(1);
+			}
 
+			g->pdfBridgePdfPath = argv[param + 1];
+			g->pdfBridgeSearchStr = argv[param + 2];
+
+			param += 2;
+#endif
 		} else if (argc == 2) {
 			/*
 			 * When we're using file-associations, the OS usually just
@@ -241,6 +250,18 @@ int main(int argc, char **argv) {
 
 	// If we've chosen to override the normally found config.
 	if (g.config_file) app.obvconfig.Load(g.config_file, true);
+
+#ifdef _WIN32
+	// Run PDF reverse search command if called with --reversesearch
+	if (g.pdfBridgePdfPath != nullptr && g.pdfBridgeSearchStr != nullptr) {
+		PDFBridgeSumatra &pdfBrdigeSumatra = PDFBridgeSumatra::GetInstance(app.obvconfig);
+		if (!pdfBrdigeSumatra.ReverseSearch(g.pdfBridgePdfPath, g.pdfBridgeSearchStr)) {
+			return 2;
+		} else {
+			return 0;
+		}
+	}
+#endif
 
 	// Apply the slowCPU flag if required.
 	app.slowCPU = g.slowCPU;
