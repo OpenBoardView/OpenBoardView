@@ -83,6 +83,7 @@ filesystem::path lookup_file_insensitive(const filesystem::path &path, const std
 			return p.path();
 		}
 	}
+	error_msg = filename + ": file not found in '" + path.string() + "'.";
 	return {};
 }
 
