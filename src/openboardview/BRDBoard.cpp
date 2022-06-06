@@ -16,7 +16,7 @@ using namespace std::placeholders;
 const string BRDBoard::kNetUnconnectedPrefix = "UNCONNECTED";
 const string BRDBoard::kComponentDummyName   = "...";
 
-BRDBoard::BRDBoard(const BRDFile *const boardFile)
+BRDBoard::BRDBoard(const BRDFileBase * const boardFile)
     : m_file(boardFile) {
 	// TODO: strip / trim all strings, especially those used as keys
 	// TODO: just loop through original arrays?
@@ -59,7 +59,7 @@ BRDBoard::BRDBoard(const BRDFile *const boardFile)
 
 			net->number    = brd_nail.probe;
 
-			if (brd_nail.side == 1) {
+			if (brd_nail.side == BRDPartMountingSide::Top) {
 				net->board_side = kBoardSideTop;
 			} else {
 				net->board_side = kBoardSideBottom;

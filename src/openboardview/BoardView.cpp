@@ -4223,7 +4223,7 @@ void BoardView::CenterView(void) {
 	m_needsRedraw = true;
 }
 
-void BoardView::LoadBoard(BRDFile *file) {
+void BoardView::LoadBoard(BRDFileBase *file) {
 	delete m_board;
 
 	// Check board outline (format) point count.

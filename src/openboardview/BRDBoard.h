@@ -10,10 +10,10 @@ using namespace std;
 
 class BRDBoard : public Board {
   public:
-	BRDBoard(const BRDFile *const boardFile);
+	BRDBoard(const BRDFileBase *const boardFile);
 	~BRDBoard();
 
-	const BRDFile *m_file;
+	const BRDFileBase *m_file;
 
 	EBoardType BoardType();
 

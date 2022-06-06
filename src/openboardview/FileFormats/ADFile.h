@@ -1,5 +1,5 @@
-#include "BRDFile.h"
 #pragma once
+#include "BRDFile.h"
 
 struct AD_BRDNet {
 	unsigned int id;
