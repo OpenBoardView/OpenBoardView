@@ -50,18 +50,14 @@ else()
 	endif(APPLE)
 endif()
 
-include_directories(
-	${CMAKE_CURRENT_SOURCE_DIR}
-	${CMAKE_CURRENT_SOURCE_DIR}/..
-	${IMGUI_INCLUDE_DIRS}
-	${UTF8_INCLUDE_DIR}
-	${GLAD_INCLUDE_DIRS}
-	${GTK_INCLUDE_DIRS}
-	${OPENGL_INCLUDE_DIR}
-	${ZLIB_INCLUDE_DIRS}
-	${FONTCONFIG_INCLUDE_DIRS}
-)
-
+# python is required for GenCAD grammar build-rime generation
+if (CMAKE_VERSION VERSION_GREATER 3.12)
+	find_package(Python REQUIRED COMPONENTS Interpreter)
+else()
+	# deprecated logic
+	find_package(PythonInterp REQUIRED)
+	set(Python_EXECUTABLE "${PYTHON_EXECUTABLE}")
+endif()
 
 set(SOURCES
 	annotations.cpp
@@ -82,6 +78,7 @@ set(SOURCES
 	FileFormats/CADFile.cpp
 	FileFormats/CSTFile.cpp
 	FileFormats/FZFile.cpp
+	FileFormats/GenCADFile.cpp
 	NetList.cpp
 	PartList.cpp
 	Renderers/Renderers.cpp
@@ -139,6 +136,23 @@ endif()
 # Must be defined in the same directory as the add_executable including the file
 set_source_files_properties(${ASSETS} PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
 
+set(GENCAD_FILE_GRAMMAR_GENERATOR
+	"${CMAKE_CURRENT_SOURCE_DIR}/../../utilities/generate_grammar_header.py")
+
+set(GENCAD_FILE_BNF_H
+	"${CMAKE_CURRENT_SOURCE_DIR}/FileFormats/GenCADFileBnf.h")
+set(GENERATED_GENCAD_FILE_GRAMMAR_H
+	"${CMAKE_CURRENT_BINARY_DIR}/build-generated/GenCADFileGrammar.h")
+
+add_custom_command(OUTPUT "${GENERATED_GENCAD_FILE_GRAMMAR_H}"
+	COMMAND "${Python_EXECUTABLE}" "${GENCAD_FILE_GRAMMAR_GENERATOR}" "${GENCAD_FILE_BNF_H}" "${GENERATED_GENCAD_FILE_GRAMMAR_H}"
+	DEPENDS "${GENCAD_FILE_GRAMMAR_GENERATOR}" "${GENCAD_FILE_BNF_H}"
+)
+
+set(SOURCES ${SOURCES}
+	${GENERATED_GENCAD_FILE_GRAMMAR_H} # dependency on generated header file to make in built
+)
+
 add_executable(${PROJECT_NAME_LOWER}
 	MACOSX_BUNDLE
 	WIN32
@@ -152,6 +166,19 @@ if(MINGW) # Dirty fix to force linking all libs (esp. libstdc++) statically for 
 elseif(APPLE)
 	set_target_properties(${PROJECT_NAME_LOWER} PROPERTIES MACOSX_BUNDLE_ICON_FILE ${PROJECT_NAME_LOWER})
 endif()
+
+target_include_directories(${PROJECT_NAME_LOWER} PRIVATE
+	${CMAKE_CURRENT_SOURCE_DIR}
+	${CMAKE_CURRENT_SOURCE_DIR}/..
+	${CMAKE_CURRENT_BINARY_DIR} # for build-generated
+	${IMGUI_INCLUDE_DIRS}
+	${UTF8_INCLUDE_DIR}
+	${GLAD_INCLUDE_DIRS}
+	${GTK_INCLUDE_DIRS}
+	${OPENGL_INCLUDE_DIR}
+	${ZLIB_INCLUDE_DIRS}
+	${FONTCONFIG_INCLUDE_DIRS}
+)
 
 target_link_libraries(${PROJECT_NAME_LOWER}
 	imgui
