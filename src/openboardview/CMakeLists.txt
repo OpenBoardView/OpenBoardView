@@ -155,6 +155,7 @@ endif()
 target_link_libraries(${PROJECT_NAME_LOWER}
 	imgui
 	SQLite::SQLite3
+	mpc
 	${GLAD_LIBRARIES}
 	${COCOA_LIBRARY}
 	${ZLIB_LIBRARIES}

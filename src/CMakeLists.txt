@@ -177,5 +177,14 @@ execute_process(
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/stb)
 add_definitions(-DSTBI_FAILURE_USERMSG)
 
+## mpc - Micro Parser Combinators ##
+execute_process(
+	COMMAND git submodule update --init src/mpc
+	WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+)
+
+add_library(mpc STATIC "mpc/mpc.c")
+
+
 ## OpenBoardView ##
 add_subdirectory(openboardview)
