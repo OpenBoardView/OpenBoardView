@@ -127,8 +127,8 @@ bool GenCADFile::parse_vias() {
 }
 
 bool GenCADFile::parse_route_vias(mpc_ast_t *route_ast) {
-	auto route_name_ast = mpc_ast_get_child(route_ast, "sig_name|nonquoted_string|regex");
-	if (!route_name_ast) return false;
+	char *route_name = get_nonquoted_or_quoted_string_child(route_ast, "sig_name");
+	if (!route_name) return false;
 
 	for (int i = 0; i >= 0;) {
 		i = mpc_ast_get_index_lb(route_ast, "via|>", i);
@@ -139,7 +139,7 @@ bool GenCADFile::parse_route_vias(mpc_ast_t *route_ast) {
 				if (pos_ast) {
 					BRDNail nail{};
 					nail.side  = BRDPartMountingSide::Both;
-					nail.net   = route_name_ast->contents;
+					nail.net   = route_name;
 					nail.probe = 1; // WTF
 					x_y_ref_to_brd_point(pos_ast, &nail.pos);
 					nails.push_back(nail);
@@ -160,9 +160,9 @@ bool GenCADFile::parse_components() {
 			mpc_ast_t *component_ast = mpc_ast_get_child_lb(components_ast, "component|>", i);
 
 			BRDPart brd_part;
-			mpc_ast_t *name_ast = mpc_ast_get_child(component_ast, "component_name|nonquoted_string|regex");
-			if (name_ast) {
-				brd_part.name = name_ast->contents;
+			char *component_name = get_nonquoted_or_quoted_string_child(component_ast, "component_name");
+			if (component_name) {
+				brd_part.name = component_name;
 			}
 
 			mpc_ast_t *place_ast = mpc_ast_get_child(component_ast, "place|>");
@@ -245,8 +245,8 @@ bool GenCADFile::parse_shape_pins_to_component(
 			mpc_ast_t *pin_ast = mpc_ast_get_child_lb(shape_ast, "shapes_pin|>", i);
 			if (pin_ast) {
 				mpc_ast_t *pos_ast      = mpc_ast_get_child(pin_ast, "x_y_ref|>");
-				mpc_ast_t *pin_name_ast = mpc_ast_get_child(pin_ast, "shape_pin_name|nonquoted_string|regex");
-				if (pos_ast && pin_name_ast) {
+				char *pin_name = get_nonquoted_or_quoted_string_child(pin_ast, "shape_pin_name");
+				if (pos_ast && pin_name) {
 					BRDPin pin;
 					pin.radius = 0.5;
 					// enable the code below once the pin.radius will be processed
@@ -261,7 +261,7 @@ bool GenCADFile::parse_shape_pins_to_component(
 					pin.part  = static_cast<unsigned int>(parts.size() + 1);
 					pin.pos.x = part->p1.x;
 					pin.pos.y = part->p1.y;
-					pin.snum  = pin_name_ast->contents;
+					pin.snum  = pin_name;
 
 					BRDPoint tmpPos{};
 					x_y_ref_to_brd_point(pos_ast, &tmpPos);
@@ -299,13 +299,12 @@ void GenCADFile::fill_signals_cache() {
 			j = mpc_ast_get_index_lb(signal_ast, "node|>", j);
 			if (j < 0) break;
 			mpc_ast_t *node_ast           = mpc_ast_get_child_lb(signal_ast, "node|>", j);
-			mpc_ast_t *node_comp_name_ast = mpc_ast_get_child(node_ast, "component_name|nonquoted_string|regex");
-			mpc_ast_t *node_pin_name_ast  = mpc_ast_get_child(node_ast, "pin_name|nonquoted_string|regex");
-			mpc_ast_t *signal_name_ast    = mpc_ast_get_child(signal_ast, "sig_name|nonquoted_string|regex");
-			if (node_comp_name_ast && node_comp_name_ast->contents && node_pin_name_ast && node_pin_name_ast->contents &&
-			    signal_name_ast && signal_name_ast->contents) {
-				ComponentPin key     = {node_comp_name_ast->contents, node_pin_name_ast->contents};
-				m_signals_cache[key] = signal_name_ast->contents;
+			char *node_comp_name = get_nonquoted_or_quoted_string_child(node_ast, "component_name");
+			char *node_pin_name = get_nonquoted_or_quoted_string_child(node_ast, "pin_name");
+			char *signal_name = get_nonquoted_or_quoted_string_child(signal_ast, "sig_name");
+			if (node_comp_name && node_pin_name && signal_name) {
+				ComponentPin key     = {node_comp_name, node_pin_name};
+				m_signals_cache[key] = signal_name;
 			}
 			j++;
 		}
@@ -314,10 +313,10 @@ void GenCADFile::fill_signals_cache() {
 }
 
 const char *GenCADFile::get_signal_name_for_component_pin(const char *component_name, mpc_ast_t *pin_ast) {
-	mpc_ast_t *pin_name_ast = mpc_ast_get_child(pin_ast, "shape_pin_name|nonquoted_string|regex");
-	if (!pin_name_ast) return nullptr;
+	char *pin_name = get_nonquoted_or_quoted_string_child(pin_ast, "shape_pin_name");
+	if (!pin_name) return nullptr;
 
-	ComponentPin key = {component_name, pin_name_ast->contents};
+	ComponentPin key = {component_name, pin_name};
 
 	auto found_pin = m_signals_cache.find(key);
 	if (found_pin != m_signals_cache.end()) {
