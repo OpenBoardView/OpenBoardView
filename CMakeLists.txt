@@ -11,6 +11,12 @@ endif()
 # Set OSX target version, before calling project() (inside version.cmake). FORCE is needed when project() is called within an included file
 set(CMAKE_OSX_DEPLOYMENT_TARGET "10.9" CACHE STRING "Minimum OS X deployment version" FORCE)
 
+# Set a default build type like suggested in official blog https://www.kitware.com/cmake-and-the-default-build-type/
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+  message(STATUS "Setting build type to Release as none was specified.")
+  set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the type of build." FORCE)
+endif()
+
 # According to CMake doc, project() must be called in the top-level file, not in an included file
 # Also since CMake 3.0 version should be defined using project() too
 # VERSION must be up to 4 groups of digits separated by a period.
