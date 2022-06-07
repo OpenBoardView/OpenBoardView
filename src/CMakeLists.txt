@@ -80,28 +80,30 @@ endif()
 # note: in the future there may be integrated CMake support into imgui
 # see: https://github.com/ocornut/imgui/pull/1713
 # for now do it manually, after glad and SDL2 because we use the includes for the sdl_opengl examples
-execute_process(
+find_package(ImGui)             # search ImGui from system
+if(NOT IMGUI_FOUND)             # else fallback to bundled copy
+    execute_process(
 	COMMAND git submodule update --init src/imgui
-	WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-)
-add_definitions("-DImDrawIdx=unsigned int") # short is not enough for us
-add_definitions("-DIMGUI_IMPL_OPENGL_LOADER_GLAD") # We use glad
-# Configure GL3 renderer to be GLES2 compatible if GLES2 is enabled
-if(ENABLE_GLES2)
-    add_definitions("-DIMGUI_IMPL_OPENGL_ES2")
-endif()
+	WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
+    add_definitions("-DImDrawIdx=unsigned int") # short is not enough for us
+    add_definitions("-DIMGUI_IMPL_OPENGL_LOADER_GLAD") # We use glad
+    # Configure GL3 renderer to be GLES2 compatible if GLES2 is enabled
+    if(ENABLE_GLES2)
+        add_definitions("-DIMGUI_IMPL_OPENGL_ES2")
+    endif()
 
-# workaround for OpenGL include for OpenGL2, need to be glad rather than gl itself
-file(READ "${CMAKE_CURRENT_SOURCE_DIR}/imgui/backends/imgui_impl_opengl2.cpp" input)
-string(REPLACE "OpenGL/gl.h" "glad/glad.h" input "${input}")
-string(REPLACE "GL/gl.h" "glad/glad.h" input "${input}")
-file(WRITE "${CMAKE_CURRENT_SOURCE_DIR}/imgui/backends/imgui_impl_opengl2.cpp" "${input}")
+    # workaround for OpenGL include for OpenGL2, need to be glad rather than gl itself
+    file(READ "${CMAKE_CURRENT_SOURCE_DIR}/imgui/backends/imgui_impl_opengl2.cpp" input)
+    string(REPLACE "OpenGL/gl.h" "glad/glad.h" input "${input}")
+    string(REPLACE "GL/gl.h" "glad/glad.h" input "${input}")
+    file(WRITE "${CMAKE_CURRENT_SOURCE_DIR}/imgui/backends/imgui_impl_opengl2.cpp" "${input}")
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/imgui
-	${GLAD_INCLUDE_DIRS}
-)
+    set(IMGUI_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/imgui
+        ${CMAKE_CURRENT_SOURCE_DIR}/imgui/examples)
 
-set(SOURCES
+    set(IMGUI_LIBRARIES imgui)
+
+    set(SOURCES
 	imgui/imgui.cpp
 	imgui/imgui_draw.cpp
 	imgui/imgui_tables.cpp
@@ -110,33 +112,35 @@ set(SOURCES
 	imgui/backends/imgui_impl_sdl.cpp)
 
 
-if(ENABLE_GL1)
+    if(ENABLE_GL1)
 	LIST(APPEND SOURCES
-		imgui/backends/imgui_impl_opengl2.cpp
-	)
-endif()
-if(ENABLE_GL3)
+	    imgui/backends/imgui_impl_opengl2.cpp
+	    )
+    endif()
+    if(ENABLE_GL3)
 	LIST(APPEND SOURCES
-		imgui/backends/imgui_impl_opengl3.cpp
-	)
-endif()
+	    imgui/backends/imgui_impl_opengl3.cpp
+	    )
+    endif()
 
-add_library(imgui STATIC ${SOURCES})
-target_link_libraries(imgui
+    add_library(imgui STATIC ${SOURCES})
+    target_link_libraries(imgui
 	${GLAD_LIBRARIES}
-)
-if(MINGW)
-target_link_libraries(imgui
-	SDL2::SDL2-static
-)
-else()
-target_link_libraries(imgui
-	SDL2::SDL2
-)
+        )
+    if(MINGW)
+        target_link_libraries(imgui
+	    SDL2::SDL2-static
+            )
+    else()
+        target_link_libraries(imgui
+	    SDL2::SDL2
+            )
+    endif()
 endif()
 
-set(IMGUI_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/imgui ${CMAKE_CURRENT_SOURCE_DIR}/imgui/examples)
-
+include_directories(
+    ${IMGUI_INCLUDE_DIRS}
+    ${GLAD_INCLUDE_DIRS})
 
 #install(TARGETS imgui DESTINATION ${INSTALL_ARCHIVE_DIR}) # No need to install a static lib
 
