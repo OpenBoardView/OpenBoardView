@@ -71,6 +71,7 @@ set(SOURCES
 	utils.cpp
 	BoardView.cpp
 	BRDBoard.cpp
+	FileFormats/BRDFileBase.cpp
 	FileFormats/ADFile.cpp
 	FileFormats/ASCFile.cpp
 	FileFormats/BDVFile.cpp

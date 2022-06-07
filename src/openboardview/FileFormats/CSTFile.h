@@ -1,13 +1,10 @@
 #pragma once
 
-#include "BRDFile.h"
+#include "BRDFileBase.h"
 
-class CSTFile : public BRDFile {
+class CSTFile : public BRDFileBase {
   public:
 	CSTFile(std::vector<char> &buf);
-	~CSTFile() {
-		free(file_buf);
-	}
 
   private:
 	void gen_outline();

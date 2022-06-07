@@ -1,18 +1,15 @@
 #pragma once
 
-#include "BRDFile.h"
+#include "BRDFileBase.h"
 
 #include <vector>
 
 #include "filesystem_impl.h"
 
-class ASCFile : public BRDFile {
+class ASCFile : public BRDFileBase {
   public:
 	typedef std::vector<char *>::iterator line_iterator_t;
 	ASCFile(std::vector<char> &buf, const filesystem::path &filepath);
-	~ASCFile() {
-		free(file_buf);
-	}
 
 	//	static bool verifyFormat(std::vector<char> &buf);
 	void parse_format(char *&p, char *&s, char *&arena, char *&arena_end, line_iterator_t &line_it);

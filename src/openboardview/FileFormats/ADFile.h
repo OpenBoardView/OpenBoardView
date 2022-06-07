@@ -1,5 +1,5 @@
-#include "BRDFile.h"
 #pragma once
+#include "BRDFileBase.h"
 
 struct AD_BRDNet {
 	unsigned int id;
@@ -33,11 +33,8 @@ struct AD_BRDPad {
 	const char *layer;
 };
 
-struct ADFile : public BRDFile {
+struct ADFile : public BRDFileBase {
 	ADFile(std::vector<char> &buf);
-	~ADFile() {
-		free(file_buf);
-	}
 
 	struct {
 		bool operator()(BRDPin a, BRDPin b) const {

@@ -1,6 +1,7 @@
 #pragma once
 
-#include "BRDFile.h"
+#include "BRDFileBase.h"
+#include <array>
 
 #undef READ_INT
 #undef READ_UINT
@@ -63,12 +64,9 @@ struct FZPartDesc {
 	const char *partno2;
 };
 
-class FZFile : public BRDFile {
+class FZFile : public BRDFileBase {
   public:
 	FZFile(std::vector<char> &buf, uint32_t fzkey[44]);
-	~FZFile() {
-		free(file_buf);
-	}
 
 	void SetKey(char *keytext);
 

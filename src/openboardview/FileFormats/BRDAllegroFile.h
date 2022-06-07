@@ -1,15 +1,11 @@
 #pragma once
 
-#include "BRDFile.h"
+#include "BRDFileBase.h"
 
-struct BRDAllegroFile : public BRDFile {
-	BRDAllegroFile(std::vector<char> &buf) {
+struct BRDAllegroFile : public BRDFileBase {
+	BRDAllegroFile(std::vector<char> &/*buf*/) {
 		valid = false;
 		error_msg = "Allegro format is not supported. Please use Allegro® FREE Physical Viewer.";
-	}
-
-	~BRDAllegroFile() {
-		free(file_buf);
 	}
 
 	static bool verifyFormat(std::vector<char> &buf) {
