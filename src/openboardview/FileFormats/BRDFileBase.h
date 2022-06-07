@@ -88,9 +88,17 @@ class BRDFileBase {
 	bool valid = false;
 	std::string error_msg = "";
 
+	virtual ~BRDFileBase()
+	{
+		free(file_buf);
+		file_buf = nullptr;
+	}
+  protected:
 	void AddNailsAsPins();
 	BRDFileBase() {}
-	~BRDFileBase() {}
+	// file_buf is used by some implementations. But since the derived class constructurs
+	// are already passed a memory buffer most usages are "historic unneeded extra copies".
+	char *file_buf = nullptr;
 };
 
 void stringfile(char *buffer, std::vector<char*> &lines);

@@ -1,12 +1,9 @@
 #pragma once
 
-#include "BRDFile.h"
+#include "BRDFileBase.h"
 
-struct CADFile : public BRDFile {
+struct CADFile : public BRDFileBase {
 	CADFile(std::vector<char> &buf);
-	~CADFile() {
-		free(file_buf);
-	}
 	enum Block {
 		Invalid,
 		None,

@@ -8,13 +8,7 @@
 
 class BRDFile : public BRDFileBase {
   public:
-	char *file_buf = nullptr;
-
 	BRDFile(std::vector<char> &buf);
-	BRDFile(){}
-	~BRDFile() {
-		free(file_buf);
-	}
 
 	static bool verifyFormat(std::vector<char> &buf);
 

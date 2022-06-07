@@ -1,12 +1,9 @@
 #pragma once
 
-#include "BRDFile.h"
+#include "BRDFileBase.h"
 
-struct BDVFile : public BRDFile {
+struct BDVFile : public BRDFileBase {
 	BDVFile(std::vector<char> &buf);
-	~BDVFile() {
-		free(file_buf);
-	}
 
 	static bool verifyFormat(std::vector<char> &buf);
 };
