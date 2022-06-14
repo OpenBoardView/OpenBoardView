@@ -27,6 +27,7 @@
 #include "FileFormats/CADFile.h"
 #include "FileFormats/CSTFile.h"
 #include "FileFormats/FZFile.h"
+#include "FileFormats/GenCADFile.h"
 #include "annotations.h"
 #include "imgui/imgui.h"
 #include "imgui/misc/cpp/imgui_stdlib.h"
@@ -443,6 +444,8 @@ int BoardView::LoadFile(const filesystem::path &filepath) {
 				m_file = new FZFile(buffer, FZKey);
 			} else if (check_fileext(filepath, ".bom") || check_fileext(filepath, ".asc"))
 				m_file = new ASCFile(buffer, filepath);
+			else if (GenCADFile::verifyFormat(buffer))
+				m_file = new GenCADFile(buffer);
 			else if (ADFile::verifyFormat(buffer))
 				m_file = new ADFile(buffer);
 			else if (CADFile::verifyFormat(buffer))
