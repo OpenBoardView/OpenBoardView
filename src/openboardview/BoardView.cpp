@@ -1772,6 +1772,9 @@ void BoardView::SearchComponent(void) {
 			ImGui::SameLine();
 			search_params_changed |= ImGui::Checkbox("Nets", &m_searchNets);
 
+			ImGui::SameLine();
+			search_params_changed |= ImGui::Checkbox("Including details", &searcher.configSearchDetails());
+
 			ImGui::Text(" Search mode: ");
 			ImGui::SameLine();
 			if (ImGui::RadioButton("Substring", searcher.isMode(SearchMode::Sub))) {

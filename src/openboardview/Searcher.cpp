@@ -41,7 +41,14 @@ template<class T> std::vector<T> Searcher::searchFor(const std::string& search, 
 	if (search.empty()) return results;
 
 	for (auto &p : v) {
-		if (strstrModeSearch(p->name, search)) {
+		bool match = strstrModeSearch(p->name, search);
+		if (m_search_details && !match) {
+			const auto details = p->searchableStringDetails();
+			for (auto s = details.begin(); s != details.end() && !match; ++s) {
+				match |= strstrModeSearch(**s, search);
+			}
+		}
+		if (match) {
 			results.push_back(p);
 			limit--;
 		}

@@ -66,6 +66,7 @@ set(SOURCES
 	history.cpp
 	utils.cpp
 	BoardView.cpp
+	Board.cpp
 	BRDBoard.cpp
 	FileFormats/BRDFileBase.cpp
 	FileFormats/ADFile.cpp

@@ -107,6 +107,8 @@ struct Net : BoardElement {
 	string UniqueId() const {
 		return kBoardNetPrefix + name;
 	}
+
+	std::vector<const std::string *> searchableStringDetails() const;
 };
 
 struct outline_pt {
@@ -215,6 +217,8 @@ struct Component : BoardElement {
 	string UniqueId() const {
 		return kBoardComponentPrefix + name;
 	}
+
+	std::vector<const std::string *> searchableStringDetails() const;
 };
 
 class Board {

@@ -8,6 +8,7 @@ enum class SearchMode {
 
 class Searcher {
 	SearchMode m_searchMode = SearchMode::Sub;
+	bool m_search_details   = false;
 
 	SharedVector<Net> m_nets;
 	SharedVector<Component> m_parts;
@@ -24,4 +25,9 @@ public:
 	SharedVector<Component> parts(const std::string& search);
 	SharedVector<Net> nets(const std::string& search, int limit);
 	SharedVector<Net> nets(const std::string& search);
+
+	bool &configSearchDetails() {
+		return m_search_details;
+	}
+
 };
