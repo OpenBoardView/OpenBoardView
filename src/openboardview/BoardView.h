@@ -254,6 +254,7 @@ struct BoardView {
 	char m_cachedDrawList[sizeof(ImDrawList)];
 	ImVector<char> m_cachedDrawCommands;
 	SharedVector<Net> m_nets;
+	int m_active_search_column = 0;
 	char m_search[3][128];
 	char m_netFilter[128];
 	std::string m_lastFileOpenName;
@@ -333,6 +334,7 @@ struct BoardView {
 	// void Move(float x, float y);
 	void Rotate(int count);
 	void DrawSelectedPins(ImDrawList *draw);
+	void ResetSearch();
 	void ClearAllHighlights(void);
 
 	// Sets the center of the screen to (x,y) in board space
