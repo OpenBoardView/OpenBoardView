@@ -599,12 +599,20 @@ bool GenCADFile::has_text_content(mpc_ast_t *content_holder, const char *text) {
 }
 
 char *GenCADFile::get_stringtoend_child(mpc_ast_t *parent, const char *name) {
-	char *key = static_cast<char *>(malloc(strlen(name) + 25));
-	sprintf(key, "%s|string_to_end|regex", name);
+	char *key = static_cast<char *>(malloc(strlen(name) + 50));
+	sprintf(key, "%s|wrapper_to_end|string_to_end|regex", name);
 	mpc_ast_t *ret_ast = mpc_ast_get_child(parent, key);
 	if (ret_ast) {
 		free(key);
 		return ret_ast->contents;
+	}
+
+	sprintf(key, "%s|wrapper_to_end|string|>", name);
+	ret_ast = mpc_ast_get_child(parent, key);
+	if (ret_ast) {
+		free(key);
+		auto value_ast = mpc_ast_get_child(ret_ast, "regex");
+		if (value_ast) return value_ast->contents;
 	}
 
 	sprintf(key, "%s|string|>", name);
