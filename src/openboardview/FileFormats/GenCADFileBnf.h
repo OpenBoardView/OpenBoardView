@@ -23,7 +23,7 @@ circle_ref          : <x_y_ref> <s>+ <radius> <s>*;
 component_name      : (<nonquoted_string>|<string>);
 dimension           : ("INCH" | "THOU" | "MM" | "MM100" | ("USER" <s> <p_integer>) | ("USERM" <s> <p_integer>) | ("USERMM" <s> <p_integer>));
 drill_size          : <number>;
-fid_name            : <string>;
+fid_name            : (<nonquoted_string>|<string>);
 filename            : <string>;
 filled_ref          : ("0" | "YES");
 flip                : ("0" | "FLIP");
