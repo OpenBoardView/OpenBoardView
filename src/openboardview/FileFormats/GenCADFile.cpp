@@ -618,15 +618,15 @@ bool GenCADFile::is_padstack_smd(mpc_ast_t *padstack_ast) {
 	return false;
 }
 
-mpc_ast_t *GenCADFile::get_padstack_by_name(const char *padstack_name) {
+mpc_ast_t *GenCADFile::get_padstack_by_name(const char *padstack_name_wanted) {
 	for (int i = 0; i >= 0;) {
 		i = mpc_ast_get_index_lb(padstacks_ast, "padstack|>", i);
 		if (i >= 0) {
 			mpc_ast_t *padstack_ast = mpc_ast_get_child_lb(padstacks_ast, "padstack|>", i);
 			if (!padstack_ast) continue;
 
-			mpc_ast_t *padstack_name_ast = mpc_ast_get_child(padstack_ast, "pad_name|nonquoted_string|regex");
-			if (has_text_content(padstack_name_ast, padstack_name)) {
+			char *padstack_name = get_nonquoted_or_quoted_string_child(padstack_ast, "pad_name");
+			if (padstack_name && (strcmp(padstack_name, padstack_name_wanted) == 0)) {
 				return padstack_ast;
 			}
 			i++;
@@ -635,15 +635,15 @@ mpc_ast_t *GenCADFile::get_padstack_by_name(const char *padstack_name) {
 	return nullptr;
 }
 
-mpc_ast_t *GenCADFile::get_pad_by_name(const char *pad_name) {
+mpc_ast_t *GenCADFile::get_pad_by_name(const char *pad_name_wanted) {
 	for (int i = 0; i >= 0;) {
 		i = mpc_ast_get_index_lb(pads_ast, "pad|>", i);
 		if (i >= 0) {
 			mpc_ast_t *pad_ast = mpc_ast_get_child_lb(pads_ast, "pad|>", i);
 			if (!pad_ast) continue;
 
-			mpc_ast_t *pad_name_ast = mpc_ast_get_child(pad_ast, "pad_name|nonquoted_string|regex");
-			if (has_text_content(pad_name_ast, pad_name)) {
+			char *pad_name = get_nonquoted_or_quoted_string_child(pad_ast, "pad_name");
+			if (pad_name && (strcmp(pad_name, pad_name_wanted) == 0)) {
 				return pad_ast;
 			}
 			i++;
@@ -661,9 +661,9 @@ double GenCADFile::get_padstack_radius(mpc_ast_t *padstack_ast) {
 			mpc_ast_t *pad_ref_ast = mpc_ast_get_child_lb(padstack_ast, "padstacks_pad|>", i);
 			if (!pad_ref_ast) continue;
 
-			mpc_ast_t *pad_name_ast = mpc_ast_get_child(pad_ref_ast, "pad_name|nonquoted_string|regex");
-			if (pad_name_ast) {
-				mpc_ast_t *pad_ast = get_pad_by_name(pad_name_ast->contents);
+			char *pad_name = get_nonquoted_or_quoted_string_child(pad_ref_ast, "pad_name");
+			if (pad_name) {
+				mpc_ast_t *pad_ast = get_pad_by_name(pad_name);
 				double pad_radius  = get_pad_radius(pad_ast);
 				if (pad_radius > radius) radius = pad_radius;
 			}
