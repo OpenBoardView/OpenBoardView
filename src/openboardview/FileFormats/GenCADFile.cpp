@@ -248,13 +248,14 @@ bool GenCADFile::parse_shape_pins_to_component(
 				if (pos_ast && pin_name_ast) {
 					BRDPin pin;
 					pin.radius = 0.5;
-					// enable the code below once the pin.radius will be processed
-					/*mpc_ast_t *padstack_name_ast = mpc_ast_get_child(pin_ast, "pad_name|nonquoted_string|regex");
+					mpc_ast_t *padstack_name_ast = mpc_ast_get_child(pin_ast, "pad_name|nonquoted_string|regex");
+					mpc_ast_t *padstack_ast = 0;
 					if (padstack_name_ast) {
-					    mpc_ast_t *padstack_ast = get_padstack_by_name(padstack_name_ast->contents);
-					    if (padstack_ast)
-					        pin.radius = get_padstack_radius(padstack_ast);
-					}*/
+						padstack_ast = get_padstack_by_name(padstack_name_ast->contents);
+						// enable the code below once the pin.radius will be processed
+						//if (padstack_ast)
+						//	pin.radius = get_padstack_radius(padstack_ast);
+					}
 
 					// part is not yet added to the list at this point
 					pin.part  = static_cast<unsigned int>(parts.size() + 1);
@@ -274,7 +275,9 @@ bool GenCADFile::parse_shape_pins_to_component(
 						pin.net = tmp;
 						nc_counter++;
 					}
-					if (part->mounting_side == BRDPartMountingSide::Top) {
+					if (padstack_ast && !is_padstack_smd(padstack_ast)) {
+						pin.side = BRDPinSide::Both;
+					} else if (part->mounting_side == BRDPartMountingSide::Top) {
 						pin.side = BRDPinSide::Top;
 					} else {
 						pin.side = BRDPinSide::Bottom;
