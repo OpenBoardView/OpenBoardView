@@ -55,7 +55,7 @@ struct BRDPin {
 	int probe = 0;
 	unsigned int part = 0;
 	BRDPinSide side{};
-	const char *net = nullptr;
+	const char *net = "UNCONNECTED";
 	double radius    = 0.5f;
 	const char *snum = nullptr;
 	const char *name = nullptr;
@@ -70,7 +70,7 @@ struct BRDNail {
 	unsigned int probe = 0;
 	BRDPoint pos;
 	BRDPartMountingSide side{};
-	const char *net = nullptr;
+	const char *net = "UNCONNECTED";
 };
 
 class BRDFileBase {
