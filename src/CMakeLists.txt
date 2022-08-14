@@ -8,7 +8,9 @@ if(NOT WIN32 OR MINGW)
 endif()
 
 ## utf8.h ##
-FIND_PATH(UTF8_INCLUDE_DIR utf8.h)
+find_path(UTF8_INCLUDE_DIR
+	NAMES "utf8.h"
+	PATH_SUFFIXES "utf8")
 if(NOT UTF8_INCLUDE_DIR)
   execute_process(
     COMMAND git submodule update --init src/utf8
