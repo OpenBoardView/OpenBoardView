@@ -170,11 +170,29 @@ else() # Other compiler/version are unsupported, use external lib
 endif()
 
 ## stb ##
-execute_process(
-	COMMAND git submodule update --init src/stb
-	WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/stb)
+if(NOT WIN32 OR MINGW)
+	pkg_check_modules(STB stb)
+endif()
+
+if(NOT STB_FOUND)
+	find_path(STB_INCLUDE_DIRS
+		NAMES "stb_image.h"
+		HINTS ${STB_INCLUDE_DIRS}
+		PATH_SUFFIXES "stb"
+	)
+endif()
+
+if(STB_INCLUDE_DIRS)
+	add_definitions(${STB_CFLAGS_OTHER})
+	include_directories(${STB_INCLUDE_DIRS})
+else()
+	execute_process(
+		COMMAND git submodule update --init src/stb
+		WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+	)
+	include_directories(${CMAKE_CURRENT_SOURCE_DIR}/stb)
+endif()
+
 add_definitions(-DSTBI_FAILURE_USERMSG)
 
 ## mpc - Micro Parser Combinators ##
