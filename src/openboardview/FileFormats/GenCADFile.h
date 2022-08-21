@@ -51,7 +51,6 @@ class GenCADFile : public BRDFileBase {
 
 	void fill_signals_cache();
 	const char *get_signal_name_for_component_pin(const char *component_name, mpc_ast_t *pin_ast);
-	mpc_ast_t *get_device_by_name(const char *name);
 	mpc_ast_t *get_shape_by_name(const char *name);
 	char *get_nonquoted_or_quoted_string_child(mpc_ast_t *parent, const char *name);
 

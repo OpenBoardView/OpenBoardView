@@ -503,24 +503,6 @@ bool GenCADFile::x_y_ref_to_brd_point(mpc_ast_t *x_y_ref, BRDPoint *point) {
 	return false;
 }
 
-mpc_ast_t *GenCADFile::get_device_by_name(const char *name) {
-	size_t name_length = strlen(name);
-	for (int i = 0; i >= 0;) {
-		i = mpc_ast_get_index_lb(devices_ast, "device|>", i);
-		if (i >= 0) {
-			mpc_ast_t *device_ast = mpc_ast_get_child_lb(devices_ast, "device|>", i);
-			if (!device_ast) continue;
-
-			char *device_name = get_nonquoted_or_quoted_string_child(device_ast, "part_name");
-			if (device_name && (strcmp(device_name, name) == 0) && strlen(device_name) == name_length) {
-				return device_ast;
-			}
-			i++;
-		}
-	}
-	return nullptr;
-}
-
 mpc_ast_t *GenCADFile::get_shape_by_name(const char *name) {
 	size_t name_length = strlen(name);
 	for (int i = 0; i >= 0;) {
