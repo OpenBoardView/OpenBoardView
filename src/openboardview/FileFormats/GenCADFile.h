@@ -9,6 +9,7 @@
 
 #include <map>
 #include <string>
+#include <vector>
 
 enum ParseVarsCounterEnum {
 #define X(CVAR, NAME) _ignore_me_##CVAR,
@@ -41,7 +42,7 @@ class GenCADFile : public BRDFileBase {
 
 	bool parse_dimension_units(mpc_ast_t *header_ast);
 	bool parse_board_outline(mpc_ast_t *board_ast);
-	void add_arc_to_outline(mpc_ast_t *start, mpc_ast_t *stop, mpc_ast_t *center);
+	std::vector<std::pair<BRDPoint, BRDPoint>> arc_to_segments(mpc_ast_t *start, mpc_ast_t *stop, mpc_ast_t *center);
 	bool parse_vias();
 	bool parse_route_vias(mpc_ast_t *route_ast);
 	bool parse_components();
