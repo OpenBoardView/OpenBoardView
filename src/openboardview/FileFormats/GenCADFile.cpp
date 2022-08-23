@@ -585,12 +585,11 @@ char *GenCADFile::get_nonquoted_or_quoted_string_child(mpc_ast_t *parent, const 
 
 	sprintf(key, "%s|string|>", name);
 	ret_ast = mpc_ast_get_child(parent, key);
+	free(key);
 	if (ret_ast) {
-		free(key);
 		auto value_ast = mpc_ast_get_child(ret_ast, "regex");
 		if (value_ast) return value_ast->contents;
 	}
-	free(key);
 	return nullptr;
 }
 
@@ -610,17 +609,21 @@ char *GenCADFile::get_stringtoend_child(mpc_ast_t *parent, const char *name) {
 	sprintf(key, "%s|wrapper_to_end|string|>", name);
 	ret_ast = mpc_ast_get_child(parent, key);
 	if (ret_ast) {
-		free(key);
 		auto value_ast = mpc_ast_get_child(ret_ast, "regex");
-		if (value_ast) return value_ast->contents;
+		if (value_ast) {
+			free(key);
+			return value_ast->contents;
+		}
 	}
 
 	sprintf(key, "%s|string|>", name);
 	ret_ast = mpc_ast_get_child(parent, key);
 	if (ret_ast) {
-		free(key);
 		auto value_ast = mpc_ast_get_child(ret_ast, "regex");
-		if (value_ast) return value_ast->contents;
+		if (value_ast) {
+			free(key);
+			return value_ast->contents;
+		}
 	}
 	free(key);
 	return nullptr;
