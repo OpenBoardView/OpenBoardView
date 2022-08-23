@@ -56,6 +56,7 @@ BoardView::~BoardView() {
 		m_board->Pins().clear();
 		m_board->Components().clear();
 		m_board->OutlinePoints().clear();
+		m_board->OutlineSegments().clear();
 		delete m_file;
 		delete m_board;
 		m_annotations.Close();
@@ -428,6 +429,7 @@ int BoardView::LoadFile(const filesystem::path &filepath) {
 			m_board->Pins().clear();
 			m_board->Components().clear();
 			m_board->OutlinePoints().clear();
+			m_board->OutlineSegments().clear();
 			//	delete m_file;
 			// delete m_board;
 		}
@@ -2845,6 +2847,10 @@ int BoardView::EPCCheck(void) {
 	auto &outline = m_board->OutlinePoints();
 	ImVec2 min, max;
 
+	if (outline.empty()) {
+		return 1;
+	};
+
 	// find the orthagonal bounding box
 	// probably can put this as a predefined
 	min.x = min.y = FLT_MAX;
@@ -3081,7 +3087,28 @@ void BoardView::DrawHex(ImDrawList *draw, ImVec2 c, double r, uint32_t color) {
 	draw->AddPolyline(hex, 6, color, true, 1.0f);
 }
 
-inline void BoardView::DrawOutline(ImDrawList *draw) {
+void BoardView::DrawOutlineSegments(ImDrawList *draw) {
+	const auto &segments = m_board->OutlineSegments();
+
+	draw->ChannelsSetCurrent(kChannelPolylines);
+
+	for (auto &segment: segments) {
+		ImVec2 spa = CoordToScreen(segment.first.x, segment.first.y);
+		ImVec2 spb = CoordToScreen(segment.second.x, segment.second.y);
+
+		/*
+		 * If we have a pin selected, we mask off the colour to shade out
+		 * things and make it easier to see associated pins/points
+		 */
+		if ((pinSelectMasks) && (m_pinSelected || m_pinHighlighted.size())) {
+			draw->AddLine(spa, spb, (m_colors.boardOutlineColor & m_colors.selectedMaskOutline) | m_colors.orMaskOutline);
+		} else {
+			draw->AddLine(spa, spb, m_colors.boardOutlineColor);
+		}
+	}
+}
+
+void BoardView::DrawOutlinePoints(ImDrawList *draw) {
 	int jump = 1;
 	Point fp;
 
@@ -3129,6 +3156,11 @@ inline void BoardView::DrawOutline(ImDrawList *draw) {
 			draw->AddLine(spa, spb, m_colors.boardOutlineColor);
 		}
 	} // for
+}
+
+void BoardView::DrawOutline(ImDrawList *draw) {
+	DrawOutlineSegments(draw);
+	DrawOutlinePoints(draw);
 }
 
 void BoardView::DrawNetWeb(ImDrawList *draw) {
@@ -4251,7 +4283,7 @@ void BoardView::LoadBoard(BRDFileBase *file) {
 	// Check board outline (format) point count.
 	//		If we don't have an outline, generate one
 	//
-	if (file->format.size() < 3) {
+	if (file->outline_segments.size() < 3 && file->format.size() < 3) {
 		auto pins = file->pins;
 		int minx, maxx, miny, maxy;
 		int margin = 200; // #define or leave this be? Rather arbritary.
@@ -4293,11 +4325,21 @@ void BoardView::LoadBoard(BRDFileBase *file) {
 	m_nets = m_board->Nets();
 
 	int min_x = INT_MAX, max_x = INT_MIN, min_y = INT_MAX, max_y = INT_MIN;
-	for (auto &pa : m_file->format) {
-		if (pa.x < min_x) min_x = pa.x;
-		if (pa.y < min_y) min_y = pa.y;
-		if (pa.x > max_x) max_x = pa.x;
-		if (pa.y > max_y) max_y = pa.y;
+	for (auto &pa : m_board->OutlinePoints()) {
+		if (pa->x < min_x) min_x = pa->x;
+		if (pa->y < min_y) min_y = pa->y;
+		if (pa->x > max_x) max_x = pa->x;
+		if (pa->y > max_y) max_y = pa->y;
+	}
+	for (auto &s: m_board->OutlineSegments()) {
+		if (s.first.x < min_x) min_x = s.first.x;
+		if (s.second.x < min_x) min_x = s.second.x;
+		if (s.first.y < min_y) min_y = s.first.y;
+		if (s.second.y < min_y) min_y = s.second.y;
+		if (s.first.x > max_x) max_x = s.first.x;
+		if (s.second.x > max_x) max_x = s.second.x;
+		if (s.first.y > max_y) max_y = s.first.y;
+		if (s.second.y > max_y) max_y = s.second.y;
 	}
 
 	// ImVec2 view = ImGui::GetIO().DisplaySize;

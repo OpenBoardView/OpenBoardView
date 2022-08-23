@@ -227,10 +227,11 @@ class Board {
 
 	virtual ~Board() {}
 
-	virtual SharedVector<Net> &Nets()             = 0;
-	virtual SharedVector<Component> &Components() = 0;
-	virtual SharedVector<Pin> &Pins()             = 0;
-	virtual SharedVector<Point> &OutlinePoints()  = 0;
+	virtual SharedVector<Net> &Nets()                               = 0;
+	virtual SharedVector<Component> &Components()                   = 0;
+	virtual SharedVector<Pin> &Pins()                               = 0;
+	virtual SharedVector<Point> &OutlinePoints()                    = 0;
+	virtual std::vector<std::pair<Point, Point>> &OutlineSegments() = 0;
 
 	EBoardType BoardType() {
 		return kBoardTypeUnknown;

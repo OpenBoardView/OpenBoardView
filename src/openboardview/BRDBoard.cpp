@@ -34,9 +34,14 @@ BRDBoard::BRDBoard(const BRDFileBase * const boardFile)
 	{
 		for (auto &brdPoint : m_points) {
 			auto point = make_shared<Point>(brdPoint.x, brdPoint.y);
-			outline_.push_back(point);
+			outline_points_.push_back(point);
 		}
 	}
+
+	outline_segments_.reserve(m_file->outline_segments.size());
+	std::transform(m_file->outline_segments.begin(), m_file->outline_segments.end(), std::back_inserter(outline_segments_), [](const std::pair<BRDPoint, BRDPoint> &s) -> std::pair<Point, Point> {
+		return {{s.first.x, s.first.y}, {s.second.x, s.second.y}};
+	});
 
 	// Populate map of unique nets
 	SharedStringMap<Net> net_map;
@@ -92,7 +97,7 @@ BRDBoard::BRDBoard(const BRDFileBase * const boardFile)
 			} else {
 				comp->board_side = kBoardSideBoth;
 			}
-					 
+
 			comp->mount_type = (brd_part.part_type == BRDPartType::SMD) ? Component::kMountTypeSMD : Component::kMountTypeDIP;
 
 			components_.push_back(comp);
@@ -242,7 +247,11 @@ SharedVector<Net> &BRDBoard::Nets() {
 }
 
 SharedVector<Point> &BRDBoard::OutlinePoints() {
-	return outline_;
+	return outline_points_;
+}
+
+std::vector<std::pair<Point, Point>> &BRDBoard::OutlineSegments() {
+	return outline_segments_;
 }
 
 Board::EBoardType BRDBoard::BoardType() {

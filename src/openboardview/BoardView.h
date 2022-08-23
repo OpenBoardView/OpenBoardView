@@ -323,6 +323,8 @@ struct BoardView {
 	void DrawPinTooltips(ImDrawList *draw);
 	void DrawAnnotations(ImDrawList *draw);
 	void DrawOutline(ImDrawList *draw);
+	void DrawOutlinePoints(ImDrawList *draw);
+	void DrawOutlineSegments(ImDrawList *draw);
 	void DrawPins(ImDrawList *draw);
 	void DrawParts(ImDrawList *draw);
 	void DrawBoard();
