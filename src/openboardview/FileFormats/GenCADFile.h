@@ -67,7 +67,7 @@ class GenCADFile : public BRDFileBase {
 	bool x_y_ref_to_brd_point(mpc_ast_t *x_y_ref, BRDPoint *point);
 
 	bool is_shape_smd(mpc_ast_t *shape_ast);
-	bool is_padstack_smd(mpc_ast_t *padstack_ast);
+	bool is_padstack_drilled(mpc_ast_t *padstack_ast);
 
 	mpc_ast_t *header_ast     = nullptr;
 	mpc_ast_t *board_ast      = nullptr;
