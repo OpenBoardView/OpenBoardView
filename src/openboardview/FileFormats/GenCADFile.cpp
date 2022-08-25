@@ -7,6 +7,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <limits>
+#include <optional>
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -390,15 +391,38 @@ bool GenCADFile::parse_board_outline(mpc_ast_t *board_ast) {
 				if (!p1_ast || !p2_ast) continue;
 
 				BRDPoint p1{}, p2{};
-				if (x_y_ref_to_brd_point(p1_ast, &p1)) {
-					format.push_back(p1);
-					num_format++;
+				if (x_y_ref_to_brd_point(p1_ast, &p1) && x_y_ref_to_brd_point(p2_ast, &p2)) {
+					outline_segments.push_back({p1, p2});
 				}
+			}
+		} else if (strcmp(board_ast->children[i]->tag, "rectangle|>") == 0) {
+			mpc_ast_t *rectangle = board_ast->children[i];
+			if (rectangle) {
+				mpc_ast_t *x_ast = mpc_ast_get_child(rectangle, "x|number|regex");
+				mpc_ast_t *y_ast = mpc_ast_get_child(rectangle, "y|number|regex");
+				mpc_ast_t *w_ast = mpc_ast_get_child(rectangle, "width|number|regex");
+				mpc_ast_t *h_ast = mpc_ast_get_child(rectangle, "height|number|regex");
+				if (!x_ast || !y_ast || !w_ast || !h_ast) continue;
 
-				if (x_y_ref_to_brd_point(p2_ast, &p2)) {
-					format.push_back(p2);
-					num_format++;
-				}
+				BRDPoint p1{}, p2{}, p3{}, p4{};
+				p1.x = board_unit_to_brd_coordinate(atof(x_ast->contents));
+				p1.y = board_unit_to_brd_coordinate(atof(y_ast->contents));
+				int h = board_unit_to_brd_coordinate(atof(h_ast->contents));
+				int w = board_unit_to_brd_coordinate(atof(w_ast->contents));
+
+				p2.x = p1.x;
+				p2.y = p1.y + h;
+
+				p3.x = p1.x + w;
+				p3.y = p1.y + h;
+
+				p4.x = p1.x + w;
+				p4.y = p1.y;
+
+				outline_segments.push_back({p1, p2});
+				outline_segments.push_back({p2, p3});
+				outline_segments.push_back({p3, p4});
+				outline_segments.push_back({p4, p1});
 			}
 		} else if (strcmp(board_ast->children[i]->tag, "arc|>") == 0) {
 			mpc_ast_t *arc = board_ast->children[i];
@@ -410,88 +434,43 @@ bool GenCADFile::parse_board_outline(mpc_ast_t *board_ast) {
 				mpc_ast_t *center = mpc_ast_get_child(aref, "arc_center|x_y_ref|>");
 				// TODO add support for ellipse arcs (which have arc_p1 and arc_p2)
 				if (!start || !stop || !center) continue;
-				add_arc_to_outline(start, stop, center);
+				std::vector<std::pair<BRDPoint, BRDPoint>> arc_outline_segments = arc_to_segments(start, stop, center);
+				std::move(arc_outline_segments.begin(), arc_outline_segments.end(), std::back_inserter(outline_segments));
 			}
-		}
-	}
-
-	for (int i = 0; i >= 0;) {
-		i = mpc_ast_get_index_lb(board_ast, "rectangle|>", i);
-		if (i >= 0) {
-			mpc_ast_t *rectangle = mpc_ast_get_child_lb(board_ast, "rectangle|>", i);
-			if (!rectangle) continue;
-			mpc_ast_t *x_ast = mpc_ast_get_child(rectangle, "x|number|regex");
-			mpc_ast_t *y_ast = mpc_ast_get_child(rectangle, "y|number|regex");
-			mpc_ast_t *w_ast = mpc_ast_get_child(rectangle, "width|number|regex");
-			mpc_ast_t *h_ast = mpc_ast_get_child(rectangle, "height|number|regex");
-			if (!x_ast || !y_ast || !w_ast || !h_ast) continue;
-
-			BRDPoint p;
-
-			p.x = board_unit_to_brd_coordinate(atof(x_ast->contents));
-			p.y = board_unit_to_brd_coordinate(atof(y_ast->contents));
-			format.push_back(p);
-
-			p.y += board_unit_to_brd_coordinate(atof(h_ast->contents));
-			format.push_back(p);
-
-			p.x += board_unit_to_brd_coordinate(atof(w_ast->contents));
-			format.push_back(p);
-
-			p.y -= board_unit_to_brd_coordinate(atof(h_ast->contents));
-			format.push_back(p);
-
-			num_format += 4;
-			i++;
 		}
 	}
 	return true;
 }
 
-void GenCADFile::add_arc_to_outline(mpc_ast_t *start, mpc_ast_t *stop, mpc_ast_t *center) {
+std::vector<std::pair<BRDPoint, BRDPoint>> GenCADFile::arc_to_segments(mpc_ast_t *start, mpc_ast_t *stop, mpc_ast_t *center) {
+	std::vector<std::pair<BRDPoint, BRDPoint>> arc_segments{};
+
 	BRDPoint p1{}, p2{}, pc{};
-	if (!x_y_ref_to_brd_point(start, &p1)) return;
+	if (!x_y_ref_to_brd_point(start, &p1)) return arc_segments;
 
-	if (!x_y_ref_to_brd_point(stop, &p2)) return;
+	if (!x_y_ref_to_brd_point(stop, &p2)) return arc_segments;
 
-	if (!x_y_ref_to_brd_point(center, &pc)) return;
+	if (!x_y_ref_to_brd_point(center, &pc)) return arc_segments;
 
-	double r     = distance(p1, pc);
-	double delta = distance(p1, p2);
+	double r = distance(p1, pc);
 
-	double startAngle = asin((p1.y - pc.y) / r);
-	if (p1.y == pc.y && p1.x < pc.x) startAngle = M_PI;
+	double startAngle = atan2(p1.y - pc.y, p1.x - pc.x);
+	double endAngle = atan2(p2.y - pc.y, p2.x - pc.x);
+	if (endAngle < startAngle) endAngle += 2.0 * M_PI;
 
-	double endAngle = startAngle + (asin((delta / 2.0) / r) * 2);
-
-	bool inverseOrder = false;
-	if (format.size()) {
-		double p1toLast = distance(p1, format.back());
-		double p2toLast = distance(p2, format.back());
-		if (p2toLast < p1toLast) inverseOrder = true;
-	}
-
-	if (!inverseOrder) {
-		for (double i = startAngle; i < endAngle; i += arc_slice_angle_rad) {
-			BRDPoint p{};
-			p.x = pc.x + r * cos(i);
-			p.y = pc.y + r * sin(i);
-			format.push_back(p);
-			num_format++;
+	BRDPoint p = p1;
+	std::optional<BRDPoint> pold{};
+	for (double i = startAngle; i < endAngle; i += arc_slice_angle_rad) {
+		p.x = pc.x + r * cos(i);
+		p.y = pc.y + r * sin(i);
+		if (pold) {
+				arc_segments.push_back({*pold, p});
 		}
-		format.push_back(p2);
-		num_format++;
-	} else {
-		for (double i = endAngle; i > startAngle; i -= arc_slice_angle_rad) {
-			BRDPoint p{};
-			p.x = pc.x + r * cos(i);
-			p.y = pc.y + r * sin(i);
-			format.push_back(p);
-			num_format++;
-		}
-		format.push_back(p1);
-		num_format++;
+		pold = p;
 	}
+	arc_segments.push_back({p, p2});
+
+	return arc_segments;
 }
 
 bool GenCADFile::x_y_ref_to_brd_point(mpc_ast_t *x_y_ref, BRDPoint *point) {

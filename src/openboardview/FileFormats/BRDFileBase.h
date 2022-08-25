@@ -81,6 +81,7 @@ class BRDFileBase {
 	unsigned int num_nails  = 0;
 
 	std::vector<BRDPoint> format;
+	std::vector<std::pair<BRDPoint, BRDPoint>> outline_segments;
 	std::vector<BRDPart> parts;
 	std::vector<BRDPin> pins;
 	std::vector<BRDNail> nails;
