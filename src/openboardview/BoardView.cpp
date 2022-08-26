@@ -2941,7 +2941,6 @@ void BoardView::OutlineGenFillDraw(ImDrawList *draw, int ydelta, double thicknes
 
 	auto io = ImGui::GetIO();
 	vector<ImVec2> scanhits;
-	auto &outline = m_board->OutlinePoints();
 	static ImVec2 min, max; // board min/max points
 	                        //	double steps = 500;
 	double vdelta;
@@ -2959,11 +2958,21 @@ void BoardView::OutlineGenFillDraw(ImDrawList *draw, int ydelta, double thicknes
 	if (!boardMinMaxDone) {
 		min.x = min.y = 100000000000;
 		max.x = max.y = -100000000000;
-		for (auto &p : outline) {
+		for (auto &p : m_board->OutlinePoints()) {
 			if (p->x < min.x) min.x = p->x;
 			if (p->y < min.y) min.y = p->y;
 			if (p->x > max.x) max.x = p->x;
 			if (p->y > max.y) max.y = p->y;
+		}
+		for (auto &s: m_board->OutlineSegments()) {
+			if (s.first.x < min.x) min.x = s.first.x;
+			if (s.second.x < min.x) min.x = s.second.x;
+			if (s.first.y < min.y) min.y = s.first.y;
+			if (s.second.y < min.y) min.y = s.second.y;
+			if (s.first.x > max.x) max.x = s.first.x;
+			if (s.second.x > max.x) max.x = s.second.x;
+			if (s.first.y > max.y) max.y = s.first.y;
+			if (s.second.y > max.y) max.y = s.second.y;
 		}
 		boardMinMaxDone = true;
 	}
@@ -3005,30 +3014,52 @@ void BoardView::OutlineGenFillDraw(ImDrawList *draw, int ydelta, double thicknes
 			int jump = 1;
 			Point fp;
 
-			auto &outline = m_board->OutlinePoints();
+			auto &outline_points = m_board->OutlinePoints();
 
 			// set our initial draw point, so we can detect when we encounter it again
-			fp = *outline[0];
+			if (!outline_points.empty()) {
+				fp = *outline_points[0];
 
-			for (size_t i = 0; i < outline.size() - 1; i++) {
-				Point &pa = *outline[i];
-				Point &pb = *outline[i + 1];
+				for (size_t i = 0; i < outline_points.size() - 1; i++) {
+					Point &pa = *outline_points[i];
+					Point &pb = *outline_points[i + 1];
 
-				// jump double/dud points
-				if (pa.x == pb.x && pa.y == pb.y) continue;
+					// jump double/dud points
+					if (pa.x == pb.x && pa.y == pb.y) continue;
 
-				// if we encounter our hull/poly start point, then we've now created the
-				// closed
-				// hull, jump the next segment and reset the first-point
-				if ((!jump) && (fp.x == pb.x) && (fp.y == pb.y)) {
-					if (i < outline.size() - 2) {
-						fp   = *outline[i + 2];
-						jump = 1;
-						i++;
+					// if we encounter our hull/poly start point, then we've now created the
+					// closed
+					// hull, jump the next segment and reset the first-point
+					if ((!jump) && (fp.x == pb.x) && (fp.y == pb.y)) {
+						if (i < outline_points.size() - 2) {
+							fp   = *outline_points[i + 2];
+							jump = 1;
+							i++;
+						}
+					} else {
+						jump = 0;
 					}
-				} else {
-					jump = 0;
-				}
+
+					// test to see if this segment makes the scan-cut.
+					if ((pa.y > pb.y && y < pa.y && y > pb.y) || (pa.y < pb.y && y > pa.y && y < pb.y)) {
+						ImVec2 intersect;
+
+						intersect.y = y;
+						if (pa.x == pb.x)
+							intersect.x = pa.x;
+						else
+							intersect.x = (pb.x - pa.x) / (pb.y - pa.y) * (y - pa.y) + pa.x;
+						scanhits.push_back(intersect);
+					}
+				} // if we did get an intersection
+			}
+
+			for (auto &s: m_board->OutlineSegments()) {
+				auto pa = s.first;
+				auto pb = s.second;
+
+				// jump double/dud segments
+				if (pa.x == pb.x && pa.y == pb.y) continue;
 
 				// test to see if this segment makes the scan-cut.
 				if ((pa.y > pb.y && y < pa.y && y > pb.y) || (pa.y < pb.y && y > pa.y && y < pb.y)) {
@@ -3041,9 +3072,12 @@ void BoardView::OutlineGenFillDraw(ImDrawList *draw, int ydelta, double thicknes
 						intersect.x = (pb.x - pa.x) / (pb.y - pa.y) * (y - pa.y) + pa.x;
 					scanhits.push_back(intersect);
 				}
-			} // if we did get an intersection
+			}
 
 			sort(scanhits.begin(), scanhits.end(), [](ImVec2 const &a, ImVec2 const &b) { return a.x < b.x; });
+			// Some boards contain duplicate outline segments (possibly with points swapped) that generate duplicate intersections
+			// which interferes with the process of generating alterating segments for the scanlines, so remove duplicates.
+			scanhits.erase(std::unique(scanhits.begin(), scanhits.end(), [](const ImVec2 &a, const ImVec2 &b) {return a.x == b.x && a.y == b.y;}), scanhits.end());
 
 			// now finally generate the lines.
 			{
