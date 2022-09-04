@@ -36,7 +36,7 @@ struct BRDPoint {
 };
 
 enum class BRDPartMountingSide { Both, Bottom, Top };
-enum class BRDPartType { SMD, ThroughHole };
+enum class BRDPartType { None, SMD, ThroughHole };
 
 struct BRDPart {
 	const char *name = nullptr;
@@ -48,7 +48,7 @@ struct BRDPart {
 	BRDPoint p2{0, 0};
 };
 
-enum class BRDPinSide { Both, Bottom, Top };
+enum class BRDPinSide { None, Both, Bottom, Top };
 
 struct BRDPin {
 	BRDPoint pos;
