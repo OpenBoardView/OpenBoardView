@@ -523,6 +523,8 @@ int GenCADFile::board_unit_to_brd_coordinate(double brdUnit) {
 }
 
 BRDPartType GenCADFile::get_shape_type(mpc_ast_t *shape_ast) {
+	bool top    = false;
+	bool bottom = false;
 	for (int i = 0; i >= 0;) {
 		i = mpc_ast_get_index_lb(shape_ast, "shapes_pin|>", i);
 		if (i >= 0) {
@@ -533,13 +535,22 @@ BRDPartType GenCADFile::get_shape_type(mpc_ast_t *shape_ast) {
 			if (!pad_name) continue;
 
 			mpc_ast_t *padstack_ast = get_padstack_by_name(pad_name);
-			if (padstack_ast && is_padstack_drilled(padstack_ast)) {
-				return BRDPartType::ThroughHole;
+			if (padstack_ast) {
+				BRDPinSide padstack_side = get_padstack_side(padstack_ast, BRDPartMountingSide::Top);
+				if (padstack_side == BRDPinSide::Both )
+					return BRDPartType::ThroughHole;
+				top     = (padstack_side == BRDPinSide::Top)    ? true : top;
+				bottom  = (padstack_side == BRDPinSide::Bottom) ? true : bottom;
+				if (top && bottom)
+					return BRDPartType::ThroughHole;
 			}
 			i++;
 		}
 	}
-	return BRDPartType::SMD;
+	if (top || bottom)
+		return BRDPartType::SMD;
+	else
+		return BRDPartType::None;
 }
 
 char *GenCADFile::get_nonquoted_or_quoted_string_child(mpc_ast_t *parent, const char *name) {
