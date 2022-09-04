@@ -659,6 +659,48 @@ double GenCADFile::get_padstack_radius(mpc_ast_t *padstack_ast) {
 	return radius;
 }
 
+BRDPinSide GenCADFile::get_padstack_side(mpc_ast_t *padstack_ast, BRDPartMountingSide mounting_side) {
+	// loop through all pads in a padstack to find determine side(s)
+	bool top    = false;
+	bool bottom = false;
+	for (int i = 0; i >= 0;) {
+		i = mpc_ast_get_index_lb(padstack_ast, "padstacks_pad|>", i);
+		if (i >= 0) {
+			mpc_ast_t *pad_ref_ast = mpc_ast_get_child_lb(padstack_ast, "padstacks_pad|>", i);
+			if (!pad_ref_ast)
+				continue;
+
+			mpc_ast_t *layer_ast = mpc_ast_get_child(pad_ref_ast, "layer|string");
+			if (layer_ast) {
+				top         = has_text_content(layer_ast, "TOP")    ? true : top;
+				bottom      = has_text_content(layer_ast, "BOTTOM") ? true : bottom;
+			}
+			i++;
+		}
+	}
+
+	if ( ( top && bottom ) || is_padstack_drilled(padstack_ast) ) {
+		// THT/DUAL-SIDED/DRILL PAD
+		return BRDPinSide::Both;
+	} else if (mounting_side == BRDPartMountingSide::Top) {
+		if (top) {
+			return BRDPinSide::Top;
+		} else if (bottom) {
+			return BRDPinSide::Bottom;
+		}
+	} else if (mounting_side == BRDPartMountingSide::Bottom) {
+		if (top) {
+			return BRDPinSide::Bottom;
+		} else if (bottom) {
+			return BRDPinSide::Top;
+		}
+	}
+	printf("WARNING: This padstack has no outer copper side nor drill holes!\n");
+	mpc_ast_print(padstack_ast);
+	return BRDPinSide::None;
+}
+
+
 double GenCADFile::get_pad_radius(mpc_ast_t *pad_ast) {
 	double radius    = 0.5;
 	double min_x     = std::numeric_limits<double>::max();
