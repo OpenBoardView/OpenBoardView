@@ -213,7 +213,14 @@ bool GenCADFile::parse_components() {
 						mpc_ast_t *mirror_ast = mpc_ast_get_child(shape_ref_ast, "mirror|string");
 						bool mirror_x         = has_text_content(mirror_ast, "MIRRORX");
 						bool mirror_y         = has_text_content(mirror_ast, "MIRRORY");
-						brd_part.part_type    = is_shape_smd(shape_ast) ? BRDPartType::SMD : BRDPartType::ThroughHole;
+						BRDPartType shape_type = get_shape_type(shape_ast);
+						if (shape_type != BRDPartType::None)
+							brd_part.part_type     = shape_type;
+						else {
+							// BRDPartType::None - Skip as this part does not contain electrical/mechanical pads
+							i++;
+							continue;
+						}
 						parse_shape_pins_to_component(&brd_part, component_rotation_angle, mirror_x, mirror_y, shape_ast);
 						if ( brd_part.part_type == BRDPartType::ThroughHole ) {
 							brd_part.mounting_side = BRDPartMountingSide::Both;
@@ -515,7 +522,7 @@ int GenCADFile::board_unit_to_brd_coordinate(double brdUnit) {
 	return static_cast<int>(brdUnit);
 }
 
-bool GenCADFile::is_shape_smd(mpc_ast_t *shape_ast) {
+BRDPartType GenCADFile::get_shape_type(mpc_ast_t *shape_ast) {
 	for (int i = 0; i >= 0;) {
 		i = mpc_ast_get_index_lb(shape_ast, "shapes_pin|>", i);
 		if (i >= 0) {
@@ -527,12 +534,12 @@ bool GenCADFile::is_shape_smd(mpc_ast_t *shape_ast) {
 
 			mpc_ast_t *padstack_ast = get_padstack_by_name(pad_name);
 			if (padstack_ast && is_padstack_drilled(padstack_ast)) {
-				return false;
+				return BRDPartType::ThroughHole;
 			}
 			i++;
 		}
 	}
-	return true;
+	return BRDPartType::SMD;
 }
 
 char *GenCADFile::get_nonquoted_or_quoted_string_child(mpc_ast_t *parent, const char *name) {
