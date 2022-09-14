@@ -49,9 +49,6 @@ using namespace std::placeholders;
 
 BoardView::~BoardView() {
 	if (m_validBoard) {
-		for (auto &p : m_board->Components()) {
-			if (p->hull) free(p->hull);
-		}
 		m_board->Nets().clear();
 		m_board->Pins().clear();
 		m_board->Components().clear();
@@ -419,9 +416,6 @@ int BoardView::LoadFile(const filesystem::path &filepath) {
 	if (!filepath.empty()) {
 		// clean up the previous file.
 		if (m_file && m_board) {
-			for (auto &p : m_board->Components()) {
-				if (p->hull) free(p->hull);
-			}
 			m_pinHighlighted.clear();
 			m_partHighlighted.clear();
 			m_annotations.Close();
@@ -1485,13 +1479,9 @@ void BoardView::ContextMenu(void) {
 
 					// Work out if the point is inside the hull
 					{
-						int i, j, n;
-						outline_pt *poly;
+						auto poly = part->outline;
 
-						n    = 4;
-						poly = part->outline;
-
-						for (i = 0, j = n - 1; i < n; j = i++) {
+						for (size_t i = 0, j = poly.size() - 1; i < poly.size(); j = i++) {
 							if (((poly[i].y > pos.y) != (poly[j].y > pos.y)) &&
 							    (pos.x < (poly[j].x - poly[i].x) * (pos.y - poly[i].y) / (poly[j].y - poly[i].y) + poly[i].x))
 								hit = !hit;
@@ -2501,13 +2491,9 @@ void BoardView::HandleInput() {
 
 							// Work out if the point is inside the hull
 							{
-								int i, j, n;
-								outline_pt *poly;
+								auto poly = part->outline;
 
-								n    = 4;
-								poly = part->outline;
-
-								for (i = 0, j = n - 1; i < n; j = i++) {
+								for (size_t i = 0, j = poly.size() - 1; i < poly.size(); j = i++) {
 									if (((poly[i].y > pos.y) != (poly[j].y > pos.y)) &&
 									    (pos.x <
 									     (poly[j].x - poly[i].x) * (pos.y - poly[i].y) / (poly[j].y - poly[i].y) + poly[i].x))
@@ -3483,7 +3469,6 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 	// float psz = (float)m_pinDiameter * 0.5f * m_scale;
 	double angle;
 	double distance = 0;
-	struct ImVec2 pva[3000], *ppp;
 	uint32_t color = m_colors.partOutlineColor;
 	//	int rendered   = 0;
 	char p0, p1; // first two characters of the part name, code-writing
@@ -3501,7 +3486,8 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 	for (auto &part : m_board->Components()) {
 		int pincount = 0;
 		double min_x, min_y, max_x, max_y, aspect;
-		outline_pt dbox[4]; // default box, if there's nothing else claiming to render the part different.
+		std::vector<ImVec2> pva;
+		std::array<ImVec2, 4> dbox; // default box, if there's nothing else claiming to render the part different.
 
 		if (part->is_dummy()) continue;
 
@@ -3515,8 +3501,6 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 		 *
 		 */
 		if (!part->outline_done) { // should only need to do this once for most parts
-
-			ppp = &pva[0];
 			if (part->pins.size() == 0) {
 				if (debug) fprintf(stderr, "WARNING: Drawing empty part %s\n", part->name.c_str());
 				draw->AddRect(CoordToScreen(part->p1.x + DPIF(10), part->p1.y + DPIF(10)),
@@ -3539,11 +3523,7 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 					max_y = min_y;
 				}
 
-				if (pincount < 3000) {
-					ppp->x = pin->position.x;
-					ppp->y = pin->position.y;
-					ppp++;
-				}
+				pva.push_back({pin->position.x, pin->position.y});
 
 				if (pin->position.x > max_x) {
 					max_x = pin->position.x;
@@ -3672,18 +3652,14 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 
 			if ((pincount == 3) && (abs(aspect > 0.5)) &&
 			    ((strchr("DQZ", p0) || (strchr("DQZ", p1)) || strcmp(part->name.c_str(), "LED")))) {
-				outline_pt *hpt;
 
-				memcpy(part->outline, dbox, sizeof(dbox));
+				part->outline = dbox;
 				part->outline_done = true;
 
-				hpt = part->hull = (outline_pt *)malloc(sizeof(outline_pt) * 3);
+				part->hull.clear();
 				for (auto &pin : part->pins) {
-					hpt->x = pin->position.x;
-					hpt->y = pin->position.y;
-					hpt++;
+					part->hull.push_back({pin->position.x, pin->position.y});
 				}
-				part->hull_count = 3;
 
 				/*
 				 * handle all other devices not specifically handled above
@@ -3768,62 +3744,28 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 				 * to give it a more sane outline
 				 */
 				if ((pincount >= 4) && ((strchr("UJL", p0) || strchr("UJL", p1) || (strncmp(part->name.c_str(), "CN", 2) == 0)))) {
-					ImVec2 *hull;
-					int hpc;
+					// Find our hull
+					std::vector<ImVec2> hull = VHConvexHull(pva);
 
-					hull = (ImVec2 *)malloc(sizeof(ImVec2) * pincount); // massive overkill since our hull will
-					                                                    // only require the perimeter points
-					if (hull) {
-						// Find our hull
-						hpc = VHConvexHull(hull, pva, pincount); // (hpc = hull pin count)
+					// If we had a valid hull, then find the MBB for it
+					if (hull.size() > 0) {
+						part->hull = hull;
 
-						// If we had a valid hull, then find the MBB for it
-						if (hpc > 0) {
-							int i;
-							ImVec2 bbox[4];
-							outline_pt *hpt;
-							part->hull_count = hpc;
-
-							/*
-							 * compute the convex hull and then transfer
-							 * points to the part
-							 */
-							hpt = part->hull = (outline_pt *)malloc(sizeof(outline_pt) * (hpc + 1));
-							for (i = 0; i < hpc; i++) {
-								hpt->x = hull[i].x;
-								hpt->y = hull[i].y;
-								hpt++;
-							}
-
-							VHMBBCalculate(bbox, hull, hpc, pin_radius);
-							for (i = 0; i < 4; i++) {
-								part->outline[i].x = bbox[i].x;
-								part->outline[i].y = bbox[i].y;
-							}
-
-							part->outline_done = true;
-
-							/*
-							 * Tighten the hull, removes any small angle segments
-							 * such as a sequence of pins in a line, might be an overkill
-							 */
-							// hpc = TightenHull(hull, hpc, 0.1f);
-						}
-
-						free(hull);
-					} else {
-						fprintf(stderr, "ERROR: Cannot allocate memory for convex hull generation (%s)", strerror(errno));
-						memcpy(part->outline, dbox, sizeof(dbox));
+						std::array<ImVec2, 4> bbox = VHMBBCalculate(hull, pin_radius);
+						part->outline = bbox;
 						part->outline_done = true;
-						//						draw->AddRect(min, max, color);
-						//						rendered = 1;
-					}
 
+						/*
+						 * Tighten the hull, removes any small angle segments
+						 * such as a sequence of pins in a line, might be an overkill
+						 */
+						// hpc = TightenHull(hull, hpc, 0.1f);
+					}
 				} else {
 					// if it wasn't at an odd angle, or wasn't large, or wasn't a connector,
 					// just an ordinary
 					// type part, then this is where we'll likely end up
-					memcpy(part->outline, dbox, sizeof(dbox));
+					part->outline = dbox;
 					part->outline_done = true;
 				}
 			}
@@ -3859,10 +3801,9 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 			/*
 			 * Draw the convex hull of the part if it has one
 			 */
-			if (part->hull) {
-				int i;
+			if (!part->hull.empty()) {
 				draw->PathClear();
-				for (i = 0; i < part->hull_count; i++) {
+				for (size_t i = 0; i < part->hull.size(); i++) {
 					ImVec2 p = CoordToScreen(part->hull[i].x, part->hull[i].y);
 					draw->PathLineTo(p);
 				}
@@ -4010,13 +3951,9 @@ void BoardView::DrawPartTooltips(ImDrawList *draw) {
 
 		// Work out if the point is inside the hull
 		{
-			int i, j, n;
-			outline_pt *poly;
+			auto poly = part->outline;
 
-			n    = 4;
-			poly = part->outline;
-
-			for (i = 0, j = n - 1; i < n; j = i++) {
+			for (size_t i = 0, j = poly.size() - 1; i < poly.size(); j = i++) {
 				if (((poly[i].y > pos.y) != (poly[j].y > pos.y)) &&
 				    (pos.x < (poly[j].x - poly[i].x) * (pos.y - poly[i].y) / (poly[j].y - poly[i].y) + poly[i].x))
 					hit ^= 1;
@@ -4230,17 +4167,14 @@ int BoardView::AnnotationIsHovered(void) {
  * EXPERIMENTAL, draw an area around selected pins
  */
 void BoardView::DrawSelectedPins(ImDrawList *draw) {
-	ImVec2 pl[1024];
-	ImVec2 hull[1024];
-	int i = 0, hpc = 0;
+	std::vector<ImVec2> pl;
 	if ((m_pinHighlighted.size()) < 3) return;
 	for (auto &p : m_pinHighlighted) {
-		pl[i] = CoordToScreen(p->position.x, p->position.y);
-		i++;
+		pl.push_back(CoordToScreen(p->position.x, p->position.y));
 	}
-	hpc = VHConvexHull(hull, pl, i);
-	if (hpc > 3) {
-		draw->AddConvexPolyFilled(hull, hpc, 0x660000ff);
+	std::vector<ImVec2> hull = VHConvexHull(pl);
+	if (hull.size() > 3) {
+		draw->AddConvexPolyFilled(hull.data(), hull.size(), 0x660000ff);
 	}
 }
 
@@ -4503,12 +4437,12 @@ void BoardView::Mirror(void) {
 		part->centerpoint.x = max.x - part->centerpoint.x;
 
 		if (part->outline_done) {
-			for (int i = 0; i < 4; i++) {
+			for (size_t i = 0; i < part->outline.size(); i++) {
 				part->outline[i].x = max.x - part->outline[i].x;
 			}
 		}
 
-		for (int i = 0; i < part->hull_count; i++) {
+		for (size_t i = 0; i < part->hull.size(); i++) {
 			part->hull[i].x = max.x - part->hull[i].x;
 		}
 	}

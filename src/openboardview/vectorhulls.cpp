@@ -51,12 +51,12 @@ double VHAngleToX(ImVec2 a, ImVec2 b) {
 	return atan2((b.y - a.y), (b.x - a.x));
 }
 
-void VHMBBCalculate(ImVec2 box[], ImVec2 *hull, int n, double psz) {
+std::array<ImVec2, 4> VHMBBCalculate(std::vector<ImVec2> hull, double psz) {
+	std::array<ImVec2, 4> box;
 
 	double mbAngle = 0, cumulative_angle = 0;
 	double mbArea = DBL_MAX; // fake area to initialise
 	ImVec2 mbb, mba, origin; // Box bottom left, box top right
-	int i;
 
 	// Find the lowest hull point, if it's below the x-axis just bring it up to
 	// compensate
@@ -65,24 +65,24 @@ void VHMBBCalculate(ImVec2 box[], ImVec2 *hull, int n, double psz) {
 	origin.y = DBL_MAX;
 
 	// find bottom corner
-	for (i = 0; i < n; i++) {
+	for (size_t i = 0; i < hull.size(); i++) {
 		if (hull[i].y < origin.y) origin.y = hull[i].y;
 		if (hull[i].x < origin.x) origin.x = hull[i].x;
 	}
 
 	// transpose
-	for (i = 0; i < n; i++) {
+	for (size_t i = 0; i < hull.size(); i++) {
 		hull[i].x -= origin.x;
 		hull[i].y -= origin.y;
 	}
 
 	// rotate hull on each side and work out the smallest area
-	for (i = 0; i < n; i++) {
+	for (size_t i = 0; i < hull.size(); i++) {
 		int ni = i + 1;
 		double area;
 
 		ImVec2 current = hull[i];
-		ImVec2 next    = hull[ni % n];
+		ImVec2 next    = hull[ni % hull.size()];
 
 		double angle = VHAngleToX(current, next); // angle formed between current and next hull points;
 		cumulative_angle += angle;
@@ -91,8 +91,7 @@ void VHMBBCalculate(ImVec2 box[], ImVec2 *hull, int n, double psz) {
 		top = right = DBL_MIN;
 		bot = left = DBL_MAX;
 
-		int x;
-		for (x = 0; x < n; x++) {
+		for (size_t x = 0; x < hull.size(); x++) {
 			ImVec2 rp = VHRotateV(hull[x], -angle);
 
 			hull[x] = rp;
@@ -127,10 +126,12 @@ void VHMBBCalculate(ImVec2 box[], ImVec2 *hull, int n, double psz) {
 	box[3] = VHRotateV(ImVec2(mba.x, mbb.y), +mbAngle);
 
 	// Transpose MBB back
-	for (i = 0; i < 4; i++) {
+	for (size_t i = 0; i < 4; i++) {
 		box[i].x += origin.x;
 		box[i].y += origin.y;
 	}
+
+	return box;
 }
 
 // To find orientation of ordered triplet (p, q, r).
@@ -146,16 +147,15 @@ int VHConvexHullOrientation(ImVec2 p, ImVec2 q, ImVec2 r) {
 	return (val > 0) ? 1 : 2; // clock or counterclock wise
 }
 
-int VHConvexHull(ImVec2 hull[], ImVec2 points[], int n) {
-
-	int hpc = 0;
+std::vector<ImVec2> VHConvexHull(const std::vector<ImVec2> &points) {
+	std::vector<ImVec2> hull;
 
 	// There must be at least 3 points
-	if (n < 3) return 0;
+	if (points.size() < 3) return hull;
 
 	// Find the leftmost point
 	int l = 0;
-	for (int i = 1; i < n; i++) {
+	for (size_t i = 1; i < points.size(); i++) {
 		if (points[i].x < points[l].x) {
 			l = i;
 		}
@@ -168,16 +168,15 @@ int VHConvexHull(ImVec2 hull[], ImVec2 points[], int n) {
 	do {
 		// Add current point to result
 		//		hull[hpc] = CoordToScreen(points[p].x, points[p].y);
-		hull[hpc] = ImVec2(points[p].x, points[p].y);
-		hpc++;
+		hull.push_back({points[p].x, points[p].y});
 
 		// Search for a point 'q' such that orientation(p, x,
 		// q) is counterclockwise for all points 'x'. The idea
 		// is to keep track of last visited most counterclock-
 		// wise point in q. If any point 'i' is more counterclock-
 		// wise than q, then update q.
-		q = (p + 1) % n;
-		for (int i = 0; i < n; i++) {
+		q = (p + 1) % points.size();
+		for (size_t i = 0; i < points.size(); i++) {
 			// If i is more counterclockwise than current q, then update q
 			if (VHConvexHullOrientation(points[p], points[i], points[q]) == 2) {
 				q = i;
@@ -189,9 +188,9 @@ int VHConvexHull(ImVec2 hull[], ImVec2 points[], int n) {
 		// result 'hull'
 		p = q;
 
-	} while ((p != l) && (hpc < n)); // While we don't come to first point
+	} while ((p != l) && (hull.size() < points.size())); // While we don't come to first point
 
-	return hpc;
+	return hull;
 }
 
 int VHTightenHull(ImVec2 hull[], int n, double threshold) {

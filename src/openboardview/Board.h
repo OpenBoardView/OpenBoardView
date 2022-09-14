@@ -111,10 +111,6 @@ struct Net : BoardElement {
 	std::vector<const std::string *> searchableStringDetails() const;
 };
 
-struct outline_pt {
-	double x, y;
-};
-
 // Any observeable contact (nails, component pins).
 // Convieniently/Confusingly named Pin not Contact here.
 struct Pin : BoardElement {
@@ -185,12 +181,11 @@ struct Component : BoardElement {
 
 	// Post calculated outlines
 	//
-	outline_pt outline[4];
+	std::array<ImVec2, 4> outline;
 	Point p1{0.0f, 0.0f}, p2{0.0f, 0.0f}; // for debugging
 
 	bool outline_done = false;
-	outline_pt *hull  = NULL;
-	int hull_count    = 0;
+	std::vector<ImVec2> hull;
 	ImVec2 omin, omax;
 	ImVec2 centerpoint;
 	double expanse = 0.0f; // quick measure of distance between pins.
