@@ -119,16 +119,22 @@ BVR3File::BVR3File(std::vector<char> &buf) {
 		} else if (!strncmp(line, "OUTLINE_POINTS ", 15)) {
 			p += 15;
 			while (p[0]) {
+				auto pold = p;
 				BRDPoint point;
 				double x = READ_DOUBLE();
 				point.x  = trunc(x);
 				double y = READ_DOUBLE();
 				point.y  = trunc(y);
+				// Nothing was read, probably end of list
+				if (pold == p) {
+					break;
+				}
 				format.push_back(point);
 			}
 		} else if (!strncmp(line, "OUTLINE_SEGMENTED ", 18)) {
 			p += 18;
 			while (p[0]) {
+				auto pold = p;
 				std::pair<BRDPoint, BRDPoint> outline_segment;
 				double x = READ_DOUBLE();
 				outline_segment.first.x  = trunc(x);
@@ -138,6 +144,10 @@ BVR3File::BVR3File(std::vector<char> &buf) {
 				outline_segment.second.x = trunc(x);
 				y = READ_DOUBLE();
 				outline_segment.second.y = trunc(y);
+				// Nothing was read, probably end of list
+				if (pold == p) {
+					break;
+				}
 				outline_segments.push_back(outline_segment);
 			}
 
@@ -185,7 +195,7 @@ BVR3File::BVR3File(std::vector<char> &buf) {
 						return std::min(manhattan_distance(end_point, os1.first), manhattan_distance(end_point, os1.second))
 							< std::min(manhattan_distance(end_point, os2.first), manhattan_distance(end_point, os2.second));
 					});
-				
+
 				// Calculate distances for comparison
 				auto start_point_distance = manhattan_distance(end_point, start_point);
 				auto segment_distance_first = manhattan_distance(end_point, it->first);
