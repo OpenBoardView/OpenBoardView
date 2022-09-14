@@ -27,6 +27,10 @@ struct BRDPoint {
 	int x = 0;
 	int y = 0;
 
+	// Declaring these constructors wouldn't be required in C++17
+	BRDPoint() = default;
+	BRDPoint(int x, int y) : x(x), y(y) {}
+
 	bool operator==(const BRDPoint& point) {
 		return x == point.x && y == point.y;
 	}

@@ -459,13 +459,11 @@ std::vector<std::pair<BRDPoint, BRDPoint>> GenCADFile::arc_to_segments(mpc_ast_t
 	if (endAngle < startAngle) endAngle += 2.0 * M_PI;
 
 	BRDPoint p = p1;
-	std::optional<BRDPoint> pold{};
-	for (double i = startAngle; i < endAngle; i += arc_slice_angle_rad) {
+	BRDPoint pold = p1;
+	for (double i = startAngle + arc_slice_angle_rad; i < endAngle; i += arc_slice_angle_rad) {
 		p.x = pc.x + r * cos(i);
 		p.y = pc.y + r * sin(i);
-		if (pold) {
-				arc_segments.push_back({*pold, p});
-		}
+		arc_segments.push_back({pold, p});
 		pold = p;
 	}
 	arc_segments.push_back({p, p2});
