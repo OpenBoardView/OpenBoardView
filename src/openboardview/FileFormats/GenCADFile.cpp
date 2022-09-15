@@ -309,7 +309,7 @@ void GenCADFile::fill_signals_cache() {
 			char *node_pin_name = get_nonquoted_or_quoted_string_child(node_ast, "pin_name");
 			char *signal_name = get_nonquoted_or_quoted_string_child(signal_ast, "sig_name");
 			if (node_comp_name && node_pin_name && signal_name) {
-				ComponentPin key     = {node_comp_name, node_pin_name};
+				ComponentPin key{node_comp_name, node_pin_name};
 				m_signals_cache[key] = signal_name;
 			}
 			j++;
@@ -322,7 +322,7 @@ const char *GenCADFile::get_signal_name_for_component_pin(const char *component_
 	char *pin_name = get_nonquoted_or_quoted_string_child(pin_ast, "shape_pin_name");
 	if (!pin_name) return nullptr;
 
-	ComponentPin key = {component_name, pin_name};
+	ComponentPin key{component_name, pin_name};
 
 	auto found_pin = m_signals_cache.find(key);
 	if (found_pin != m_signals_cache.end()) {
