@@ -107,6 +107,8 @@ BRD2File::BRD2File(std::vector<char> &buf) {
 					part.mounting_side = BRDPartMountingSide::Top; // SMD part on top
 				else if (side == 2)
 					part.mounting_side = BRDPartMountingSide::Bottom; // SMD part on bottom
+				else //0
+					part.mounting_side = BRDPartMountingSide::Both;
 
 				parts.push_back(part);
 			} break;
@@ -123,6 +125,8 @@ BRD2File::BRD2File(std::vector<char> &buf) {
 					pin.side = BRDPinSide::Top;
 				else if (side == 2)
 					pin.side = BRDPinSide::Bottom;
+				else //0
+					pin.side = BRDPinSide::Both;
 
 				try {
 					pin.net = nets.at(netid);
