@@ -69,13 +69,21 @@ $ git clone --recursive 'https://github.com/OpenBoardView/OpenBoardView'
 ```
 $ ./build.sh
 ```
-3. Run it!
+3. Sign it (skip if you're not on running macOS)
+```
+$ codesign --force --deep --sign - ./openboardview.app
+```
+4. Run it!
 ```
 $ ./bin/openboardview
 ```
 ...or...
 ```
 $ ./openboardview.sh
+```
+...or...
+```
+$ open ./openboardview.app
 ```
 
 ### Usage
