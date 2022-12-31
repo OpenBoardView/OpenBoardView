@@ -46,7 +46,7 @@ BVRFile::BVRFile(std::vector<char> &buf) {
 	stringfile(file_buf, lines);
 
 	std::vector<char *>::iterator line_it = lines.begin();
-	while (line_it != lines.end()) {
+	while (line_it < lines.end()) {
 		char *line = *line_it;
 		++line_it;
 
