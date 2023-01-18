@@ -119,7 +119,7 @@ CADFile::CADFile(std::vector<char> &buf) {
 				if (strchr(netr, '/'))
 					memmove(&netr[0],
 					&netr[0 + 1],
-					sizeof(netr) - 0 - 1);
+					strlen(netr));
 				pin.net        = netr;
 				switch (parts[pin.part - 1].mounting_side) {
 					case BRDPartMountingSide::Top:    pin.side = BRDPinSide::Top;    break;
@@ -134,7 +134,7 @@ CADFile::CADFile(std::vector<char> &buf) {
 				if (strchr(netr, '/'))
 					memmove(&netr[0],
 					&netr[0 + 1],
-					sizeof(netr) - 0 - 1);
+					strlen(netr));
 				nailnet        = netr;
 			} break;
 			case Vias: {
