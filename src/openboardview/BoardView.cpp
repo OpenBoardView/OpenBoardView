@@ -452,14 +452,14 @@ int BoardView::LoadFile(const filesystem::path &filepath) {
 				m_file = new BRDFile(buffer);
 			else if (BRD2File::verifyFormat(buffer))
 				m_file = new BRD2File(buffer);
-			else if (BRDAllegroFile::verifyFormat(buffer))
-				m_file = new BRDAllegroFile(buffer);
 			else if (BDVFile::verifyFormat(buffer))
 				m_file = new BDVFile(buffer);
 			else if (BVRFile::verifyFormat(buffer))
 				m_file = new BVRFile(buffer);
 			else if (BVR3File::verifyFormat(buffer))
 				m_file = new BVR3File(buffer);
+			else if (BRDAllegroFile::verifyFormat(buffer))
+				m_file = new BRDAllegroFile(buffer);
 			else
 				m_error_msg = "Unrecognized file format.";
 
