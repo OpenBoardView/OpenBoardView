@@ -212,8 +212,10 @@ bool GenCADFile::parse_components() {
 						mpc_ast_t *mirror_ast = mpc_ast_get_child(shape_ref_ast, "mirror|string");
 						bool mirror_x         = has_text_content(mirror_ast, "MIRRORX");
 						bool mirror_y         = has_text_content(mirror_ast, "MIRRORY");
+						mpc_ast_t *flip_ast   = mpc_ast_get_child(shape_ref_ast, "flip|string");
+						bool flip             = has_text_content(flip_ast, "FLIP");
 						brd_part.part_type    = is_shape_smd(shape_ast) ? BRDPartType::SMD : BRDPartType::ThroughHole;
-						parse_shape_pins_to_component(&brd_part, component_rotation_angle, mirror_x, mirror_y, shape_ast);
+						parse_shape_pins_to_component(&brd_part, component_rotation_angle, mirror_x, mirror_y, flip, shape_ast);
 						if ( brd_part.part_type == BRDPartType::ThroughHole ) {
 							brd_part.mounting_side = BRDPartMountingSide::Both;
 						}
@@ -230,7 +232,7 @@ bool GenCADFile::parse_components() {
 }
 
 bool GenCADFile::parse_shape_pins_to_component(
-    BRDPart *part, double rotation_in_degrees, bool mirror_x, bool mirror_y, mpc_ast_t *shape_ast) {
+    BRDPart *part, double rotation_in_degrees, bool mirror_x, bool mirror_y, bool flip, mpc_ast_t *shape_ast) {
 	double rotation_in_rads = (rotation_in_degrees * (M_PI / 180.0));
 	int mirror_x_sign       = mirror_x ? (-1) : 1;
 	int mirror_y_sign       = mirror_y ? (-1) : 1;
@@ -289,6 +291,16 @@ bool GenCADFile::parse_shape_pins_to_component(
 							case BRDPartMountingSide::Both:   pin.side = BRDPinSide::Both;   break;
 						}
 					}
+
+					// Flipped shape also flips pin side
+					if (flip) {
+						if (pin.side == BRDPinSide::Top) {
+							pin.side = BRDPinSide::Bottom;
+						} else if (pin.side == BRDPinSide::Bottom) {
+							pin.side = BRDPinSide::Top;
+						}
+					}
+
 					pins.push_back(pin);
 					num_pins++;
 				}
