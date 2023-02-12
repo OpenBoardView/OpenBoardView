@@ -212,8 +212,10 @@ bool GenCADFile::parse_components() {
 						mpc_ast_t *mirror_ast = mpc_ast_get_child(shape_ref_ast, "mirror|string");
 						bool mirror_x         = has_text_content(mirror_ast, "MIRRORX");
 						bool mirror_y         = has_text_content(mirror_ast, "MIRRORY");
+						mpc_ast_t *flip_ast   = mpc_ast_get_child(shape_ref_ast, "flip|string");
+						bool flip             = has_text_content(flip_ast, "FLIP");
 						brd_part.part_type    = is_shape_smd(shape_ast) ? BRDPartType::SMD : BRDPartType::ThroughHole;
-						parse_shape_pins_to_component(&brd_part, component_rotation_angle, mirror_x, mirror_y, shape_ast);
+						parse_shape_pins_to_component(&brd_part, component_rotation_angle, mirror_x, mirror_y, flip, shape_ast);
 						if ( brd_part.part_type == BRDPartType::ThroughHole ) {
 							brd_part.mounting_side = BRDPartMountingSide::Both;
 						}
@@ -230,7 +232,7 @@ bool GenCADFile::parse_components() {
 }
 
 bool GenCADFile::parse_shape_pins_to_component(
-    BRDPart *part, double rotation_in_degrees, bool mirror_x, bool mirror_y, mpc_ast_t *shape_ast) {
+    BRDPart *part, double rotation_in_degrees, bool mirror_x, bool mirror_y, bool flip, mpc_ast_t *shape_ast) {
 	double rotation_in_rads = (rotation_in_degrees * (M_PI / 180.0));
 	int mirror_x_sign       = mirror_x ? (-1) : 1;
 	int mirror_y_sign       = mirror_y ? (-1) : 1;
@@ -279,13 +281,26 @@ bool GenCADFile::parse_shape_pins_to_component(
 						pin.net = tmp;
 						nc_counter++;
 					}
-					if (padstack_ast && !is_padstack_smd(padstack_ast)) {
-						pin.side = BRDPinSide::Both;
-					} else if (part->mounting_side == BRDPartMountingSide::Top) {
-						pin.side = BRDPinSide::Top;
+
+					if (padstack_ast) {
+						pin.side = get_padstack_side(padstack_ast);
 					} else {
-						pin.side = BRDPinSide::Bottom;
+						switch (part->mounting_side) {
+							case BRDPartMountingSide::Top:    pin.side = BRDPinSide::Top;    break;
+							case BRDPartMountingSide::Bottom: pin.side = BRDPinSide::Bottom; break;
+							case BRDPartMountingSide::Both:   pin.side = BRDPinSide::Both;   break;
+						}
 					}
+
+					// Flipped shape also flips pin side
+					if (flip) {
+						if (pin.side == BRDPinSide::Top) {
+							pin.side = BRDPinSide::Bottom;
+						} else if (pin.side == BRDPinSide::Bottom) {
+							pin.side = BRDPinSide::Top;
+						}
+					}
+
 					pins.push_back(pin);
 					num_pins++;
 				}
@@ -523,7 +538,7 @@ bool GenCADFile::is_shape_smd(mpc_ast_t *shape_ast) {
 			if (!pad_name) continue;
 
 			mpc_ast_t *padstack_ast = get_padstack_by_name(pad_name);
-			if (padstack_ast && !is_padstack_smd(padstack_ast)) {
+			if (padstack_ast && is_padstack_drilled(padstack_ast)) {
 				return false;
 			}
 			i++;
@@ -587,9 +602,10 @@ char *GenCADFile::get_stringtoend_child(mpc_ast_t *parent, const char *name) {
 	return nullptr;
 }
 
-bool GenCADFile::is_padstack_smd(mpc_ast_t *padstack_ast) {
+bool GenCADFile::is_padstack_drilled(mpc_ast_t *padstack_ast) {
 	mpc_ast_t *drill_size_ast = mpc_ast_get_child(padstack_ast, "drill_size|number|regex");
-	if (drill_size_ast) return atof(drill_size_ast->contents) == 0.0;
+	if (drill_size_ast)
+		return atof(drill_size_ast->contents) != 0.0;
 	return false;
 }
 
@@ -647,6 +663,40 @@ double GenCADFile::get_padstack_radius(mpc_ast_t *padstack_ast) {
 	}
 	return radius;
 }
+
+BRDPinSide GenCADFile::get_padstack_side(mpc_ast_t *padstack_ast) {
+	// loop through all pads in a padstack to find determine side(s)
+	// TODO: handle LAYERSTACK
+	bool top    = false;
+	bool bottom = false;
+	for (int i = 0; i >= 0;) {
+		i = mpc_ast_get_index_lb(padstack_ast, "padstacks_pad|>", i);
+		if (i >= 0) {
+			mpc_ast_t *pad_ref_ast = mpc_ast_get_child_lb(padstack_ast, "padstacks_pad|>", i);
+			if (!pad_ref_ast)
+				continue;
+
+			mpc_ast_t *layer_ast = mpc_ast_get_child(pad_ref_ast, "layer|string");
+			if (layer_ast) {
+				top         = has_text_content(layer_ast, "TOP")    ? true : top;
+				bottom      = has_text_content(layer_ast, "BOTTOM") ? true : bottom;
+			}
+			i++;
+		}
+	}
+
+	if (top && bottom) {
+		return BRDPinSide::Both;
+	} else if (top) {
+		return BRDPinSide::Top;
+	} else if (bottom) {
+		return BRDPinSide::Bottom;
+	} else {
+		// Inner layers only not handled, might still be useful so show on both sides as well
+		return BRDPinSide::Both;
+	}
+}
+
 
 double GenCADFile::get_pad_radius(mpc_ast_t *pad_ast) {
 	double radius    = 0.5;

@@ -48,7 +48,7 @@ class GenCADFile : public BRDFileBase {
 	bool parse_components();
 
 	bool
-	parse_shape_pins_to_component(BRDPart *part, double rotation_in_degrees, bool mirror_x, bool mirror_y, mpc_ast_t *shape_ast);
+	parse_shape_pins_to_component(BRDPart *part, double rotation_in_degrees, bool mirror_x, bool mirror_y, bool flip, mpc_ast_t *shape_ast);
 
 	void fill_signals_cache();
 	const char *get_signal_name_for_component_pin(const char *component_name, mpc_ast_t *pin_ast);
@@ -61,13 +61,14 @@ class GenCADFile : public BRDFileBase {
 	mpc_ast_t *get_padstack_by_name(const char *padstack_name);
 	mpc_ast_t *get_pad_by_name(const char *pad_name);
 	double get_padstack_radius(mpc_ast_t *padstack_ast);
+	BRDPinSide get_padstack_side(mpc_ast_t *padstack_ast);
 	double get_pad_radius(mpc_ast_t *pad_ast);
 
 	int board_unit_to_brd_coordinate(double brdUnit);
 	bool x_y_ref_to_brd_point(mpc_ast_t *x_y_ref, BRDPoint *point);
 
 	bool is_shape_smd(mpc_ast_t *shape_ast);
-	bool is_padstack_smd(mpc_ast_t *padstack_ast);
+	bool is_padstack_drilled(mpc_ast_t *padstack_ast);
 
 	mpc_ast_t *header_ast     = nullptr;
 	mpc_ast_t *board_ast      = nullptr;
