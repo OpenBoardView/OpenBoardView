@@ -2456,7 +2456,7 @@ void BoardView::HandleInput() {
 					min_dist *= min_dist; // all distance squared
 					std::shared_ptr<Pin> selection = nullptr;
 					for (auto &pin : m_board->Pins()) {
-						if (BoardElementIsVisible(pin->component)) {
+						if (BoardElementIsVisible(pin)) {
 							float dx   = pin->position.x - pos.x;
 							float dy   = pin->position.y - pos.y;
 							float dist = dx * dx + dy * dy;
