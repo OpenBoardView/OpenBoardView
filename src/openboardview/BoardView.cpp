@@ -3947,7 +3947,6 @@ void BoardView::DrawPartTooltips(ImDrawList *draw) {
 		int hit = 0;
 		//		auto p_part = part.get();
 
-		if (!BoardElementIsVisible(part)) continue;
 
 		// Work out if the point is inside the hull
 		{
@@ -3964,6 +3963,32 @@ void BoardView::DrawPartTooltips(ImDrawList *draw) {
 		if (hit) {
 			currentlyHoveredPart = part;
 			//			fprintf(stderr,"InPart: %s\n", currentlyHoveredPart->name.c_str());
+
+			float min_dist = m_pinDiameter / 2.0f;
+			min_dist *= min_dist; // all distance squared
+			currentlyHoveredPin = nullptr;
+
+			for (auto &pin : currentlyHoveredPart->pins) {
+				// auto p     = pin;
+				float dx   = pin->position.x - pos.x;
+				float dy   = pin->position.y - pos.y;
+				float dist = dx * dx + dy * dy;
+
+				if (!BoardElementIsVisible(pin)) {
+					continue;
+				}
+
+				if ((dist < (pin->diameter * pin->diameter)) && (dist < min_dist)) {
+					currentlyHoveredPin = pin;
+					//					fprintf(stderr,"Pinhit: %s\n",pin->number.c_str());
+					min_dist = dist;
+				} // if in the required diameter
+			}     // for each pin in the part
+
+			if (!BoardElementIsVisible(part) && (!currentlyHoveredPin || !BoardElementIsVisible(currentlyHoveredPin))) {
+				continue;
+			}
+
 			if (part->outline_done) {
 
 				/*
@@ -3977,22 +4002,6 @@ void BoardView::DrawPartTooltips(ImDrawList *draw) {
 				d = ImVec2(CoordToScreen(part->outline[3].x, part->outline[3].y));
 				draw->AddQuad(a, b, c, d, m_colors.partHighlightedColor, 2);
 			}
-
-			float min_dist = m_pinDiameter / 2.0f;
-			min_dist *= min_dist; // all distance squared
-			currentlyHoveredPin = nullptr;
-
-			for (auto &pin : currentlyHoveredPart->pins) {
-				// auto p     = pin;
-				float dx   = pin->position.x - pos.x;
-				float dy   = pin->position.y - pos.y;
-				float dist = dx * dx + dy * dy;
-				if ((dist < (pin->diameter * pin->diameter)) && (dist < min_dist)) {
-					currentlyHoveredPin = pin;
-					//					fprintf(stderr,"Pinhit: %s\n",pin->number.c_str());
-					min_dist = dist;
-				} // if in the required diameter
-			}     // for each pin in the part
 
 			draw->ChannelsSetCurrent(kChannelAnnotations);
 
