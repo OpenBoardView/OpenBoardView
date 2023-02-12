@@ -3776,7 +3776,7 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 
 		} // if !outline_done
 
-		if (!BoardElementIsVisible(part)) continue;
+		if (!BoardElementIsVisible(part) && !PartIsHighlighted(part)) continue;
 
 		if (part->outline_done) {
 
