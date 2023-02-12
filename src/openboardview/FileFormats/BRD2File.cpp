@@ -198,7 +198,6 @@ BRD2File::BRD2File(std::vector<char> &buf) {
 				pei = parts[i + 1].end_of_pins; // Again, not end of pins but beginning
 			}
 
-			auto firstPinSide = pins[cpi].side;
 			while (cpi < pei) {
 				pins[cpi].part                           = i + 1;
 				if (pins[cpi].side != BRDPinSide::Top) pins[cpi].pos.y = max.y - pins[cpi].pos.y;
@@ -206,10 +205,6 @@ BRD2File::BRD2File(std::vector<char> &buf) {
 				    (pins[cpi].side == BRDPinSide::Bottom && parts[i].mounting_side == BRDPartMountingSide::Bottom)) {
 					// Pins on the same side as the part
 					isDIP = false;
-				}
-				// If pins appear on both sides for this part, mounting side of part is both even if SMD
-				if (pins[cpi].side != firstPinSide) {
-					parts[i].mounting_side = BRDPartMountingSide::Both;
 				}
 				cpi++;
 			}
