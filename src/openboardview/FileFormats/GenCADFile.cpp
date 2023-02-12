@@ -279,12 +279,15 @@ bool GenCADFile::parse_shape_pins_to_component(
 						pin.net = tmp;
 						nc_counter++;
 					}
-					if (padstack_ast && is_padstack_drilled(padstack_ast)) {
-						pin.side = BRDPinSide::Both;
-					} else if (part->mounting_side == BRDPartMountingSide::Top) {
-						pin.side = BRDPinSide::Top;
+
+					if (padstack_ast) {
+						pin.side = get_padstack_side(padstack_ast);
 					} else {
-						pin.side = BRDPinSide::Bottom;
+						switch (part->mounting_side) {
+							case BRDPartMountingSide::Top:    pin.side = BRDPinSide::Top;    break;
+							case BRDPartMountingSide::Bottom: pin.side = BRDPinSide::Bottom; break;
+							case BRDPartMountingSide::Both:   pin.side = BRDPinSide::Both;   break;
+						}
 					}
 					pins.push_back(pin);
 					num_pins++;
