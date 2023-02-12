@@ -61,7 +61,7 @@ class GenCADFile : public BRDFileBase {
 	mpc_ast_t *get_padstack_by_name(const char *padstack_name);
 	mpc_ast_t *get_pad_by_name(const char *pad_name);
 	double get_padstack_radius(mpc_ast_t *padstack_ast);
-	BRDPinSide get_padstack_side(mpc_ast_t *padstack_ast, BRDPartMountingSide mounting_side);
+	BRDPinSide get_padstack_side(mpc_ast_t *padstack_ast);
 	double get_pad_radius(mpc_ast_t *pad_ast);
 
 	int board_unit_to_brd_coordinate(double brdUnit);

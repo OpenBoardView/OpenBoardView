@@ -649,8 +649,9 @@ double GenCADFile::get_padstack_radius(mpc_ast_t *padstack_ast) {
 	return radius;
 }
 
-BRDPinSide GenCADFile::get_padstack_side(mpc_ast_t *padstack_ast, BRDPartMountingSide mounting_side) {
+BRDPinSide GenCADFile::get_padstack_side(mpc_ast_t *padstack_ast) {
 	// loop through all pads in a padstack to find determine side(s)
+	// TODO: handle LAYERSTACK
 	bool top    = false;
 	bool bottom = false;
 	for (int i = 0; i >= 0;) {
@@ -669,25 +670,16 @@ BRDPinSide GenCADFile::get_padstack_side(mpc_ast_t *padstack_ast, BRDPartMountin
 		}
 	}
 
-	if ( ( top && bottom ) || is_padstack_drilled(padstack_ast) ) {
-		// THT/DUAL-SIDED/DRILL PAD
+	if (top && bottom) {
 		return BRDPinSide::Both;
-	} else if (mounting_side == BRDPartMountingSide::Top) {
-		if (top) {
-			return BRDPinSide::Top;
-		} else if (bottom) {
-			return BRDPinSide::Bottom;
-		}
-	} else if (mounting_side == BRDPartMountingSide::Bottom) {
-		if (top) {
-			return BRDPinSide::Bottom;
-		} else if (bottom) {
-			return BRDPinSide::Top;
-		}
+	} else if (top) {
+		return BRDPinSide::Top;
+	} else if (bottom) {
+		return BRDPinSide::Bottom;
+	} else {
+		// Inner layers only not handled, might still be useful so show on both sides as well
+		return BRDPinSide::Both;
 	}
-	printf("WARNING: This padstack has no outer copper side nor drill holes!\n");
-	mpc_ast_print(padstack_ast);
-	return BRDPinSide::None;
 }
 
 
