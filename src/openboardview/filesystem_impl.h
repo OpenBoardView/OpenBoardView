@@ -1,5 +1,5 @@
 // Filesystem fallback to ghc::filesystem if std::filesystem not available
-#if __cplusplus >= 201703L && defined(__has_include)
+#if __cplusplus >= 201703L && defined(__has_include) && defined(WITH_STD_FILESYSTEM)
 #if __has_include(<filesystem>)
 #define GHC_USE_STD_FS
 #include <filesystem>

@@ -151,17 +151,20 @@ if(((CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "G
 	message(CHECK_PASS "available")
 	set(CMAKE_CXX_STANDARD 17)
 	set(FILESYSTEM_LIBRARIES)
+	add_definitions(-DWITH_STD_FILESYSTEM)
 # Clang 8 requires explicit linking with lc++fs. AppleClang 11.0 is Clang 8.0
 elseif((CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 8.0))
 	#OR (CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang" AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 11.0))
 	message(CHECK_PASS "available")
 	set(CMAKE_CXX_STANDARD 17)
 	set(FILESYSTEM_LIBRARIES lc++fs)
+	add_definitions(-DWITH_STD_FILESYSTEM)
 # GCC 8 requires explicit linking with stdc++fs
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 8.0)
 	message(CHECK_PASS "available")
 	set(CMAKE_CXX_STANDARD 17)
 	set(FILESYSTEM_LIBRARIES stdc++fs)
+	add_definitions(-DWITH_STD_FILESYSTEM)
 else() # Other compiler/version are unsupported, use external lib
 	message(CHECK_FAIL "not available, using ghc::filesystem")
 	execute_process(
