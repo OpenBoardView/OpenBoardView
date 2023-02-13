@@ -22,7 +22,7 @@ endif()
 # VERSION must be up to 4 groups of digits separated by a period.
 # major.90 are alpha releases
 # major.95 are beta releases
-project(OpenBoardView VERSION 9.90.0)
+project(OpenBoardView VERSION 9.95.0)
 
 # Include our project variables
 include("version.cmake")
