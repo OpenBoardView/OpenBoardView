@@ -32,7 +32,6 @@ COMPILEFLAGS="-DCMAKE_INSTALL_PREFIX="
 export DESTDIR="$(cd "$(dirname "$0")" && pwd)"
 BUILDTYPE="$(color 6 release)"
 
-
 for arg in "$@"; do
   case $arg in
     --help)
@@ -74,6 +73,10 @@ if [ $THREADS -eq 1 ]; then
   STRTHREADS="thread"
 fi
 
+if [[ "$(uname -a)" == *"arm64"* ]]; then
+  COMPILEFLAGS="$COMPILEFLAGS -DCMAKE_OSX_ARCHITECTURES=arm64;x86_64"
+fi
+
 # Now compile the source code and install it in server's directory
 echo "$STRCOMPILE $PROJECT using $(color 4 $THREADS) $STRTHREADS ($BUILDTYPE build)"
 echo "Extra flags passed to CMake: $COMPILEFLAGS"
@@ -90,6 +93,10 @@ fi
 case "$(uname -s)" in
   *Darwin*)
     # Generate DMG
+    if [ ! -z "$SIGNER" ]; then
+      codesign --deep --force --verbose --sign "$SIGNER" ../openboardview.app
+      codesign --deep --force --verbose --sign "$SIGNER" $DESTDIR/$COMPILEDIR/src/openboardview/openboardview.app
+    fi
     make package
     [ "$?" != "0" ] && color 1 "MAKE PACKAGE FAILED" && exit 1
     ;;
