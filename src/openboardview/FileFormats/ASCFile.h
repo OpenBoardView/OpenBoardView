@@ -6,6 +6,17 @@
 
 #include "filesystem_impl.h"
 
+// Read string util 2 spaces are found, used as delimiter after pin name in PINS.ASC and accounts for names containing space
+#define READ_STR2                                     \
+	[&]() {                                          \
+		while ((*p) && (isspace((uint8_t)*p))) ++p;  \
+		s = p;                                       \
+		while ((*p && *(p + 1)) && (!isspace((uint8_t)*p) || !isspace((uint8_t)*(p + 1)))) ++p; \
+		*p = 0;                                      \
+		p++;                                         \
+		return fix_to_utf8(s, &arena, arena_end);    \
+	}
+
 class ASCFile : public BRDFileBase {
   public:
 	typedef std::vector<char *>::iterator line_iterator_t;

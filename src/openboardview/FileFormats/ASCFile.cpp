@@ -50,7 +50,7 @@ void ASCFile::parse_pin(char *&p, char *&s, char *&arena, char *&arena_end, line
 
 		pin.part = parts.size();
 		/*int id =*/READ_INT(); // uint
-		/*char *name =*/READ_STR();
+		/*char *name =*/READ_STR2();
 		double posx = READ_DOUBLE();
 		pin.pos.x   = posx * 1000.0f;
 		double posy = READ_DOUBLE();
