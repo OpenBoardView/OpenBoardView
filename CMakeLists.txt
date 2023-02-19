@@ -153,7 +153,8 @@ elseif(UNIX)
 	    "/usr/share/icons/hicolor/scalable"
 	    "/usr/share/icons/hicolor/scalable/apps"
 	    "/usr/share/mime"
-	    "/usr/share/mime/packages")
+	    "/usr/share/mime/packages"
+	    "/usr/share/metainfo")
 elseif(WIN32)
 	set(CPACK_GENERATOR ZIP CACHE STRING "List of generators to build packages with")
 	set(CPACK_INCLUDE_TOPLEVEL_DIRECTORY FALSE)
