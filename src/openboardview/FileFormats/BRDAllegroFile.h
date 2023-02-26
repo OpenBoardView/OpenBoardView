@@ -9,7 +9,9 @@ struct BRDAllegroFile : public BRDFileBase {
 	}
 
 	static bool verifyFormat(std::vector<char> &buf) {
-		// Allegro files contain the string "all" + version number ("15", "16", …) at offset 0xf8
-		return buf.size() >= 0xfa && std::equal(buf.begin() + 0xf8, buf.begin() + 0xfb, "all");
+		// Allegro files contain the string "all" or "vie" + version number ("v15", "v16", …) at offset 0xf8
+		return buf.size() >= 0xfa
+				&& (std::equal(buf.begin() + 0xf8, buf.begin() + 0xfb, "all")
+					|| std::equal(buf.begin() + 0xf8, buf.begin() + 0xfb, "vie"));
 	}
 };
