@@ -143,6 +143,9 @@ struct Pin : BoardElement {
 	std::string UniqueId() const {
 		return kBoardPinPrefix + number;
 	}
+	struct LessByNumberAndName {
+		bool operator()(const std::shared_ptr<Pin> &a, const std::shared_ptr<Pin> &b) const;
+	};
 };
 
 // A component on the board having multiple Pins.
