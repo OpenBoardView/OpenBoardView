@@ -43,7 +43,7 @@ class GenCADFile : public BRDFileBase {
 	bool parse_dimension_units(mpc_ast_t *header_ast);
 	bool parse_board_outline(mpc_ast_t *board_ast);
 	std::vector<std::pair<BRDPoint, BRDPoint>> arc_to_segments(mpc_ast_t *start, mpc_ast_t *stop, mpc_ast_t *center);
-	bool parse_vias();
+	bool parse_vias(mpc_ast_t *routes_ast);
 	bool parse_route_vias(mpc_ast_t *route_ast);
 	bool parse_components();
 
@@ -71,16 +71,12 @@ class GenCADFile : public BRDFileBase {
 	bool is_padstack_drilled(mpc_ast_t *padstack_ast);
 
 	mpc_ast_t *header_ast     = nullptr;
-	mpc_ast_t *board_ast      = nullptr;
 	mpc_ast_t *signals_ast    = nullptr;
 	mpc_ast_t *devices_ast    = nullptr;
 	mpc_ast_t *shapes_ast     = nullptr;
 	mpc_ast_t *components_ast = nullptr;
 	mpc_ast_t *pads_ast       = nullptr;
 	mpc_ast_t *padstacks_ast  = nullptr;
-	mpc_ast_t *routes_ast     = nullptr;
-	mpc_ast_t *tracks_ast     = nullptr;
-	mpc_ast_t *layers_ast     = nullptr;
 
 	typedef std::tuple<std::string, std::string> ComponentPin;
 	std::map<ComponentPin, std::string> m_signals_cache;
