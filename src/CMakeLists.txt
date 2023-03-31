@@ -213,6 +213,7 @@ if(NOT MPC_FOUND)
 		WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
     	)
         add_library(mpc STATIC "mpc/mpc.c")
+        include_directories(${CMAKE_CURRENT_SOURCE_DIR}/mpc)
 endif()
 
 ## OpenBoardView ##
