@@ -206,13 +206,14 @@ endif()
 add_definitions(-DSTBI_FAILURE_USERMSG)
 
 ## mpc - Micro Parser Combinators ##
-execute_process(
-	COMMAND git submodule update --init src/mpc
-	WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-)
-
-add_library(mpc STATIC "mpc/mpc.c")
-
+pkg_check_modules(MPC QUIET mpc)
+if(NOT MPC_FOUND)
+	execute_process(
+		COMMAND git submodule update --init src/mpc
+		WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+    	)
+        add_library(mpc STATIC "mpc/mpc.c")
+endif()
 
 ## OpenBoardView ##
 add_subdirectory(openboardview)
