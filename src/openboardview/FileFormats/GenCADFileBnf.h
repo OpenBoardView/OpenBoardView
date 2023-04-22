@@ -84,7 +84,7 @@ board               : "$BOARD" <n>+ <thickness>? (<line>|<arc>|<circle>|<rectang
 pad                 : "PAD" <s>+ <pad_name> <s>+ <pad_type> <s>+ <drill_size> <n>+ (<line>|<arc>|<circle>|<rectangle>|<attribute>)* <n>*;
 pads                : "$PADS" <n>+ <pad>* "$ENDPADS" <n>*;
 padstacks_pad       : "PAD" <s>+ <pad_name> <s>+ <layer> <s>+ <rot> <s>+ <mirror> <n>+;
-padstack            : "PADSTACK" <s>+ <pad_name> <s>+ <drill_size> <n>* <padstacks_pad>* <attribute>*;
+padstack            : "PADSTACK" <s>+ <pad_name> <s>+ <drill_size> <n>* (<padstacks_pad>|<attribute>)*;
 padstacks           : "$PADSTACKS" <n>+ <padstack>* "$ENDPADSTACKS" <n>*;
 layer_name          : <nonquoted_string>;
 named_layer         : "LAYER" <s>+ <layer_name> <n>*;
