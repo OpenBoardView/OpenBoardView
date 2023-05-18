@@ -2,6 +2,7 @@
 
 #include "utf8/utf8.h"
 #include <cstdint>
+#include <cstring>
 
 // from stb.h
 void stringfile(char *buffer, std::vector<char*> &lines) {
@@ -67,6 +68,60 @@ char *fix_to_utf8(char *s, char **arena, char *arena_end) {
 done:
 	*arena = p;
 	return begin;
+}
+
+struct PinNameParseInfo {
+	int non_digit_prefix_len = 0;
+	int digits_value         = 0;
+};
+
+static PinNameParseInfo pin_name_parse(const BRDPin &pin) {
+	PinNameParseInfo result = {};
+	if (pin.name != nullptr) {
+		for (;;) {
+			char next = pin.name[result.non_digit_prefix_len];
+			if (next == '\0' || (next >= '0' && next <= '9')) {
+				break;
+			}
+			++result.non_digit_prefix_len;
+		}
+		result.digits_value = strtod(pin.name + result.non_digit_prefix_len, nullptr);
+	}
+	return result;
+}
+
+bool BRDPin::LessByPartAndNumberAndName::operator()(const BRDPin &a, const BRDPin &b) const {
+	// This comparison operator MUST satisfy strict weak ordering definition; otherwise std::sort can crash!
+	// At first compare parts
+	if (a.part != b.part) {
+		return a.part < b.part;
+	}
+	// for equal parts compare pin number
+	if (a.snum != nullptr && b.snum != nullptr) {
+		int anum = strtod(a.snum, nullptr);
+		int bnum = strtod(b.snum, nullptr);
+		if (anum != bnum) {
+			return anum < bnum;
+		}
+	}
+	// for equal parts and numbers compare pin name, supporting strings like AA51. The order is like:
+	// A0 A1..A9 A10 A11..A99 A100 A101..B0..Z0..AA0..AZ0..BA0..
+	PinNameParseInfo a_name = pin_name_parse(a);
+	PinNameParseInfo b_name = pin_name_parse(b);
+
+	// compare non-digit prefixes lengths
+	if (a_name.non_digit_prefix_len != b_name.non_digit_prefix_len) {
+		return a_name.non_digit_prefix_len < b_name.non_digit_prefix_len;
+	}
+
+	// compare non-digit prefixes of equal length if non-empty
+	if (a_name.non_digit_prefix_len > 0) {
+		int prefix_cmp_result = memcmp(a.name, b.name, a_name.non_digit_prefix_len);
+		if (prefix_cmp_result != 0) {
+			return prefix_cmp_result < 0;
+		}
+	}
+	return a_name.digits_value < b_name.digits_value;
 }
 
 void BRDFileBase::AddNailsAsPins() {
