@@ -2,6 +2,7 @@
 
 #include "BRDFileBase.h"
 #include <array>
+#include <cstdint>
 
 #undef READ_INT
 #undef READ_UINT
