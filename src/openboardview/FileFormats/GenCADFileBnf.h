@@ -62,7 +62,7 @@ x_y_ref             : <x> <s>+ <y>;
 header              : "$HEADER" <n>+ <gencad_version>? <user>? <drawing>? <revision>? <units>? <origin>? <intertrack>? <attribute>* "$ENDHEADER" <n>*;
 major               : <p_integer>;
 minor               : <p_integer>;
-gencad_version      : "GENCAD" <s>+ <major> "." <minor>  <n>+;
+gencad_version      : "GENCAD" <s>+ <major> ("." <minor>)?  <n>+;
 user                : "USER" <s>+ <wrapper_to_end> <n>+;
 drawing             : "DRAWING" <s>+ <wrapper_to_end> <n>+;
 revision            : "REVISION" <s>+ <wrapper_to_end> <n>+;
