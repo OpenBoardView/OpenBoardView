@@ -348,10 +348,6 @@ const char *GenCADFile::get_signal_name_for_component_pin(const char *component_
 	return nullptr;
 }
 
-double GenCADFile::distance(BRDPoint &p1, BRDPoint &p2) {
-	return sqrt(pow(p1.x - p2.x, 2) + pow(p1.y - p2.y, 2));
-}
-
 bool GenCADFile::parse_dimension_units(mpc_ast_t *header_ast) {
 	mpc_ast_t *units = mpc_ast_get_child(header_ast, "units|>");
 	m_dimension      = INVALID;
@@ -450,7 +446,7 @@ bool GenCADFile::parse_board_outline(mpc_ast_t *board_ast) {
 				mpc_ast_t *center = mpc_ast_get_child(aref, "arc_center|x_y_ref|>");
 				// TODO add support for ellipse arcs (which have arc_p1 and arc_p2)
 				if (!start || !stop || !center) continue;
-				std::vector<std::pair<BRDPoint, BRDPoint>> arc_outline_segments = arc_to_segments(start, stop, center);
+				std::vector<std::pair<BRDPoint, BRDPoint>> arc_outline_segments = arc_to_segments_from_ast(start, stop, center);
 				std::move(arc_outline_segments.begin(), arc_outline_segments.end(), std::back_inserter(outline_segments));
 			}
 		}
@@ -458,7 +454,7 @@ bool GenCADFile::parse_board_outline(mpc_ast_t *board_ast) {
 	return true;
 }
 
-std::vector<std::pair<BRDPoint, BRDPoint>> GenCADFile::arc_to_segments(mpc_ast_t *start, mpc_ast_t *stop, mpc_ast_t *center) {
+std::vector<std::pair<BRDPoint, BRDPoint>> GenCADFile::arc_to_segments_from_ast(mpc_ast_t *start, mpc_ast_t *stop, mpc_ast_t *center) {
 	std::vector<std::pair<BRDPoint, BRDPoint>> arc_segments{};
 
 	BRDPoint p1{}, p2{}, pc{};
@@ -474,17 +470,7 @@ std::vector<std::pair<BRDPoint, BRDPoint>> GenCADFile::arc_to_segments(mpc_ast_t
 	double endAngle = atan2(p2.y - pc.y, p2.x - pc.x);
 	if (endAngle < startAngle) endAngle += 2.0 * M_PI;
 
-	BRDPoint p = p1;
-	BRDPoint pold = p1;
-	for (double i = startAngle + arc_slice_angle_rad; i < endAngle; i += arc_slice_angle_rad) {
-		p.x = pc.x + r * cos(i);
-		p.y = pc.y + r * sin(i);
-		arc_segments.push_back({pold, p});
-		pold = p;
-	}
-	arc_segments.push_back({p, p2});
-
-	return arc_segments;
+	return arc_to_segments(startAngle, endAngle, r, p1, p2, pc);
 }
 
 bool GenCADFile::x_y_ref_to_brd_point(mpc_ast_t *x_y_ref, BRDPoint *point) {

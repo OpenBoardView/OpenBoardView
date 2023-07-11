@@ -105,6 +105,12 @@ class BRDFileBase {
 	// file_buf is used by some implementations. But since the derived class constructurs
 	// are already passed a memory buffer most usages are "historic unneeded extra copies".
 	char *file_buf = nullptr;
+
+	std::vector<std::pair<BRDPoint, BRDPoint>> arc_to_segments(double startAngle, double endAngle, double r, BRDPoint p1, BRDPoint p2, BRDPoint pc);
+
+	static double arc_slice_angle_rad;
+
+	double distance(const BRDPoint &p1, const BRDPoint &p2);
 };
 
 void stringfile(char *buffer, std::vector<char*> &lines);

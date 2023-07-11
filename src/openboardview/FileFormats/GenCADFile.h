@@ -42,7 +42,7 @@ class GenCADFile : public BRDFileBase {
 
 	bool parse_dimension_units(mpc_ast_t *header_ast);
 	bool parse_board_outline(mpc_ast_t *board_ast);
-	std::vector<std::pair<BRDPoint, BRDPoint>> arc_to_segments(mpc_ast_t *start, mpc_ast_t *stop, mpc_ast_t *center);
+	std::vector<std::pair<BRDPoint, BRDPoint>> arc_to_segments_from_ast(mpc_ast_t *start, mpc_ast_t *stop, mpc_ast_t *center);
 	bool parse_vias(mpc_ast_t *routes_ast);
 	bool parse_route_vias(mpc_ast_t *route_ast);
 	bool parse_components();
@@ -82,9 +82,6 @@ class GenCADFile : public BRDFileBase {
 	std::map<ComponentPin, std::string> m_signals_cache;
 	int nc_counter = 0;
 
-	double distance(BRDPoint &p1, BRDPoint &p2);
-
-	const double arc_slice_angle_rad = 0.1;
 };
 
 #endif // GENCADFILE_H
