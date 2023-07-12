@@ -2,6 +2,9 @@
 
 #include "utf8/utf8.h"
 #include <cstdint>
+#include <cmath>
+
+double BRDFileBase::arc_slice_angle_rad = 0.1;
 
 // from stb.h
 void stringfile(char *buffer, std::vector<char*> &lines) {
@@ -87,4 +90,27 @@ void BRDFileBase::AddNailsAsPins() {
 		pin.net   = nail.net;
 		pins.push_back(pin);
 	}
+}
+
+std::vector<std::pair<BRDPoint, BRDPoint> > BRDFileBase::arc_to_segments(
+	double startAngle, double endAngle, double r, BRDPoint p1, BRDPoint p2, BRDPoint pc)
+{
+	std::vector<std::pair<BRDPoint, BRDPoint>> arc_segments{};
+
+	BRDPoint p = p1;
+	BRDPoint pold = p1;
+	for (double i = startAngle + arc_slice_angle_rad; i < endAngle; i += arc_slice_angle_rad) {
+		p.x = pc.x + r * cos(i);
+		p.y = pc.y + r * sin(i);
+		arc_segments.push_back({pold, p});
+		pold = p;
+	}
+	arc_segments.push_back({p, p2});
+
+	return arc_segments;
+}
+
+
+double BRDFileBase::distance(const BRDPoint &p1, const BRDPoint &p2) {
+	return sqrt(pow(p1.x - p2.x, 2) + pow(p1.y - p2.y, 2));
 }

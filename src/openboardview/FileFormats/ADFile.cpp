@@ -18,6 +18,7 @@
 #define ADFILE_BLOCK_COMPONENTS 3
 #define ADFILE_BLOCK_PADS 4
 #define ADFILE_BLOCK_TRACKS 5
+#define ADFILE_BLOCK_ARC 6
 
 char *arena;
 char *arena_end;
@@ -41,61 +42,6 @@ bool ADFile::verifyFormat(std::vector<char> &buf) {
 	return versionOK && !isBinary;
 }
 
-void ADFile::outline_order_segments(std::vector<BRDPoint> &format) {
-	std::vector<BRDPoint> source = format;
-	std::vector<BRDPoint> ordered;
-
-	ordered.push_back(source.at(0));
-	ordered.push_back(source.at(1));
-	source.erase(source.begin() + 1);
-	source.erase(source.begin());
-
-	auto p   = ordered.back();
-	bool hit = false;
-
-	while (source.size() > 1) {
-
-		p   = ordered.back();
-		hit = false;
-
-		for (size_t i = 0; i < source.size(); i += 2) {
-			auto q = source.at(i);
-			auto r = source.at(i + 1);
-
-			if (q.x == p.x && q.y == p.y) {
-				ordered.push_back(r);
-				source.erase(source.begin() + i + 1);
-				source.erase(source.begin() + i);
-				hit = true;
-				break;
-			}
-			if (r.x == p.x && r.y == p.y) {
-				ordered.push_back(q);
-				source.erase(source.begin() + i + 1);
-				source.erase(source.begin() + i);
-				hit = true;
-				break;
-			} // if we have a match
-		}     // for each possible segment in the list
-
-		if (hit == false) {
-			if (source.size() > 1) {
-				ordered.push_back(source.at(0));
-				ordered.push_back(source.at(1));
-				source.erase(source.begin() + 1);
-				source.erase(source.begin());
-			}
-		}
-	} // while there's at least 2  items left
-
-	ordered.push_back(ordered.at(0)); // close the loop
-
-	if (ordered.size() > 2) {
-		format.clear();
-		format = ordered;
-	}
-}
-
 ADFile::ADFile(std::vector<char> &buf) {
 	auto buffer_size = buf.size();
 
@@ -116,7 +62,6 @@ ADFile::ADFile(std::vector<char> &buf) {
 
 	int current_block = 0;
 	int net_count     = 0;
-	BRDPoint format_first, format_last;
 
 	std::vector<char *> lines;
 	stringfile(file_buf, lines);
@@ -146,9 +91,72 @@ ADFile::ADFile(std::vector<char> &buf) {
 			current_block = ADFILE_BLOCK_PADS;
 		}
 
+		if (strstr(line, "RECORD=Arc")) {
+			current_block = ADFILE_BLOCK_ARC;
+		}
+
 		p = line;
 
 		switch (current_block) {
+			case ADFILE_BLOCK_ARC: {
+				char *layer = NULL;
+
+				p = strstr(line, "|LAYER=");
+				if (!p)
+					continue;
+				p += 7;
+				layer = read_item(p);
+
+				if (!layer)
+					continue;
+
+				if ((strcmp(layer, "KEEPOUT") != 0)) {
+					continue;
+				}
+
+				BRDPoint pc, p1, p2;
+				double startAngle, endAngle, radius;
+				p = strstr(line, "LOCATION.X=");
+				if (!p)
+					continue;
+
+				p += 11;
+				pc.x = READ_DOUBLE();
+
+				p  = strstr(p, "LOCATION.Y=");
+				if (!p)
+					continue;
+				p += 11;
+				pc.y = READ_DOUBLE();
+
+				p  = strstr(p, "RADIUS=");
+				if (!p)
+					continue;
+				p += 7;
+				radius = READ_DOUBLE();
+
+				p  = strstr(p, "STARTANGLE=");
+				if (!p)
+					continue;
+				p += 11;
+				startAngle = READ_DOUBLE() * (M_PI / 180.0);
+
+				p  = strstr(p, "ENDANGLE=");
+				if (!p)
+					continue;
+				p += 9;
+				endAngle = READ_DOUBLE() * (M_PI / 180.0);
+
+				p1.x = pc.x + radius * cos(startAngle);
+				p1.y = pc.y + radius * sin(startAngle);
+
+				p2.x = pc.x + radius * cos(endAngle);
+				p2.y = pc.y + radius * sin(endAngle);
+
+				std::vector<std::pair<BRDPoint, BRDPoint>> segments = arc_to_segments(startAngle, endAngle, radius, p1, p2, pc);
+				std::move(segments.begin(), segments.end(), std::back_inserter(outline_segments));
+			}
+			break;
 			case ADFILE_BLOCK_TRACKS: {
 				unsigned int part_id;
 				int x1, y1, x2, y2;
@@ -189,12 +197,8 @@ ADFile::ADFile(std::vector<char> &buf) {
 									//
 									// usually the board outline is kept here... usually
 									//
-									if (format.size() == 0) format_first = BRDPoint({x1, y1});
 
-									format.push_back(BRDPoint({x1, y1}));
-									format.push_back(BRDPoint({x2, y2}));
-									format_last = BRDPoint({x2, y2});
-
+									outline_segments.push_back({BRDPoint({x1, y1}), BRDPoint({x2, y2})});
 								} else if (strstr(layer, "OVERLAY")) {
 									// Overlay
 									//
@@ -220,26 +224,27 @@ ADFile::ADFile(std::vector<char> &buf) {
 				break;
 
 			case ADFILE_BLOCK_OUTLINE: {
-				BRDPoint point;
+				BRDPoint p1, p2;
 				if (!strstr(p, "LAYER=KEEPOUT")) break;
 				p = strstr(p, "X1=");
 				if (p) {
 					p += 3;
-					point.x = READ_DOUBLE();
+					p1.x = READ_DOUBLE();
 					p       = strstr(p, "Y1=");
 					if (p) {
 						p += 3;
-						point.y = READ_DOUBLE();
-						format.push_back(point);
+						p1.y = READ_DOUBLE();
+						//format.push_back(p1);
 						p = strstr(p, "X2=");
 						if (p) {
 							p += 3;
-							point.x = READ_DOUBLE();
+							p2.x = READ_DOUBLE();
 							p       = strstr(p, "Y2=");
 							if (p) {
 								p += 3;
-								point.y = READ_DOUBLE();
-								format.push_back(point);
+								p2.y = READ_DOUBLE();
+								//format.push_back(p1);
+								outline_segments.push_back({p1, p2});
 							}
 						}
 					}
@@ -478,11 +483,6 @@ ADFile::ADFile(std::vector<char> &buf) {
 	}
 
 	std::sort(pins.begin(), pins.end(), customLess);
-
-	// AD files use segments for board outline
-	// we want points.
-	//
-	outline_order_segments(format);
 
 	num_parts  = parts.size();
 	num_pins   = pins.size();
