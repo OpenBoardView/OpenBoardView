@@ -5,7 +5,7 @@
 
 #include "build-generated/GenCADFileGrammar.h"
 
-#include "mpc/mpc.h"
+#include "mpc.h"
 
 #include <map>
 #include <string>
