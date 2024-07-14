@@ -8,12 +8,14 @@
 #include <cstring>
 #include <limits>
 
+#include <SDL.h>
+
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
 #endif
 
 bool GenCADFile::verifyFormat(const std::vector<char> &buf) {
-	return find_str_in_buf("GENCAD", buf) && (find_str_in_buf("$BOARD", buf) || find_str_in_buf("$PADS", buf));
+	return find_str_in_buf("GENCAD", buf) && (find_str_in_buf("$HEADER", buf));
 }
 
 GenCADFile::GenCADFile(const std::vector<char> &buf) {
@@ -51,10 +53,14 @@ bool GenCADFile::parse_file(const std::vector<char> &buf) {
 			mpc_ast_t *optional_board_ast = mpc_ast_get_child(ast, "board|>");
 
 			pads_ast = mpc_ast_get_child(ast, "pads|>");
-			if (!pads_ast) throw std::string("Failed to parse GenCAD file: the $PADS section was not parsed properly");
+			if (!pads_ast) {
+				SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION, "Failed to parse GenCAD file: the $PADS section was not parsed properly");
+			}
 
 			padstacks_ast = mpc_ast_get_child(ast, "padstacks|>");
-			if (!padstacks_ast) throw std::string("Failed to parse GenCAD file: the $PADSTACKS section was not parsed properly");
+			if (!padstacks_ast) {
+				SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION, "Failed to parse GenCAD file: the $PADSTACKS section was not parsed properly");
+			}
 
 			shapes_ast = mpc_ast_get_child(ast, "shapes|>");
 			if (!shapes_ast) throw std::string("Failed to parse GenCAD file: the $SHAPES section was not parsed properly");
@@ -598,6 +604,11 @@ bool GenCADFile::is_padstack_drilled(mpc_ast_t *padstack_ast) {
 }
 
 mpc_ast_t *GenCADFile::get_padstack_by_name(const char *padstack_name_wanted) {
+	// $PADSTACKS section may be missing
+	if (padstacks_ast == nullptr) {
+		return nullptr;
+	}
+
 	for (int i = 0; i >= 0;) {
 		i = mpc_ast_get_index_lb(padstacks_ast, "padstack|>", i);
 		if (i >= 0) {
@@ -615,6 +626,11 @@ mpc_ast_t *GenCADFile::get_padstack_by_name(const char *padstack_name_wanted) {
 }
 
 mpc_ast_t *GenCADFile::get_pad_by_name(const char *pad_name_wanted) {
+	// $PADS section may be missing
+	if (pads_ast == nullptr) {
+		return nullptr;
+	}
+
 	for (int i = 0; i >= 0;) {
 		i = mpc_ast_get_index_lb(pads_ast, "pad|>", i);
 		if (i >= 0) {
@@ -643,8 +659,10 @@ double GenCADFile::get_padstack_radius(mpc_ast_t *padstack_ast) {
 			char *pad_name = get_nonquoted_or_quoted_string_child(pad_ref_ast, "pad_name");
 			if (pad_name) {
 				mpc_ast_t *pad_ast = get_pad_by_name(pad_name);
-				double pad_radius  = get_pad_radius(pad_ast);
-				if (pad_radius > radius) radius = pad_radius;
+				if (pad_ast != nullptr) {
+					double pad_radius  = get_pad_radius(pad_ast);
+					if (pad_radius > radius) radius = pad_radius;
+				}
 			}
 			i++;
 		}
