@@ -101,7 +101,7 @@ fid                 : "FID" <s>+ <fid_name> <s> <pad_name> <s> <x_y_ref> <s> <la
 shape_pin_name      : (<nonquoted_string>|<string>);
 shapes_pin          : "PIN" <s>+ <shape_pin_name> <s>+ <pad_name> <s> <x_y_ref> <s> <layer> <s> <rot> <s> <mirror> <n>+;
 shape               : "SHAPE" <s>+ <shape_name> <n> (<line>|<arc>|<circle>|<rectangle>|<fiducial>|<insert>|<height_>|<attribute>|<shape_artwork>|<fid>|<shapes_pin>)* <n>*;
-shapes              : "$SHAPES" <n>* <shape>* "$ENDSHAPES" <n>*;
+shapes              : "$SHAPES" <n>* <insert>? <n>* <shape>* "$ENDSHAPES" <n>*;
 device_name         : <wrapper_to_end>;
 device_             : "DEVICE" <s>+ <device_name> <n>*;
 place               : "PLACE" <s>+ <x_y_ref> <n>+;
