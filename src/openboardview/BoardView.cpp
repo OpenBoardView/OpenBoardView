@@ -36,9 +36,6 @@
 #include "PartList.h"
 #include "vectorhulls.h"
 
-using namespace std;
-using namespace std::placeholders;
-
 #if _MSC_VER
 #define stricmp _stricmp
 #endif
@@ -2676,12 +2673,12 @@ void BoardView::HandleInput() {
  *
  */
 void BoardView::ShowNetList(bool *p_open) {
-	static NetList netList(bind(&BoardView::FindNet, this, _1));
+	static NetList netList(std::bind(&BoardView::FindNet, this, std::placeholders::_1));
 	netList.Draw("Net List", p_open, m_board);
 }
 
 void BoardView::ShowPartList(bool *p_open) {
-	static PartList partList(bind(&BoardView::FindComponent, this, _1));
+	static PartList partList(std::bind(&BoardView::FindComponent, this, std::placeholders::_1));
 	partList.Draw("Part List", p_open, m_board);
 }
 
@@ -2707,7 +2704,7 @@ void BoardView::RenderOverlay() {
  *
  */
 
-void BoardView::CenterZoomNet(string netname) {
+void BoardView::CenterZoomNet(std::string netname) {
 	ImVec2 view = m_board_surface;
 	ImVec2 min, max;
 	int i = 0;
@@ -2926,7 +2923,7 @@ int BoardView::EPCCheck(void) {
 void BoardView::OutlineGenFillDraw(ImDrawList *draw, int ydelta, double thickness = 1.0f) {
 
 	auto io = ImGui::GetIO();
-	vector<ImVec2> scanhits;
+	std::vector<ImVec2> scanhits;
 	static ImVec2 min, max; // board min/max points
 	                        //	double steps = 500;
 	double vdelta;
@@ -3425,7 +3422,7 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 
 				float maxfontwidth = psz * 2.125/ text_size_normalized.x; // Fit horizontally with 6.75% overflow (should still avoid colliding with neighbours)
 				float maxfontheight = psz * 1.5/ text_size_normalized.y; // Fit vertically with 25% top/bottom padding
-				float maxfontsize = min(maxfontwidth, maxfontheight);
+				float maxfontsize = std::min(maxfontwidth, maxfontheight);
 
 				// Font size for pin name only depends on height of text (rather than width of full text incl. net name) to scale to pin bounding box
 				ImVec2 size_pin_name = font->CalcTextSizeA(maxfontheight, FLT_MAX, 0.0f, pin->name.c_str());
@@ -3846,7 +3843,7 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 					// Find max font size to fit text inside bounding box
 					float maxfontwidth = maxwidth / text_size_normalized.x;
 					float maxfontheight = maxheight / text_size_normalized.y;
-					float maxfontsize = min(maxfontwidth, maxfontheight);
+					float maxfontsize = std::min(maxfontwidth, maxfontheight);
 
 					ImVec2 text_size{text_size_normalized.x * maxfontsize, text_size_normalized.y * maxfontsize};
 

@@ -10,20 +10,17 @@
 #include <string>
 #include <vector>
 
-using namespace std;
-using namespace std::placeholders;
-
-const string BRDBoard::kNetUnconnectedPrefix = "UNCONNECTED";
-const string BRDBoard::kComponentDummyName   = "...";
+const std::string BRDBoard::kNetUnconnectedPrefix = "UNCONNECTED";
+const std::string BRDBoard::kComponentDummyName   = "...";
 
 BRDBoard::BRDBoard(const BRDFileBase * const boardFile)
     : m_file(boardFile) {
 	// TODO: strip / trim all strings, especially those used as keys
 	// TODO: just loop through original arrays?
-	vector<BRDPart> m_parts(m_file->num_parts);
-	vector<BRDPin> m_pins(m_file->num_pins);
-	vector<BRDNail> m_nails(m_file->num_nails);
-	vector<BRDPoint> m_points(m_file->num_format);
+	std::vector<BRDPart> m_parts(m_file->num_parts);
+	std::vector<BRDPin> m_pins(m_file->num_pins);
+	std::vector<BRDNail> m_nails(m_file->num_nails);
+	std::vector<BRDPoint> m_points(m_file->num_format);
 
 	m_parts  = m_file->parts;
 	m_pins   = m_file->pins;
@@ -33,7 +30,7 @@ BRDBoard::BRDBoard(const BRDFileBase * const boardFile)
 	// Set outline
 	{
 		for (auto &brdPoint : m_points) {
-			auto point = make_shared<Point>(brdPoint.x, brdPoint.y);
+			auto point = std::make_shared<Point>(brdPoint.x, brdPoint.y);
 			outline_points_.push_back(point);
 		}
 	}
@@ -47,17 +44,17 @@ BRDBoard::BRDBoard(const BRDFileBase * const boardFile)
 	SharedStringMap<Net> net_map;
 	{
 		// adding special net 'UNCONNECTED'
-		auto net_nc           = make_shared<Net>();
+		auto net_nc           = std::make_shared<Net>();
 		net_nc->name          = kNetUnconnectedPrefix;
 		net_nc->is_ground     = false;
 		net_map[net_nc->name] = net_nc;
 
 		// handle all the others
 		for (auto &brd_nail : m_nails) {
-			auto net = make_shared<Net>();
+			auto net = std::make_shared<Net>();
 
 			// copy NET name and number (probe)
-			net->name = string(brd_nail.net);
+			net->name = std::string(brd_nail.net);
 
 			// avoid having multiple UNCONNECTED<XXX> references
 			if (is_prefix(kNetUnconnectedPrefix, net->name)) continue;
@@ -78,9 +75,9 @@ BRDBoard::BRDBoard(const BRDFileBase * const boardFile)
 	// Populate parts
 	{
 		for (auto &brd_part : m_parts) {
-			auto comp = make_shared<Component>();
+			auto comp = std::make_shared<Component>();
 
-			comp->name    = string(brd_part.name);
+			comp->name    = std::string(brd_part.name);
 			comp->mfgcode = std::move(brd_part.mfgcode);
 
 			comp->p1 = {brd_part.p1.x, brd_part.p1.y};
@@ -107,7 +104,7 @@ BRDBoard::BRDBoard(const BRDFileBase * const boardFile)
 	// Populate pins
 	{
 		// generate dummy component as reference
-		auto comp_dummy            = make_shared<Component>();
+		auto comp_dummy            = std::make_shared<Component>();
 		comp_dummy->name           = kComponentDummyName;
 		comp_dummy->component_type = Component::kComponentTypeDummy;
 
@@ -124,7 +121,7 @@ BRDBoard::BRDBoard(const BRDFileBase * const boardFile)
 
 			if (!comp) continue;
 
-			auto pin = make_shared<Pin>();
+			auto pin = std::make_shared<Pin>();
 
 			if (comp->is_dummy()) {
 				// component is virtual, i.e. "...", pin is test pad
@@ -171,7 +168,7 @@ BRDBoard::BRDBoard(const BRDFileBase * const boardFile)
 			}
 
 			// set net reference (here's our NET key string again)
-			string net_name = string(brd_pin.net);
+			std::string net_name = std::string(brd_pin.net);
 			if (net_map.count(net_name)) {
 				// there is a net with that name in our map
 				pin->net = net_map[net_name].get();
@@ -184,7 +181,7 @@ BRDBoard::BRDBoard(const BRDFileBase * const boardFile)
 						pin->type = Pin::kPinTypeNotConnected;
 					} else {
 						// indeed a new net
-						auto net        = make_shared<Net>();
+						auto net        = std::make_shared<Net>();
 						net->name       = net_name;
 						net->board_side = pin->board_side;
 						// NOTE: net->number not set
@@ -213,7 +210,7 @@ BRDBoard::BRDBoard(const BRDFileBase * const boardFile)
 
 		// remove all dummy components from vector, add our official dummy
 		components_.erase(
-		    remove_if(begin(components_), end(components_), [](shared_ptr<Component> &comp) { return comp->is_dummy(); }),
+		    remove_if(begin(components_), end(components_), [](std::shared_ptr<Component> &comp) { return comp->is_dummy(); }),
 		    end(components_));
 
 		components_.push_back(comp_dummy);
@@ -227,7 +224,7 @@ BRDBoard::BRDBoard(const BRDFileBase * const boardFile)
 	}
 
 	// Sort components by name
-	sort(begin(components_), end(components_), [](const shared_ptr<Component> &lhs, const shared_ptr<Component> &rhs) {
+	sort(begin(components_), end(components_), [](const std::shared_ptr<Component> &lhs, const std::shared_ptr<Component> &rhs) {
 		return lhs->name < rhs->name;
 	});
 }

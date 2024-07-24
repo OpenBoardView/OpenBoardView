@@ -27,7 +27,7 @@ void PartList::Draw(const char *title, bool *p_open, Board *board) {
 		auto parts = board->Components();
 
 		static int selected = -1;
-		string part_name    = "";
+		std::string part_name    = "";
 		ImGuiListClipper clipper;
 		clipper.Begin(parts.size());
 		while (clipper.Step()) {

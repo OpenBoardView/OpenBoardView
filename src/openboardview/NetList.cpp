@@ -27,7 +27,7 @@ void NetList::Draw(const char *title, bool *p_open, Board *board) {
 		auto nets = board->Nets();
 
 		static int selected = -1;
-		string net_name     = "";
+		std::string net_name     = "";
 		ImGuiListClipper clipper;
 		clipper.Begin(nets.size());
 		while (clipper.Step()) {

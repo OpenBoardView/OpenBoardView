@@ -6,7 +6,6 @@
 #include <cstdlib>
 #include <cstring>
 #include <vector>
-using namespace std;
 
 #include "annotations.h"
 
@@ -91,7 +90,7 @@ void Annotations::GenerateList(void) {
 
 	rc = sqlite3_prepare_v2(sqldb, sql, -1, &stmt, NULL);
 	if (rc != SQLITE_OK) {
-		if (debug) cerr << "SELECT failed: " << sqlite3_errmsg(sqldb) << endl;
+		if (debug) std::cerr << "SELECT failed: " << sqlite3_errmsg(sqldb) << std::endl;
 		return; // or throw
 	}
 
@@ -135,7 +134,7 @@ void Annotations::GenerateList(void) {
 		annotations.push_back(ann);
 	}
 	if (rc != SQLITE_DONE) {
-		if (debug) cerr << "SELECT failed: " << sqlite3_errmsg(sqldb) << endl;
+		if (debug) std::cerr << "SELECT failed: " << sqlite3_errmsg(sqldb) << std::endl;
 		// if you return/throw here, don't forget the finalize
 	}
 	sqlite3_finalize(stmt);

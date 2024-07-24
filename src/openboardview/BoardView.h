@@ -216,7 +216,7 @@ struct BoardView {
 
 	bool infoPanelCenterZoomNets   = true;
 	bool infoPanelSelectPartsOnNet = false;
-	void CenterZoomNet(string netname);
+	void CenterZoomNet(std::string netname);
 
 	bool m_centerZoomSearchResults = true;
 	void CenterZoomSearchResults(void);
