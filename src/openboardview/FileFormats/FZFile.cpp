@@ -212,16 +212,15 @@ FZFile::FZFile(std::vector<char> &buf, uint32_t fzkey[44]) {
 	float multiplier = 1.0f;
 	saved_locale     = setlocale(LC_NUMERIC, "C"); // Use '.' as delimiter for strtod
 
-	if (!check_fz_key(fzkey)) {
+	if (check_fz_key(fzkey)) {
+		memcpy(key, fzkey, sizeof(key));
+	} else if (!check_fz_key(key)) { // Try to fallback to built-in key
 		valid = false;
 		error_msg = "Invalid FZ key\n";
 		error_msg += "FZ Key:\n";
 		error_msg += fz_key_to_string(fzkey);
 		return;
 	}
-
-	memcpy(key, fzkey, sizeof(key));
-
 
 	ENSURE_OR_FAIL(buffer_size > 4, error_msg, return);
 	size_t file_buf_size = 3 * (1 + buffer_size);
