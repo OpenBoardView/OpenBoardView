@@ -139,6 +139,38 @@ bool PDFBridgeSumatra::InitializeDDE() {
 	return true;
 }
 
+bool PDFBridgeSumatra::TestFork() {
+	if (this->ForkTested)
+		return true; // Already determined
+
+	if (this->idInst == 0L) {
+		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "%s", "PDFBridgeSumatra DDE not initialized");
+		return false;
+	}
+
+	if (this->hConv == nullptr) {
+		if (!this->ConnectDDEClient(this->szService, this->szTopic)) {
+			return false;
+		}
+	}
+
+	std::wstring ddeCmd = L"[Search(\"" + this->pdfPathString + L"\",\" 0p3nb04rdv13w \",0)]";
+	if ( this->ExecuteDDECommand(ddeCmd)) {
+		SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "PDFBridgeSumatra detected forked Sumatra");
+		this->IsForked = true;
+		this->ForkTested = true;
+		return true;
+	} else {
+		SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "PDFBridgeSumatra detected mainline Sumatra");
+		this->IsForked = false;
+		this->ForkTested = true;
+		return true;
+	}
+// TODO: Actually check for both, and if both fail, try repeating entire procedure few times, to deal with PDFs that take longer to load
+// Or add extra bool flag ForkChecked, and don't set that until at least one DDE command succeeded.
+// TODO: set ForkTested false on closing document
+}
+
 bool PDFBridgeSumatra::StartDDEServer(const std::wstring &service, const std::wstring &topic) {
 	if (this->hDataNameService != nullptr) { // Already started
 		return true;
@@ -309,7 +341,12 @@ void PDFBridgeSumatra::DocumentSearch(const std::string &str, bool wholeWordsOnl
 	}
 
 	auto wstr = utf8_to_utf16(strCopy);
-	std::wstring ddeCmd = L"[Search(\"" + this->pdfPathString + L"\",\"" + wstr + L"\"," + (caseSensitive ? L"1" : L"0") + L")]";
+	std::wstring ddeCmd;
+	this->TestFork();
+	if (this->IsForked)
+		ddeCmd = L"[Search(\"" + this->pdfPathString + L"\",\"" + wstr + L"\"," + (caseSensitive ? L"1" : L"0") + L")]";
+	else
+		ddeCmd = L"[Search(\"" + this->pdfPathString + L"\",\"" + wstr + L"\")]";
 
 	this->ExecuteDDECommand(ddeCmd);
 }
