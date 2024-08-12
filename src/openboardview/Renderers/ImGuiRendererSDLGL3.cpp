@@ -72,3 +72,7 @@ void ImGuiRendererSDLGL3::shutdown() {
 	ImGui_ImplOpenGL3_Shutdown();
 	ImGuiRendererSDL::shutdown();
 }
+
+void ImGuiRendererSDLGL3::destroyFontsTexture() {
+	ImGui_ImplOpenGL3_DestroyFontsTexture();
+}

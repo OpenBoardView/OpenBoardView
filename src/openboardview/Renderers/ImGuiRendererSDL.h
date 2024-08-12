@@ -24,6 +24,7 @@ public:
 	virtual void renderFrame(const ImVec4 &clear_color);
 	virtual void renderDrawData() = 0;
 	virtual void shutdown();
+	virtual void destroyFontsTexture() = 0;
 
 	// Returned string is error message, empty if successful
 	virtual std::string loadTextureFromFile(const filesystem::path &filepath, GLuint* out_texture, int* out_width, int* out_height);

@@ -13,6 +13,7 @@ public:
 	void initFrame();
 	void renderDrawData();
 	void shutdown();
+	void destroyFontsTexture();
 private:
 	std::string glsl_version;
 };
