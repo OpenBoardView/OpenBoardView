@@ -258,6 +258,7 @@ int BoardView::ConfigParse(void) {
 	ThemeSetStyle(v);
 
 	fontSize            = obvconfig.ParseDouble("fontSize", 20);
+	fontName            = obvconfig.ParseStr("fontName", "");
 	pinSizeThresholdLow = obvconfig.ParseDouble("pinSizeThresholdLow", 0);
 	pinShapeSquare      = obvconfig.ParseBool("pinShapeSquare", false);
 	pinShapeCircle      = obvconfig.ParseBool("pinShapeCircle", true);

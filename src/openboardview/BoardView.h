@@ -144,7 +144,8 @@ struct BoardView {
 
 	bool debug                   = false;
 	int history_file_has_changed = 0;
-	double fontSize              = 20.0f;
+	double fontSize              = 20.0;
+	std::string fontName         = "";
 	float zoomFactor             = 0.5f;
 	float partZoomScaleOutFactor = 3.0f;
 	int zoomModifier             = 5;
@@ -180,6 +181,7 @@ struct BoardView {
 
 	bool showPosition  = true;
 	bool reloadConfig  = false;
+	bool reloadFonts  = false;
 	int pinBlank       = 0;
 	uint32_t FZKey[44] = {0};
 
