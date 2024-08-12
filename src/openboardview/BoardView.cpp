@@ -29,6 +29,7 @@
 #include "FileFormats/FZFile.h"
 #include "FileFormats/GenCADFile.h"
 #include "GUI/DPI.h"
+#include "GUI/widgets.h"
 #include "annotations.h"
 #include "imgui/imgui.h"
 #include "imgui/misc/cpp/imgui_stdlib.h"
@@ -537,14 +538,6 @@ void BoardView::SetFZKey(const char *keytext) {
 	}
 }
 
-void RA(const char *t, int w) {
-	ImVec2 s = ImGui::CalcTextSize(t);
-	s.x      = w - s.x;
-	ImGui::Dummy(s);
-	ImGui::SameLine();
-	ImGui::Text("%s", t);
-}
-
 void u32tof4(uint32_t c, float *f) {
 	f[0] = (c & 0xff) / 0xff;
 	c >>= 8;
@@ -559,7 +552,7 @@ void BoardView::ColorPreferencesItem(
 	std::string desc_id = "##ColorButton" + std::string(label);
 	char buf[20];
 	snprintf(buf, sizeof(buf), "%08X", byte4swap(*c));
-	RA(label, label_width);
+	RightAlignedText(label, label_width);
 	ImGui::SameLine();
 	ImGui::ColorButton(desc_id.c_str(), ImColor(*c));
 	ImGui::SameLine();
@@ -628,7 +621,7 @@ void BoardView::ColorPreferences(void) {
 		}
 
 		ImGui::Dummy(ImVec2(1, DPI(5)));
-		RA("Base theme", DPI(200));
+		RightAlignedText("Base theme", DPI(200));
 		ImGui::SameLine();
 		{
 			int tc        = 0;
@@ -764,14 +757,14 @@ void BoardView::Preferences(void) {
 		}
 
 		t = obvconfig.ParseInt("windowX", 1100);
-		RA("Window Width", DPI(200));
+		RightAlignedText("Window Width", DPI(200));
 		ImGui::SameLine();
 		if (ImGui::InputInt("##windowX", &t)) {
 			if (t > 400) obvconfig.WriteInt("windowX", t);
 		}
 
 		t = obvconfig.ParseInt("windowY", 700);
-		RA("Window Height", DPI(200));
+		RightAlignedText("Window Height", DPI(200));
 		ImGui::SameLine();
 		if (ImGui::InputInt("##windowY", &t)) {
 			if (t > 320) obvconfig.WriteInt("windowY", t);
@@ -781,7 +774,7 @@ void BoardView::Preferences(void) {
 		std::vector<char> newFont(oldFont, oldFont + strlen(oldFont) + 1); // Copy string data + '\0' char
 		if (newFont.size() < 256)                                          // reserve space for new font name
 			newFont.resize(256, '\0');                                     // Max font name length is 255 characters
-		RA("Font name", DPI(200));
+		RightAlignedText("Font name", DPI(200));
 		ImGui::SameLine();
 		if (ImGui::InputText("##fontName", newFont.data(), newFont.size())) {
 			fontName = newFont.data();
@@ -790,7 +783,7 @@ void BoardView::Preferences(void) {
 		}
 
 		t = obvconfig.ParseInt("fontSize", 20);
-		RA("Font size", DPI(200));
+		RightAlignedText("Font size", DPI(200));
 		ImGui::SameLine();
 		if (ImGui::InputInt("##fontSize", &t)) {
 			if (t < 8) {
@@ -804,7 +797,7 @@ void BoardView::Preferences(void) {
 		}
 
 		t = obvconfig.ParseInt("dpi", 100);
-		RA("Screen DPI", DPI(200));
+		RightAlignedText("Screen DPI", DPI(200));
 		ImGui::SameLine();
 		if (ImGui::InputInt("##dpi", &t)) {
 			if ((t > 25) && (t < 600)) {
@@ -816,39 +809,39 @@ void BoardView::Preferences(void) {
 
 		ImGui::Separator();
 
-		RA("Board fill spacing", DPI(200));
+		RightAlignedText("Board fill spacing", DPI(200));
 		ImGui::SameLine();
 		if (ImGui::InputInt("##boardFillSpacing", &boardFillSpacing)) {
 			obvconfig.WriteInt("boardFillSpacing", boardFillSpacing);
 		}
 
 		t = zoomFactor * 10;
-		RA("Zoom step", DPI(200));
+		RightAlignedText("Zoom step", DPI(200));
 		ImGui::SameLine();
 		if (ImGui::InputInt("##zoomStep", &t)) {
 			obvconfig.WriteFloat("zoomFactor", t / 10);
 		}
 
-		RA("Zoom modifier", DPI(200));
+		RightAlignedText("Zoom modifier", DPI(200));
 		ImGui::SameLine();
 		if (ImGui::InputInt("##zoomModifier", &zoomModifier)) {
 			obvconfig.WriteInt("zoomModifier", zoomModifier);
 		}
 
-		RA("Panning step", DPI(200));
+		RightAlignedText("Panning step", DPI(200));
 		ImGui::SameLine();
 		if (ImGui::InputInt("##panningStep", &panFactor)) {
 			obvconfig.WriteInt("panFactor", panFactor);
 		}
 
-		RA("Pan modifier", DPI(200));
+		RightAlignedText("Pan modifier", DPI(200));
 		ImGui::SameLine();
 		if (ImGui::InputInt("##panModifier", &panModifier)) {
 			obvconfig.WriteInt("panModifier", panModifier);
 		}
 
 		ImGui::Dummy(ImVec2(1, DPI(5)));
-		RA("Flip Mode", DPI(200));
+		RightAlignedText("Flip Mode", DPI(200));
 		ImGui::SameLine();
 		{
 			if (ImGui::RadioButton("Viewport", &flipMode, 0)) {
@@ -861,25 +854,25 @@ void BoardView::Preferences(void) {
 		}
 		ImGui::Dummy(ImVec2(1, DPI(5)));
 
-		RA("Annotation flag size", DPI(200));
+		RightAlignedText("Annotation flag size", DPI(200));
 		ImGui::SameLine();
 		if (ImGui::InputInt("##annotationBoxSize", &annotationBoxSize)) {
 			obvconfig.WriteInt("annotationBoxSize", annotationBoxSize);
 		}
 
-		RA("Annotation flag offset", DPI(200));
+		RightAlignedText("Annotation flag offset", DPI(200));
 		ImGui::SameLine();
 		if (ImGui::InputInt("##annotationBoxOffset", &annotationBoxOffset)) {
 			obvconfig.WriteInt("annotationBoxOffset", annotationBoxOffset);
 		}
-		RA("Net web thickness", DPI(200));
+		RightAlignedText("Net web thickness", DPI(200));
 		ImGui::SameLine();
 		if (ImGui::InputInt("##netWebThickness", &netWebThickness)) {
 			obvconfig.WriteInt("netWebThickness", netWebThickness);
 		}
 		ImGui::Separator();
 
-		RA("Pin-1/A1 count threshold", DPI(200));
+		RightAlignedText("Pin-1/A1 count threshold", DPI(200));
 		ImGui::SameLine();
 		if (ImGui::InputInt("##pinA1threshold", &pinA1threshold)) {
 			if (pinA1threshold < 1) pinA1threshold = 1;
@@ -893,19 +886,19 @@ void BoardView::Preferences(void) {
 		if (ImGui::Checkbox("Pin Halo", &pinHalo)) {
 			obvconfig.WriteBool("pinHalo", pinHalo);
 		}
-		RA("Halo diameter", DPI(200));
+		RightAlignedText("Halo diameter", DPI(200));
 		ImGui::SameLine();
 		if (ImGui::InputFloat("##haloDiameter", &pinHaloDiameter)) {
 			obvconfig.WriteFloat("pinHaloDiameter", pinHaloDiameter);
 		}
 
-		RA("Halo thickness", DPI(200));
+		RightAlignedText("Halo thickness", DPI(200));
 		ImGui::SameLine();
 		if (ImGui::InputFloat("##haloThickness", &pinHaloThickness)) {
 			obvconfig.WriteFloat("pinHaloThickness", pinHaloThickness);
 		}
 
-		RA("Info Panel Zoom", DPI(200));
+		RightAlignedText("Info Panel Zoom", DPI(200));
 		ImGui::SameLine();
 		if (ImGui::InputFloat("##partZoomScaleOutFactor", &partZoomScaleOutFactor)) {
 			if (partZoomScaleOutFactor < 1.1) partZoomScaleOutFactor = 1.1;
@@ -954,7 +947,7 @@ void BoardView::Preferences(void) {
 		}
 
 #ifdef _WIN32
-		RA("PDF software executable", DPI(200));
+		RightAlignedText("PDF software executable", DPI(200));
 		ImGui::SameLine();
 		static std::string pdfSoftwarePath = obvconfig.ParseStr("pdfSoftwarePath", "SumatraPDF.exe");;
 		if (ImGui::InputText("##pdfSoftwarePath", &pdfSoftwarePath)) {

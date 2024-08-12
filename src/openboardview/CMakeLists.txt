@@ -97,6 +97,7 @@ set(SOURCES
 	GUI/Preferences/BoardSettings/BoardSettings.cpp
 	GUI/Preferences/BoardSettings/PDFFile.cpp
 	GUI/Preferences/Keyboard.cpp
+	GUI/widgets.cpp
 	PDFBridge/PDFBridge.cpp
 	PDFBridge/PDFFile.cpp
 	main_opengl.cpp
