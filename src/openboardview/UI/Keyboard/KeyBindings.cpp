@@ -21,7 +21,7 @@ const std::unordered_map<std::string, std::string> KeyBindings::deserializeName 
 };
 
 KeyBindings::KeyBindings() {
-	for (ImGuiKey key = ImGuiKey_NamedKey_BEGIN; key < ImGuiKey_NamedKey_END; key++) {
+	for (ImGuiKey key = ImGuiKey_NamedKey_BEGIN; key < ImGuiKey_NamedKey_END; key = (ImGuiKey)(key + 1)) {
 		nameToKey.insert({ImGui::GetKeyName(key), key});
 	}
 

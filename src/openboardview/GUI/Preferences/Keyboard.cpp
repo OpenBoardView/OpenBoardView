@@ -69,7 +69,7 @@ void Keyboard::render() {
 				// Add new binding after pressing add button, keep that after showing all bindings
 				if (addingName == kbs.first) {
 					// Check if a key is pressed
-					for (ImGuiKey key = ImGuiKey_NamedKey_BEGIN; key < ImGuiKey_NamedKey_END; key++) {
+					for (ImGuiKey key = ImGuiKey_NamedKey_BEGIN; key < ImGuiKey_NamedKey_END; key = (ImGuiKey)(key + 1)) {
 						if (ImGui::IsKeyDown(key)) {
 							// Ignore modifier keys, cannot be a final key
 							if (!keybindings.keyModifiers.isModifier(key)) {
@@ -138,7 +138,6 @@ void Keyboard::render() {
 	}
 
 	if (!close_button_not_clicked) { // modal title bar close button clicked
-		printf("Close\n");
 		keybindings.readFromConfig(obvconfig);
 	}
 
