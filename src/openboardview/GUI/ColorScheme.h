@@ -3,7 +3,10 @@
 
 #include <cstdint>
 
-struct ColorScheme {
+#include "confparse.h"
+
+class ColorScheme {
+public:
 	/*
 	 * Take note, because these are directly set
 	 * the packing format is ABGR,  not RGBA
@@ -56,6 +59,12 @@ struct ColorScheme {
 	uint32_t orMaskPins    = 0x00000000;
 	uint32_t orMaskParts   = 0x00000000;
 	uint32_t orMaskOutline = 0x00000000;
+
+	static uint32_t byte4swap(uint32_t x);
+
+	void ThemeSetStyle(const char *name);
+	void readFromConfig(Confparse &obvconfig);
+	void writeToConfig(Confparse &obvconfig);
 };
 
 #endif//_COLORSCHEME_H_

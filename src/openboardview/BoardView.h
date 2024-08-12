@@ -9,6 +9,7 @@
 #include "imgui/imgui.h"
 #include "UI/Keyboard/KeyBindings.h"
 #include "GUI/ColorScheme.h"
+#include "GUI/Preferences/Color.h"
 #include "GUI/Preferences/Keyboard.h"
 #include "GUI/BackgroundImage.h"
 #include "GUI/Preferences/BoardSettings/BoardSettings.h"
@@ -76,6 +77,7 @@ struct BoardView {
 	SpellCorrector scnets;
 	SpellCorrector scparts;
 	KeyBindings keybindings;
+	Preferences::Color colorPreferences{keybindings, obvconfig, m_colors};
 	Preferences::Keyboard keyboardPreferences{keybindings, obvconfig};
 	Preferences::BoardSettings boardSettings{keybindings, backgroundImage, pdfFile};
 
@@ -132,7 +134,6 @@ struct BoardView {
 	uint32_t FZKey[44] = {0};
 
 	int ConfigParse(void);
-	uint32_t byte4swap(uint32_t x);
 	void CenterView(void);
 	void Pan(int direction, int amount);
 	void Zoom(float osd_x, float osd_y, float zoom);
@@ -150,10 +151,6 @@ struct BoardView {
 	                          char *search,
 	                          int limit);
 	void Preferences(void);
-	void SaveAllColors(void);
-	void ColorPreferencesItem(
-	    const char *label, int label_width, const char *butlabel, const char *conflabel, int var_width, uint32_t *c);
-	void ColorPreferences(void);
 	bool AnyItemVisible(void);
 	void ThemeSetStyle(const char *name);
 

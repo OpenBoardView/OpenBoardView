@@ -91,11 +91,13 @@ set(SOURCES
 	UI/Keyboard/KeyModifiers.cpp
 	GUI/BackgroundImage.cpp
 	GUI/DPI.cpp
+	GUI/ColorScheme.cpp
 	GUI/Fonts.cpp
 	GUI/Image.cpp
 	GUI/Preferences/BoardSettings/BackgroundImage.cpp
 	GUI/Preferences/BoardSettings/BoardSettings.cpp
 	GUI/Preferences/BoardSettings/PDFFile.cpp
+	GUI/Preferences/Color.cpp
 	GUI/Preferences/Keyboard.cpp
 	GUI/widgets.cpp
 	PDFBridge/PDFBridge.cpp
