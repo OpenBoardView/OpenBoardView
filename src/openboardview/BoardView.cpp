@@ -28,6 +28,7 @@
 #include "FileFormats/CSTFile.h"
 #include "FileFormats/FZFile.h"
 #include "FileFormats/GenCADFile.h"
+#include "GUI/DPI.h"
 #include "annotations.h"
 #include "imgui/imgui.h"
 #include "imgui/misc/cpp/imgui_stdlib.h"
@@ -267,10 +268,11 @@ int BoardView::ConfigParse(void) {
 
 	// Special test here, in case we've already set the dpi from external
 	// such as command line.
-	if (!dpi) dpi = obvconfig.ParseInt("dpi", 100);
+	int dpi = 0;
+	if (getDPI() == 0) dpi = obvconfig.ParseInt("dpi", 100);
 	if (dpi < 50) dpi = 50;
 	if (dpi > 400) dpi = 400;
-	dpiscale = dpi / 100.0f;
+	setDPI(dpi);
 
 	pinHalo          = obvconfig.ParseBool("pinHalo", true);
 	pinHaloDiameter  = obvconfig.ParseDouble("pinHaloDiameter", 1.25);

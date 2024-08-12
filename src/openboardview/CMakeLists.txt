@@ -90,6 +90,7 @@ set(SOURCES
 	UI/Keyboard/KeyBindings.cpp
 	UI/Keyboard/KeyModifiers.cpp
 	GUI/BackgroundImage.cpp
+	GUI/DPI.cpp
 	GUI/Image.cpp
 	GUI/Preferences/BoardSettings/BackgroundImage.cpp
 	GUI/Preferences/BoardSettings/BoardSettings.cpp

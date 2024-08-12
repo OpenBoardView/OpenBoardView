@@ -18,9 +18,6 @@
 #include <cstdint>
 #include <vector>
 
-#define DPIF(x) (((x)*dpi) / 100.f)
-#define DPI(x) (((x)*dpi) / 100)
-
 struct BRDPart;
 class BRDFile;
 
@@ -147,8 +144,6 @@ struct BoardView {
 
 	bool debug                   = false;
 	int history_file_has_changed = 0;
-	int dpi                      = 0;
-	double dpiscale              = 1.0f;
 	double fontSize              = 20.0f;
 	float zoomFactor             = 0.5f;
 	float partZoomScaleOutFactor = 3.0f;

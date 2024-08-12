@@ -33,6 +33,7 @@
 
 // Rendering stuff
 #include "Renderers/Renderers.h"
+#include "GUI/DPI.h"
 
 #include "filesystem_impl.h"
 
@@ -305,9 +306,7 @@ int main(int argc, char **argv) {
 	bool done             = false;
 	bool preload_required = false;
 
-	// Set the dpi, if we've not set any parameters it'll be 0 which
-	// will make the ConfigParse load and set the right dpi.
-	app.dpi = g.dpi;
+	if (g.dpi > 0) setDPI(g.dpi);
 
 	// Now that the configuration file is loaded in to BoardView, parse its settings.
 	app.ConfigParse();
@@ -318,12 +317,7 @@ int main(int argc, char **argv) {
 	if (app.showInfoPanel) app.m_board_surface.x -= app.m_info_surface.x;
 
 	if (g.font_size == 0.0f) g.font_size = app.obvconfig.ParseDouble("fontSize", 20.0f);
-	g.font_size                          = (g.font_size * app.dpi) / 100;
-
-	{
-		ImGuiStyle &style = ImGui::GetStyle();
-		style.ScrollbarSize *= app.dpi / 100.0f;
-	}
+	g.font_size                          = (g.font_size * getDPI()) / 100;
 
 	// Font selection
 	std::deque<std::string> fontList(
