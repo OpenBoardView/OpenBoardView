@@ -399,6 +399,12 @@ int main(int argc, char **argv) {
 			clear_color = ImColor(app.m_colors.backgroundColor);
 		}
 
+		if (app.reloadFonts) {
+			// Needs to happen after frame has been rendered (or before starting a new frame)
+			fonts.reload(app.fontName, app.fontSize);
+			app.reloadFonts = false;
+		}
+
 		if (!(sleepout--)) {
 #ifdef _WIN32
 			Sleep(50);

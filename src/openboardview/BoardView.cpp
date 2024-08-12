@@ -784,7 +784,9 @@ void BoardView::Preferences(void) {
 		RA("Font name", DPI(200));
 		ImGui::SameLine();
 		if (ImGui::InputText("##fontName", newFont.data(), newFont.size())) {
+			fontName = newFont.data();
 			obvconfig.WriteStr("fontName", newFont.data());
+			this->reloadFonts = true;
 		}
 
 		t = obvconfig.ParseInt("fontSize", 20);
@@ -796,18 +798,21 @@ void BoardView::Preferences(void) {
 			} else if (t > 50) { // 50 is a value that hopefully should not break with too many fonts and 1024x1024 texture limits
 				t = 50;
 			}
+			fontSize = t;
 			obvconfig.WriteInt("fontSize", t);
+			this->reloadFonts = true;
 		}
 
 		t = obvconfig.ParseInt("dpi", 100);
 		RA("Screen DPI", DPI(200));
 		ImGui::SameLine();
 		if (ImGui::InputInt("##dpi", &t)) {
-			if ((t > 25) && (t < 600)) obvconfig.WriteInt("dpi", t);
+			if ((t > 25) && (t < 600)) {
+				obvconfig.WriteInt("dpi", t);
+				setDPI(t);
+				this->reloadFonts = true;
+			}
 		}
-		ImGui::PushStyleColor(ImGuiCol_Text, 0xff4040ff);
-		ImGui::Text("(Program restart is required to properly apply font and DPI changes)");
-		ImGui::PopStyleColor();
 
 		ImGui::Separator();
 
