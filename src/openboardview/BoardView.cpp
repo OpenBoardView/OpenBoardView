@@ -1003,7 +1003,7 @@ void BoardView::HelpAbout(void) {
 		}
 		ImGui::Text("%s %s", OBV_NAME, OBV_VERSION);
 		ImGui::Text("Build %s %s", OBV_BUILD, __DATE__ " " __TIME__);
-		ImGui::Text(OBV_URL);
+		ImGui::TextLinkOpenURL(OBV_URL);
 		if (ImGui::Button("Close") || keybindings.isPressed("CloseDialog")) {
 			ImGui::CloseCurrentPopup();
 		}

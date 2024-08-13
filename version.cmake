@@ -2,7 +2,7 @@
 
 string(TOLOWER ${PROJECT_NAME} PROJECT_NAME_LOWER)
 set(PROJECT_DESCRIPTION "Viewer for PCB layouts")
-set(PROJECT_URL "http://openboardview.org")
+set(PROJECT_URL "https://github.com/OpenBoardView/OpenBoardView")
 set(PROJECT_LICENSE "MIT")
 file(READ "LICENSE" PROJECT_LICENSE_TEXT)
 
