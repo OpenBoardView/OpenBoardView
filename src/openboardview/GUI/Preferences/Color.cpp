@@ -39,12 +39,12 @@ void Color::menuItem() {
 
 bool Color::render() {
 	bool m_needsRedraw = false;
-	bool close_button_not_clicked = true;
+	bool p_open = true;
 
 	//	ImGui::PushStyleColor(ImGuiCol_PopupBg, 0xffe0e0e0);
 	ImGuiIO& io = ImGui::GetIO();
 	ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x * 0.5f, io.DisplaySize.y * 0.5f), 0, ImVec2(0.5f, 0.5f));;
-	if (ImGui::BeginPopupModal("Colour Preferences", &close_button_not_clicked, ImGuiWindowFlags_AlwaysAutoResize)) {
+	if (ImGui::BeginPopupModal("Colour Preferences", &p_open, ImGuiWindowFlags_AlwaysAutoResize)) {
 		shown = false;
 
 		ImGui::Dummy(ImVec2(1, DPI(5)));

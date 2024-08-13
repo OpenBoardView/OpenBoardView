@@ -16,11 +16,12 @@ void Keyboard::menuItem() {
 }
 
 void Keyboard::render() {
-	bool close_button_not_clicked = true;
+	bool p_open = true;
 	auto &io = ImGui::GetIO();
 	ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x * 0.5f, io.DisplaySize.y * 0.5f), 0, ImVec2(0.5f, 0.5f));
-	if (ImGui::BeginPopupModal("Keyboard Preferences", &close_button_not_clicked, ImGuiWindowFlags_AlwaysAutoResize)) {
+	if (ImGui::BeginPopupModal("Keyboard Preferences", &p_open, ImGuiWindowFlags_AlwaysAutoResize)) {
 		shown = false;
+		was_open = true;
 
 		// Find how many columns we need to show all the keybindings
 		auto maxbindings = std::max_element(keybindings.keybindings.begin(), keybindings.keybindings.end(),
@@ -123,11 +124,13 @@ void Keyboard::render() {
 		if (ImGui::Button("Save")) {
 			keybindings.writeToConfig(obvconfig);
 			ImGui::CloseCurrentPopup();
+			was_open = false;
 		}
 		ImGui::SameLine();
-		if (ImGui::Button("Cancel") || keybindings.isPressed("CloseDialog") || !close_button_not_clicked) {
+		if (ImGui::Button("Cancel") || keybindings.isPressed("CloseDialog")) {
 			keybindings.readFromConfig(obvconfig);
 			ImGui::CloseCurrentPopup();
+			was_open = false;
 		}
 		ImGui::SameLine();
 		if (ImGui::Button("Default")) {
@@ -137,8 +140,13 @@ void Keyboard::render() {
 		ImGui::EndPopup();
 	}
 
-	if (!close_button_not_clicked) { // modal title bar close button clicked
-		keybindings.readFromConfig(obvconfig);
+	if (!p_open) { // ImGui tells us the popup is closed
+		if (was_open) {
+			// We need to run this only once when the popup is closed with the popup title bar close button
+			// If it was closed with our Save or Cancel button, we already did what we had to do and was_open is already false
+			keybindings.readFromConfig(obvconfig);
+			was_open = false;
+		}
 	}
 
 	if (shown) {

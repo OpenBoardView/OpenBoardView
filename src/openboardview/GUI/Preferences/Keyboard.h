@@ -7,6 +7,7 @@ namespace Preferences {
 class Keyboard {
 private:
 	bool shown = false;
+	bool was_open = false;
 	KeyBindings	&keybindings;
 	Confparse &obvconfig;
 	std::string addingName;
