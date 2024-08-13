@@ -40,7 +40,7 @@ void BoardSettings::render() {
 			backgroundImagePreferences.save();
 		}
 		ImGui::SameLine();
-		if (ImGui::Button("Cancel") || this->keybindings.isPressed("CloseDialog")) {
+		if (ImGui::Button("Cancel") || (ImGui::IsWindowHovered() && this->keybindings.isPressed("CloseDialog"))) {
 			shown = false;
 			pdfFilePreferences.cancel();
 			backgroundImagePreferences.cancel();
