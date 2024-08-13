@@ -1727,7 +1727,9 @@ void BoardView::Update() {
 	ImGuiWindowFlags flags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
 	                         ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings;
 
-	ImGuiWindowFlags draw_surface_flags = flags | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoScrollWithMouse;
+	// ImGui's keyboard navigation is disabled for the boardview area as we use our own key bindings
+	ImGuiWindowFlags draw_surface_flags = flags | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoBringToFrontOnFocus |
+		ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoNavInputs;
 
 	/*
 	 * Status footer
@@ -1896,6 +1898,8 @@ void BoardView::HandleInput() {
 	const ImGuiIO &io = ImGui::GetIO();
 
 	if (ImGui::IsWindowHovered()) {
+		// Set focus on boardview area hover to apply our key bindings instead of the currently active ImGui's keyboard navigation
+		ImGui::SetWindowFocus();
 
 		if (ImGui::IsMouseDragging(0)) {
 			if ((m_dragging_token == 0) && (io.MouseClickedPos[0].x < m_board_surface.x)) m_dragging_token = 1; // own it.

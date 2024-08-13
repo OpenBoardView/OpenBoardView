@@ -299,6 +299,7 @@ int main(int argc, char **argv) {
 	SDL_EnableScreenSaver();
 
 	ImGuiIO &io    = ImGui::GetIO();
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable ImGui's keyboard navigation
 	io.IniFilename = NULL;
 	//	io.Fonts->AddFontDefault();
 
