@@ -1,9 +1,10 @@
 #include "KeyModifiers.h"
 
+#include <cstdio>
 #include <algorithm>
 
 #if __cplusplus < 201703L
-constexpr const std::array<ImGuiKey, 12> KeyModifiers::modifiers;
+constexpr const std::array<ImGuiKey, 16> KeyModifiers::modifiers;
 constexpr const std::array<ImGuiKey, 4> KeyModifiers::handledModifiers;
 #endif
 

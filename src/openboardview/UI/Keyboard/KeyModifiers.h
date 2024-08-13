@@ -10,7 +10,7 @@
 class KeyModifiers {
 private:
 	// All modifiers key that should not be treated as regular keys
-	constexpr static const std::array<ImGuiKey, 12> modifiers{{
+	constexpr static const std::array<ImGuiKey, 16> modifiers{{
 		ImGuiKey_ModCtrl,
 		ImGuiKey_ModShift,
 		ImGuiKey_ModAlt,
@@ -23,6 +23,10 @@ private:
 		ImGuiKey_RightShift,
 		ImGuiKey_RightAlt,
 		ImGuiKey_RightSuper,
+		ImGuiKey_ReservedForModCtrl,
+		ImGuiKey_ReservedForModShift,
+		ImGuiKey_ReservedForModAlt,
+		ImGuiKey_ReservedForModSuper,
 	}};
 
 	// Modifier keys to handle as modifiers
