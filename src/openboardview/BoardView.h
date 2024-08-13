@@ -8,11 +8,13 @@
 #include "history.h"
 #include "imgui/imgui.h"
 #include "UI/Keyboard/KeyBindings.h"
+#include "GUI/Config.h"
 #include "GUI/ColorScheme.h"
 #include "GUI/Help/About.h"
 #include "GUI/Help/Controls.h"
 #include "GUI/Preferences/Color.h"
 #include "GUI/Preferences/Keyboard.h"
+#include "GUI/Preferences/Program.h"
 #include "GUI/BackgroundImage.h"
 #include "GUI/Preferences/BoardSettings/BoardSettings.h"
 #include "PDFBridge/PDFBridge.h"
@@ -79,6 +81,8 @@ struct BoardView {
 	SpellCorrector scnets;
 	SpellCorrector scparts;
 	KeyBindings keybindings;
+	Config config;
+	Preferences::Program programPreferences{keybindings, obvconfig, config, *this};
 	Preferences::Color colorPreferences{keybindings, obvconfig, m_colors};
 	Preferences::Keyboard keyboardPreferences{keybindings, obvconfig};
 	Preferences::BoardSettings boardSettings{keybindings, backgroundImage, pdfFile};
@@ -97,42 +101,8 @@ struct BoardView {
 
 	bool debug                   = false;
 	int history_file_has_changed = 0;
-	double fontSize              = 20.0;
-	std::string fontName         = "";
-	float zoomFactor             = 0.5f;
-	float partZoomScaleOutFactor = 3.0f;
-	int zoomModifier             = 5;
-	int panFactor                = 30;
-	int panModifier              = 5;
-	int flipMode                 = 0;
-
-	int annotationBoxOffset = 10;
-	int annotationBoxSize   = 10;
-
-	int pinA1threshold = 3; // pincount of package to show 1/A1 pin
-	int netWebThickness = 2;
-
-	float pinSizeThresholdLow = 0.0f;
-	bool pinShapeSquare       = false;
-	bool pinShapeCircle       = true;
-	bool pinSelectMasks       = true;
-	bool slowCPU              = false;
-	bool showFPS              = false;
-	bool showNetWeb           = true;
-	bool showInfoPanel        = true;
-	bool showPins             = true;
-	bool showAnnotations      = true;
-	bool pinHalo              = false;
-	float pinHaloDiameter     = 1.1;
-	float pinHaloThickness    = 4.00;
-	bool fillParts            = true;
-	bool boardFill            = true;
-	bool showPartName         = true;
-	bool showPinName          = true;
-	int boardFillSpacing      = 3;
 	bool boardMinMaxDone      = false;
 
-	bool showPosition  = true;
 	bool reloadConfig  = false;
 	bool reloadFonts  = false;
 	int pinBlank       = 0;
@@ -157,11 +127,8 @@ struct BoardView {
 	bool AnyItemVisible(void);
 	void ThemeSetStyle(const char *name);
 
-	bool infoPanelCenterZoomNets   = true;
-	bool infoPanelSelectPartsOnNet = false;
 	void CenterZoomNet(std::string netname);
 
-	bool m_centerZoomSearchResults = true;
 	void CenterZoomSearchResults(void);
 	int EPCCheck(void);
 	void OutlineGenFillDraw(ImDrawList *draw, int ydelta, double thickness);

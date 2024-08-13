@@ -92,6 +92,7 @@ set(SOURCES
 	GUI/BackgroundImage.cpp
 	GUI/DPI.cpp
 	GUI/ColorScheme.cpp
+	GUI/Config.cpp
 	GUI/Fonts.cpp
 	GUI/Image.cpp
 	GUI/Help/About.cpp
@@ -101,6 +102,7 @@ set(SOURCES
 	GUI/Preferences/BoardSettings/PDFFile.cpp
 	GUI/Preferences/Color.cpp
 	GUI/Preferences/Keyboard.cpp
+	GUI/Preferences/Program.cpp
 	GUI/widgets.cpp
 	PDFBridge/PDFBridge.cpp
 	PDFBridge/PDFFile.cpp

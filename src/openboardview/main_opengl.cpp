@@ -265,7 +265,7 @@ int main(int argc, char **argv) {
 #endif
 
 	// Apply the slowCPU flag if required.
-	app.slowCPU = g.slowCPU;
+	app.config.slowCPU = g.slowCPU;
 
 	if (g.width == 0) g.width   = app.obvconfig.ParseInt("windowX", 1100);
 	if (g.height == 0) g.height = app.obvconfig.ParseInt("windowY", 700);
@@ -315,12 +315,12 @@ int main(int argc, char **argv) {
 	// Preset some workable sizes
 	app.m_board_surface.x = g.width;
 	app.m_board_surface.y = g.height;
-	if (app.showInfoPanel) app.m_board_surface.x -= app.m_info_surface.x;
+	if (app.config.showInfoPanel) app.m_board_surface.x -= app.m_info_surface.x;
 
-	if (g.font_size > 0.0) app.fontSize = g.font_size;
+	if (g.font_size > 0.0) app.config.fontSize = g.font_size;
 
 	Fonts fonts;
-	std::string loadedFontName = fonts.load(app.fontName, app.fontSize);
+	std::string loadedFontName = fonts.load(app.config.fontName, app.config.fontSize);
 	if (!loadedFontName.empty()) { // Overwrite saved font name by the one that has just been loaded
 		app.obvconfig.WriteStr("fontName", loadedFontName.c_str());
 	}
@@ -381,7 +381,7 @@ int main(int argc, char **argv) {
 				else if (fabs(event.mgesture.dDist) > 0.002) {
 					int w, h;
 					SDL_GetWindowSize(window, &w, &h);
-					app.Zoom(event.mgesture.x * w, event.mgesture.y * h, event.mgesture.dDist * app.zoomFactor * 10);
+					app.Zoom(event.mgesture.x * w, event.mgesture.y * h, event.mgesture.dDist * app.config.zoomFactor * 10);
 				}
 			}
 
@@ -402,7 +402,7 @@ int main(int argc, char **argv) {
 
 		if (app.reloadFonts) {
 			// Needs to happen after frame has been rendered (or before starting a new frame)
-			fonts.reload(app.fontName, app.fontSize);
+			fonts.reload(app.config.fontName, app.config.fontSize);
 			app.reloadFonts = false;
 		}
 
