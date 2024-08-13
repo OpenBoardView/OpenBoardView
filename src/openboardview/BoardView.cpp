@@ -617,7 +617,6 @@ void BoardView::ColorPreferences(void) {
 
 		if (m_showColorPreferences) {
 			m_showColorPreferences = false;
-			m_tooltips_enabled     = false;
 		}
 
 		ImGui::Dummy(ImVec2(1, DPI(5)));
@@ -731,14 +730,9 @@ void BoardView::ColorPreferences(void) {
 		ImGui::Separator();
 
 		if (ImGui::Button("Done") || keybindings.isPressed("CloseDialog")) {
-			m_tooltips_enabled = true;
 			ImGui::CloseCurrentPopup();
 		}
 		ImGui::EndPopup();
-	}
-
-	if (!dummy) {
-		m_tooltips_enabled = true;
 	}
 	//	ImGui::PopStyleColor();
 }
@@ -753,7 +747,6 @@ void BoardView::Preferences(void) {
 		int t;
 		if (m_showPreferences) {
 			m_showPreferences  = false;
-			m_tooltips_enabled = false;
 		}
 
 		t = obvconfig.ParseInt("windowX", 1100);
@@ -994,13 +987,8 @@ void BoardView::Preferences(void) {
 
 		if (ImGui::Button("Done") || keybindings.isPressed("CloseDialog")) {
 			ImGui::CloseCurrentPopup();
-			m_tooltips_enabled = true;
 		}
 		ImGui::EndPopup();
-	}
-
-	if (!dummy) {
-		m_tooltips_enabled = true;
 	}
 	//	ImGui::PopStyleColor();
 }
@@ -1012,13 +1000,11 @@ void BoardView::HelpAbout(void) {
 	if (ImGui::BeginPopupModal("About", &dummy, ImGuiWindowFlags_AlwaysAutoResize)) {
 		if (m_showHelpAbout) {
 			m_showHelpAbout    = false;
-			m_tooltips_enabled = false;
 		}
 		ImGui::Text("%s %s", OBV_NAME, OBV_VERSION);
 		ImGui::Text("Build %s %s", OBV_BUILD, __DATE__ " " __TIME__);
 		ImGui::Text(OBV_URL);
 		if (ImGui::Button("Close") || keybindings.isPressed("CloseDialog")) {
-			m_tooltips_enabled = true;
 			ImGui::CloseCurrentPopup();
 		}
 		ImGui::Dummy(ImVec2(1, DPI(10)));
@@ -1027,10 +1013,6 @@ void BoardView::HelpAbout(void) {
 		ImGui::TextWrapped(OBV_LICENSE_TEXT);
 
 		ImGui::EndPopup();
-	}
-
-	if (!dummy) {
-		m_tooltips_enabled = true;
 	}
 }
 
@@ -1042,13 +1024,11 @@ void BoardView::HelpControls(void) {
 	if (ImGui::BeginPopupModal("Controls", &dummy)) {
 		if (m_showHelpControls) {
 			m_showHelpControls = false;
-			m_tooltips_enabled = false;
 		}
 		ImGui::Text("KEYBOARD CONTROLS");
 		ImGui::SameLine();
 
 		if (ImGui::Button("Close") || keybindings.isPressed("CloseDialog")) {
-			m_tooltips_enabled = true;
 			ImGui::CloseCurrentPopup();
 		}
 		ImGui::Separator();
@@ -1155,9 +1135,6 @@ void BoardView::HelpControls(void) {
 		ImGui::Columns(1);
 
 		ImGui::EndPopup();
-	}
-	if (!dummy) {
-		m_tooltips_enabled = true;
 	}
 }
 
@@ -1417,8 +1394,6 @@ void BoardView::ContextMenu(void) {
 		if (m_showContextMenu) {
 			contextbuf[0]      = 0;
 			m_showContextMenu  = false;
-			m_tooltips_enabled = false;
-			//			m_parent_occluded = true;
 			for (auto &ann : m_annotations.annotations) ann.hovered = false;
 		}
 
@@ -1530,16 +1505,12 @@ void BoardView::ContextMenu(void) {
 							m_annotations.Update(m_annotations.annotations[m_annotation_clicked_id].id, contextbuf);
 							m_annotations.GenerateList();
 							m_needsRedraw      = true;
-							m_tooltips_enabled = true;
-							// m_parent_occluded = false;
 							ImGui::CloseCurrentPopup();
 						}
 						ImGui::SameLine();
 						if (ImGui::Button("Cancel##1")) {
 							ImGui::CloseCurrentPopup();
 							m_annotationnew_retain = false;
-							m_tooltips_enabled     = true;
-							// m_parent_occluded = false;
 						}
 						ImGui::Separator();
 					}
@@ -1586,7 +1557,6 @@ void BoardView::ContextMenu(void) {
 					                          contextbufnew);
 
 					if (ImGui::Button("Apply##1") || keybindings.isPressed("Validate")) {
-						m_tooltips_enabled     = true;
 						m_annotationnew_retain = false;
 						if (debug) fprintf(stderr, "DATA:'%s'\n\n", contextbufnew);
 
@@ -1600,7 +1570,6 @@ void BoardView::ContextMenu(void) {
 					ImGui::SameLine();
 					if (ImGui::Button("Cancel")) {
 					    ImGui::CloseCurrentPopup();
-					    m_tooltips_enabled     = true;
 					    m_annotationnew_retain = false;
 					}
 					*/
@@ -1612,7 +1581,6 @@ void BoardView::ContextMenu(void) {
 					m_annotations.Remove(m_annotations.annotations[m_annotation_clicked_id].id);
 					m_annotations.GenerateList();
 					m_needsRedraw = true;
-					// m_parent_occluded = false;
 					ImGui::CloseCurrentPopup();
 				}
 			}
@@ -1624,12 +1592,9 @@ void BoardView::ContextMenu(void) {
 		if (ImGui::Button("Cancel##2") || keybindings.isPressed("CloseDialog")) {
 			m_annotationnew_retain  = false;
 			m_annotationedit_retain = false;
-			m_tooltips_enabled      = true;
-			// m_parent_occluded = false;
 			ImGui::CloseCurrentPopup();
 		}
 		ImGui::EndPopup();
-		//	m_tooltips_enabled = true;
 	}
 	ImGui::PopStyleVar();
 
@@ -1637,8 +1602,6 @@ void BoardView::ContextMenu(void) {
 	if (!dummy) {
 		m_annotationnew_retain  = false;
 		m_annotationedit_retain = false;
-		m_tooltips_enabled      = true;
-		// m_parent_occluded = false;
 	}
 }
 
@@ -1718,7 +1681,6 @@ void BoardView::SearchComponent(void) {
 		bool search_params_changed = m_showSearch; //treat initiail popup reopening similar to later search option changes
 		if (m_showSearch) {
 			m_showSearch       = false;
-			m_tooltips_enabled = false;
 			//			fprintf(stderr, "Tooltips disabled\n");
 		}
 
@@ -1727,7 +1689,6 @@ void BoardView::SearchComponent(void) {
 		//
 		if (ImGui::Button("Search")) {
 			// FindComponent(first_button);
-			m_tooltips_enabled = true;
 			SearchCompound(first_button[0]);
 			SearchCompoundNoClear(first_button[1]);
 			SearchCompoundNoClear(first_button[2]);
@@ -1745,7 +1706,6 @@ void BoardView::SearchComponent(void) {
 		if (ImGui::Button("Exit") || keybindings.isPressed("CloseDialog")) {
 			FindComponent("");
 			ResetSearch();
-			m_tooltips_enabled = true;
 			ImGui::CloseCurrentPopup();
 		} // exit button
 
@@ -1852,15 +1812,11 @@ void BoardView::SearchComponent(void) {
 			SearchCompoundNoClear(m_search[2]);
 			CenterZoomSearchResults();
 			ImGui::CloseCurrentPopup();
-			m_tooltips_enabled = true;
 		} // response to keyboard ENTER
 
 		ImGui::EndPopup();
 	}
 	ImGui::PopStyleVar();
-	if (!dummy) {
-		m_tooltips_enabled = true;
-	}
 }
 
 void BoardView::ResetSearch() {
@@ -1874,7 +1830,6 @@ void BoardView::ClearAllHighlights(void) {
 	FindComponent("");
 	ResetSearch();
 	m_needsRedraw      = true;
-	m_tooltips_enabled = true;
 	if (m_board != NULL) {
 		for (auto part : m_board->Components()) part->visualmode = part->CVMNormal;
 	}
@@ -2432,7 +2387,6 @@ void BoardView::HandleInput() {
 						m_annotationedit_retain = false;
 						m_showContextMenu       = true;
 						m_showContextMenuPos    = spos;
-						m_tooltips_enabled      = false;
 						m_needsRedraw           = true;
 						if (debug) fprintf(stderr, "context click request at (%f %f)\n", spos.x, spos.y);
 					}
@@ -3912,9 +3866,8 @@ void BoardView::DrawPartTooltips(ImDrawList *draw) {
 	ImVec2 spos = ImGui::GetMousePos();
 	ImVec2 pos  = ScreenToCoord(spos.x, spos.y);
 
-	//	if (m_parent_occluded) return;
-	if (!m_tooltips_enabled) return;
-	if (spos.x > m_board_surface.x) return;
+	if (!ImGui::IsWindowHovered()) return;
+
 	/*
 	 * I am loathing that I have to add this, but basically check every pin on the board so we can
 	 * determine if we're hovering over a testpad
@@ -4028,7 +3981,6 @@ void BoardView::DrawPartTooltips(ImDrawList *draw) {
 }
 
 inline void BoardView::DrawPinTooltips(ImDrawList *draw) {
-	if (!m_tooltips_enabled) return;
 	draw->ChannelsSetCurrent(kChannelAnnotations);
 
 	if (HighlightedPinIsHovered()) {
@@ -4047,7 +3999,6 @@ inline void BoardView::DrawPinTooltips(ImDrawList *draw) {
 inline void BoardView::DrawAnnotations(ImDrawList *draw) {
 
 	if (!showAnnotations) return;
-	if (!m_tooltips_enabled) return;
 
 	draw->ChannelsSetCurrent(kChannelAnnotations);
 
@@ -4060,7 +4011,7 @@ inline void BoardView::DrawAnnotations(ImDrawList *draw) {
 			a.y -= annotationBoxOffset;
 			b = ImVec2(a.x + annotationBoxSize, a.y - annotationBoxSize);
 
-			if ((ann.hovered == true) && (m_tooltips_enabled)) {
+			if ((ann.hovered == true) && (ImGui::IsWindowHovered())) {
 				char buf[60];
 
 				snprintf(buf, sizeof(buf), "%s", ann.note.c_str());
@@ -4148,7 +4099,7 @@ int BoardView::AnnotationIsHovered(void) {
 	bool is_hovered = false;
 	int i           = 0;
 
-	if (!m_tooltips_enabled) return false;
+	if (!ImGui::IsWindowHovered()) return false;
 	m_annotation_last_hovered = 0;
 
 	for (auto &ann : m_annotations.annotations) {
