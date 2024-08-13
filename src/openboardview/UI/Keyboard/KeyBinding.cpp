@@ -28,7 +28,7 @@ std::vector<ImGuiKey> KeyBinding::getModifiers() const {
 }
 
 std::string KeyBinding::to_string() const {
-	std::string keys = ImGui::GetKeyName(this->getKey());
+	std::string keys = (this->getKey() == ImGuiKey_None) ? "" : ImGui::GetKeyName(this->getKey());
 
 	auto modifiers = this->getModifiers();
 	for (auto im = modifiers.rbegin(); im != modifiers.rend(); ++im ) {
