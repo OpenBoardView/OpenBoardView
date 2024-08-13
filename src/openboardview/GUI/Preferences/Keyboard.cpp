@@ -67,6 +67,39 @@ void Keyboard::render() {
 					colindex++;
 				}
 
+				ImGui::TableSetColumnIndex(colindex);
+				if (addingName == kbs.first) {
+					// Adding a new key binding
+					auto keys = addingBinding.to_string();
+					if (ImGui::SmallButton(("X##adding" + kbs.first).c_str())) {
+						// Stop adding new keybinding
+						addingKey = ImGuiKey_None;
+						addingName = std::string{};
+						addingBinding = KeyBinding{};
+					}
+					bool x_button_clicked = ImGui::IsItemActive();
+
+					ImGui::SameLine();
+					if (!keys.empty()) {
+						// Show current pressed keys
+						ImGui::Text("%s", keys.c_str());
+					} else {
+						// Or a message indicating to press a key
+						ImGui::Text("%s", "<Press a key>");
+					}
+
+					// Dot not attempt to add a key if the X button is being clicked
+					// Prevent showing "MouseLeft" while clicking the button before releasing
+					if (x_button_clicked) {
+						continue;
+					}
+				} else {
+					// Show add button
+					if (ImGui::SmallButton(("Add##" + kbs.first).c_str())) {
+						addingName = kbs.first;
+					}
+				}
+
 				// Add new binding after pressing add button, keep that after showing all bindings
 				if (addingName == kbs.first) {
 					// Check if a key is pressed
@@ -92,30 +125,6 @@ void Keyboard::render() {
 					}
 				}
 
-				ImGui::TableSetColumnIndex(colindex);
-				if (addingName == kbs.first) {
-					// Adding a new key binding
-					auto keys = addingBinding.to_string();
-					if (ImGui::SmallButton(("X##adding" + kbs.first).c_str())) {
-						// Stop adding new keybinding
-						addingKey = ImGuiKey_None;
-						addingName = std::string{};
-						addingBinding = KeyBinding{};
-					}
-					ImGui::SameLine();
-					if (!keys.empty()) {
-						// Show current pressed keys
-						ImGui::Text("%s", keys.c_str());
-					} else {
-						// Or a message indicating to press a key
-						ImGui::Text("%s", "<Press a key>");
-					}
-				} else {
-					// Show add button
-					if (ImGui::SmallButton(("Add##" + kbs.first).c_str())) {
-						addingName = kbs.first;
-					}
-				}
 			}
 
 			ImGui::EndTable();
