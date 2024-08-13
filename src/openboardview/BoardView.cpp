@@ -2174,12 +2174,12 @@ void BoardView::HandleInput() {
  *
  */
 void BoardView::ShowNetList(bool *p_open) {
-	static NetList netList(std::bind(&BoardView::FindNet, this, std::placeholders::_1));
+	static NetList netList(keybindings, std::bind(&BoardView::FindNet, this, std::placeholders::_1));
 	netList.Draw("Net List", p_open, m_board);
 }
 
 void BoardView::ShowPartList(bool *p_open) {
-	static PartList partList(std::bind(&BoardView::FindComponent, this, std::placeholders::_1));
+	static PartList partList(keybindings, std::bind(&BoardView::FindComponent, this, std::placeholders::_1));
 	partList.Draw("Part List", p_open, m_board);
 }
 

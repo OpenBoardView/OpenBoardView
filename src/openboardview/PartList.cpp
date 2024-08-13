@@ -2,7 +2,7 @@
 
 #include "imgui/imgui.h"
 
-PartList::PartList(TcharStringCallback cbNetSelected) {
+PartList::PartList(KeyBindings &keyBindings, TcharStringCallback cbNetSelected) : keyBindings(keyBindings) {
 	cbNetSelected_ = cbNetSelected;
 }
 
@@ -14,7 +14,7 @@ void PartList::Draw(const char *title, bool *p_open, Board *board) {
 	int height = 640;
 
 	ImGui::SetNextWindowSize(ImVec2(width, height));
-	ImGui::Begin("Part List");
+	ImGui::Begin(title, p_open);
 
 	ImGui::Columns(1, "part_infos");
 	ImGui::Separator();
@@ -47,6 +47,10 @@ void PartList::Draw(const char *title, bool *p_open, Board *board) {
 	}
 	ImGui::Columns(1);
 	ImGui::Separator();
+
+	if (ImGui::IsWindowHovered() && keyBindings.isPressed("CloseDialog")) {
+		*p_open = false;
+	}
 
 	ImGui::End();
 }
