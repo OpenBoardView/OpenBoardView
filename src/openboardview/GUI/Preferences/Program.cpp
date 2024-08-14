@@ -1,5 +1,8 @@
 #include "BoardView.h"
 
+#include <string>
+#include <vector>
+
 #include "Program.h"
 
 #include "imgui/imgui.h"
@@ -31,14 +34,14 @@ void Program::render() {
 		int t;
 
 		t = obvconfig.ParseInt("windowX", 1100);
-		RightAlignedText("Window Width", DPI(200));
+		RightAlignedText("Window width", DPI(250));
 		ImGui::SameLine();
 		if (ImGui::InputInt("##windowX", &t)) {
 			if (t > 400) obvconfig.WriteInt("windowX", t);
 		}
 
 		t = obvconfig.ParseInt("windowY", 700);
-		RightAlignedText("Window Height", DPI(200));
+		RightAlignedText("Window height", DPI(250));
 		ImGui::SameLine();
 		if (ImGui::InputInt("##windowY", &t)) {
 			if (t > 320) obvconfig.WriteInt("windowY", t);
@@ -48,7 +51,7 @@ void Program::render() {
 		std::vector<char> newFont(oldFont, oldFont + strlen(oldFont) + 1); // Copy string data + '\0' char
 		if (newFont.size() < 256)                                          // reserve space for new font name
 			newFont.resize(256, '\0');                                     // Max font name length is 255 characters
-		RightAlignedText("Font name", DPI(200));
+		RightAlignedText("Font name", DPI(250));
 		ImGui::SameLine();
 		if (ImGui::InputText("##fontName", newFont.data(), newFont.size())) {
 			config.fontName = newFont.data();
@@ -57,7 +60,7 @@ void Program::render() {
 		}
 
 		t = obvconfig.ParseInt("fontSize", 20);
-		RightAlignedText("Font size", DPI(200));
+		RightAlignedText("Font size", DPI(250));
 		ImGui::SameLine();
 		if (ImGui::InputInt("##fontSize", &t)) {
 			if (t < 8) {
@@ -71,7 +74,7 @@ void Program::render() {
 		}
 
 		t = obvconfig.ParseInt("dpi", 100);
-		RightAlignedText("Screen DPI", DPI(200));
+		RightAlignedText("Screen DPI", DPI(250));
 		ImGui::SameLine();
 		if (ImGui::InputInt("##dpi", &t)) {
 			if ((t > 25) && (t < 600)) {
@@ -81,148 +84,10 @@ void Program::render() {
 			}
 		}
 
-		ImGui::Separator();
-
-		RightAlignedText("Board fill spacing", DPI(200));
-		ImGui::SameLine();
-		if (ImGui::InputInt("##boardFillSpacing", &config.boardFillSpacing)) {
-			obvconfig.WriteInt("boardFillSpacing", config.boardFillSpacing);
-		}
-
-		t = config.zoomFactor * 10;
-		RightAlignedText("Zoom step", DPI(200));
-		ImGui::SameLine();
-		if (ImGui::InputInt("##zoomStep", &t)) {
-			config.zoomFactor = t / 10.0f;
-			obvconfig.WriteFloat("zoomFactor", config.zoomFactor);
-		}
-
-		RightAlignedText("Zoom modifier", DPI(200));
-		ImGui::SameLine();
-		if (ImGui::InputInt("##zoomModifier", &config.zoomModifier)) {
-			obvconfig.WriteInt("zoomModifier", config.zoomModifier);
-		}
-
-		RightAlignedText("Panning step", DPI(200));
-		ImGui::SameLine();
-		if (ImGui::InputInt("##panningStep", &config.panFactor)) {
-			obvconfig.WriteInt("panFactor", config.panFactor);
-		}
-
-		RightAlignedText("Pan modifier", DPI(200));
-		ImGui::SameLine();
-		if (ImGui::InputInt("##panModifier", &config.panModifier)) {
-			obvconfig.WriteInt("panModifier", config.panModifier);
-		}
-
-		ImGui::Dummy(ImVec2(1, DPI(5)));
-		RightAlignedText("Flip Mode", DPI(200));
-		ImGui::SameLine();
-		{
-			if (ImGui::RadioButton("Viewport", &config.flipMode, 0)) {
-				obvconfig.WriteInt("flipMode", config.flipMode);
-			}
-			ImGui::SameLine();
-			if (ImGui::RadioButton("Mouse", &config.flipMode, 1)) {
-				obvconfig.WriteInt("flipMode", config.flipMode);
-			}
-		}
-		ImGui::Dummy(ImVec2(1, DPI(5)));
-
-		RightAlignedText("Annotation flag size", DPI(200));
-		ImGui::SameLine();
-		if (ImGui::InputInt("##annotationBoxSize", &config.annotationBoxSize)) {
-			obvconfig.WriteInt("annotationBoxSize", config.annotationBoxSize);
-		}
-
-		RightAlignedText("Annotation flag offset", DPI(200));
-		ImGui::SameLine();
-		if (ImGui::InputInt("##annotationBoxOffset", &config.annotationBoxOffset)) {
-			obvconfig.WriteInt("annotationBoxOffset", config.annotationBoxOffset);
-		}
-		RightAlignedText("Net web thickness", DPI(200));
-		ImGui::SameLine();
-		if (ImGui::InputInt("##netWebThickness", &config.netWebThickness)) {
-			obvconfig.WriteInt("netWebThickness", config.netWebThickness);
-		}
-		ImGui::Separator();
-
-		RightAlignedText("Pin-1/A1 count threshold", DPI(200));
-		ImGui::SameLine();
-		if (ImGui::InputInt("##pinA1threshold", &config.pinA1threshold)) {
-			if (config.pinA1threshold < 1) config.pinA1threshold = 1;
-			obvconfig.WriteInt("pinA1threshold", config.pinA1threshold);
-		}
-
-		if (ImGui::Checkbox("Pin select masks", &config.pinSelectMasks)) {
-			obvconfig.WriteBool("pinSelectMasks", config.pinSelectMasks);
-		}
-
-		if (ImGui::Checkbox("Pin Halo", &config.pinHalo)) {
-			obvconfig.WriteBool("pinHalo", config.pinHalo);
-		}
-		RightAlignedText("Halo diameter", DPI(200));
-		ImGui::SameLine();
-		if (ImGui::InputFloat("##haloDiameter", &config.pinHaloDiameter)) {
-			obvconfig.WriteFloat("pinHaloDiameter", config.pinHaloDiameter);
-		}
-
-		RightAlignedText("Halo thickness", DPI(200));
-		ImGui::SameLine();
-		if (ImGui::InputFloat("##haloThickness", &config.pinHaloThickness)) {
-			obvconfig.WriteFloat("pinHaloThickness", config.pinHaloThickness);
-		}
-
-		RightAlignedText("Info Panel Zoom", DPI(200));
-		ImGui::SameLine();
-		if (ImGui::InputFloat("##partZoomScaleOutFactor", &config.partZoomScaleOutFactor)) {
-			if (config.partZoomScaleOutFactor < 1.1) config.partZoomScaleOutFactor = 1.1;
-			obvconfig.WriteFloat("partZoomScaleOutFactor", config.partZoomScaleOutFactor);
-		}
-
-		if (ImGui::Checkbox("Center/Zoom Search Results", &config.centerZoomSearchResults)) {
-			obvconfig.WriteBool("centerZoomSearchResults", config.centerZoomSearchResults);
-		}
-
-		if (ImGui::Checkbox("Show Info Panel", &config.showInfoPanel)) {
-			obvconfig.WriteBool("showInfoPanel", config.showInfoPanel);
-		}
-
-		if (ImGui::Checkbox("Show net web", &config.showNetWeb)) {
-			obvconfig.WriteBool("showNetWeb", config.showNetWeb);
-		}
-
-		if (ImGui::Checkbox("slowCPU", &config.slowCPU)) {
-			obvconfig.WriteBool("slowCPU", config.slowCPU);
-			style.AntiAliasedLines = !config.slowCPU;
-			style.AntiAliasedFill  = !config.slowCPU;
-		}
-
-		ImGui::SameLine();
-		if (ImGui::Checkbox("Show FPS", &config.showFPS)) {
-			obvconfig.WriteBool("showFPS", config.showFPS);
-		}
-
-		if (ImGui::Checkbox("Fill Parts", &config.fillParts)) {
-			obvconfig.WriteBool("fillParts", config.fillParts);
-		}
-
-		ImGui::SameLine();
-		if (ImGui::Checkbox("Fill Board", &config.boardFill)) {
-			obvconfig.WriteBool("boardFill", config.boardFill);
-		}
-
-		if (ImGui::Checkbox("Show part name", &config.showPartName)) {
-			obvconfig.WriteBool("showPartName", config.showPartName);
-		}
-
-		ImGui::SameLine();
-		if (ImGui::Checkbox("Show pin name", &config.showPinName)) {
-			obvconfig.WriteBool("showPinName", config.showPinName);
-		}
-
 #ifdef _WIN32
-		RightAlignedText("PDF software executable", DPI(200));
+		ImGui::Separator();
+
+		RightAlignedText("PDF software executable", DPI(250));
 		ImGui::SameLine();
 		static std::string pdfSoftwarePath = obvconfig.ParseStr("pdfSoftwarePath", "SumatraPDF.exe");;
 		if (ImGui::InputText("##pdfSoftwarePath", &config.pdfSoftwarePath)) {
@@ -237,6 +102,170 @@ void Program::render() {
 			}
 		}
 #endif
+
+		ImGui::Separator();
+
+
+		t = config.zoomFactor * 10;
+		RightAlignedText("Zoom step", DPI(250));
+		ImGui::SameLine();
+		if (ImGui::InputInt("##zoomStep", &t)) {
+			config.zoomFactor = t / 10.0f;
+			obvconfig.WriteFloat("zoomFactor", config.zoomFactor);
+		}
+
+		RightAlignedText("Zoom modifier", DPI(250));
+		ImGui::SameLine();
+		if (ImGui::InputInt("##zoomModifier", &config.zoomModifier)) {
+			obvconfig.WriteInt("zoomModifier", config.zoomModifier);
+		}
+
+		RightAlignedText("Show info panel", DPI(250));
+		ImGui::SameLine();
+		if (ImGui::Checkbox("##showInfoPanel", &config.showInfoPanel)) {
+			obvconfig.WriteBool("showInfoPanel", config.showInfoPanel);
+		}
+
+		RightAlignedText("Info panel zoom", DPI(250));
+		ImGui::SameLine();
+		if (ImGui::InputFloat("##partZoomScaleOutFactor", &config.partZoomScaleOutFactor)) {
+			if (config.partZoomScaleOutFactor < 1.1) config.partZoomScaleOutFactor = 1.1;
+			obvconfig.WriteFloat("partZoomScaleOutFactor", config.partZoomScaleOutFactor);
+		}
+
+		RightAlignedText("Center/zoom search results", DPI(250));
+		ImGui::SameLine();
+		if (ImGui::Checkbox("##centerZoomSearchResults", &config.centerZoomSearchResults)) {
+			obvconfig.WriteBool("centerZoomSearchResults", config.centerZoomSearchResults);
+		}
+
+		RightAlignedText("Panning step", DPI(250));
+		ImGui::SameLine();
+		if (ImGui::InputInt("##panningStep", &config.panFactor)) {
+			obvconfig.WriteInt("panFactor", config.panFactor);
+		}
+
+		RightAlignedText("Pan modifier", DPI(250));
+		ImGui::SameLine();
+		if (ImGui::InputInt("##panModifier", &config.panModifier)) {
+			obvconfig.WriteInt("panModifier", config.panModifier);
+		}
+
+		RightAlignedText("Flip mode", DPI(250));
+		ImGui::SameLine();
+		{
+			if (ImGui::RadioButton("Viewport", &config.flipMode, 0)) {
+				obvconfig.WriteInt("flipMode", config.flipMode);
+			}
+			ImGui::SameLine();
+			if (ImGui::RadioButton("Mouse", &config.flipMode, 1)) {
+				obvconfig.WriteInt("flipMode", config.flipMode);
+			}
+		}
+
+		RightAlignedText("Show FPS", DPI(250));
+		ImGui::SameLine();
+		if (ImGui::Checkbox("##showFPS", &config.showFPS)) {
+			obvconfig.WriteBool("showFPS", config.showFPS);
+		}
+
+		ImGui::SameLine();
+		RightAlignedText("Slow CPU", DPI(150));
+		ImGui::SameLine();
+		if (ImGui::Checkbox("##slowCPU", &config.slowCPU)) {
+			obvconfig.WriteBool("slowCPU", config.slowCPU);
+			style.AntiAliasedLines = !config.slowCPU;
+			style.AntiAliasedFill  = !config.slowCPU;
+		}
+
+		ImGui::Separator();
+
+		RightAlignedText("Annotation flag size", DPI(250));
+		ImGui::SameLine();
+		if (ImGui::InputInt("##annotationBoxSize", &config.annotationBoxSize)) {
+			obvconfig.WriteInt("annotationBoxSize", config.annotationBoxSize);
+		}
+
+		RightAlignedText("Annotation flag offset", DPI(250));
+		ImGui::SameLine();
+		if (ImGui::InputInt("##annotationBoxOffset", &config.annotationBoxOffset)) {
+			obvconfig.WriteInt("annotationBoxOffset", config.annotationBoxOffset);
+		}
+
+		RightAlignedText("Pin-1/A1 count threshold", DPI(250));
+		ImGui::SameLine();
+		if (ImGui::InputInt("##pinA1threshold", &config.pinA1threshold)) {
+			if (config.pinA1threshold < 1) config.pinA1threshold = 1;
+			obvconfig.WriteInt("pinA1threshold", config.pinA1threshold);
+		}
+
+		RightAlignedText("Pin select masks", DPI(250));
+		ImGui::SameLine();
+		if (ImGui::Checkbox("##pinSelectMasks", &config.pinSelectMasks)) {
+			obvconfig.WriteBool("pinSelectMasks", config.pinSelectMasks);
+		}
+
+		RightAlignedText("Pin halo", DPI(250));
+		ImGui::SameLine();
+		if (ImGui::Checkbox("##pinHalo", &config.pinHalo)) {
+			obvconfig.WriteBool("", config.pinHalo);
+		}
+
+		RightAlignedText("Halo diameter", DPI(250));
+		ImGui::SameLine();
+		if (ImGui::InputFloat("##haloDiameter", &config.pinHaloDiameter)) {
+			obvconfig.WriteFloat("pinHaloDiameter", config.pinHaloDiameter);
+		}
+
+		RightAlignedText("Halo thickness", DPI(250));
+		ImGui::SameLine();
+		if (ImGui::InputFloat("##haloThickness", &config.pinHaloThickness)) {
+			obvconfig.WriteFloat("pinHaloThickness", config.pinHaloThickness);
+		}
+
+		RightAlignedText("Show net web", DPI(250));
+		ImGui::SameLine();
+		if (ImGui::Checkbox("##showNetWeb", &config.showNetWeb)) {
+			obvconfig.WriteBool("showNetWeb", config.showNetWeb);
+		}
+
+		RightAlignedText("Net web thickness", DPI(250));
+		ImGui::SameLine();
+		if (ImGui::InputInt("##netWebThickness", &config.netWebThickness)) {
+			obvconfig.WriteInt("netWebThickness", config.netWebThickness);
+		}
+
+		RightAlignedText("Fill parts", DPI(250));
+		ImGui::SameLine();
+		if (ImGui::Checkbox("##fillParts", &config.fillParts)) {
+			obvconfig.WriteBool("fillParts", config.fillParts);
+		}
+
+		ImGui::SameLine();
+		RightAlignedText("Fill board", DPI(150));
+		ImGui::SameLine();
+		if (ImGui::Checkbox("##boardFill", &config.boardFill)) {
+			obvconfig.WriteBool("boardFill", config.boardFill);
+		}
+
+		RightAlignedText("Board fill spacing", DPI(250));
+		ImGui::SameLine();
+		if (ImGui::InputInt("##boardFillSpacing", &config.boardFillSpacing)) {
+			obvconfig.WriteInt("boardFillSpacing", config.boardFillSpacing);
+		}
+
+		RightAlignedText("Show parts name", DPI(250));
+		ImGui::SameLine();
+		if (ImGui::Checkbox("##showPartName", &config.showPartName)) {
+			obvconfig.WriteBool("showPartName", config.showPartName);
+		}
+
+		ImGui::SameLine();
+		RightAlignedText("Show pins name", DPI(150));
+		ImGui::SameLine();
+		if (ImGui::Checkbox("##showPinName", &config.showPinName)) {
+			obvconfig.WriteBool("showPinName", config.showPinName);
+		}
 
 		ImGui::Separator();
 		{
