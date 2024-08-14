@@ -32,6 +32,7 @@
 #include "GUI/widgets.h"
 #include "annotations.h"
 #include "imgui/imgui.h"
+#include "imgui/imgui_internal.h" // For ImGui::FocusWindow()
 #include "imgui/misc/cpp/imgui_stdlib.h"
 
 #include "NetList.h"
@@ -1215,7 +1216,6 @@ void BoardView::SearchColumnGenerate(const std::string &title,
 
 void BoardView::SearchComponent(void) {
 	bool dummy = true;
-
 	ImGui::SetNextWindowPos(ImVec2(ImGui::GetIO().DisplaySize.x/2, DPI(100)), 0, ImVec2(0.5f, 0.0f));
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1.0f);
 	if (ImGui::BeginPopupModal("Search for Component / Network",
@@ -1898,8 +1898,14 @@ void BoardView::HandleInput() {
 	const ImGuiIO &io = ImGui::GetIO();
 
 	if (ImGui::IsWindowHovered()) {
-		// Set focus on boardview area hover to apply our key bindings instead of the currently active ImGui's keyboard navigation
-		ImGui::SetWindowFocus();
+		if (!ImGui::IsWindowFocused()) {
+			// Set focus on boardview area hover to apply our key bindings instead of the currently active ImGui's keyboard navigation
+			// Using imgui_internal's FocusWindow with UnlessBelowModal instead of SetWindowFocus
+			// Otherwise PopupModal get closed right after opening when boardview area is hovered
+			// https://github.com/ocornut/imgui/issues/3595
+			// Warning: wouldn't work with regular Popup but we use only PopupModal
+			ImGui::FocusWindow(nullptr, ImGuiFocusRequestFlags_UnlessBelowModal);
+		}
 
 		if (ImGui::IsMouseDragging(0)) {
 			if ((m_dragging_token == 0) && (io.MouseClickedPos[0].x < m_board_surface.x)) m_dragging_token = 1; // own it.
