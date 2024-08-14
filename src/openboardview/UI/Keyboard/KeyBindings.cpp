@@ -20,6 +20,35 @@ const std::unordered_map<std::string, std::string> KeyBindings::deserializeName 
 	{"Equals", "="}
 };
 
+const std::array<std::pair<const std::string, const std::string>, 26> KeyBindings::descriptions{{
+	{"Open", "Load file"},
+	{"Quit", "Quit"},
+	{"CloseDialog", "Close dialog/popup"},
+	{"Accept", "Accept dialog"},
+	{"Validate", "Validate dialog"},
+	{"", ""}, // Separator for display
+	{"PanUp", "Pan up"},
+	{"PanDown", "Pan down"},
+	{"PanLeft", "Pan left"},
+	{"PanRight", "Pan right"},
+	{"", ""}, // Separator for display
+	{"ZoomIn", "Zoom in"},
+	{"ZoomOut", "Zoom out"},
+	{"", ""}, // Separator for display
+	{"RotateCW", "Rotate clockwise"},
+	{"RotateCCW", "Rotate anticlockwise"},
+	{"Mirror", "Mirror board"},
+	{"Flip", "Flip board"},
+	{"", ""}, // Separator for display
+	{"Search", "Search for component or net"},
+	{"Clear", "Clear all highlighted items"},
+	{"", ""}, // Separator for display
+	{"InfoPanel", "Show/hide information panel"},
+	{"PartList", "Show/hide component list"},
+	{"NetList", "Show/hide component list"},
+	{"TogglePins", "Show/hide pins"},
+}};
+
 KeyBindings::KeyBindings() {
 	for (ImGuiKey key = ImGuiKey_NamedKey_BEGIN; key < ImGuiKey_NamedKey_END; key = (ImGuiKey)(key + 1)) {
 		nameToKey.insert({ImGui::GetKeyName(key), key});

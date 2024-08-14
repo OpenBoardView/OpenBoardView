@@ -26,110 +26,69 @@ void Controls::render() {
 	if (ImGui::BeginPopupModal("Controls", &p_open)) {
 		shown = false;
 
-		ImGui::Text("KEYBOARD CONTROLS");
-
+		ImGui::Text("Keyboard controls");
 		ImGui::Separator();
 
-		ImGui::Columns(2);
-		ImGui::PushItemWidth(-1);
-		ImGui::Text("Load file");
-		ImGui::Text("Quit");
-		ImGui::Spacing();
-		ImGui::Spacing();
+		if (ImGui::BeginTable("KeyboardControls", 2, ImGuiTableFlags_BordersInnerV)) {
+			ImGui::TableSetupColumn(nullptr, ImGuiTableColumnFlags_WidthFixed); // size according to content
+			ImGui::TableSetupColumn(nullptr, ImGuiTableColumnFlags_WidthFixed); // size according to content
 
-		ImGui::Text("Pan up");
-		ImGui::Text("Pan down");
-		ImGui::Text("Pan left");
-		ImGui::Text("Pan right");
-		ImGui::Spacing();
-		ImGui::Spacing();
-
-		ImGui::Text("Toggle information panel");
-		ImGui::Text("Search for component/Net");
-		ImGui::Text("Display component list");
-		ImGui::Text("Display net list");
-		ImGui::Text("Clear all highlighted items");
-		ImGui::Spacing();
-		ImGui::Spacing();
-
-		ImGui::Text("Mirror board");
-		ImGui::Text("Flip board");
-		ImGui::Text(" ");
-
-		ImGui::Text("Zoom in");
-		ImGui::Text("Zoom out");
-		ImGui::Spacing();
-		ImGui::Spacing();
-
-		ImGui::Text("Reset zoom and center");
-		ImGui::Text("Rotate clockwise");
-		ImGui::Text("Rotate anticlockwise");
-		ImGui::Spacing();
-		ImGui::Spacing();
-
-		ImGui::Text("Toggle Pin Blanking");
-
-		/*
-		 * NEXT COLUMN
-		 */
-		ImGui::NextColumn();
-		ImGui::Text("CTRL-o");
-		ImGui::Text("CTRL-q");
-		ImGui::Spacing();
-		ImGui::Spacing();
-
-		ImGui::Text("w, numpad-up, arrow-up");
-		ImGui::Text("s, numpad-down, arrow-down");
-		ImGui::Text("a, numpad-left, arrow-left");
-		ImGui::Text("d, numpad-right, arrow-right");
-		ImGui::Spacing();
-		ImGui::Spacing();
-
-		ImGui::Text("i");
-		ImGui::Text("CTRL-f, /");
-		ImGui::Text("k");
-		ImGui::Text("l");
-		ImGui::Text("ESC");
-		ImGui::Spacing();
-		ImGui::Spacing();
-
-		ImGui::Text("m");
-		ImGui::Text("Space bar");
-		ImGui::Text("(+shift to hold position)");
-		ImGui::Spacing();
-
-		ImGui::Text("+, numpad+");
-		ImGui::Text("-, numpad-");
-		ImGui::Spacing();
-		ImGui::Spacing();
-
-		ImGui::Text("x, numpad-5");
-		ImGui::Text("'.' numpad '.'");
-		ImGui::Text("',' numpad-0");
-		ImGui::Spacing();
-		ImGui::Spacing();
-
-		ImGui::Text("p");
-
-		ImGui::Columns(1);
+			for (auto &desc : keybindings.descriptions) {
+				ImGui::TableNextRow();
+				if (desc.second.empty()) {
+					ImGui::TableSetColumnIndex(0);
+					ImGui::Dummy(ImVec2(0.0f, DPI(5)));
+					ImGui::TableSetColumnIndex(1);
+					ImGui::Dummy(ImVec2(0.0f, DPI(5)));
+				} else {
+					ImGui::TableSetColumnIndex(0);
+					ImGui::Text("%s", desc.second.c_str());
+					ImGui::TableSetColumnIndex(1);
+					ImGui::Text("%s", keybindings.getKeyNames(desc.first).c_str());
+				}
+			}
+			ImGui::EndTable();
+		}
+		ImGui::Separator();
+		ImGui::Text("Mouse controls");
 		ImGui::Separator();
 
-		ImGui::Text("MOUSE CONTROLS");
-		ImGui::Separator();
-		ImGui::Columns(2);
-		ImGui::Text("Highlight pins on network");
-		ImGui::Text("Move board");
-		ImGui::Text("Zoom (CTRL for finer steps)");
-		ImGui::Text("Flip board");
-		ImGui::Text("Annotations menu");
+		if (ImGui::BeginTable("MouseControls", 2, ImGuiTableFlags_BordersInnerV)) {
+			ImGui::TableSetupColumn(nullptr, ImGuiTableColumnFlags_WidthFixed); // size according to content
+			ImGui::TableSetupColumn(nullptr, ImGuiTableColumnFlags_WidthFixed); // size according to content
 
-		ImGui::NextColumn();
-		ImGui::Text("Click (on pin)");
-		ImGui::Text("Click and drag");
-		ImGui::Text("Scroll");
-		ImGui::Text("Middle click");
-		ImGui::Text("Right click");
-		ImGui::Columns(1);
+			ImGui::TableNextRow();
+			ImGui::TableSetColumnIndex(0);
+			ImGui::Text("Highlight pins on network");
+			ImGui::TableSetColumnIndex(1);
+			ImGui::Text("Click (on pin)");
+
+			ImGui::TableNextRow();
+			ImGui::TableSetColumnIndex(0);
+			ImGui::Text("Move board");
+			ImGui::TableSetColumnIndex(1);
+			ImGui::Text("Click and drag");
+
+			ImGui::TableNextRow();
+			ImGui::TableSetColumnIndex(0);
+			ImGui::Text("Zoom (CTRL for finer steps)");
+			ImGui::TableSetColumnIndex(1);
+			ImGui::Text("Scroll");
+
+			ImGui::TableNextRow();
+			ImGui::TableSetColumnIndex(0);
+			ImGui::Text("Flip board");
+			ImGui::TableSetColumnIndex(1);
+			ImGui::Text("Middle click");
+
+			ImGui::TableNextRow();
+			ImGui::TableSetColumnIndex(0);
+			ImGui::Text("Annotations menu");
+			ImGui::TableSetColumnIndex(1);
+			ImGui::Text("Right click");
+
+			ImGui::EndTable();
+		}
 
 		if (ImGui::Button("Close") || keybindings.isPressed("CloseDialog")) {
 			ImGui::CloseCurrentPopup();

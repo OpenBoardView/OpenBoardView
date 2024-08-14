@@ -19,6 +19,8 @@ private:
 	std::unordered_map<std::string, ImGuiKey> nameToKey;
 
 public:
+	static const std::array<std::pair<const std::string, const std::string>, 26> descriptions;
+
 	std::unordered_map<std::string, std::vector<KeyBinding>> keybindings;
 	KeyModifiers keyModifiers;
 
