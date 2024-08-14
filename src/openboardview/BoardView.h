@@ -10,6 +10,7 @@
 #include "UI/Keyboard/KeyBindings.h"
 #include "GUI/ColorScheme.h"
 #include "GUI/Help/About.h"
+#include "GUI/Help/Controls.h"
 #include "GUI/Preferences/Color.h"
 #include "GUI/Preferences/Keyboard.h"
 #include "GUI/BackgroundImage.h"
@@ -83,6 +84,7 @@ struct BoardView {
 	Preferences::BoardSettings boardSettings{keybindings, backgroundImage, pdfFile};
 
 	Help::About helpAbout{keybindings};
+	Help::Controls helpControls{keybindings};
 
 #ifdef ENABLE_PDFBRIDGE_EVINCE
 	PDFBridgeEvince pdfBridge;
@@ -145,7 +147,6 @@ struct BoardView {
 	void DrawHex(ImDrawList *draw, ImVec2 c, double r, uint32_t color);
 	void DrawBox(ImDrawList *draw, ImVec2 c, double r, uint32_t color);
 	void SetFZKey(const char *keytext);
-	void HelpControls(void);
 	template <class T>
 	void ShowSearchResults(std::vector<T> results, char *search, int &limit, void (BoardView::*onSelect)(const char *));
 	void SearchColumnGenerate(const std::string &title,
@@ -240,7 +241,6 @@ struct BoardView {
 	bool m_searchNets       = true;
 	bool m_showNetList;
 	bool m_showPartList;
-	bool m_showHelpControls;
 	bool m_showPreferences;
 	bool m_showColorPreferences;
 	bool m_firstFrame = true;
