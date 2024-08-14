@@ -94,6 +94,7 @@ set(SOURCES
 	GUI/ColorScheme.cpp
 	GUI/Fonts.cpp
 	GUI/Image.cpp
+	GUI/Help/About.cpp
 	GUI/Preferences/BoardSettings/BackgroundImage.cpp
 	GUI/Preferences/BoardSettings/BoardSettings.cpp
 	GUI/Preferences/BoardSettings/PDFFile.cpp

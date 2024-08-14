@@ -3,7 +3,6 @@
 #include "history.h"
 #include "utf8/utf8.h"
 #include "utils.h"
-#include "version.h"
 
 #include <cmath>
 #include <iostream>
@@ -538,29 +537,6 @@ void BoardView::Preferences(void) {
 		ImGui::EndPopup();
 	}
 	//	ImGui::PopStyleColor();
-}
-
-void BoardView::HelpAbout(void) {
-	bool dummy = true;
-	ImGuiIO& io = ImGui::GetIO();
-	ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x * 0.5f, io.DisplaySize.y * 0.5f), 0, ImVec2(0.5f, 0.5f));
-	if (ImGui::BeginPopupModal("About", &dummy, ImGuiWindowFlags_AlwaysAutoResize)) {
-		if (m_showHelpAbout) {
-			m_showHelpAbout    = false;
-		}
-		ImGui::Text("%s %s", OBV_NAME, OBV_VERSION);
-		ImGui::Text("Build %s %s", OBV_BUILD, __DATE__ " " __TIME__);
-		ImGui::TextLinkOpenURL(OBV_URL);
-		if (ImGui::Button("Close") || keybindings.isPressed("CloseDialog")) {
-			ImGui::CloseCurrentPopup();
-		}
-		ImGui::Dummy(ImVec2(1, DPI(10)));
-		ImGui::Text("License info");
-		ImGui::Separator();
-		ImGui::TextWrapped(OBV_LICENSE_TEXT);
-
-		ImGui::EndPopup();
-	}
 }
 
 void BoardView::HelpControls(void) {
@@ -1427,7 +1403,6 @@ void BoardView::Update() {
 		 */
 		SearchComponent();
 		HelpControls();
-		HelpAbout();
 		Preferences();
 		ContextMenu();
 
@@ -1563,9 +1538,9 @@ void BoardView::Update() {
 			if (ImGui::MenuItem("Controls")) {
 				m_showHelpControls = true;
 			}
-			if (ImGui::MenuItem("About")) {
-				m_showHelpAbout = true;
-			}
+
+			helpAbout.menuItem();
+
 			ImGui::EndMenu();
 		}
 
@@ -1662,9 +1637,8 @@ void BoardView::Update() {
 			ImGui::OpenPopup("Annotations");
 		}
 
-		if (m_showHelpAbout) {
-			ImGui::OpenPopup("About");
-		}
+		helpAbout.render();
+
 		if (m_showHelpControls) {
 			ImGui::OpenPopup("Controls");
 		}
