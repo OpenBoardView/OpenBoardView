@@ -8,6 +8,9 @@
 
 class Config {
 public:
+	int windowX = 1200;
+	int windowY = 700;
+	int dpi = 100;
 	double fontSize              = 20.0;
 	std::string fontName         = "";
 	float zoomFactor             = 0.5f;
@@ -17,8 +20,8 @@ public:
 	int panModifier              = 5;
 	int flipMode                 = 0;
 
-	int annotationBoxOffset = 10;
-	int annotationBoxSize   = 10;
+	int annotationBoxOffset = 8;
+	int annotationBoxSize   = 20;
 
 	int pinA1threshold = 3; // pincount of package to show 1/A1 pin
 	int netWebThickness = 2;
@@ -31,7 +34,7 @@ public:
 	bool showFPS              = false;
 	bool showNetWeb           = true;
 	bool showInfoPanel        = true;
-	int infoPanelWidth        = 0;
+	int infoPanelWidth        = 300;
 	bool showPins             = true;
 	bool showAnnotations      = true;
 	bool showBackgroundImage  = true;
@@ -46,9 +49,10 @@ public:
 	bool showPosition  = true;
 
 	bool infoPanelCenterZoomNets   = true;
-	bool infoPanelSelectPartsOnNet = false;
+	bool infoPanelSelectPartsOnNet = true;
 	bool centerZoomSearchResults = true;
 
+	std::string FZKeyStr = "";
 	uint32_t FZKey[44] = {0};
 
 	void SetFZKey(const char *keytext);

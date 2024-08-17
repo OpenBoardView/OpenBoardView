@@ -267,8 +267,8 @@ int main(int argc, char **argv) {
 	// Apply the slowCPU flag if required.
 	app.config.slowCPU = g.slowCPU;
 
-	if (g.width == 0) g.width   = app.obvconfig.ParseInt("windowX", 1100);
-	if (g.height == 0) g.height = app.obvconfig.ParseInt("windowY", 700);
+	if (g.width == 0) g.width   = app.config.windowX;
+	if (g.height == 0) g.height = app.config.windowY;
 
 	if (g.renderer == Renderers::Renderer::DEFAULT) {
 		g.renderer = Renderers::get(app.obvconfig.ParseInt("renderer", static_cast<int>(Renderers::Preferred)));

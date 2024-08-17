@@ -18,6 +18,8 @@ Program::Program(KeyBindings &keybindings, Confparse &obvconfig, Config &config,
 
 void Program::menuItem() {
 	if (ImGui::MenuItem("Program Preferences")) {
+		// Make a copy to be able to restore if cancelled
+		configCopy = config;
 		shown = true;
 	}
 }
@@ -30,36 +32,35 @@ void Program::render() {
 	ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x * 0.5f, io.DisplaySize.y * 0.5f), 0, ImVec2(0.5f, 0.5f));
 	if (ImGui::BeginPopupModal("Program Preferences", &p_open, ImGuiWindowFlags_AlwaysAutoResize)) {
 		shown = false;
+		wasOpen = true;
 
 		int t;
 
-		t = obvconfig.ParseInt("windowX", 1100);
+		t = config.windowX;
 		RightAlignedText("Window width", DPI(250));
 		ImGui::SameLine();
 		if (ImGui::InputInt("##windowX", &t)) {
-			if (t > 400) obvconfig.WriteInt("windowX", t);
+			if (t > 400) config.windowX = t;
 		}
 
-		t = obvconfig.ParseInt("windowY", 700);
+		t = config.windowY;
 		RightAlignedText("Window height", DPI(250));
 		ImGui::SameLine();
 		if (ImGui::InputInt("##windowY", &t)) {
-			if (t > 320) obvconfig.WriteInt("windowY", t);
+			if (t > 320) config.windowY = t;
 		}
 
-		const char *oldFont = obvconfig.ParseStr("fontName", "");
-		std::vector<char> newFont(oldFont, oldFont + strlen(oldFont) + 1); // Copy string data + '\0' char
+		std::vector<char> newFont(config.fontName.begin(), config.fontName.end()); // Copy string data + '\0' char
 		if (newFont.size() < 256)                                          // reserve space for new font name
 			newFont.resize(256, '\0');                                     // Max font name length is 255 characters
 		RightAlignedText("Font name", DPI(250));
 		ImGui::SameLine();
 		if (ImGui::InputText("##fontName", newFont.data(), newFont.size())) {
 			config.fontName = newFont.data();
-			obvconfig.WriteStr("fontName", newFont.data());
 			boardView.reloadFonts = true;
 		}
 
-		t = obvconfig.ParseInt("fontSize", 20);
+		t = config.fontSize;
 		RightAlignedText("Font size", DPI(250));
 		ImGui::SameLine();
 		if (ImGui::InputInt("##fontSize", &t)) {
@@ -69,16 +70,15 @@ void Program::render() {
 				t = 50;
 			}
 			config.fontSize = t;
-			obvconfig.WriteInt("fontSize", t);
 			boardView.reloadFonts = true;
 		}
 
-		t = obvconfig.ParseInt("dpi", 100);
+		t = config.dpi;
 		RightAlignedText("Screen DPI", DPI(250));
 		ImGui::SameLine();
 		if (ImGui::InputInt("##dpi", &t)) {
 			if ((t > 25) && (t < 600)) {
-				obvconfig.WriteInt("dpi", t);
+				config.dpi = t;
 				setDPI(t);
 				boardView.reloadFonts = true;
 			}
@@ -89,16 +89,12 @@ void Program::render() {
 
 		RightAlignedText("PDF software executable", DPI(250));
 		ImGui::SameLine();
-		static std::string pdfSoftwarePath = obvconfig.ParseStr("pdfSoftwarePath", "SumatraPDF.exe");;
-		if (ImGui::InputText("##pdfSoftwarePath", &config.pdfSoftwarePath)) {
-			obvconfig.WriteStr("pdfSoftwarePath", config.pdfSoftwarePath.c_str());
-		}
+		ImGui::InputText("##pdfSoftwarePath", &config.pdfSoftwarePath;
 		ImGui::SameLine();
 		if (ImGui::Button("Browse##pdfSoftwarePath")) {
 			auto path = show_file_picker();
 			if (!path.empty()) {
-				pdfSoftwarePath = path.string();
-				obvconfig.WriteStr("pdfSoftwarePath", config.pdfSoftwarePath.c_str());
+				config.pdfSoftwarePath = path.string();
 			}
 		}
 #endif
@@ -111,161 +107,55 @@ void Program::render() {
 		ImGui::SameLine();
 		if (ImGui::InputInt("##zoomStep", &t)) {
 			config.zoomFactor = t / 10.0f;
-			obvconfig.WriteFloat("zoomFactor", config.zoomFactor);
 		}
 
 		RightAlignedText("Zoom modifier", DPI(250));
 		ImGui::SameLine();
-		if (ImGui::InputInt("##zoomModifier", &config.zoomModifier)) {
-			obvconfig.WriteInt("zoomModifier", config.zoomModifier);
-		}
+		ImGui::InputInt("##zoomModifier", &config.zoomModifier);
 
 		RightAlignedText("Show info panel", DPI(250));
 		ImGui::SameLine();
-		if (ImGui::Checkbox("##showInfoPanel", &config.showInfoPanel)) {
-			obvconfig.WriteBool("showInfoPanel", config.showInfoPanel);
-		}
+		ImGui::Checkbox("##showInfoPanel", &config.showInfoPanel);
 
 		RightAlignedText("Info panel zoom", DPI(250));
 		ImGui::SameLine();
 		if (ImGui::InputFloat("##partZoomScaleOutFactor", &config.partZoomScaleOutFactor)) {
 			if (config.partZoomScaleOutFactor < 1.1) config.partZoomScaleOutFactor = 1.1;
-			obvconfig.WriteFloat("partZoomScaleOutFactor", config.partZoomScaleOutFactor);
 		}
 
 		RightAlignedText("Center/zoom search results", DPI(250));
 		ImGui::SameLine();
-		if (ImGui::Checkbox("##centerZoomSearchResults", &config.centerZoomSearchResults)) {
-			obvconfig.WriteBool("centerZoomSearchResults", config.centerZoomSearchResults);
-		}
+		ImGui::Checkbox("##centerZoomSearchResults", &config.centerZoomSearchResults);
 
 		RightAlignedText("Panning step", DPI(250));
 		ImGui::SameLine();
-		if (ImGui::InputInt("##panningStep", &config.panFactor)) {
-			obvconfig.WriteInt("panFactor", config.panFactor);
-		}
+		ImGui::InputInt("##panningStep", &config.panFactor);
 
 		RightAlignedText("Pan modifier", DPI(250));
 		ImGui::SameLine();
-		if (ImGui::InputInt("##panModifier", &config.panModifier)) {
-			obvconfig.WriteInt("panModifier", config.panModifier);
-		}
+		ImGui::InputInt("##panModifier", &config.panModifier);
 
 		RightAlignedText("Flip mode", DPI(250));
 		ImGui::SameLine();
-		{
-			if (ImGui::RadioButton("Viewport", &config.flipMode, 0)) {
-				obvconfig.WriteInt("flipMode", config.flipMode);
-			}
-			ImGui::SameLine();
-			if (ImGui::RadioButton("Mouse", &config.flipMode, 1)) {
-				obvconfig.WriteInt("flipMode", config.flipMode);
-			}
-		}
+		ImGui::RadioButton("Viewport", &config.flipMode, 0);
+		ImGui::SameLine();
+		ImGui::RadioButton("Mouse", &config.flipMode, 1);
 
 		RightAlignedText("Show FPS", DPI(250));
 		ImGui::SameLine();
-		if (ImGui::Checkbox("##showFPS", &config.showFPS)) {
-			obvconfig.WriteBool("showFPS", config.showFPS);
-		}
+		ImGui::Checkbox("##showFPS", &config.showFPS);
 
 		ImGui::SameLine();
 		RightAlignedText("Slow CPU", DPI(150));
 		ImGui::SameLine();
 		if (ImGui::Checkbox("##slowCPU", &config.slowCPU)) {
-			obvconfig.WriteBool("slowCPU", config.slowCPU);
 			style.AntiAliasedLines = !config.slowCPU;
 			style.AntiAliasedFill  = !config.slowCPU;
 		}
 
 		ImGui::Separator();
 
-		RightAlignedText("Annotation flag size", DPI(250));
-		ImGui::SameLine();
-		if (ImGui::InputInt("##annotationBoxSize", &config.annotationBoxSize)) {
-			obvconfig.WriteInt("annotationBoxSize", config.annotationBoxSize);
-		}
-
-		RightAlignedText("Annotation flag offset", DPI(250));
-		ImGui::SameLine();
-		if (ImGui::InputInt("##annotationBoxOffset", &config.annotationBoxOffset)) {
-			obvconfig.WriteInt("annotationBoxOffset", config.annotationBoxOffset);
-		}
-
-		RightAlignedText("Pin-1/A1 count threshold", DPI(250));
-		ImGui::SameLine();
-		if (ImGui::InputInt("##pinA1threshold", &config.pinA1threshold)) {
-			if (config.pinA1threshold < 1) config.pinA1threshold = 1;
-			obvconfig.WriteInt("pinA1threshold", config.pinA1threshold);
-		}
-
-		RightAlignedText("Pin select masks", DPI(250));
-		ImGui::SameLine();
-		if (ImGui::Checkbox("##pinSelectMasks", &config.pinSelectMasks)) {
-			obvconfig.WriteBool("pinSelectMasks", config.pinSelectMasks);
-		}
-
-		RightAlignedText("Pin halo", DPI(250));
-		ImGui::SameLine();
-		if (ImGui::Checkbox("##pinHalo", &config.pinHalo)) {
-			obvconfig.WriteBool("", config.pinHalo);
-		}
-
-		RightAlignedText("Halo diameter", DPI(250));
-		ImGui::SameLine();
-		if (ImGui::InputFloat("##haloDiameter", &config.pinHaloDiameter)) {
-			obvconfig.WriteFloat("pinHaloDiameter", config.pinHaloDiameter);
-		}
-
-		RightAlignedText("Halo thickness", DPI(250));
-		ImGui::SameLine();
-		if (ImGui::InputFloat("##haloThickness", &config.pinHaloThickness)) {
-			obvconfig.WriteFloat("pinHaloThickness", config.pinHaloThickness);
-		}
-
-		RightAlignedText("Show net web", DPI(250));
-		ImGui::SameLine();
-		if (ImGui::Checkbox("##showNetWeb", &config.showNetWeb)) {
-			obvconfig.WriteBool("showNetWeb", config.showNetWeb);
-		}
-
-		RightAlignedText("Net web thickness", DPI(250));
-		ImGui::SameLine();
-		if (ImGui::InputInt("##netWebThickness", &config.netWebThickness)) {
-			obvconfig.WriteInt("netWebThickness", config.netWebThickness);
-		}
-
-		RightAlignedText("Fill parts", DPI(250));
-		ImGui::SameLine();
-		if (ImGui::Checkbox("##fillParts", &config.fillParts)) {
-			obvconfig.WriteBool("fillParts", config.fillParts);
-		}
-
-		ImGui::SameLine();
-		RightAlignedText("Fill board", DPI(150));
-		ImGui::SameLine();
-		if (ImGui::Checkbox("##boardFill", &config.boardFill)) {
-			obvconfig.WriteBool("boardFill", config.boardFill);
-		}
-
-		RightAlignedText("Board fill spacing", DPI(250));
-		ImGui::SameLine();
-		if (ImGui::InputInt("##boardFillSpacing", &config.boardFillSpacing)) {
-			obvconfig.WriteInt("boardFillSpacing", config.boardFillSpacing);
-		}
-
-		RightAlignedText("Show parts name", DPI(250));
-		ImGui::SameLine();
-		if (ImGui::Checkbox("##showPartName", &config.showPartName)) {
-			obvconfig.WriteBool("showPartName", config.showPartName);
-		}
-
-		ImGui::SameLine();
-		RightAlignedText("Show pins name", DPI(150));
-		ImGui::SameLine();
-		if (ImGui::Checkbox("##showPinName", &config.showPinName)) {
-			obvconfig.WriteBool("showPinName", config.showPinName);
-		}
+		boardAppearance.render();
 
 		ImGui::Separator();
 		{
@@ -289,18 +179,42 @@ void Program::render() {
 					if ((*c == '\r') || (*c == '\n')) *c = ' ';
 					c++;
 				}
-				obvconfig.WriteStr("FZKey", keybuf);
 				config.SetFZKey(keybuf);
 			}
 		}
 
 		ImGui::Separator();
 
-		if (ImGui::Button("Done") || keybindings.isPressed("CloseDialog")) {
+		if (ImGui::Button("Save")) {
+			config.writeToConfig(obvconfig);
 			ImGui::CloseCurrentPopup();
+			wasOpen = false;
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("Cancel") || this->keybindings.isPressed("CloseDialog")) {
+			config = configCopy;
+			setDPI(config.dpi);
+			boardView.reloadFonts = true;
+			ImGui::CloseCurrentPopup();
+			wasOpen = false;
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("Reset")) {
+			config = Config{};
 		}
 
 		ImGui::EndPopup();
+	}
+
+	if (!p_open) { // ImGui tells us the popup is closed
+		if (wasOpen) {
+			// We need to run this only once when the popup is closed with the popup title bar close button
+			// If it was closed with our Save or Cancel button, we already did what we had to do and was_open is already false
+			config = configCopy;
+			setDPI(config.dpi);
+			boardView.reloadFonts = true;
+			wasOpen = false;
+		}
 	}
 
 	if (shown) {

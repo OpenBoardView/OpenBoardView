@@ -103,6 +103,7 @@ set(SOURCES
 	GUI/Preferences/Color.cpp
 	GUI/Preferences/Keyboard.cpp
 	GUI/Preferences/Program.cpp
+	GUI/Preferences/BoardAppearance.cpp
 	GUI/widgets.cpp
 	PDFBridge/PDFBridge.cpp
 	PDFBridge/PDFFile.cpp

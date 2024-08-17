@@ -63,15 +63,9 @@ BoardView::~BoardView() {
 int BoardView::ConfigParse(void) {
 	ImGuiStyle &style = ImGui::GetStyle();
 
-	// Special test here, in case we've already set the dpi from external
-	// such as command line.
-	int dpi = 0;
-	if (getDPI() == 0) dpi = obvconfig.ParseInt("dpi", 100);
-	if (dpi < 50) dpi = 50;
-	if (dpi > 400) dpi = 400;
-	setDPI(dpi);
-
 	config.readFromConfig(obvconfig);
+
+	setDPI(config.dpi);
 
 	style.AntiAliasedLines = !config.slowCPU;
 	style.AntiAliasedFill  = !config.slowCPU;
@@ -239,6 +233,7 @@ void BoardView::ShowInfoPane(void) {
 		}
 	} else {
 		if (m_dragging_token == 2) {
+			config.infoPanelWidth = m_info_surface.x;
 			obvconfig.WriteInt("infoPanelWidth", m_info_surface.x);
 		}
 		m_dragging_token = 0;
@@ -1587,16 +1582,16 @@ void BoardView::HandleInput() {
 			Zoom(m_board_surface.x / 2, m_board_surface.y / 2, -config.zoomFactor);
 
 		} else if (keybindings.isPressed("PanDown")) {
-			Pan(DIR_DOWN, config.panFactor);
+			Pan(DIR_DOWN, DPI(config.panFactor));
 
 		} else if (keybindings.isPressed("PanUp")) {
-			Pan(DIR_UP, config.panFactor);
+			Pan(DIR_UP, DPI(config.panFactor));
 
 		} else if (keybindings.isPressed("PanLeft")) {
-			Pan(DIR_LEFT, config.panFactor);
+			Pan(DIR_LEFT, DPI(config.panFactor));
 
 		} else if (keybindings.isPressed("PanRight")) {
-			Pan(DIR_RIGHT, config.panFactor);
+			Pan(DIR_RIGHT, DPI(config.panFactor));
 
 		} else if (keybindings.isPressed("Center")) {
 			// Center and reset zoom
@@ -3029,9 +3024,9 @@ inline void BoardView::DrawAnnotations(ImDrawList *draw) {
 			ImVec2 a, b, s;
 			if (debug) fprintf(stderr, "%d:%d:%f %f: %s\n", ann.id, ann.side, ann.x, ann.y, ann.note.c_str());
 			a = s = CoordToScreen(ann.x, ann.y);
-			a.x += config.annotationBoxOffset;
-			a.y -= config.annotationBoxOffset;
-			b = ImVec2(a.x + config.annotationBoxSize, a.y - config.annotationBoxSize);
+			a.x += DPI(config.annotationBoxOffset);
+			a.y -= DPI(config.annotationBoxOffset);
+			b = ImVec2(a.x + DPI(config.annotationBoxSize), a.y - DPI(config.annotationBoxSize));
 
 			if ((ann.hovered == true) && (ImGui::IsWindowHovered())) {
 				char buf[60];
@@ -3126,8 +3121,8 @@ int BoardView::AnnotationIsHovered(void) {
 
 	for (auto &ann : m_annotations.annotations) {
 		ImVec2 a = CoordToScreen(ann.x, ann.y);
-		if ((mp.x > a.x + config.annotationBoxOffset) && (mp.x < a.x + (config.annotationBoxOffset + config.annotationBoxSize)) &&
-		    (mp.y < a.y - config.annotationBoxOffset) && (mp.y > a.y - (config.annotationBoxOffset + config.annotationBoxSize))) {
+		if ((mp.x > a.x + DPI(config.annotationBoxOffset)) && (mp.x < a.x + (DPI(config.annotationBoxOffset) + DPI(config.annotationBoxSize))) &&
+		    (mp.y < a.y - DPI(config.annotationBoxOffset)) && (mp.y > a.y - (DPI(config.annotationBoxOffset) + DPI(config.annotationBoxSize)))) {
 			ann.hovered               = true;
 			is_hovered                = true;
 			m_annotation_last_hovered = i;

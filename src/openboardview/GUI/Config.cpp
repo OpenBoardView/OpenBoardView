@@ -7,6 +7,8 @@
 void Config::SetFZKey(const char *keytext) {
 
 	if (keytext) {
+		FZKeyStr = keytext;
+
 		int ki;
 		const char *p, *limit;
 		char *ep;
@@ -38,6 +40,15 @@ void Config::SetFZKey(const char *keytext) {
 }
 
 void Config::readFromConfig(Confparse &obvconfig) {
+	// Special test here, in case we've already set the dpi from external
+	// such as command line.
+	if (getDPI() == 0) dpi = obvconfig.ParseInt("dpi", 100);
+	if (dpi < 50) dpi = 50;
+	if (dpi > 400) dpi = 400;
+
+	windowX = obvconfig.ParseInt("windowX", 1100);
+	windowY = obvconfig.ParseInt("windowY", 700);
+
 	fontSize            = obvconfig.ParseDouble("fontSize", 20);
 	fontName            = obvconfig.ParseStr("fontName", "");
 	pinSizeThresholdLow = obvconfig.ParseDouble("pinSizeThresholdLow", 0);
@@ -81,17 +92,19 @@ void Config::readFromConfig(Confparse &obvconfig) {
 	zoomModifier = obvconfig.ParseInt("zoomModifier", 5);
 
 	panFactor = obvconfig.ParseInt("panFactor", 30);
-	panFactor = DPI(panFactor);
 
 	panModifier = obvconfig.ParseInt("panModifier", 5);
 
 	annotationBoxSize = obvconfig.ParseInt("annotationBoxSize", 15);
-	annotationBoxSize = DPI(annotationBoxSize);
 
 	annotationBoxOffset = obvconfig.ParseInt("annotationBoxOffset", 8);
-	annotationBoxOffset = DPI(annotationBoxOffset);
 
 	netWebThickness = obvconfig.ParseInt("netWebThickness", 2);
+
+
+#ifdef _WIN32
+	pdfSoftwarePath = obvconfig.ParseStr("pdfSoftwarePath", "SumatraPDF.exe");
+#endif
 
 	/*
 	 * Some machines (Atom etc) don't have enough CPU/GPU
@@ -114,4 +127,66 @@ void Config::readFromConfig(Confparse &obvconfig) {
 	 *
 	 */
 	SetFZKey(obvconfig.ParseStr("FZKey", ""));
+}
+
+void Config::writeToConfig(Confparse &obvconfig) {
+	obvconfig.WriteInt("dpi", dpi);
+	obvconfig.WriteInt("windowX", windowX);
+	obvconfig.WriteInt("windowY", windowY);
+
+	obvconfig.WriteFloat("fontSize", fontSize);
+	obvconfig.WriteStr("fontName", fontName.c_str());
+	obvconfig.WriteFloat("pinSizeThresholdLow", pinSizeThresholdLow);
+	obvconfig.WriteBool("pinShapeSquare", pinShapeSquare);
+	obvconfig.WriteBool("pinShapeCircle", pinShapeCircle);
+
+	obvconfig.WriteBool("pinHalo", pinHalo);
+	obvconfig.WriteFloat("pinHaloDiameter", pinHaloDiameter);
+	obvconfig.WriteFloat("pinHaloThickness", pinHaloThickness);
+	obvconfig.WriteBool("pinSelectMasks", pinSelectMasks);
+
+	obvconfig.WriteInt("pinA1threshold", pinA1threshold);
+
+	obvconfig.WriteBool("showFPS", showFPS);
+	obvconfig.WriteBool("showInfoPanel", showInfoPanel);
+	obvconfig.WriteBool("infoPanelSelectPartsOnNet", infoPanelSelectPartsOnNet);
+	obvconfig.WriteBool("infoPanelCenterZoomNets", infoPanelCenterZoomNets);
+	obvconfig.WriteFloat("partZoomScaleOutFactor", partZoomScaleOutFactor);
+
+	obvconfig.WriteInt("infoPanelWidth", infoPanelWidth);
+	obvconfig.WriteBool("showPins", showPins);
+	obvconfig.WriteBool("showPosition", showPosition);
+	obvconfig.WriteBool("showNetWeb", showNetWeb);
+	obvconfig.WriteBool("showAnnotations", showAnnotations);
+	obvconfig.WriteBool("showBackgroundImage", showBackgroundImage);
+	obvconfig.WriteBool("fillParts", fillParts);
+	obvconfig.WriteBool("showPartName", showPartName);
+	obvconfig.WriteBool("showPinName", showPinName);
+	obvconfig.WriteBool("centerZoomSearchResults", centerZoomSearchResults);
+	obvconfig.WriteInt("flipMode", flipMode);
+
+	obvconfig.WriteBool("boardFill", boardFill);
+	obvconfig.WriteInt("boardFillSpacing", boardFillSpacing);
+
+	obvconfig.WriteFloat("zoomFactor", zoomFactor);
+	obvconfig.WriteInt("zoomModifier", zoomModifier);
+
+	obvconfig.WriteInt("panFactor", panFactor);
+
+	obvconfig.WriteInt("panModifier", panModifier);
+
+	obvconfig.WriteInt("annotationBoxSize", annotationBoxSize);
+
+	obvconfig.WriteInt("annotationBoxOffset", annotationBoxOffset);
+
+	obvconfig.WriteInt("netWebThickness", netWebThickness);
+
+
+#ifdef _WIN32
+	obvconfig.WriteStr("pdfSoftwarePath", pdfSoftwarePath);
+#endif
+
+	obvconfig.WriteBool("slowCPU", slowCPU);
+
+	obvconfig.WriteStr("FZKey", FZKeyStr.c_str());
 }
