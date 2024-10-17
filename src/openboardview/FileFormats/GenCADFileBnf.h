@@ -99,7 +99,7 @@ height_             : "HEIGHT" <s>+ <height> <n>+;
 shape_artwork       : "ARTWORK" <s>+ <artwork_name> <s> <x_y_ref> <s> <rot> <s> <mirror> <n> <attribute>*;
 fid                 : "FID" <s>+ <fid_name> <s> <pad_name> <s> <x_y_ref> <s> <layer> <s> <rot> <s> <mirror> <n>+ <attribute>*;
 shape_pin_name      : (<nonquoted_string>|<string>);
-shapes_pin          : "PIN" <s>+ <shape_pin_name> <s>+ <pad_name> <s> <x_y_ref> <s> <layer> <s> <rot> <s> <mirror> <s>* <n>+;
+shapes_pin          : "PIN" <s>+ <shape_pin_name> <s>+ <pad_name> <s>+ <x_y_ref> <s>+ <layer> <s>+ <rot> <s>+ <mirror> <s>* <n>+;
 shape               : "SHAPE" <s>+ <shape_name> <n> (<line>|<arc>|<circle>|<rectangle>|<fiducial>|<insert>|<height_>|<attribute>|<shape_artwork>|<fid>|<shapes_pin>)* <n>*;
 shapes              : "$SHAPES" <n>* <insert>? <n>* <shape>* "$ENDSHAPES" <n>*;
 device_name         : <wrapper_to_end>;
@@ -111,7 +111,7 @@ artwork_            : "ARTWORK" <s>+ <artwork_name> <s>+ <x_y_ref> <s>+ <rot> <s
 sheet               : "SHEET" <s>+ <string> <n>*;
 component           : "COMPONENT" <s>+ <component_name> <n>* (<device_>|<place>|<named_layer>|<rotation>|<shape_>|<value>|<partnumber>|<artwork_>|<fid>|<text>|<sheet>|<attribute>)* <n>*;
 components          : "$COMPONENTS" <n>* <component>* "$ENDCOMPONENTS" <n>*;
-part                : "PART" <s>+ <part_name_to_end> <s>* <n>+;
+part                : "PART" (<s>+ <part_name_to_end>)? <s>* <n>+;
 partemp             : "PARTemp" <s>+ <part_name_to_end> <s>* <n>+;
 type                : "TYPE" <s>+ (<nonquoted_string>|<string>) <n>+;
 style               : "STYLE" <s>+ <string> <n>*;
