@@ -109,6 +109,7 @@ const filesystem::path show_file_picker(bool filterBoards) {
 	gtk_file_filter_add_pattern(filter, "*.[cC][sS][tT]");
 	gtk_file_filter_add_pattern(filter, "*.[pP][cC][bB][dD][oO][cC]");
 	gtk_file_filter_add_pattern(filter, "*.[fF][zZ]");
+	gtk_file_filter_add_pattern(filter, "*.[pP][cC][bB]");
 
 	gtk_file_filter_set_name(filter_everything, "All");
 	gtk_file_filter_add_pattern(filter_everything, "*");

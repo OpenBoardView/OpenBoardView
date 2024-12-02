@@ -27,6 +27,7 @@
 #include "FileFormats/CSTFile.h"
 #include "FileFormats/FZFile.h"
 #include "FileFormats/GenCADFile.h"
+#include "FileFormats/XZZPCBFile.h"
 #include "GUI/DPI.h"
 #include "GUI/widgets.h"
 #include "annotations.h"
@@ -129,6 +130,8 @@ int BoardView::LoadFile(const filesystem::path &filepath) {
 				m_file = new BVR3File(buffer);
 			else if (BRDAllegroFile::verifyFormat(buffer))
 				m_file = new BRDAllegroFile(buffer);
+			else if (XZZPCBFile::verifyFormat(buffer))
+				m_file = new XZZPCBFile(buffer, filepath.string());
 			else
 				m_error_msg = "Unrecognized file format.";
 
@@ -2986,7 +2989,8 @@ void BoardView::DrawPartTooltips(ImDrawList *draw) {
 				ImGui::Text("%s\n[%s]%s",
 				            currentlyHoveredPart->name.c_str(),
 				            (currentlyHoveredPin ? currentlyHoveredPin->name.c_str() : " "),
-				            (currentlyHoveredPin ? currentlyHoveredPin->net->name.c_str() : " "));
+				            (currentlyHoveredPin ? currentlyHoveredPin->net->name.c_str() : " "),
+				            (currentlyHoveredPin ? currentlyHoveredPin->comment.c_str() : " "));
 			} else {
 				ImGui::Text("%s", currentlyHoveredPart->name.c_str());
 			}
