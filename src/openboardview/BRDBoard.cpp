@@ -155,6 +155,10 @@ BRDBoard::BRDBoard(const BRDFileBase * const boardFile)
 				pin->name = pin->number;
 			}
 
+			if (brd_pin.comment) {
+				pin->comment = std::string(brd_pin.comment);
+			}
+
 			// copy position
 			pin->position = Point(brd_pin.pos.x, brd_pin.pos.y);
 
