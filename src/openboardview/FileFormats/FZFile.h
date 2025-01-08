@@ -66,18 +66,22 @@ struct FZPartDesc {
 };
 
 class FZFile : public BRDFileBase {
-  public:
-	FZFile(std::vector<char> &buf, uint32_t fzkey[44]);
+public:
+	void parse(std::vector<char> &buf, const std::array<uint32_t, 44> &fzkey);
 
-	void SetKey(char *keytext);
+protected:
+	virtual const std::array<uint32_t, 44> getKeyParity() const;
+	virtual const std::string getKeyErrorMsg() const;
 
-  private:
+private:
 	std::vector<FZPartDesc> partsDesc;
 
-	static std::string fz_key_to_string(const uint32_t fzkey[44]);
-	static bool check_fz_key(const uint32_t fzkey[44]);
+	template<size_t N>
+	static std::string fz_key_to_string(const std::array<uint32_t, N> &fzkey);
+	template<size_t N>
+	bool check_fz_key(const std::array<uint32_t, N> &fzkey) const;
 
-	static void decode(char *source, size_t size);
+	void decode(char *source, size_t size) const;
 	static char *split(char *file_buf, size_t buffer_size, size_t &content_size, char *&descr, size_t &descr_size);
 	static char *decompress(char *file_buf, size_t buffer_size, size_t &output_size);
 	void gen_outline();
@@ -87,6 +91,5 @@ class FZFile : public BRDFileBase {
 	// uint32_t keylength = 2*r + 4; // i.e. buf[0..2r+3]
 	// static constexpr uint32_t key[44] = {0};
 	// static uint32_t key[44] = {0};
-	static uint32_t key[44];
-	static constexpr const std::array<uint32_t, 44> key_parity = {{0, 1, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 1, 1, 0, 1, 1, 0, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 1, 0, 1}};
+	std::array<uint32_t, 44> key = {0};
 };

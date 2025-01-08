@@ -15,7 +15,6 @@
 #include "BoardView.h"
 #include "history.h"
 
-#include "FileFormats/FZFile.h"
 #include "confparse.h"
 #include "resource.h"
 #include <SDL.h>

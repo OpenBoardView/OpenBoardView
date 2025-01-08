@@ -13,6 +13,7 @@
     <glob pattern="*.bdv"/>
     <glob pattern="*.bvr"/>
     <glob pattern="*.fz"/>
+    <glob pattern="*.cae"/>
   </mime-type>
   <mime-type type="application/x-openboardview-brd-landrex">
     <comment>Landrex/Testlink PCB Layout</comment>

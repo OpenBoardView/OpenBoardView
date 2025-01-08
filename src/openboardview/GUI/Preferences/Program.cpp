@@ -184,6 +184,32 @@ void Program::render() {
 		}
 
 		ImGui::Separator();
+		{
+			char caekeybuf[1024];
+			int i;
+			ImGui::Text("CAE Key");
+			ImGui::SameLine();
+			for (i = 0; i < 44; i++) {
+				sprintf(caekeybuf + (i * 12),
+				        "0x%08lx%s",
+				        (long unsigned int)config.CAEKey[i],
+				        (i != 43) ? ((i + 1) % 4 ? "  " : "\r\n")
+				                  : ""); // yes, a nested inline-if-else. add \r\n after every 4 values, except if the last
+			}
+			if (ImGui::InputTextMultiline(
+			        "##caekey", caekeybuf, sizeof(caekeybuf), ImVec2(DPI(450), ImGui::GetTextLineHeight() * 12.5), 0, NULL, caekeybuf)) {
+
+				// Strip the line breaks out.
+				char *c = caekeybuf;
+				while (*c) {
+					if ((*c == '\r') || (*c == '\n')) *c = ' ';
+					c++;
+				}
+				config.SetCAEKey(caekeybuf);
+			}
+		}
+
+		ImGui::Separator();
 
 		if (ImGui::Button("Save")) {
 			config.writeToConfig(obvconfig);

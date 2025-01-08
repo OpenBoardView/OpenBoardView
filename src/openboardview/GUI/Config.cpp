@@ -4,38 +4,51 @@
 #include "confparse.h"
 #include "GUI/DPI.h"
 
-void Config::SetFZKey(const char *keytext) {
+template<size_t N>
+std::array<uint32_t, N> Config::DecodeKey(const char *keytext) {
+	std::array<uint32_t, N> key = {0};
+	int ki;
+	const char *p, *limit;
+	char *ep;
+	ki    = 0;
+	p     = keytext;
+	limit = keytext + strlen(keytext);
 
+	if ((limit - p) > 440) {
+		/*
+		 * we *assume* that the key is correctly formatted in the configuration file
+		 * as such it should be like FZKey = 0x12345678, 0xabcd1234, ...
+		 *
+		 * If your key is incorrectly formatted, or incorrect, it'll cause OBV to
+		 * likely crash / segfault (for now).
+		 */
+		while (p && (p < limit) && ki < 44) {
+
+			// locate the start of the u32 hex value
+			while ((p < limit) && (*p != '0')) p++;
+
+			// decode the next number, ep will be set to the end of the converted string
+			key[ki] = strtoll(p, &ep, 16);
+
+			ki++;
+			p = ep;
+		}
+	}
+
+	return key;
+}
+
+void Config::SetFZKey(const char *keytext) {
 	if (keytext) {
 		FZKeyStr = keytext;
+		FZKey = DecodeKey<44>(keytext);
+	}
+}
 
-		int ki;
-		const char *p, *limit;
-		char *ep;
-		ki    = 0;
-		p     = keytext;
-		limit = keytext + strlen(keytext);
-
-		if ((limit - p) > 440) {
-			/*
-			 * we *assume* that the key is correctly formatted in the configuration file
-			 * as such it should be like FZKey = 0x12345678, 0xabcd1234, ...
-			 *
-			 * If your key is incorrectly formatted, or incorrect, it'll cause OBV to
-			 * likely crash / segfault (for now).
-			 */
-			while (p && (p < limit) && ki < 44) {
-
-				// locate the start of the u32 hex value
-				while ((p < limit) && (*p != '0')) p++;
-
-				// decode the next number, ep will be set to the end of the converted string
-				FZKey[ki] = strtoll(p, &ep, 16);
-
-				ki++;
-				p = ep;
-			}
-		}
+void Config::SetCAEKey(const char *keytext) {
+	if (keytext) {
+		CAEKeyStr = keytext;
+		CAEKey = DecodeKey<44>(keytext);
 	}
 }
 
@@ -120,13 +133,14 @@ void Config::readFromConfig(Confparse &obvconfig) {
 	slowCPU |= obvconfig.ParseBool("slowCPU", false);
 
 	/*
-	 * The asus .fz file formats require a specific key to be decoded.
+	 * The asus .fz and Asrock .cae file formats require a specific key to be decoded.
 	 *
 	 * This key is supplied in the obv.conf file as a long single line
 	 * of comma/space separated 32-bit hex values 0x1234abcd etc.
 	 *
 	 */
 	SetFZKey(obvconfig.ParseStr("FZKey", ""));
+	SetCAEKey(obvconfig.ParseStr("CAEKey", ""));
 }
 
 void Config::writeToConfig(Confparse &obvconfig) {
@@ -189,4 +203,5 @@ void Config::writeToConfig(Confparse &obvconfig) {
 	obvconfig.WriteBool("slowCPU", slowCPU);
 
 	obvconfig.WriteStr("FZKey", FZKeyStr.c_str());
+	obvconfig.WriteStr("CAEKey", CAEKeyStr.c_str());
 }

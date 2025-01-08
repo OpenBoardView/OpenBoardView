@@ -1,6 +1,7 @@
 #ifndef _CONFIG_H_
 #define _CONFIG_H_
 
+#include <array>
 #include <cstdint>
 #include <string>
 
@@ -52,10 +53,16 @@ public:
 	bool infoPanelSelectPartsOnNet = true;
 	bool centerZoomSearchResults = true;
 
-	std::string FZKeyStr = "";
-	uint32_t FZKey[44] = {0};
+	template<size_t N>
+	std::array<uint32_t, N> DecodeKey(const char *keytext);
 
+	std::string FZKeyStr = "";
+	std::array<uint32_t, 44> FZKey = {0};
 	void SetFZKey(const char *keytext);
+
+	std::string CAEKeyStr = "";
+	std::array<uint32_t, 44> CAEKey = {0};
+	void SetCAEKey(const char *keytext);
 
 	void readFromConfig(Confparse &obvconfig);
 	void writeToConfig(Confparse &obvconfig);

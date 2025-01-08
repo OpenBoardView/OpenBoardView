@@ -106,7 +106,6 @@ struct BoardView {
 	bool reloadConfig  = false;
 	bool reloadFonts  = false;
 	int pinBlank       = 0;
-	uint32_t FZKey[44] = {0};
 
 	int ConfigParse(void);
 	void CenterView(void);
@@ -116,7 +115,6 @@ struct BoardView {
 	void DrawDiamond(ImDrawList *draw, ImVec2 c, double r, uint32_t color);
 	void DrawHex(ImDrawList *draw, ImVec2 c, double r, uint32_t color);
 	void DrawBox(ImDrawList *draw, ImVec2 c, double r, uint32_t color);
-	void SetFZKey(const char *keytext);
 	template <class T>
 	void ShowSearchResults(std::vector<T> results, char *search, int &limit, void (BoardView::*onSelect)(const char *));
 	void SearchColumnGenerate(const std::string &title,

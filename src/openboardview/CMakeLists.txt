@@ -77,6 +77,7 @@ set(SOURCES
 	FileFormats/BVRFile.cpp
 	FileFormats/BVR3File.cpp
 	FileFormats/CADFile.cpp
+	FileFormats/CAEFile.cpp
 	FileFormats/CSTFile.cpp
 	FileFormats/FZFile.cpp
 	FileFormats/GenCADFile.cpp

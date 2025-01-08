@@ -24,6 +24,7 @@
 #include "FileFormats/BVRFile.h"
 #include "FileFormats/BVR3File.h"
 #include "FileFormats/CADFile.h"
+#include "FileFormats/CAEFile.h"
 #include "FileFormats/CSTFile.h"
 #include "FileFormats/FZFile.h"
 #include "FileFormats/GenCADFile.h"
@@ -106,7 +107,13 @@ int BoardView::LoadFile(const filesystem::path &filepath) {
 		std::vector<char> buffer = file_as_buffer(filepath, m_error_msg);
 		if (!buffer.empty()) {
 			if (check_fileext(filepath, ".fz")) { // Since it is encrypted we cannot use the below logic. Trust the ext.
-				m_file = new FZFile(buffer, config.FZKey);
+				FZFile *fzfile = new FZFile();
+				fzfile->parse(buffer, config.FZKey);
+				m_file = fzfile;
+			} else if (check_fileext(filepath, ".cae")) { // Since it is encrypted we cannot use the below logic. Trust the ext.
+				CAEFile *caefile = new CAEFile();
+				caefile->parse(buffer, config.CAEKey);
+				m_file = caefile;
 			} else if (check_fileext(filepath, ".bom") || check_fileext(filepath, ".asc"))
 				m_file = new ASCFile(buffer, filepath);
 			else if (GenCADFile::verifyFormat(buffer))
