@@ -110,6 +110,8 @@ set(SOURCES
 	PDFBridge/PDFBridge.cpp
 	PDFBridge/PDFFile.cpp
 	main_opengl.cpp
+		FileFormats/des.c
+		FileFormats/des.h
 )
 
 if(ENABLE_GL1)
