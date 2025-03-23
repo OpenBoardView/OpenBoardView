@@ -179,6 +179,14 @@ elseif(APPLE)
 	set_target_properties(${PROJECT_NAME_LOWER} PROPERTIES MACOSX_BUNDLE_ICON_FILE ${PROJECT_NAME_LOWER})
 endif()
 
+if(NOT "${CMAKE_BUILD_TYPE}" STREQUAL "DEBUG")
+	include(CheckIPOSupported)
+	check_ipo_supported(RESULT supported OUTPUT error)
+	if (supported)
+		set_property(TARGET ${PROJECT_NAME_LOWER} PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
+	endif()
+endif()
+
 target_include_directories(${PROJECT_NAME_LOWER} PRIVATE
 	${CMAKE_CURRENT_SOURCE_DIR}
 	${CMAKE_CURRENT_SOURCE_DIR}/..

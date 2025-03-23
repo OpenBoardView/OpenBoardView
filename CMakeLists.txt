@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.9)
 # We now use project() VERSION parameter
 if(POLICY CMP0048)
 	cmake_policy(SET CMP0048 NEW)
@@ -6,6 +6,10 @@ endif()
 # Targets with semicolon are imported targets
 if(POLICY CMP0028)
 	cmake_policy(SET CMP0028 NEW)
+endif()
+# LTO
+if(POLICY CMP0069)
+	cmake_policy(SET CMP0069 NEW)
 endif()
 
 # Set OSX target version, before calling project() (inside version.cmake). FORCE is needed when project() is called within an included file
