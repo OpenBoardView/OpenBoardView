@@ -66,27 +66,68 @@ set(CMAKE_POLICY_VERSION_MINIMUM 3.11) # force glad 1.x compatibility with cmake
 add_subdirectory(glad)
 unset(CMAKE_POLICY_VERSION_MINIMUM)
 
-## SDL2 ##
-find_package(SDL2 REQUIRED CONFIG)
-add_definitions(-DENABLE_SDL2)
+if (NOT MSVC)
+	## SDL2 ##
+	find_package(SDL2 REQUIRED CONFIG)
+	add_definitions(-DENABLE_SDL2)
 
-# Create namespace targets for system with SDL2 older than 2.0.12
-if(NOT TARGET SDL2::SDL2)
-	add_library(SDL2::SDL2 SHARED IMPORTED)
-	find_library(SDL2_LIBRARY SDL2)
-	set_target_properties(SDL2::SDL2 PROPERTIES
-		IMPORTED_LOCATION ${SDL2_LIBRARY}
-		INTERFACE_INCLUDE_DIRECTORIES ${SDL2_INCLUDE_DIRS})
-	find_library(SDL2MAIN_LIBRARY SDL2main)
-	if(SDL2MAIN_LIBRARY)
-		add_library(SDL2::SDL2main STATIC IMPORTED)
-		set_target_properties(SDL2::SDL2main PROPERTIES
-			IMPORTED_LOCATION ${SDL2MAIN_LIBRARY}
+	# Create namespace targets for system with SDL2 older than 2.0.12
+	if(NOT TARGET SDL2::SDL2)
+		add_library(SDL2::SDL2 SHARED IMPORTED)
+		find_library(SDL2_LIBRARY SDL2)
+		set_target_properties(SDL2::SDL2 PROPERTIES
+			IMPORTED_LOCATION ${SDL2_LIBRARY}
 			INTERFACE_INCLUDE_DIRECTORIES ${SDL2_INCLUDE_DIRS})
-	else()
-		add_library(SDL2::SDL2main INTERFACE IMPORTED)
+		find_library(SDL2MAIN_LIBRARY SDL2main)
+		if(SDL2MAIN_LIBRARY)
+			add_library(SDL2::SDL2main STATIC IMPORTED)
+			set_target_properties(SDL2::SDL2main PROPERTIES
+				IMPORTED_LOCATION ${SDL2MAIN_LIBRARY}
+				INTERFACE_INCLUDE_DIRECTORIES ${SDL2_INCLUDE_DIRS})
+		else()
+			add_library(SDL2::SDL2main INTERFACE IMPORTED)
+		endif()
 	endif()
+elseif()
+	execute_process(
+		COMMAND git submodule update --init src/sdl
+		WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+	)
+	set(SDL_STATIC ON)
+	set(SDL_SHARED OFF)
+	add_subdirectory(src/sdl)
+	add_library(SDL2::SDL2main STATIC IMPORTED)
+	add_library(SDL2::SDL2-static STATIC IMPORTED)
 endif()
+
+#add_library(SDL2::SDL2main STATIC IMPORTED)
+#add_library(SDL2::SDL2-static STATIC IMPORTED)
+set(SDL_STATIC TRUE)
+set(SDL_SHARED FALSE)
+#set(SDL_ATOMIC FALSE)
+set(SDL_AUDIO FALSE)
+#set(SDL_VIDEO FALSE)
+#set(SDL_RENDER FALSE)
+#set(SDL_EVENTS FALSE)
+set(SDL_JOYSTICK FALSE)
+set(SDL_HAPTIC FALSE)
+set(SDL_HIDAPI FALSE)
+set(SDL_POWER FALSE)
+#set(SDL_THREADS FALSE)
+set(SDL_TIMERS FALSE)
+set(SDL_FILESYSTEM FALSE)
+#set(SDL_LOADSO FALSE)
+set(SDL_CPUINFO FALSE)
+set(SDL_SENSOR FALSE)
+#set(SDL_LOCALE FALSE)
+set(SDL_INSTALL FALSE)
+set(SDL_TESTS FALSE)
+set(BUILD_SHARED_LIBS FALSE)
+add_subdirectory(sdl)
+#add_library(SDL2::SDL2main STATIC IMPORTED)
+#add_library(SDL2::SDL2-static STATIC IMPORTED)
+message("here")
+
 
 ## imgui ##
 # note: in the future there may be integrated CMake support into imgui
@@ -138,6 +179,10 @@ target_link_libraries(imgui
 	${GLAD_LIBRARIES}
 )
 if(MINGW)
+target_link_libraries(imgui
+	SDL2::SDL2-static
+)
+elseif(MSVC)
 target_link_libraries(imgui
 	SDL2::SDL2-static
 )
