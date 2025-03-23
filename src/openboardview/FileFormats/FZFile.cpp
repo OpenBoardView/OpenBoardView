@@ -379,7 +379,7 @@ void FZFile::parse(std::vector<char> &buf, const std::array<uint32_t, 44> &fzkey
 				char *name = READ_STR();
 
 				// use name field as pin name if snum is empty string or "0" (decimal zero as string)
-				bool name_is_pin_position_id = strlen(pin.snum) <= 1 && (pin.snum[0] == '\0' or pin.snum[0] == '0');
+				bool name_is_pin_position_id = strlen(pin.snum) <= 1 && (pin.snum[0] == '\0' || pin.snum[0] == '0');
 				if (name_is_pin_position_id)
 				{
 					pin.name = name;
