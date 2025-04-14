@@ -13,6 +13,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <cmath>
 
 /*
  * Credit to @huertas for DES functions
@@ -107,8 +108,8 @@ std::vector<std::pair<BRDPoint, BRDPoint>> XZZPCBFile::xzz_arc_to_segments(int s
 
 	double angleStep = (endAngleD - startAngleD) / (numPoints - 1);
 
-	BRDPoint pold = {static_cast<int>(static_cast<float>(pc_xD + rD * cos(startAngleD))),
-	                 static_cast<int>(static_cast<float>(pc_yD + rD * sin(startAngleD)))};
+	BRDPoint pold = {static_cast<int>(static_cast<float>(pc_xD + rD * std::cos(startAngleD))),
+	                 static_cast<int>(static_cast<float>(pc_yD + rD * std::sin(startAngleD)))};
 	for (int i = 1; i < numPoints; ++i) {
 		double angle = startAngleD + i * angleStep;
 		BRDPoint p   = {static_cast<int>(pc_xD + rD * cos(angle)), static_cast<int>(pc_yD + rD * sin(angle))};
