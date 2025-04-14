@@ -112,7 +112,7 @@ std::vector<std::pair<BRDPoint, BRDPoint>> XZZPCBFile::xzz_arc_to_segments(int s
 	                 static_cast<int>(static_cast<float>(pc_yD + rD * std::sin(startAngleD)))};
 	for (int i = 1; i < numPoints; ++i) {
 		double angle = startAngleD + i * angleStep;
-		BRDPoint p   = {static_cast<int>(pc_xD + rD * cos(angle)), static_cast<int>(pc_yD + rD * sin(angle))};
+		BRDPoint p   = {static_cast<int>(pc_xD + rD * std::cos(angle)), static_cast<int>(pc_yD + rD * std::sin(angle))};
 		arc_segments.push_back({pold, p});
 		pold = p;
 	}
