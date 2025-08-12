@@ -32,9 +32,16 @@ struct BRDPoint {
 	BRDPoint() = default;
 	BRDPoint(int x, int y) : x(x), y(y) {}
 
+	BRDPoint &operator-=(const BRDPoint& point)& {
+		x -= point.x;
+		y -= point.y;
+		return *this;
+	}
+
 	bool operator==(const BRDPoint& point) {
 		return x == point.x && y == point.y;
 	}
+
 	bool operator!=(const BRDPoint& point) {
 		return x != point.x || y != point.y;
 	}
