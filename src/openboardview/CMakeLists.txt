@@ -68,6 +68,8 @@ set(SOURCES
 	BoardView.cpp
 	Board.cpp
 	BRDBoard.cpp
+	FileFormats/des.c
+	FileFormats/des.h
 	FileFormats/BRDFileBase.cpp
 	FileFormats/ADFile.cpp
 	FileFormats/ASCFile.cpp
@@ -110,8 +112,6 @@ set(SOURCES
 	PDFBridge/PDFBridge.cpp
 	PDFBridge/PDFFile.cpp
 	main_opengl.cpp
-		FileFormats/des.c
-		FileFormats/des.h
 )
 
 if(ENABLE_GL1)

@@ -1,42 +1,37 @@
 #pragma once
 
 #include "BRDFileBase.h"
+
 #include <cstdint>
-#include <vector>
-#include <unordered_map>
 #include <string>
-#include "annotations.h"
+#include <unordered_map>
+#include <vector>
 
 struct XZZPCBFile : public BRDFileBase {
   public:
 	XZZPCBFile(std::vector<char> &buf, std::string filepath);
 
-	static bool verifyFormat(std::vector<char> &buf);
+	static bool verifyFormat(const std::vector<char> &buf);
 
   private:
+	static const int XZZ_GLOBAL_SCALE = 10000;
 	std::unordered_map<uint32_t, std::string> net_dict;
 	std::unordered_map<std::string, std::unordered_map<std::string, std::string>> diode_dict; // <Net Name, <Pin Name, Reading>>
-	BRDPoint xy_translation = {0, 0};
-	int diode_readings_type = 0; // 0 = No readings, 1 = Based on part name and pin name, 2 = Based on net
 
 	// DES
 	void des_decrypt(std::vector<char> &buf);
-    void decryptWithDES(std::vector<char> &buf);
 
 	std::vector<std::pair<BRDPoint, BRDPoint>> xzz_arc_to_segments(int startAngle, int endAngle, int r, BRDPoint pc);
-	void parse_arc_block(std::vector<uint32_t> &buf);
-	void parse_line_segment_block(std::vector<uint32_t> &buf);
+	void parse_arc_block(const std::vector<char> &buf);
+	void parse_line_segment_block(const std::vector<char> &buf);
+	BRDPin parse_pin_block(const std::vector<char> &buf, uint32_t &current_pointer);
 	void parse_part_block(std::vector<char> &buf);
-	void parse_test_pad_block(std::vector<uint8_t> &buf);
-	void parse_post_v6(std::vector<char>::iterator v6_pos, std::vector<char> &buf);
-	void parse_net_block(std::vector<char> &buf);
-	void process_block(uint8_t block_type, std::vector<char> &block_buf);
+	void parse_test_pad_block(const std::vector<char> &buf);
+	void parse_net_block(const std::vector<char> &buf);
+	void process_block(std::vector<char> &block_buf, uint8_t block_type);
+	void process_blocks(const std::vector<char> &buf, uint32_t main_data_start, uint32_t main_data_blocks_size);
 
-	char read_utf8_char(char c) const;
-	std::string read_cb2312_string(const std::string &str);
-
-	void find_xy_translation();
-    void translate_segments();
-	void translate_points(BRDPoint &point) const;
-	void translate_pins();
+	BRDPoint find_xy_translation() const;
+	void translate_segments(const BRDPoint &xy_translation);
+	void translate_pins(const BRDPoint &xy_translation);
 };
