@@ -137,9 +137,6 @@ struct Pin : BoardElement {
 	// Net this contact is connected to, nulltpr if no info available.
 	Net *net;
 
-	// Pin comment
-	std::string comment;
-
 	// Contact belonging to this component (pin), nullptr if nail.
 	std::shared_ptr<Component> component;
 

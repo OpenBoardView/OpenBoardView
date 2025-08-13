@@ -2996,8 +2996,7 @@ void BoardView::DrawPartTooltips(ImDrawList *draw) {
 				ImGui::Text("%s\n[%s]%s",
 				            currentlyHoveredPart->name.c_str(),
 				            (currentlyHoveredPin ? currentlyHoveredPin->name.c_str() : " "),
-				            (currentlyHoveredPin ? currentlyHoveredPin->net->name.c_str() : " "),
-				            (currentlyHoveredPin ? currentlyHoveredPin->comment.c_str() : " "));
+				            (currentlyHoveredPin ? currentlyHoveredPin->net->name.c_str() : " "));
 			} else {
 				ImGui::Text("%s", currentlyHoveredPart->name.c_str());
 			}
