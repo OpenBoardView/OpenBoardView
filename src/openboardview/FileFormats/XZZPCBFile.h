@@ -2,6 +2,7 @@
 
 #include "BRDFileBase.h"
 
+#include <array>
 #include <cstdint>
 #include <string>
 #include <unordered_map>
@@ -15,10 +16,13 @@ struct XZZPCBFile : public BRDFileBase {
 
   private:
 	uint64_t key = 0ul;
-
 	static const int XZZ_GLOBAL_SCALE = 10000;
 	std::unordered_map<uint32_t, std::string> net_dict;
 	std::unordered_map<std::string, std::unordered_map<std::string, std::string>> diode_dict; // <Net Name, <Pin Name, Reading>>
+
+	const std::array<uint8_t, 8> getKeyParity() const;
+	bool checkKey(uint64_t key) const;
+	std::string keyToString(uint64_t key) const;
 
 	// DES
 	std::vector<char> des_decrypt(const std::vector<char> &buf);

@@ -1,10 +1,13 @@
 #include "XZZPCBFile.h"
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <cstdint>
 #include <cstring>
+#include <iomanip>
 #include <list>
+#include <sstream>
 #include <string>
 #include <string_view>
 #include <unordered_map>
@@ -88,6 +91,30 @@ std::vector<std::pair<BRDPoint, BRDPoint>> XZZPCBFile::xzz_arc_to_segments(int s
 	return arc_segments;
 }
 
+bool XZZPCBFile::checkKey(uint64_t key) const {
+	auto key_parity = getKeyParity();
+	bool valid_key = true;
+	for (size_t i = 0; i < sizeof(uint64_t); i++) { // Compute parity for each byte of XZZ key
+		uint8_t tmp = (key >> (i * 8)) & 0xff;
+		tmp ^= tmp >> 4;
+		tmp ^= tmp >> 2;
+		tmp ^= tmp >> 1;
+		tmp = (~tmp) & 1;
+		valid_key = valid_key && (tmp == key_parity[i]);
+	}
+	return valid_key;
+}
+
+const std::array<uint8_t, 8> XZZPCBFile::getKeyParity() const {
+	return {{1, 1, 1, 1, 1, 1, 1, 0}};
+}
+
+std::string XZZPCBFile::keyToString(uint64_t key) const {
+	std::stringstream ss;
+	ss << "0x" << std::setfill('0') << std::setw(sizeof(key) * 2)  << std::hex << key;
+	return ss.str();
+}
+
 bool XZZPCBFile::verifyFormat(const std::vector<char> &buf) {
 	if (buf.size() < 6) {
 		return false;
@@ -109,8 +136,16 @@ bool XZZPCBFile::verifyFormat(const std::vector<char> &buf) {
 	return false;
 }
 
-XZZPCBFile::XZZPCBFile(std::vector<char> &buf, uint64_t key) : key(key) {
+XZZPCBFile::XZZPCBFile(std::vector<char> &buf, uint64_t xzzkey) {
 	std::list<std::pair<BRDPoint, BRDPoint>> outline_segments;
+
+	if (checkKey(xzzkey)) {
+		key = xzzkey;
+	} else if (!checkKey(key)) { // Try to fallback to built-in key
+		valid = false;
+		error_msg = "Invalid XZZ PCB Key\nXZZ PCB key: " + keyToString(xzzkey);
+		return;
+	}
 
 	std::string_view v6v6555v6v6{"v6v6555v6v6"};
 	auto v6v6555v6v6_found = std::search(buf.begin(), buf.end(), v6v6555v6v6.begin(), v6v6555v6v6.end());
