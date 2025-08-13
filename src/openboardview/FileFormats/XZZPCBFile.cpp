@@ -4,10 +4,7 @@
 #include <cmath>
 #include <cstdint>
 #include <cstring>
-#include <iomanip>
-#include <ios>
 #include <list>
-#include <sstream>
 #include <string>
 #include <string_view>
 #include <unordered_map>
@@ -22,15 +19,6 @@
  */
 
 
-static const unsigned char hexconv[256] = {
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 0, 0,  0,  0,  0,  0,  10, 11, 12, 13, 14, 15, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 11, 12, 13, 14, 15, 0,  0,  0,  0,  0,  0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0};
-
 static inline uint32_t read_uint32_t(const std::vector<char> &buf, size_t start_pos, std::string &error_msg) {
 	ENSURE_OR_FAIL(buf.size() > start_pos + 3, error_msg, return 0);
 	return ((static_cast<uint32_t>(static_cast<unsigned char>(buf[start_pos + 3])) << 24) |
@@ -39,58 +27,30 @@ static inline uint32_t read_uint32_t(const std::vector<char> &buf, size_t start_
 			(static_cast<uint32_t>(static_cast<unsigned char>(buf[start_pos + 0])) <<  0));
 }
 
-void XZZPCBFile::des_decrypt(std::vector<char> &buf) {
-	std::vector<uint16_t> byteList = {0xE0, 0xCF, 0x2E, 0x9F, 0x3C, 0x33, 0x3C, 0x33};
+std::vector<char> XZZPCBFile::des_decrypt(const std::vector<char> &inbuf) {
+	uint64_t key = 0xdcfc12ac00000000;
+	std::vector<char> outbuf(inbuf.size());
 
-	std::ostringstream a;
-	for (size_t i = 0; i < byteList.size(); i += 2) {
-		uint16_t value = (byteList[i] << 8) | byteList[i + 1];
-		value ^= 0x3C33; // <3
-		a << std::uppercase << std::hex << std::setw(4) << std::setfill('0') << value;
-	}
-	std::string b = a.str();
-	char *c       = new char[b.length() + 1];
-	std::copy(b.begin(), b.end(), c);
-	c[b.length()] = '\0';
-
-	std::vector<uint8_t> buf_uint8(buf.begin(), buf.end());
-	uint8_t *p  = buf_uint8.data();
-	uint8_t *ep = p + buf_uint8.size();
-
-	uint64_t k     = 0x0000000000000000;
-	const char *kp = c;
-	for (int i = 0; i < 8; i++) {
-		uint64_t v = hexconv[(int)*kp] * 16 + hexconv[(int)*(kp + 1)];
-		k |= (v << ((7 - i) * 8));
-		kp += 2;
-	}
-
-	std::vector<uint8_t> decrypted_buf;
-	while (p < ep) {
-		unsigned char e[8];
-		unsigned char d[8];
-		uint64_t d64;
-		uint64_t e64;
-
-		// Build encrypted block
-		for (int i = 0; i < 8; i++) {
-			e[7 - i] = *p;
-			p++;
+	// Iterate over input and output buffer at the same time by chunks of 8 bytes
+	auto inpos = inbuf.begin();
+	for (auto outpos = outbuf.begin();
+			inpos < inbuf.end() && outpos < outbuf.end();
+			inpos += sizeof(uint64_t), outpos += sizeof(uint64_t)) {
+		// Convert 8 bytes of the input buffer into a 64-bit unsigned int with byte order reversed
+		uint64_t input = 0l;
+		for (size_t i = 0; i < sizeof(uint64_t) && inpos + i < inbuf.end(); i++) {
+			input |= static_cast<uint64_t>(static_cast<unsigned char>(inpos[sizeof(uint64_t) - 1 - i])) << (i * 8);
 		}
-		memcpy(&e64, e, 8);
 
-		// Decode/decrypt
-		d64 = des(e64, k, 'd');
+		uint64_t output = des(input, key, 'd');
 
-		// Reverse d64 and append to decrypted_buf
-		for (int i = 0; i < 8; i++) {
-			d[i] = (d64 >> (i * 8)) & 0xff; // Extract each byte
-		}
-		for (int i = 7; i >= 0; i--) {
-			decrypted_buf.push_back(d[i]); // Append in reverse order
+		// Convert the resulting 64-bit unsigned back into 8 bytes in the output buffer with byte order reversed
+		for (size_t i = 0; i < sizeof(uint64_t) && outpos + i < outbuf.end(); i++) {
+			outpos[sizeof(uint64_t) - 1 - i] = (output >> (i * 8)) & 0xff;
 		}
 	}
-	buf = std::vector<char>(decrypted_buf.begin(), decrypted_buf.end());
+
+	return outbuf;
 }
 
 std::vector<std::pair<BRDPoint, BRDPoint>> XZZPCBFile::xzz_arc_to_segments(int startAngle, int endAngle, int r, BRDPoint pc) {
@@ -360,10 +320,10 @@ BRDPin XZZPCBFile::parse_pin_block(const std::vector<char> &buf, uint32_t &curre
 	return pin;
 }
 
-void XZZPCBFile::parse_part_block(std::vector<char> &buf) {
+void XZZPCBFile::parse_part_block(std::vector<char> &encrypted_buf) {
 	BRDPart part{};
 
-	des_decrypt(buf);
+	auto buf = des_decrypt(encrypted_buf);
 
 	uint32_t current_pointer = 0;
 	uint32_t part_size       = read_uint32_t(buf, current_pointer, error_msg);
@@ -375,6 +335,7 @@ void XZZPCBFile::parse_part_block(std::vector<char> &buf) {
 
 	// So far 0x06 sub blocks have been first always
 	// Also contains part name so needed before pins
+	ENSURE_OR_FAIL(current_pointer < buf.size(), error_msg, return);
 	ENSURE_OR_FAIL(buf[current_pointer] == 0x06, error_msg, return);
 
 	current_pointer += 31;

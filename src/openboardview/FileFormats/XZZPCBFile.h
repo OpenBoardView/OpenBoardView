@@ -19,13 +19,13 @@ struct XZZPCBFile : public BRDFileBase {
 	std::unordered_map<std::string, std::unordered_map<std::string, std::string>> diode_dict; // <Net Name, <Pin Name, Reading>>
 
 	// DES
-	void des_decrypt(std::vector<char> &buf);
+	std::vector<char> des_decrypt(const std::vector<char> &buf);
 
 	std::vector<std::pair<BRDPoint, BRDPoint>> xzz_arc_to_segments(int startAngle, int endAngle, int r, BRDPoint pc);
 	void parse_arc_block(const std::vector<char> &buf);
 	void parse_line_segment_block(const std::vector<char> &buf);
 	BRDPin parse_pin_block(const std::vector<char> &buf, uint32_t &current_pointer);
-	void parse_part_block(std::vector<char> &buf);
+	void parse_part_block(std::vector<char> &encrypted_buf);
 	void parse_test_pad_block(const std::vector<char> &buf);
 	void parse_net_block(const std::vector<char> &buf);
 	void process_block(std::vector<char> &block_buf, uint8_t block_type);
