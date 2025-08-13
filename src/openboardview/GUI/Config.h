@@ -68,6 +68,10 @@ public:
 	std::array<uint32_t, 44> CAEKey = {0};
 	void SetCAEKey(const char *keytext);
 
+	std::string XZZPCBKeyStr = "";
+	uint64_t XZZPCBKey = 0ul;
+	void SetXZZPCBKey(const std::string &keytext);
+
 	void readFromConfig(Confparse &obvconfig);
 	void writeToConfig(Confparse &obvconfig);
 };

@@ -138,7 +138,7 @@ int BoardView::LoadFile(const filesystem::path &filepath) {
 			else if (BRDAllegroFile::verifyFormat(buffer))
 				m_file = new BRDAllegroFile(buffer);
 			else if (XZZPCBFile::verifyFormat(buffer))
-				m_file = new XZZPCBFile(buffer, filepath.string());
+				m_file = new XZZPCBFile(buffer, config.XZZPCBKey);
 			else
 				m_error_msg = "Unrecognized file format.";
 

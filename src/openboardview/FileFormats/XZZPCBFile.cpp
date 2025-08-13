@@ -28,7 +28,6 @@ static inline uint32_t read_uint32_t(const std::vector<char> &buf, size_t start_
 }
 
 std::vector<char> XZZPCBFile::des_decrypt(const std::vector<char> &inbuf) {
-	uint64_t key = 0xdcfc12ac00000000;
 	std::vector<char> outbuf(inbuf.size());
 
 	// Iterate over input and output buffer at the same time by chunks of 8 bytes
@@ -110,7 +109,7 @@ bool XZZPCBFile::verifyFormat(const std::vector<char> &buf) {
 	return false;
 }
 
-XZZPCBFile::XZZPCBFile(std::vector<char> &buf, std::string filepath) {
+XZZPCBFile::XZZPCBFile(std::vector<char> &buf, uint64_t key) : key(key) {
 	std::list<std::pair<BRDPoint, BRDPoint>> outline_segments;
 
 	std::string_view v6v6555v6v6{"v6v6555v6v6"};

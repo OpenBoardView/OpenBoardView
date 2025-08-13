@@ -9,11 +9,13 @@
 
 struct XZZPCBFile : public BRDFileBase {
   public:
-	XZZPCBFile(std::vector<char> &buf, std::string filepath);
+	XZZPCBFile(std::vector<char> &buf, uint64_t key);
 
 	static bool verifyFormat(const std::vector<char> &buf);
 
   private:
+	uint64_t key = 0ul;
+
 	static const int XZZ_GLOBAL_SCALE = 10000;
 	std::unordered_map<uint32_t, std::string> net_dict;
 	std::unordered_map<std::string, std::unordered_map<std::string, std::string>> diode_dict; // <Net Name, <Pin Name, Reading>>

@@ -1,6 +1,9 @@
 #include "Config.h"
 
 #include <cstring>
+#include <stdexcept>
+#include <string>
+
 #include "confparse.h"
 #include "GUI/DPI.h"
 
@@ -49,6 +52,15 @@ void Config::SetCAEKey(const char *keytext) {
 	if (keytext) {
 		CAEKeyStr = keytext;
 		CAEKey = DecodeKey<44>(keytext);
+	}
+}
+
+void Config::SetXZZPCBKey(const std::string &keytext) {
+	try {
+		XZZPCBKey = std::stoul(keytext, nullptr, 0);
+		XZZPCBKeyStr = keytext;
+	} catch (const std::invalid_argument &e) {
+
 	}
 }
 
@@ -141,6 +153,7 @@ void Config::readFromConfig(Confparse &obvconfig) {
 	 */
 	SetFZKey(obvconfig.ParseStr("FZKey", ""));
 	SetCAEKey(obvconfig.ParseStr("CAEKey", ""));
+	SetXZZPCBKey(obvconfig.ParseStr("XZZPCBKey", ""));
 }
 
 void Config::writeToConfig(Confparse &obvconfig) {
@@ -204,4 +217,5 @@ void Config::writeToConfig(Confparse &obvconfig) {
 
 	obvconfig.WriteStr("FZKey", FZKeyStr.c_str());
 	obvconfig.WriteStr("CAEKey", CAEKeyStr.c_str());
+	obvconfig.WriteStr("XZZPCBKey", XZZPCBKeyStr.c_str());
 }

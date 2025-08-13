@@ -216,6 +216,17 @@ void Program::render() {
 		}
 
 		ImGui::Separator();
+		ImGui::Text("XZZ PCB Key");
+		ImGui::SameLine();
+
+		std::vector<char> newXZZPCBKey(config.XZZPCBKeyStr.c_str(), config.XZZPCBKeyStr.c_str() + config.XZZPCBKeyStr.size() + 1); // Copy string data + '\0' char
+		if (newXZZPCBKey.size() < 19) // reserve space for new key
+			newXZZPCBKey.resize(19, '\0'); // Max string length is 18 (2 chars fo 0x prefix, 16 hex chars) + 1 nul char
+		if (ImGui::InputText("##XZZPCBKey", newXZZPCBKey.data(), newXZZPCBKey.size())) {
+			config.SetXZZPCBKey(newXZZPCBKey.data());
+		}
+
+		ImGui::Separator();
 
 		if (ImGui::Button("Save")) {
 			config.writeToConfig(obvconfig);
