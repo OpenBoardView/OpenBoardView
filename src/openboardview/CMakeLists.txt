@@ -68,8 +68,7 @@ set(SOURCES
 	BoardView.cpp
 	Board.cpp
 	BRDBoard.cpp
-	FileFormats/des.c
-	FileFormats/des.h
+	Crypto/des.c
 	FileFormats/BRDFileBase.cpp
 	FileFormats/ADFile.cpp
 	FileFormats/ASCFile.cpp
