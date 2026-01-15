@@ -74,7 +74,7 @@ if [ $THREADS -eq 1 ]; then
 fi
 
 if [ "$(uname -m)" = "arm64" ]; then
-  COMPILEFLAGS="$COMPILEFLAGS -DCMAKE_OSX_ARCHITECTURES=arm64;x86_64"
+  COMPILEFLAGS="$COMPILEFLAGS -DCMAKE_OSX_ARCHITECTURES=arm64"
 fi
 
 # Now compile the source code and install it in server's directory
