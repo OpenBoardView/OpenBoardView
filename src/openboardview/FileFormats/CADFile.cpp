@@ -79,7 +79,7 @@ CADFile::CADFile(std::vector<char> &buf) {
 		switch (current_block) {
 			case Parts: {
 				BRDPart part;
-				BRDPin pin;
+				/*BRDPin pin;*/
 				/*char *TYPE    =*/READ_STR();
 				part.name       = READ_STR();
 				/*char *Part(NR)=*/READ_STR();

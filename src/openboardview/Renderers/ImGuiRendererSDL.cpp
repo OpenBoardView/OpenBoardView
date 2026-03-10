@@ -10,9 +10,9 @@
 #include "utils.h"
 
 float ImGuiRendererSDL::getDisplayScale() {
-	// Scaling from platform display DPI is only supported on Windows for now as it is broken and inconsistent on X11/XWayland/Wayland
-#ifdef _WIN32
-	return ImGui_ImplSDL3_GetContentScaleForDisplay(0);
+	// Scaling from platform display DPI is only supported on Windows and Apple for now
+#if defined(_WIN32) || defined(__APPLE__)
+	return SDL_GetDisplayContentScale(SDL_GetPrimaryDisplay());
 #else
 	return 1.0f;
 #endif

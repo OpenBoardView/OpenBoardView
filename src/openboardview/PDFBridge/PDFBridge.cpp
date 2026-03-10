@@ -11,11 +11,11 @@ std::string PDFBridge::GetSelection() const {
 	return {};
 }
 
-void PDFBridge::OpenDocument(const PDFFile &pdfFile) {
+void PDFBridge::OpenDocument(const PDFFile & /*pdfFile*/) {
 }
 
 void PDFBridge::CloseDocument() {
 }
 
-void PDFBridge::DocumentSearch(const std::string &str, bool wholeWordsOnly, bool caseSensitive) {
+void PDFBridge::DocumentSearch(const std::string & /*str*/, bool /*wholeWordsOnly*/, bool /*caseSensitive*/) {
 }

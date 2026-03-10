@@ -298,7 +298,8 @@ int main(int argc, char **argv) {
 	// Cap window width/height to maximum usable screen area to prevent e.g., out-of-screen titlebar in case of low resolution/high scale
 	SDL_Rect window_bounds{};
 
-	if (SDL_GetDisplayUsableBounds(0, &window_bounds) != 0) {
+	SDL_DisplayID displayID = SDL_GetPrimaryDisplay();
+	if (SDL_GetDisplayUsableBounds(displayID, &window_bounds) != 0) {
 		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "%s:%d Error: %s\n", __FILE__, __LINE__, SDL_GetError());
 	} else {
 		window_width = std::min(window_width, window_bounds.w);
@@ -362,7 +363,7 @@ SDL_PropertiesID props = SDL_CreateProperties();
 	if (g.font_size > 0.0) app.config.fontSize = g.font_size;
 
 	Fonts fonts;
-	std::string loadedFontName = fonts.load(app.config.fontName);
+	std::string loadedFontName = fonts.load(app.config.fontName, app.config.fontSize);
 	if (!loadedFontName.empty()) { // Overwrite saved font name by the one that has just been loaded
 		app.obvconfig.WriteStr("fontName", loadedFontName.c_str());
 	}
@@ -393,7 +394,9 @@ SDL_PropertiesID props = SDL_CreateProperties();
 	 * the mouse or 'waking up' OBV then increase to 5 or more.
 	 */
 	sleepout = 30;
+#if 0
 	float angleacc = 0.0;
+#endif
 	while (!done) {
 
 		SDL_Event event;
@@ -435,7 +438,9 @@ SDL_PropertiesID props = SDL_CreateProperties();
 
 		// reset rotation angle accumulator
 		if (ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
+#if 0
 			angleacc = 0.0;
+#endif
 		}
 
 		if (app.reloadConfig) {
@@ -447,7 +452,7 @@ SDL_PropertiesID props = SDL_CreateProperties();
 
 		if (app.reloadFonts) {
 			// Needs to happen after frame has been rendered (or before starting a new frame)
-			fonts.reload(app.config.fontName);
+			fonts.reload(app.config.fontName, app.config.fontSize);
 			app.reloadFonts = false;
 		}
 

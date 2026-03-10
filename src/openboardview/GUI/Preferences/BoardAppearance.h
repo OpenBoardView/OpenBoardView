@@ -8,8 +8,6 @@ namespace Preferences {
 
 class BoardAppearance {
 private:
-	bool shown = false;
-	Confparse &obvconfig;
 	Config &config;
 public:
 	BoardAppearance(Confparse &obvconfig, Config &config);

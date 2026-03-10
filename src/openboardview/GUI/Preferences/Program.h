@@ -7,7 +7,7 @@
 #include "confparse.h"
 #include "BoardAppearance.h"
 
-class BoardView;
+struct BoardView;
 
 namespace Preferences {
 
