@@ -90,6 +90,16 @@ if(NOT MSVC)
 	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wextra")
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wextra -Werror=format-security")
 endif()
+
+if(PEDANTIC)
+	if(MSVC)
+		set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /WX")
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /WX")
+	else()
+		set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Werror")
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
+	endif()
+endif()
 # Workaround type bug of kSecKeyUsageCritical in SecCertificate.h for Xcode 8.2.1 SDK 10.12
 if(APPLE)
 	execute_process(

@@ -11,9 +11,10 @@ color() {
 
 helpMsg() {
   cat << EOH
-Usage: $(color 4 ${0}) [--$(color 5 recompile)] [--$(color 1 debug)] — Build $PROJECT
+Usage: $(color 4 ${0}) [--$(color 5 recompile)] [--$(color 1 debug)] [--$(color 2 pedantic)] — Build $PROJECT
           --$(color 5 recompile)   — Delete $(color 6 \$COMPILEDIR) (release_build or debug_build with --$(color 1 debug)) before compiling $PROJECT again
           --$(color 1 debug)       — Make a $(color 1 debug) build
+          --$(color 2 pedantic)    — Treat warnings as errors
 
 All extra parameters are passed to cmake.
 Environment variables:
@@ -46,6 +47,9 @@ for arg in "$@"; do
     --recompile)
       STRCOMPILE="$(color 5 Recompiling)"
       RECOMPILE=true
+    ;;
+    --pedantic)
+      COMPILEFLAGS="$COMPILEFLAGS -DPEDANTIC=1"
     ;;
     *) # pass other arguments to CMAKE
       COMPILEFLAGS="$COMPILEFLAGS $arg"
