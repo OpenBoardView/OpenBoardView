@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <iostream>
 
-#include "SDL.h"
+#include <SDL3/SDL.h>
 #include "imgui/imgui.h"
 
 #include "utils.h"

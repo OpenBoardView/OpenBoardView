@@ -17,7 +17,7 @@
 
 #include "confparse.h"
 #include "resource.h"
-#include <SDL.h>
+#include <SDL3/SDL.h>
 #include <algorithm>
 #include <chrono>
 #include <memory>
@@ -218,11 +218,7 @@ int main(int argc, char **argv) {
 	BoardView app{};
 
 	// Log all messages
-	SDL_LogSetAllPriority(SDL_LOG_PRIORITY_VERBOSE);
-
-#if SDL_VERSION_ATLEAST(2, 24, 0)
-	SDL_SetHint(SDL_HINT_WINDOWS_DPI_AWARENESS, "system");
-#endif
+	SDL_SetLogPriorities(SDL_LOG_PRIORITY_VERBOSE);
 
 	/*
 	 * Parse the parameters first up, store the results in the global struct.
@@ -236,8 +232,8 @@ int main(int argc, char **argv) {
 	app.debug = g.debug;
 
 	// Setup SDL
-	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) != 0) {
-		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Error: %s\n", SDL_GetError());
+	if (!SDL_Init(SDL_INIT_VIDEO)) {
+		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "%s:%d Error: %s\n", __FILE__, __LINE__, SDL_GetError());
 		return -1;
 	}
 
@@ -287,34 +283,43 @@ int main(int argc, char **argv) {
 		g.renderer = Renderers::get(app.obvconfig.ParseInt("renderer", static_cast<int>(Renderers::Preferred)));
 	}
 
+
 	float main_scale = ImGuiRendererSDL::getDisplayScale();
 	setDisplayScale(main_scale);
 
 	int window_width = g.width * main_scale;
 	int window_height = g.height * main_scale;
 
+	SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION, "New window size: unscaled: %d x %d  scaled: %d x %d  display_scale=%0.1f", g.width, g.height, window_width, window_height, main_scale );
+
+	if (window_width < 100) window_width = 100;
+	if (window_height < 100) window_height = 100;
+
 	// Cap window width/height to maximum usable screen area to prevent e.g., out-of-screen titlebar in case of low resolution/high scale
 	SDL_Rect window_bounds{};
 
 	if (SDL_GetDisplayUsableBounds(0, &window_bounds) != 0) {
-		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Error: %s\n", SDL_GetError());
+		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "%s:%d Error: %s\n", __FILE__, __LINE__, SDL_GetError());
 	} else {
 		window_width = std::min(window_width, window_bounds.w);
 		window_height = std::min(window_height, window_bounds.h);
 	}
 
 	// Setup window
-	uint32_t window_flags = SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE;
-#if defined(_WIN32) || defined(__APPLE__)
-	window_flags |= SDL_WINDOW_ALLOW_HIGHDPI;
-#endif
-	window = SDL_CreateWindow(
-	    OBV_NAME, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, window_width, window_height, window_flags);
+SDL_PropertiesID props = SDL_CreateProperties();
+	SDL_SetStringProperty(props, SDL_PROP_WINDOW_CREATE_TITLE_STRING, OBV_NAME);
+	SDL_SetNumberProperty(props, SDL_PROP_WINDOW_CREATE_WIDTH_NUMBER, window_width);
+	SDL_SetNumberProperty(props, SDL_PROP_WINDOW_CREATE_HEIGHT_NUMBER, window_height);
+	SDL_SetBooleanProperty(props, SDL_PROP_WINDOW_CREATE_OPENGL_BOOLEAN, true);
+	SDL_SetBooleanProperty(props, SDL_PROP_WINDOW_CREATE_RESIZABLE_BOOLEAN, true);
+	SDL_SetBooleanProperty(props, SDL_PROP_WINDOW_CREATE_HIGH_PIXEL_DENSITY_BOOLEAN, true);
+	window = SDL_CreateWindowWithProperties(props);
+	SDL_DestroyProperties(props);
 	if (window == NULL) {
 		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Failed to create the sdlWindow: %s\n", SDL_GetError());
 		cleanupAndExit(1);
 	}
-
+	//SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
 	// Needs to be done before initializing the renderer or using any of ImGui stuff
 	ImGui::CreateContext();
 	// Setup renderer
@@ -323,8 +328,9 @@ int main(int argc, char **argv) {
 		SDL_LogError(SDL_LOG_CATEGORY_RENDER, "%s", "No renderer not available. Exiting.");
 		cleanupAndExit(1);
 	}
+	SDL_ShowWindow(window);
 
-	SDL_EventState(SDL_DROPFILE, SDL_ENABLE);
+	SDL_SetEventEnabled(SDL_EVENT_DROP_FILE, true);
 
 	// SDL disables screen saver by default which doesn't make sense for us.
 	SDL_EnableScreenSaver();
@@ -395,9 +401,11 @@ int main(int argc, char **argv) {
 			sleepout = 30;
 			Renderers::current->processEvent(event);
 
-			if (event.type == SDL_DROPFILE) {
-				app.LoadFile(filesystem::u8path(event.drop.file));
-			} else if(event.type == SDL_MULTIGESTURE && event.mgesture.numFingers == 2 && !ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
+			if (event.type == SDL_EVENT_DROP_FILE) {
+				app.LoadFile(filesystem::u8path(event.drop.data));
+#if 0
+#warning SDL3 removed multi gesture support
+			} else if(event.type == SDL_EVENT_MULTIGESTURE && event.mgesture.numFingers == 2 && !ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
 				//Inhibit dragging board area
 				app.m_dragging_token = -1;
 				//Rotation detected, at least 1°
@@ -419,9 +427,10 @@ int main(int argc, char **argv) {
 					SDL_GetWindowSize(window, &w, &h);
 					app.Zoom(event.mgesture.x * w, event.mgesture.y * h, event.mgesture.dDist * app.config.zoomFactor * 10);
 				}
+#endif
 			}
 
-			if (event.type == SDL_QUIT) done = true;
+			if (event.type == SDL_EVENT_QUIT) done = true;
 		}
 
 		// reset rotation angle accumulator
@@ -465,7 +474,7 @@ int main(int argc, char **argv) {
 		app.Update();
 		if (app.m_wantsQuit) {
 			SDL_Event sdlevent;
-			sdlevent.type = SDL_QUIT;
+			sdlevent.type = SDL_EVENT_QUIT;
 			SDL_PushEvent(&sdlevent);
 		}
 
@@ -482,8 +491,10 @@ int main(int argc, char **argv) {
 		ImGui::Render();
 		Renderers::current->renderFrame(clear_color);
 
+		int interval = 0;
+		SDL_GL_GetSwapInterval(&interval);
 		// vsync disabled, manual FPS limiting
-		if (!SDL_GL_GetSwapInterval()) {
+		if (interval == 0) {
 			static const int FPS = 30;
 			static const std::chrono::duration<std::intmax_t, std::ratio<1, FPS>> frameDuration{1};
 			static auto nextFrame = std::chrono::steady_clock::now() + frameDuration;

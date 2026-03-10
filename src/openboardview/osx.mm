@@ -2,7 +2,7 @@
 
 #include "platform.h"
 #include <string>
-#include <SDL.h>
+#include <SDL3/SDL.h>
 #import <objc/Object.h>
 #import <Cocoa/Cocoa.h>
 
@@ -84,8 +84,8 @@ static void openFile(id self, SEL _cmd) {
 	if (!filename.empty()) {
 		// Trigger DropFile event which will call BoardView::LoadFile()
 		SDL_Event event;
-		event.type = SDL_DROPFILE;
-		event.drop.file = SDL_strdup(filename.c_str());
+		event.type = SDL_EVENT_DROP_FILE;
+		event.drop.data = SDL_strdup(filename.c_str());
 		SDL_PushEvent(&event);
 	}
 }

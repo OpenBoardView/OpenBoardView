@@ -1,6 +1,6 @@
 #include "PDFBridgeEvince.h"
 
-#include <SDL.h>
+#include <SDL3/SDL.h>
 
 PDFBridgeEvince::PDFBridgeEvince() {
 }

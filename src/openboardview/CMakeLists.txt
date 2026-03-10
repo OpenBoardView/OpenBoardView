@@ -224,15 +224,15 @@ endif()
 
 if(MINGW)
 target_link_libraries(${PROJECT_NAME_LOWER}
-	SDL2::SDL2-static
+	SDL3::SDL3-static
 )
 else()
 target_link_libraries(${PROJECT_NAME_LOWER}
-	SDL2::SDL2
+	SDL3::SDL3
 )
 endif()
 target_link_libraries(${PROJECT_NAME_LOWER}
-	SDL2::SDL2main
+	SDL3::SDL3main
 )
 
 install(TARGETS

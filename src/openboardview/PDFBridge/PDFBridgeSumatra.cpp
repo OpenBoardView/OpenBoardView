@@ -2,7 +2,7 @@
 
 #include <cassert>
 #include <cstring>
-#include <SDL.h>
+#include <SDL3/SDL.h>
 
 #include "win32.h"
 #include "utils.h"

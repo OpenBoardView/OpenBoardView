@@ -12,9 +12,7 @@
 #include <shobjidl.h>
 #include <cstdint>
 #include <winnls.h>
-#ifdef ENABLE_SDL2
-#include <SDL.h>
-#endif
+#include <SDL3/SDL.h>
 
 const std::string utf16_to_utf8(const std::wstring &wtext) {
 	return std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t>{}.to_bytes(wtext.c_str());
@@ -90,11 +88,7 @@ std::vector<char> load_font(const std::string &name) {
 
 		const size_t size = ::GetFontData(hdc, 0, 0, NULL, 0);
 		if (size == GDI_ERROR) {
-#ifdef ENABLE_SDL2
 			SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Couldn't get \"%s\" font data: %lu", name.c_str(), GetLastError());
-#else
-			std::cout << "Couldn't get \"" << name << "\" font data: " << GetLastError() << std::endl;
-#endif
 		} else if (size > 0) {
 			char *buffer = new char[size];
 			if (::GetFontData(hdc, 0, 0, buffer, size) == size) {

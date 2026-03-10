@@ -1,5 +1,5 @@
 #include "utils.h"
-#include <SDL.h>
+#include <SDL3/SDL.h>
 #include <algorithm>
 #include <cctype>
 #include <cstring>

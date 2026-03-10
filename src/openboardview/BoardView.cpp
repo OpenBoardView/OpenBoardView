@@ -9,8 +9,8 @@
 #include <climits>
 #include <memory>
 #include <cstdio>
-#ifdef ENABLE_SDL2
-#include <SDL.h>
+#ifdef ENABLE_SDL3
+#include <SDL3/SDL.h>
 #endif
 
 #include "BRDBoard.h"
@@ -2625,7 +2625,7 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 			 * overhead but it keeps the code simpler and saves us replicating things.
 			 */
 
-			if ((pincount == 3) && (abs(aspect > 0.5)) &&
+			if ((pincount == 3) && (abs(aspect) > 0.5) &&
 			    ((strchr("DQZ", p0) || (strchr("DQZ", p1)) || strcmp(part->name.c_str(), "LED")))) {
 
 				part->outline = dbox;

@@ -67,24 +67,28 @@ add_subdirectory(glad)
 unset(CMAKE_POLICY_VERSION_MINIMUM)
 
 ## SDL2 ##
-find_package(SDL2 REQUIRED CONFIG)
-add_definitions(-DENABLE_SDL2)
+find_package(SDL3 REQUIRED CONFIG)
+add_definitions(-DENABLE_SDL3)
 
-# Create namespace targets for system with SDL2 older than 2.0.12
-if(NOT TARGET SDL2::SDL2)
-	add_library(SDL2::SDL2 SHARED IMPORTED)
-	find_library(SDL2_LIBRARY SDL2)
-	set_target_properties(SDL2::SDL2 PROPERTIES
-		IMPORTED_LOCATION ${SDL2_LIBRARY}
-		INTERFACE_INCLUDE_DIRECTORIES ${SDL2_INCLUDE_DIRS})
-	find_library(SDL2MAIN_LIBRARY SDL2main)
-	if(SDL2MAIN_LIBRARY)
-		add_library(SDL2::SDL2main STATIC IMPORTED)
-		set_target_properties(SDL2::SDL2main PROPERTIES
-			IMPORTED_LOCATION ${SDL2MAIN_LIBRARY}
-			INTERFACE_INCLUDE_DIRECTORIES ${SDL2_INCLUDE_DIRS})
+# Create namespace target for systems where SDL3::SDL3 is not provided
+if(NOT TARGET SDL3::SDL3)
+	add_library(SDL3::SDL3 SHARED IMPORTED)
+	find_library(SDL3_LIBRARY SDL3 REQUIRED)
+	set_target_properties(SDL3::SDL3 PROPERTIES
+		IMPORTED_LOCATION ${SDL3_LIBRARY}
+		INTERFACE_INCLUDE_DIRECTORIES ${SDL3_INCLUDE_DIRS})
+endif()
+
+# Create namespace target for systems where SDL3::SDL3main is not provided
+if(NOT TARGET SDL3::SDL3main)
+	find_library(SDL3MAIN_LIBRARY SDL3main)
+	if(SDL3MAIN_LIBRARY)
+		add_library(SDL3::SDL3main STATIC IMPORTED)
+		set_target_properties(SDL3::SDL3main PROPERTIES
+			IMPORTED_LOCATION ${SDL3MAIN_LIBRARY}
+			INTERFACE_INCLUDE_DIRECTORIES ${SDL3_INCLUDE_DIRS})
 	else()
-		add_library(SDL2::SDL2main INTERFACE IMPORTED)
+		add_library(SDL3::SDL3main INTERFACE IMPORTED)
 	endif()
 endif()
 
@@ -119,7 +123,7 @@ set(SOURCES
 	imgui/imgui_tables.cpp
 	imgui/imgui_widgets.cpp
 	imgui/misc/cpp/imgui_stdlib.cpp
-	imgui/backends/imgui_impl_sdl2.cpp)
+	imgui/backends/imgui_impl_sdl3.cpp)
 
 
 if(ENABLE_GL1)
@@ -143,7 +147,7 @@ target_link_libraries(imgui
 )
 else()
 target_link_libraries(imgui
-	SDL2::SDL2
+	SDL3::SDL3
 )
 endif()
 
