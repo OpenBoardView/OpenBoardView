@@ -66,31 +66,17 @@ set(CMAKE_POLICY_VERSION_MINIMUM 3.11) # force glad 1.x compatibility with cmake
 add_subdirectory(glad)
 unset(CMAKE_POLICY_VERSION_MINIMUM)
 
-## SDL2 ##
-find_package(SDL3 REQUIRED CONFIG)
+## SDL3 ##
+set(SDL_STATIC ON CACHE BOOL "" FORCE)
+set(SDL_SHARED OFF CACHE BOOL "" FORCE)
+set(SDL_TEST OFF CACHE BOOL "" FORCE)
+set(SDL_X11_XTEST OFF CACHE BOOL "" FORCE)
+add_subdirectory(SDL)
 add_definitions(-DENABLE_SDL3)
 
-# Create namespace target for systems where SDL3::SDL3 is not provided
-if(NOT TARGET SDL3::SDL3)
-	add_library(SDL3::SDL3 SHARED IMPORTED)
-	find_library(SDL3_LIBRARY SDL3 REQUIRED)
-	set_target_properties(SDL3::SDL3 PROPERTIES
-		IMPORTED_LOCATION ${SDL3_LIBRARY}
-		INTERFACE_INCLUDE_DIRECTORIES ${SDL3_INCLUDE_DIRS})
-endif()
-
-# Create namespace target for systems where SDL3::SDL3main is not provided
-if(NOT TARGET SDL3::SDL3main)
-	find_library(SDL3MAIN_LIBRARY SDL3main)
-	if(SDL3MAIN_LIBRARY)
-		add_library(SDL3::SDL3main STATIC IMPORTED)
-		set_target_properties(SDL3::SDL3main PROPERTIES
-			IMPORTED_LOCATION ${SDL3MAIN_LIBRARY}
-			INTERFACE_INCLUDE_DIRECTORIES ${SDL3_INCLUDE_DIRS})
-	else()
-		add_library(SDL3::SDL3main INTERFACE IMPORTED)
-	endif()
-endif()
+# Add (now local) sdl3 include dir to the includes search path
+include_directories(SDL/include)
+set(SDL3_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/SDL/include)
 
 ## imgui ##
 # note: in the future there may be integrated CMake support into imgui
@@ -143,11 +129,11 @@ target_link_libraries(imgui
 )
 if(MINGW)
 target_link_libraries(imgui
-	SDL2::SDL2-static
+	SDL3::SDL3-static
 )
 else()
 target_link_libraries(imgui
-	SDL3::SDL3
+	SDL3::SDL3-static
 )
 endif()
 

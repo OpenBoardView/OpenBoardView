@@ -49,7 +49,7 @@ Run the script at `/Applications/Python3.x/Install Certificates.command`.
 
 For Ubuntu developers, you'll need the following packages at a minimum;
 
-	$ apt-get install git build-essential cmake libsdl2-dev libgtk-3-dev
+	$ apt-get install git build-essential cmake libsdl2-dev libgtk-3-dev libfontconfig1-dev libsqlite3-dev libglib2.0-dev
 
 #### Fedora
 
@@ -57,7 +57,7 @@ For Fedora, you will need the following packages at a minimum;
 
 	$ dnf install @development-tools
 
-	$ dnf install SDL2-devel gtk3-devel fontconfig-devel cmake
+	$ dnf install SDL2-devel gtk3-devel fontconfig-devel glib2-devel cmake
 
 ### Installation
 

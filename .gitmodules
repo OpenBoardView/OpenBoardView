@@ -21,3 +21,6 @@
 [submodule "src/mpc"]
 	path = src/mpc
 	url = https://github.com/orangeduck/mpc.git
+[submodule "src/SDL"]
+	path = src/SDL
+	url = https://github.com/libsdl-org/SDL.git

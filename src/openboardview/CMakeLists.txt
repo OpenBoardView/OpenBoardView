@@ -196,6 +196,7 @@ target_include_directories(${PROJECT_NAME_LOWER} PRIVATE
 	${OPENGL_INCLUDE_DIR}
 	${ZLIB_INCLUDE_DIRS}
 	${FONTCONFIG_INCLUDE_DIRS}
+	${SDL3_INCLUDE_DIRS}
 )
 
 target_link_libraries(${PROJECT_NAME_LOWER}
@@ -228,12 +229,10 @@ target_link_libraries(${PROJECT_NAME_LOWER}
 )
 else()
 target_link_libraries(${PROJECT_NAME_LOWER}
-	SDL3::SDL3
+	SDL3::SDL3-static
 )
 endif()
-target_link_libraries(${PROJECT_NAME_LOWER}
-	SDL3::SDL3main
-)
+# SDL3::SDL3main is no longer needed in SDL3
 
 install(TARGETS
 	${PROJECT_NAME_LOWER}
