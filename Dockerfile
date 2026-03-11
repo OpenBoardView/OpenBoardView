@@ -1,5 +1,5 @@
 # Debian10 provides g++ 8.3.0, SDL2 2.0.9 and produces binaries compatible with Ubuntu 20.04+, RHEL-like 8.+
-FROM debian:10.13-slim AS linux-build-env
+FROM debian:11-slim AS linux-build-env
 
 ARG DEBIAN_FRONTEND=noninteractive
 ARG DEBCONF_NOWARNINGS=yes
@@ -20,9 +20,9 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 # Windows build links SDL2 statically, so use latest version.
-ENV MINGW_SDL2_VER=2.32.0
-RUN wget https://www.libsdl.org/release/SDL2-devel-${MINGW_SDL2_VER}-mingw.tar.gz -O /opt/SDL2-devel-${MINGW_SDL2_VER}-mingw.tar.gz && \
-    cd /opt && \
-    tar xf SDL2-devel-${MINGW_SDL2_VER}-mingw.tar.gz && \
-    make -C SDL2-${MINGW_SDL2_VER} cross CROSS_PATH=/usr && \
-    rm -rf /opt/SDL2-devel-${MINGW_SDL2_VER}-mingw.tar.gz /opt/SDL2-${MINGW_SDL2_VER}
+#ENV MINGW_SDL2_VER=2.32.0
+#RUN wget https://www.libsdl.org/release/SDL2-devel-${MINGW_SDL2_VER}-mingw.tar.gz -O /opt/SDL2-devel-${MINGW_SDL2_VER}-mingw.tar.gz && \
+#    cd /opt && \
+#    tar xf SDL2-devel-${MINGW_SDL2_VER}-mingw.tar.gz && \
+#    make -C SDL2-${MINGW_SDL2_VER} cross CROSS_PATH=/usr && \
+#    rm -rf /opt/SDL2-devel-${MINGW_SDL2_VER}-mingw.tar.gz /opt/SDL2-${MINGW_SDL2_VER}
