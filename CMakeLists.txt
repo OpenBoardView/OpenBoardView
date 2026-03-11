@@ -100,6 +100,20 @@ if(PEDANTIC)
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
 	endif()
 endif()
+
+# Workaround for SDL3 thread detection on macOS with -Werror
+if(APPLE)
+	include(CMakePushCheckState)
+	include(CheckCCompilerFlag)
+	cmake_push_check_state()
+	set(CMAKE_REQUIRED_FLAGS "-Wno-error=unused-command-line-argument")
+	check_c_compiler_flag("" HAVE_WNO_ERROR_UNUSED_COMMAND_LINE_ARGUMENT)
+	cmake_pop_check_state()
+	if(HAVE_WNO_ERROR_UNUSED_COMMAND_LINE_ARGUMENT)
+		set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-error=unused-command-line-argument")
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-error=unused-command-line-argument")
+	endif()
+endif()
 # Workaround type bug of kSecKeyUsageCritical in SecCertificate.h for Xcode 8.2.1 SDK 10.12
 if(APPLE)
 	execute_process(

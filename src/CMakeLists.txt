@@ -71,11 +71,30 @@ set(SDL_STATIC ON CACHE BOOL "" FORCE)
 set(SDL_SHARED OFF CACHE BOOL "" FORCE)
 set(SDL_TEST OFF CACHE BOOL "" FORCE)
 set(SDL_X11_XTEST OFF CACHE BOOL "" FORCE)
+
+# Workaround for SDL3 thread detection and warnings on macOS with -Werror
+if(APPLE)
+	set(SDL_PTHREADS ON CACHE BOOL "" FORCE)
+	set(HAVE_PTHREADS TRUE CACHE INTERNAL "" FORCE)
+
+	set(SAVE_CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
+	string(REPLACE "-Werror" "" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
+	set(SAVE_CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+	string(REPLACE "-Werror" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+endif()
+
 add_subdirectory(SDL)
+
+if(APPLE)
+	set(CMAKE_C_FLAGS "${SAVE_CMAKE_C_FLAGS}")
+	set(CMAKE_CXX_FLAGS "${SAVE_CMAKE_CXX_FLAGS}")
+endif()
+
 add_definitions(-DENABLE_SDL3)
 
 # Add (now local) sdl3 include dir to the includes search path
-include_directories(SDL/include)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/SDL/include)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/SDL/src/video/khronos)
 set(SDL3_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/SDL/include)
 
 ## imgui ##
