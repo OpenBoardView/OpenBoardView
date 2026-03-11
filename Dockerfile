@@ -3,7 +3,9 @@ FROM debian:11-slim AS linux-build-env
 ARG DEBIAN_FRONTEND=noninteractive
 ARG DEBCONF_NOWARNINGS=yes
 RUN apt-get update && \
-    apt-get -y install --no-install-recommends ca-certificates g++ make cmake rpm libgtk-3-dev libfontconfig1-dev libsqlite3-dev libglib2.0-dev git && \
+    apt-get -y install --no-install-recommends ca-certificates g++ make cmake rpm libgtk-3-dev libfontconfig1-dev libsqlite3-dev libglib2.0-dev git \
+    libx11-dev libxext-dev libxcursor-dev libxi-dev libxfixes-dev libxrandr-dev libxrender-dev libxss-dev libxtst-dev \
+    libwayland-dev libxkbcommon-dev libegl1-mesa-dev wayland-protocols && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 

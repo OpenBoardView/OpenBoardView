@@ -97,7 +97,7 @@ HDDEDATA CALLBACK PDFBridgeSumatra::DdeCallback(
 
 				// Push event to SDL queue in order to refresh GUI
 				SDL_Event sdlEvent;
-				sdlEvent.type = SDL_USEREVENT;
+				sdlEvent.type = SDL_EVENT_USER;
 				SDL_PushEvent(&sdlEvent);
 
 				return reinterpret_cast<HDDEDATA>(DDE_FACK);
