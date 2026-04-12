@@ -66,27 +66,38 @@ set(CMAKE_POLICY_VERSION_MINIMUM 3.11) # force glad 1.x compatibility with cmake
 add_subdirectory(glad)
 unset(CMAKE_POLICY_VERSION_MINIMUM)
 
-## SDL2 ##
-find_package(SDL2 REQUIRED CONFIG)
-add_definitions(-DENABLE_SDL2)
+## SDL3 ##
+set(SDL_STATIC ON CACHE BOOL "" FORCE)
+set(SDL_SHARED OFF CACHE BOOL "" FORCE)
+set(SDL_TEST OFF CACHE BOOL "" FORCE)
+set(SDL_X11_XTEST OFF CACHE BOOL "" FORCE)
+set(SDL_OPENGL_EGL OFF CACHE BOOL "" FORCE)
+set(SDL_OPENGLES OFF CACHE BOOL "" FORCE)
 
-# Create namespace targets for system with SDL2 older than 2.0.12
-if(NOT TARGET SDL2::SDL2)
-	add_library(SDL2::SDL2 SHARED IMPORTED)
-	find_library(SDL2_LIBRARY SDL2)
-	set_target_properties(SDL2::SDL2 PROPERTIES
-		IMPORTED_LOCATION ${SDL2_LIBRARY}
-		INTERFACE_INCLUDE_DIRECTORIES ${SDL2_INCLUDE_DIRS})
-	find_library(SDL2MAIN_LIBRARY SDL2main)
-	if(SDL2MAIN_LIBRARY)
-		add_library(SDL2::SDL2main STATIC IMPORTED)
-		set_target_properties(SDL2::SDL2main PROPERTIES
-			IMPORTED_LOCATION ${SDL2MAIN_LIBRARY}
-			INTERFACE_INCLUDE_DIRECTORIES ${SDL2_INCLUDE_DIRS})
-	else()
-		add_library(SDL2::SDL2main INTERFACE IMPORTED)
-	endif()
+# Workaround for SDL3 thread detection and warnings on macOS with -Werror
+if(APPLE)
+	set(SDL_PTHREADS ON CACHE BOOL "" FORCE)
+	set(HAVE_PTHREADS TRUE CACHE INTERNAL "" FORCE)
+
+	set(SAVE_CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
+	string(REPLACE "-Werror" "" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
+	set(SAVE_CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+	string(REPLACE "-Werror" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 endif()
+
+add_subdirectory(SDL)
+
+if(APPLE)
+	set(CMAKE_C_FLAGS "${SAVE_CMAKE_C_FLAGS}")
+	set(CMAKE_CXX_FLAGS "${SAVE_CMAKE_CXX_FLAGS}")
+endif()
+
+add_definitions(-DENABLE_SDL3)
+
+# Add (now local) sdl3 include dir to the includes search path
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/SDL/include)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/SDL/src/video/khronos)
+set(SDL3_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/SDL/include)
 
 ## imgui ##
 # note: in the future there may be integrated CMake support into imgui
@@ -119,7 +130,7 @@ set(SOURCES
 	imgui/imgui_tables.cpp
 	imgui/imgui_widgets.cpp
 	imgui/misc/cpp/imgui_stdlib.cpp
-	imgui/backends/imgui_impl_sdl2.cpp)
+	imgui/backends/imgui_impl_sdl3.cpp)
 
 
 if(ENABLE_GL1)
@@ -139,11 +150,11 @@ target_link_libraries(imgui
 )
 if(MINGW)
 target_link_libraries(imgui
-	SDL2::SDL2-static
+	SDL3::SDL3-static
 )
 else()
 target_link_libraries(imgui
-	SDL2::SDL2
+	SDL3::SDL3-static
 )
 endif()
 

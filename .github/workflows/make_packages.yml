@@ -94,9 +94,7 @@ jobs:
           fetch-depth: 0
       - name: MacOS dependencies
         run: |
-          brew tap-new local/oldermacos
-          ln -s $(pwd)/utilities/brew_oldermacos/sdl2.rb "$(brew --repository local/oldermacos)/Formula/sdl2.rb"
-          brew install local/oldermacos/sdl2
+          brew install sdl3
       - name: MacOS build
         run: TERM=xterm bash ./build.sh --recompile
       - uses: actions/upload-artifact@v4

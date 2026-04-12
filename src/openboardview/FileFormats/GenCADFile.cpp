@@ -8,7 +8,7 @@
 #include <cstring>
 #include <limits>
 
-#include <SDL.h>
+#include <SDL3/SDL.h>
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -285,7 +285,7 @@ bool GenCADFile::parse_shape_pins_to_component(
 					pin.net = get_signal_name_for_component_pin(part->name, pin_ast);
 					if (!pin.net) {
 						char *tmp = new char[32];
-						sprintf(tmp, "NC@%d", nc_counter);
+							snprintf(tmp, 32, "NC@%d", nc_counter);
 						pin.net = tmp;
 						nc_counter++;
 					}

@@ -2,12 +2,12 @@
 
 #include "platform.h"
 #include <string>
-#include <SDL.h>
+#include <SDL3/SDL.h>
 #import <objc/Object.h>
 #import <Cocoa/Cocoa.h>
 
 #ifndef ENABLE_GTK
-const filesystem::path show_file_picker(bool filterBoards) {
+const filesystem::path show_file_picker(bool /*filterBoards*/) {
 	std::string filename;
 	NSOpenPanel *op = [NSOpenPanel openPanel];
 
@@ -44,7 +44,7 @@ const std::string get_font_path(const std::string &name) {
 
 // Inspired by https://developer.apple.com/library/mac/documentation/FileManagement/Conceptual/FileSystemProgrammingGuide/ManagingFIlesandDirectories/ManagingFIlesandDirectories.html
 // userdir is ignored for now since common usage puts both config file and history file in ApplicationSupport directory
-const std::string get_user_dir(const UserDir userdir) {
+const std::string get_user_dir(const UserDir /*userdir*/) {
 	std::string configPath;
 	NSFileManager *fm = [NSFileManager defaultManager];
 	NSURL *configURL = nil;
@@ -70,7 +70,7 @@ const std::string get_user_dir(const UserDir userdir) {
 		return "./"; // Something went wrong, use current dir.
 }
 
-static void newInstance(id self, SEL _cmd) {
+static void newInstance(id /*self*/, SEL /*_cmd*/) {
 	NSURL *executableURL = [[NSRunningApplication currentApplication] executableURL];
         const char *executable = [[executableURL path] UTF8String];
 
@@ -79,18 +79,18 @@ static void newInstance(id self, SEL _cmd) {
 	};
 }
 
-static void openFile(id self, SEL _cmd) {
+static void openFile(id /*self*/, SEL /*_cmd*/) {
 	auto filename = show_file_picker().string();
 	if (!filename.empty()) {
 		// Trigger DropFile event which will call BoardView::LoadFile()
 		SDL_Event event;
-		event.type = SDL_DROPFILE;
-		event.drop.file = SDL_strdup(filename.c_str());
+		event.type = SDL_EVENT_DROP_FILE;
+		event.drop.data = SDL_strdup(filename.c_str());
 		SDL_PushEvent(&event);
 	}
 }
 
-static NSMenu *applicationDockMenu(id self, SEL _cmd) {
+static NSMenu *applicationDockMenu(id /*self*/, SEL /*_cmd*/) {
 	NSMenu *dockMenu = [[[NSMenu alloc] initWithTitle:@""] autorelease];
 	[dockMenu addItemWithTitle:@"New window" action:@selector(newInstance:) keyEquivalent:@""];
 	return dockMenu;

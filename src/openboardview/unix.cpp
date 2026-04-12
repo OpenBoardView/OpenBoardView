@@ -3,7 +3,7 @@
 #include "platform.h"
 #include "imgui/imgui.h"
 #include "version.h"
-#include <SDL.h>
+#include <SDL3/SDL.h>
 #include <cstdint>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -21,7 +21,7 @@
 #define loadFunc(x) x = reinterpret_cast<decltype(x)>(SDL_LoadFunction(lib, #x));
 namespace GTK {
 bool loaded = false;
-void *lib;
+SDL_SharedObject *lib;
 
 declareFunc(g_free);
 declareFunc(gtk_dialog_get_type);

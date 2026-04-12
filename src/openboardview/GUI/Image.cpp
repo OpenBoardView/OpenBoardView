@@ -11,7 +11,7 @@ Image::Image(const filesystem::path &file) : file(file) {
 }
 
 Image::~Image() {
-	glDeleteTextures(1, &texture);
+	if (texture) glDeleteTextures(1, &texture);
 }
 
 std::string Image::reload() {

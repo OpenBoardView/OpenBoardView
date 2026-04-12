@@ -169,7 +169,8 @@ void Program::render() {
 			ImGui::Text("FZ Key");
 			ImGui::SameLine();
 			for (i = 0; i < 44; i++) {
-				sprintf(keybuf + (i * 12),
+				snprintf(keybuf + (i * 12),
+				        sizeof(keybuf) - (i * 12),
 				        "0x%08lx%s",
 				        (long unsigned int)config.FZKey[i],
 				        (i != 43) ? ((i + 1) % 4 ? "  " : "\r\n")
@@ -195,7 +196,8 @@ void Program::render() {
 			ImGui::Text("CAE Key");
 			ImGui::SameLine();
 			for (i = 0; i < 44; i++) {
-				sprintf(caekeybuf + (i * 12),
+				snprintf(caekeybuf + (i * 12),
+				        sizeof(caekeybuf) - (i * 12),
 				        "0x%08lx%s",
 				        (long unsigned int)config.CAEKey[i],
 				        (i != 43) ? ((i + 1) % 4 ? "  " : "\r\n")

@@ -11,7 +11,7 @@
 buf) );
 }*/
 
-void ASCFile::parse_format(char *&p, char *&s, char *&arena, char *&arena_end, line_iterator_t &line_it) {
+void ASCFile::parse_format(char *&p, char *& /*s*/, char *& /*arena*/, char *& /*arena_end*/, line_iterator_t &line_it) {
 	if (m_firstformat) {
 		line_it += 7; // Skip 7+1 unused lines before 1st point. Might not work with all files.
 		m_firstformat = false;
@@ -19,10 +19,10 @@ void ASCFile::parse_format(char *&p, char *&s, char *&arena, char *&arena_end, l
 	}
 	BRDPoint point;
 
-	double x = READ_DOUBLE();
-	point.x  = x * 1000.0f; // OBV uses integers
-	double y = READ_DOUBLE();
-	point.y  = y * 1000.0f;
+	float x = READ_DOUBLE();
+	point.x  = x * 1000.0; // OBV uses integers
+	float y = READ_DOUBLE();
+	point.y  = y * 1000.0;
 	format.push_back(point);
 }
 
@@ -157,7 +157,7 @@ bool ASCFile::load_and_parse(const filesystem::path &path, const std::string &fi
  * buf unused for now, read all files even if one of the supported *.asc was
  * passed
  */
-ASCFile::ASCFile(std::vector<char> &buf, const filesystem::path &filepath) {
+ASCFile::ASCFile(std::vector<char> & /*buf*/, const filesystem::path &filepath) {
 	std::error_code ec;
 	auto directory = filesystem::weakly_canonical(filepath, ec);
 	if (ec) {

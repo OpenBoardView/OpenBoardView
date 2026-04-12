@@ -16,7 +16,7 @@
 
 constexpr const float Fonts::MAX_FONT_SIZE;
 
-std::string Fonts::load(std::string customFont) {
+std::string Fonts::load(std::string customFont, float fontSize) {
 	// Font selection
 	std::deque<std::string> fontList(
 	    {"Roboto", "Liberation Sans", "DejaVu Sans", "Arial", "Helvetica", ""}); // Empty string = use system default font
@@ -25,6 +25,7 @@ std::string Fonts::load(std::string customFont) {
 
 	ImGuiIO &io = ImGui::GetIO();
 
+	if (fontSize < 1.0f) fontSize = 1.0f;
 	for (const auto &name : fontList) {
 #ifdef _WIN32
 		std::vector<char> ttf = load_font(name);
@@ -37,6 +38,7 @@ std::string Fonts::load(std::string customFont) {
 		font_cfg.FontDataOwnedByAtlas = false;
 
 		if (!ttf.empty()) {
+			font_cfg.SizePixels = fontSize;
 			if (io.Fonts->AddFont(&font_cfg) != nullptr) {
 				SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Loaded font: %s", name.c_str());
 				return name;
@@ -54,7 +56,7 @@ std::string Fonts::load(std::string customFont) {
 		}
 		// ImGui handles TrueType and OpenType fonts, exclude anything which has a different ext
 		if (check_fileext(fontpath, ".ttf") || check_fileext(fontpath, ".otf")) {
-			io.Fonts->AddFontFromFileTTF(fontpath.c_str());
+			io.Fonts->AddFontFromFileTTF(fontpath.c_str(), fontSize);
 			SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Loaded font: %s, path: %s", name.c_str(), fontpath.c_str());
 			return name;
 		} else {
@@ -65,8 +67,9 @@ std::string Fonts::load(std::string customFont) {
 	return {};
 }
 
-std::string Fonts::reload(std::string customFont) {
+std::string Fonts::reload(std::string customFont, float fontSize) {
+	if (fontSize < 1.0f) fontSize = 1.0f;
 	ImGuiIO &io = ImGui::GetIO();
 	io.Fonts->Clear();
-	return this->load(customFont);
+	return this->load(customFont, fontSize);
 }

@@ -7,8 +7,8 @@
 
 namespace Preferences {
 
-BoardAppearance::BoardAppearance(Confparse &obvconfig, Config &config)
-	: obvconfig(obvconfig), config(config) {
+BoardAppearance::BoardAppearance(Confparse & /*obvconfig*/, Config &config)
+	: config(config) {
 }
 
 void BoardAppearance::render() {

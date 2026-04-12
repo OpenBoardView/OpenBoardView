@@ -9,8 +9,8 @@
 #include <climits>
 #include <memory>
 #include <cstdio>
-#ifdef ENABLE_SDL2
-#include <SDL.h>
+#ifdef ENABLE_SDL3
+#include <SDL3/SDL.h>
 #endif
 
 #include "BRDBoard.h"
@@ -37,6 +37,7 @@
 #include "imgui/imgui_internal.h" // For ImGui::FocusWindow()
 #include "imgui/misc/cpp/imgui_stdlib.h"
 
+#include "Renderers/ImGuiRendererSDL.h"
 #include "NetList.h"
 #include "PartList.h"
 #include "vectorhulls.h"
@@ -2245,7 +2246,7 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 
 		ImVec2 pos = CoordToScreen(pin->position.x, pin->position.y);
 		{
-			if (!IsVisibleScreen(pos.x, pos.y, psz, io)) continue;
+			if (!IsVisibleScreen(pos.x, pos.y, psz)) continue;
 		}
 
 		if ((!m_pinSelected) && (psz < threshold)) continue;
@@ -2414,7 +2415,9 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 				maxfontwidth = std::min(Fonts::MAX_FONT_SIZE, maxfontwidth); // Clamp to try not to overflow texture size
 				float maxfontheight = psz * 1.5/ text_size_normalized.y; // Fit vertically with 25% top/bottom padding
 				maxfontheight = std::min(Fonts::MAX_FONT_SIZE, maxfontheight); // Clamp to try not to overflow texture size
-				float maxfontsize = std::min(maxfontwidth, maxfontheight);
+				float maxfontsize = std::min({maxfontwidth, maxfontheight, 0.5f});
+				float minfontsize = 1.0f / ImGuiRendererSDL::getDisplayScale();
+				if (maxfontsize < minfontsize || maxfontheight < minfontsize) continue;
 
 				// Font size for pin name only depends on height of text (rather than width of full text incl. net name) to scale to pin bounding box
 				ImVec2 size_pin_name = font->CalcTextSizeA(maxfontheight, FLT_MAX, 0.0f, pin->name.c_str());
@@ -2625,7 +2628,7 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 			 * overhead but it keeps the code simpler and saves us replicating things.
 			 */
 
-			if ((pincount == 3) && (abs(aspect > 0.5)) &&
+			if ((pincount == 3) && (abs(aspect) > 0.5) &&
 			    ((strchr("DQZ", p0) || (strchr("DQZ", p1)) || strcmp(part->name.c_str(), "LED")))) {
 
 				part->outline = dbox;
@@ -2824,6 +2827,9 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 					float maxfontsize = std::min(maxfontwidth, maxfontheight);
 					maxfontsize = std::min(Fonts::MAX_FONT_SIZE, maxfontsize); // Clamp to try not to overflow texture size
 
+					float minfontsize = 1.0f / ImGuiRendererSDL::getDisplayScale();
+					if (maxfontsize < minfontsize) continue;
+
 					ImVec2 text_size{text_size_normalized.x * maxfontsize, text_size_normalized.y * maxfontsize};
 
 					// Center text
@@ -2858,20 +2864,22 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 					pos.x -= text_size.x * 0.5f;
 					draw->ChannelsSetCurrent(kChannelText);
 
-					// This is the background of the part text.
-					draw->AddRectFilled(ImVec2(pos.x - DPIF(2.0f), pos.y - DPIF(2.0f)),
-										ImVec2(pos.x + text_size.x + DPIF(2.0f), pos.y + text_size.y + DPIF(2.0f)),
-										m_colors.partHighlightedTextBackgroundColor,
-										0.0f);
-					draw->AddText(pos, m_colors.partHighlightedTextColor, text.c_str());
-					if ((!config.showInfoPanel) && (mcode.size())) {
-						//	pos.y += text_size.y;
-						pos.y += text_size.y + DPIF(2.0f);
+					if (ImGui::GetFontSize() > 0.25f) {
+						// This is the background of the part text.
 						draw->AddRectFilled(ImVec2(pos.x - DPIF(2.0f), pos.y - DPIF(2.0f)),
 											ImVec2(pos.x + text_size.x + DPIF(2.0f), pos.y + text_size.y + DPIF(2.0f)),
-											m_colors.annotationPopupBackgroundColor,
+											m_colors.partHighlightedTextBackgroundColor,
 											0.0f);
-						draw->AddText(ImVec2(pos.x, pos.y), m_colors.annotationPopupTextColor, mcode.c_str());
+						draw->AddText(pos, m_colors.partHighlightedTextColor, text.c_str());
+						if ((!config.showInfoPanel) && (mcode.size())) {
+							//	pos.y += text_size.y;
+							pos.y += text_size.y + DPIF(2.0f);
+							draw->AddRectFilled(ImVec2(pos.x - DPIF(2.0f), pos.y - DPIF(2.0f)),
+												ImVec2(pos.x + text_size.x + DPIF(2.0f), pos.y + text_size.y + DPIF(2.0f)),
+												m_colors.annotationPopupBackgroundColor,
+												0.0f);
+							draw->AddText(ImVec2(pos.x, pos.y), m_colors.annotationPopupTextColor, mcode.c_str());
+						}
 					}
 					draw->ChannelsSetCurrent(kChannelPolylines);
 				}
@@ -3446,7 +3454,7 @@ inline bool BoardView::BoardElementIsVisible(const std::shared_ptr<BoardElement>
 	return false;
 }
 
-inline bool BoardView::IsVisibleScreen(float x, float y, float radius, const ImGuiIO &io) {
+inline bool BoardView::IsVisibleScreen(float x, float y, float radius) {
 	// if (x < -radius || y < -radius || x - radius > io.DisplaySize.x || y - radius > io.DisplaySize.y) return false;
 	if (x < -radius || y < -radius || x - radius > m_board_surface.x || y - radius > m_board_surface.y) return false;
 	return true;

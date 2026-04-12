@@ -5,14 +5,14 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
-#include "backends/imgui_impl_sdl2.h"
+#include "backends/imgui_impl_sdl3.h"
 
 #include "utils.h"
 
 float ImGuiRendererSDL::getDisplayScale() {
-	// Scaling from platform display DPI is only supported on Windows for now as it is broken and inconsistent on X11/XWayland/Wayland
-#ifdef _WIN32
-	return ImGui_ImplSDL2_GetContentScaleForDisplay(0);
+	// Scaling from platform display DPI is only supported on Windows and Apple for now
+#if defined(_WIN32) || defined(__APPLE__)
+	return SDL_GetDisplayContentScale(SDL_GetPrimaryDisplay());
 #else
 	return 1.0f;
 #endif
@@ -25,7 +25,7 @@ ImGuiRendererSDL::ImGuiRendererSDL(SDL_Window *window) : window(window) {
 }
 
 ImGuiRendererSDL::~ImGuiRendererSDL() {
-	SDL_GL_DeleteContext(glcontext);
+	SDL_GL_DestroyContext(glcontext);
 	SDL_GL_UnloadLibrary();
 }
 
@@ -50,7 +50,7 @@ bool ImGuiRendererSDL::init() {
 		return false;
 	}
 
-	if (!gladLoadGLLoader(SDL_GL_GetProcAddress)) {
+	if (!gladLoadGLLoader(reinterpret_cast<GLADloadproc>(SDL_GL_GetProcAddress))) {
 		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "%s: glad failed to load OpenGL\n", this->name().c_str());
 		return false;
 	}
@@ -71,24 +71,24 @@ bool ImGuiRendererSDL::init() {
 	SDL_LogInfo(SDL_LOG_CATEGORY_RENDER, "%s", ss.str().c_str());
 
 	//Use Vsync
-	if (SDL_GL_SetSwapInterval(1) < 0)
+	if (!SDL_GL_SetSwapInterval(1))
 		SDL_LogWarn(SDL_LOG_CATEGORY_RENDER, "%s: Unable to enable VSync: %s\n", this->name().c_str(), SDL_GetError());
 
 	// check if we got the correct OpenGL context version
 	if (!checkGLVersion())
 		return false;
 
-	ImGui_ImplSDL2_InitForOpenGL(window, glcontext);
+	ImGui_ImplSDL3_InitForOpenGL(window, glcontext);
 
 	return true;
 }
 
 void ImGuiRendererSDL::processEvent(SDL_Event &event) {
-	ImGui_ImplSDL2_ProcessEvent(&event);
+	ImGui_ImplSDL3_ProcessEvent(&event);
 }
 
 void ImGuiRendererSDL::initFrame() {
-	ImGui_ImplSDL2_NewFrame();
+	ImGui_ImplSDL3_NewFrame();
 }
 
 void ImGuiRendererSDL::renderFrame(const ImVec4 &clear_color) {
@@ -101,7 +101,7 @@ void ImGuiRendererSDL::renderFrame(const ImVec4 &clear_color) {
 }
 
 void ImGuiRendererSDL::shutdown() {
-	ImGui_ImplSDL2_Shutdown();
+	ImGui_ImplSDL3_Shutdown();
 }
 
 std::string ImGuiRendererSDL::loadTextureFromFile(const filesystem::path &filepath, GLuint* out_texture, int* out_width, int* out_height)

@@ -4,7 +4,7 @@
 #include <string>
 
 // SDL, glad
-#include <SDL.h>
+#include <SDL3/SDL.h>
 #include <glad/glad.h>
 
 #include "imgui/imgui.h"

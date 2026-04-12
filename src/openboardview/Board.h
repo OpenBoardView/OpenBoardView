@@ -71,6 +71,7 @@ inline void remove(T &element, std::vector<T> &v) {
 
 // Any element being on the board.
 struct BoardElement {
+	virtual ~BoardElement() = default;
 	// Side of the board the element is located. (top, bottom, both?)
 	EBoardSide board_side = kBoardSideBoth;
 
