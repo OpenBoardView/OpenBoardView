@@ -1,0 +1,23 @@
+id: io.github.openboardview.openboardview
+runtime: org.freedesktop.Platform
+runtime-version: "24.08"
+sdk: org.freedesktop.Sdk
+command: openboardview
+finish-args:
+  - --socket=wayland
+  - --socket=fallback-x11
+  - --share=ipc
+  - --device=dri
+  - --filesystem=home
+
+modules:
+  - name: openboardview
+    buildsystem: cmake-ninja
+    config-opts:
+      - -DFLATPAK=ON
+    sources:
+      - type: git
+        url: https://github.com/OpenBoardView/OpenBoardView
+        branch: master
+        x-checker-data:
+          - type: git

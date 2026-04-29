@@ -159,3 +159,15 @@ jobs:
         with:
           name: "openboardview-ucrt64.exe.${{ github.sha }}"
           path: bin/openboardview.exe
+  build-flatpak:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/flathub-infra/flatpak-github-actions:freedesktop-24.08
+      options: --privileged
+    steps:
+      - uses: actions/checkout@v4
+      - uses: flatpak/flatpak-github-actions/flatpak-builder@v6
+        with:
+          bundle: openboardview.flatpak
+          manifest-path: io.github.openboardview.openboardview.yml
+          cache-key: flatpak-builder-${{ github.sha }}

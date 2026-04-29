@@ -67,3 +67,8 @@ share
 
 # VS Code
 .vscode
+
+# Flatpak
+builddir/
+.flatpak-builder/
+repo/

@@ -15,6 +15,7 @@ endif()
 # major.90 are alpha releases
 # major.95 are beta releases
 project(OpenBoardView VERSION 9.95.2)
+option(FLATPAK "Build for Flatpak" OFF)
 
 # Include our project variables
 include("version.cmake")
