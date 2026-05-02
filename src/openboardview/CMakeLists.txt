@@ -139,7 +139,9 @@ else()
 if(APPLE)
 	set(SOURCES ${SOURCES}
 		osx.mm
+		PDFBridge/PDFBridgeSkim.mm
 	)
+	set_source_files_properties(PDFBridge/PDFBridgeSkim.mm PROPERTIES COMPILE_FLAGS "-fobjc-arc")
 endif()
 	set(SOURCES ${SOURCES}
 		unix.cpp

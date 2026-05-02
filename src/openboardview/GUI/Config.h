@@ -57,6 +57,9 @@ public:
 	std::string pdfSoftwarePath = "";
 #endif
 
+	std::string pdfDirectory = "";
+	std::string brdDirectory = "";
+
 	template<size_t N>
 	std::array<uint32_t, N> DecodeKey(const char *keytext);
 

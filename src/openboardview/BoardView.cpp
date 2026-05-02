@@ -158,7 +158,7 @@ int BoardView::LoadFile(const filesystem::path &filepath) {
 				auto conffilepath = filepath;
 				conffilepath.replace_extension("conf");
 				backgroundImage.loadFromConfig(conffilepath);
-				pdfFile.loadFromConfig(conffilepath);
+				pdfFile.loadFromConfig(conffilepath, filesystem::u8path(config.pdfDirectory));
 
 				pdfBridge.OpenDocument(pdfFile);
 

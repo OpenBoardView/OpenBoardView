@@ -149,9 +149,18 @@ const filesystem::path show_file_picker(bool filterBoards) {
 
 	return path;
 }
+
+const filesystem::path show_folder_picker() {
+	SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "show_folder_picker: GTK folder picker not implemented.");
+	return std::string();
+}
 #elif !defined(__APPLE__)
 const filesystem::path show_file_picker(bool filterBoards) { // dummy function when not building for OS X and GTK not available
 	SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Cannot show open file dialog: not built in.");
+	return std::string();
+}
+const filesystem::path show_folder_picker() {
+	SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Cannot show folder dialog: not built in.");
 	return std::string();
 }
 #endif
