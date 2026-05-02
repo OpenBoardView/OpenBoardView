@@ -14,6 +14,7 @@ struct Annotation {
 
 struct Annotations {
 	std::string filename;
+	std::string sqlfilename; // saved for deferred creation
 	sqlite3 *sqldb;
 	bool debug = false;
 	std::vector<Annotation> annotations;

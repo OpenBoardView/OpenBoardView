@@ -62,7 +62,14 @@ int Annotations::Load(void) {
 	if (pos != std::string::npos) sqlfn[pos] = '_';
 	sqlfn += ".sqlite3";
 
-	sqldb = nullptr;
+	sqldb      = nullptr;
+	sqlfilename = sqlfn; // save for deferred creation in Add()
+
+	// Only open if the file already exists — don't create it on load
+	FILE *test = fopen(sqlfn.c_str(), "r");
+	if (!test) return 0; // no existing annotations file, skip
+	fclose(test);
+
 	int r = sqlite3_open(sqlfn.c_str(), &sqldb);
 	if (r) {
 		fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(sqldb));
@@ -144,6 +151,18 @@ void Annotations::Add(int side, double x, double y, const char *net, const char 
 	char sql[10240];
 	char *zErrMsg = 0;
 	int r;
+
+	// Create the database file now (deferred from Load) if not yet open
+	if (!sqldb && !sqlfilename.empty()) {
+		r = sqlite3_open(sqlfilename.c_str(), &sqldb);
+		if (r) {
+			fprintf(stderr, "Can't create database: %s\n", sqlite3_errmsg(sqldb));
+			sqldb = nullptr;
+			return;
+		}
+		Init();
+	}
+	if (!sqldb) return;
 
 	sqlite3_snprintf(sizeof(sql),
 	                 sql,
