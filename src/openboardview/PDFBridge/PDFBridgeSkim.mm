@@ -4,9 +4,9 @@
 
 #import <Foundation/Foundation.h>
 #include <SDL.h>
+#include <cctype>
 
-PDFBridgeSkim::PDFBridgeSkim() {}
-PDFBridgeSkim::~PDFBridgeSkim() {}
+// ---------- helpers ----------
 
 std::string PDFBridgeSkim::escapeForAppleScript(const std::string &s) {
 	std::string result;
@@ -18,7 +18,6 @@ std::string PDFBridgeSkim::escapeForAppleScript(const std::string &s) {
 }
 
 void PDFBridgeSkim::runScript(const std::string &script) {
-	// Write script to temp file and run with osascript
 	std::string tmpFile = "/tmp/obv_skim_script.applescript";
 	FILE *f = fopen(tmpFile.c_str(), "w");
 	if (!f) return;
@@ -45,6 +44,101 @@ std::string PDFBridgeSkim::runScriptResult(const std::string &script) {
 	return result;
 }
 
+// ---------- background polling thread ----------
+
+// Trim whitespace from both ends
+static std::string trimWS(const std::string &s) {
+	size_t start = s.find_first_not_of(" \t\n\r");
+	if (start == std::string::npos) return "";
+	size_t end = s.find_last_not_of(" \t\n\r");
+	return s.substr(start, end - start + 1);
+}
+
+
+void PDFBridgeSkim::pollLoop() {
+	std::string lastSeen;
+
+	while (pollRunning.load()) {
+		// 1) Check the Automator request file first (instant, no AppleScript cost)
+		{
+			const char *reqFile = "/tmp/obv_search_request.txt";
+			FILE *f = fopen(reqFile, "r");
+			if (f) {
+				char buf[512] = {};
+				fgets(buf, sizeof(buf), f);
+				fclose(f);
+				remove(reqFile);
+				std::string req = trimWS(std::string(buf));
+				if (!req.empty() && req != lastSeen) {
+					lastSeen = req;
+					std::lock_guard<std::mutex> lk(selectionMutex);
+					pendingSelection = req;
+					selectionReady.store(true);
+				}
+				std::this_thread::sleep_for(std::chrono::milliseconds(200));
+				continue;
+			}
+		}
+
+		// 2) Poll Skim's current text selection via AppleScript
+		std::string script =
+			"tell application \"Skim\"\n"
+			"    if (count of documents) > 0 then\n"
+			"        set sel to selection of front document\n"
+			"        if sel is not missing value then\n"
+			"            set txt to \"\"\n"
+			"            repeat with s in sel\n"
+			"                set txt to txt & (s as string)\n"
+			"            end repeat\n"
+			"            return txt\n"
+			"        end if\n"
+			"    end if\n"
+			"    return \"\"\n"
+			"end tell";
+
+		std::string polled = trimWS(runScriptResult(script));
+
+		if (!polled.empty() && polled != lastSeen) {
+			lastSeen = polled;
+			std::lock_guard<std::mutex> lk(selectionMutex);
+			pendingSelection = polled;
+			selectionReady.store(true);
+		} else if (polled.empty()) {
+			lastSeen = ""; // reset so next selection triggers even if same text
+		}
+
+		// Poll every 500 ms
+		std::this_thread::sleep_for(std::chrono::milliseconds(500));
+	}
+}
+
+// ---------- lifecycle ----------
+
+PDFBridgeSkim::PDFBridgeSkim() {
+	pollRunning.store(true);
+	pollThread = std::thread(&PDFBridgeSkim::pollLoop, this);
+}
+
+PDFBridgeSkim::~PDFBridgeSkim() {
+	pollRunning.store(false);
+	if (pollThread.joinable()) pollThread.detach(); // don't block — thread dies with process
+
+	// Close only the documents that OBV opened (synchronous)
+	for (const auto &path : openedPdfPaths) {
+		std::string docName = filesystem::path(path).filename().string();
+		std::string escapedDoc = escapeForAppleScript(docName);
+		std::string script =
+			"tell application \"Skim\"\n"
+			"    try\n"
+			"        close document \"" + escapedDoc + "\"\n"
+			"    end try\n"
+			"end tell";
+		runScriptResult(script);
+	}
+}
+
+// ---------- public API ----------
+
 void PDFBridgeSkim::OpenDocument(const PDFFile &pdfFile) {
 	auto pdfPath = pdfFile.getPath();
 	if (!filesystem::exists(pdfPath)) {
@@ -63,6 +157,7 @@ void PDFBridgeSkim::OpenDocument(const PDFFile &pdfFile) {
 		"end tell";
 
 	runScript(script);
+	openedPdfPaths.push_back(currentPdfPath);
 	SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "PDFBridgeSkim: opened %s", currentPdfPath.c_str());
 }
 
@@ -85,8 +180,6 @@ void PDFBridgeSkim::DocumentSearch(const std::string &str, bool wholeWordsOnly, 
 	bool sameTerm = (str == lastSearchTerm);
 	lastSearchTerm = str;
 
-	// Aynı terme tekrar basılınca son bulunan sayfadan sonrasından ara
-	// Farklı terme basılınca baştan başla
 	std::string fromClause;
 	if (sameTerm && lastFoundPage > 0) {
 		fromClause = " from character 1 of page " + std::to_string(lastFoundPage + 1) + " of doc";
@@ -113,7 +206,6 @@ void PDFBridgeSkim::DocumentSearch(const std::string &str, bool wholeWordsOnly, 
 	if (!result.empty() && result != "0") {
 		try { lastFoundPage = std::stoi(result); } catch (...) {}
 	} else if (result == "0" && sameTerm && lastFoundPage > 0) {
-		// Sona gelindi, başa dön
 		lastFoundPage = 0;
 		DocumentSearch(str, wholeWordsOnly, caseSensitive);
 		return;
@@ -122,36 +214,11 @@ void PDFBridgeSkim::DocumentSearch(const std::string &str, bool wholeWordsOnly, 
 }
 
 bool PDFBridgeSkim::HasNewSelection() {
-	if (currentPdfPath.empty()) return false;
-
-	// Poll at most every 2 seconds to avoid freezing the UI
-	auto now = std::chrono::steady_clock::now();
-	if (std::chrono::duration_cast<std::chrono::seconds>(now - lastPollTime).count() < 2)
-		return false;
-	lastPollTime = now;
-
-	// Poll Skim's current text selection for reverse search
-	std::string script =
-		"tell application \"Skim\"\n"
-		"    if (count of documents) > 0 then\n"
-		"        set sel to selection of front document\n"
-		"        if sel is not missing value then\n"
-		"            return string of sel\n"
-		"        end if\n"
-		"    end if\n"
-		"    return \"\"\n"
-		"end tell";
-
-	std::string polled = runScriptResult(script);
-
-	if (!polled.empty() && polled != lastPolledSelection) {
-		lastPolledSelection = polled;
-		selection = polled;
-		hasNewSelection = true;
-		return true;
-	}
-
-	return false;
+	if (!selectionReady.load()) return false;
+	std::lock_guard<std::mutex> lk(selectionMutex);
+	selection = pendingSelection;
+	selectionReady.store(false);
+	return true;
 }
 
 std::string PDFBridgeSkim::GetSelection() const {

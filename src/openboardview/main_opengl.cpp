@@ -449,6 +449,17 @@ int main(int argc, char **argv) {
 			usleep(50000);
 #endif
 			sleepout = 0;
+			// Wake up if the background Skim poll thread found a new selection
+			if (app.pdfBridge.HasNewSelection()) {
+				auto sel = app.pdfBridge.GetSelection();
+				if (!sel.empty()) {
+					strncpy(app.m_search[0], sel.c_str(), sizeof(app.m_search[0]) - 1);
+					app.m_search[0][sizeof(app.m_search[0]) - 1] = '\0';
+					app.SearchCompound(sel.c_str());
+					app.CenterZoomSearchResults();
+				}
+				sleepout = 5; // render a few frames to show the result
+			}
 			continue;
 		} // puts OBV to sleep if nothing is happening.
 		// Prepare frame
@@ -493,11 +504,11 @@ int main(int argc, char **argv) {
 		}
 	}
 
-	// Cleanup
+	// Cleanup — do NOT use cleanupAndExit here: exit() skips C++ destructors
+	// (PDFBridgeSkim destructor must run to close Skim and stop the poll thread)
 	Renderers::current->shutdown();
-
 	ImGui::DestroyContext();
-
-	cleanupAndExit(0);
+	if (window) SDL_DestroyWindow(window);
+	SDL_Quit();
 	return 0;
 }
