@@ -211,10 +211,13 @@ bool GenCADFile::parse_components() {
 			if (shape_ref_ast) {
 				char *shape_name_str = get_nonquoted_or_quoted_string_child(shape_ref_ast, "shape_name");
 				if (shape_name_str && *shape_name_str) {
-					if (!brd_part.mfgcode.empty()) {
-						brd_part.mfgcode += " SHAPE ";
+					if (brd_part.mfgcode.find(shape_name_str) == std::string::npos) {
+						// cat shape name to displayed information if it is not already included
+						if (!brd_part.mfgcode.empty()) {
+							brd_part.mfgcode += " SHAPE ";
+						}
+						brd_part.mfgcode += shape_name_str;
 					}
-					brd_part.mfgcode += shape_name_str;
 					mpc_ast_t *shape_ast = get_shape_by_name(shape_name_str);
 					if (shape_ast) {
 						mpc_ast_t *mirror_ast = mpc_ast_get_child(shape_ref_ast, "mirror|string");
