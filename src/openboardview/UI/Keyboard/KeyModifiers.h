@@ -1,0 +1,49 @@
+#ifndef _KEYMODIFIERS_H_
+#define _KEYMODIFIERS_H_
+
+#include <array>
+#include <unordered_map>
+#include <vector>
+
+#include "imgui/imgui.h"
+
+class KeyModifiers {
+private:
+	// All modifiers key that should not be treated as regular keys
+	constexpr static const std::array<ImGuiKey, 16> modifiers{{
+		ImGuiMod_Ctrl,
+		ImGuiMod_Shift,
+		ImGuiMod_Alt,
+		ImGuiMod_Super,
+		ImGuiKey_LeftCtrl,
+		ImGuiKey_LeftShift,
+		ImGuiKey_LeftAlt,
+		ImGuiKey_LeftSuper,
+		ImGuiKey_RightCtrl,
+		ImGuiKey_RightShift,
+		ImGuiKey_RightAlt,
+		ImGuiKey_RightSuper,
+		ImGuiKey_ReservedForModCtrl,
+		ImGuiKey_ReservedForModShift,
+		ImGuiKey_ReservedForModAlt,
+		ImGuiKey_ReservedForModSuper,
+	}};
+
+	// Modifier keys to handle as modifiers
+	// Only ImGuiMod_* are used here in order to handle both Left and Right modifiers the same way
+	// If handling them separately is required, ImGuiKey_Left* and ImGuiKey_Right* should be specified instead
+	constexpr static const std::array<ImGuiKey, 4> handledModifiers{{
+		ImGuiMod_Ctrl,
+		ImGuiMod_Shift,
+		ImGuiMod_Alt,
+		ImGuiMod_Super,
+	}};
+
+public:
+	KeyModifiers();
+
+	bool isModifier(ImGuiKey key) const;
+	std::vector<ImGuiKey> pressed() const;
+};
+
+#endif

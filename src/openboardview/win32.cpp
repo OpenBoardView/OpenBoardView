@@ -1,0 +1,150 @@
+#ifdef _WIN32
+
+#include "platform.h" // Should be kept first
+#include "win32.h"
+#include "imgui/imgui.h"
+#include "utf8/utf8.h"
+#include "version.h"
+#include <codecvt>
+#include <iostream>
+#include <locale>
+#include <shlobj.h>
+#include <shobjidl.h>
+#include <cstdint>
+#include <winnls.h>
+#ifdef ENABLE_SDL2
+#include <SDL.h>
+#endif
+
+const std::string utf16_to_utf8(const std::wstring &wtext) {
+	return std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t>{}.to_bytes(wtext.c_str());
+}
+
+const std::wstring utf8_to_utf16(const std::string &text) {
+	return std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t>{}.from_bytes(text.c_str());
+}
+
+// Mostly from https://msdn.microsoft.com/en-us/library/windows/desktop/ff485843(v=vs.85).aspx
+// Windows Vista minimum
+const filesystem::path show_file_picker(bool filterBoards) {
+	std::wstring file_path;
+	IFileOpenDialog *pFileOpen;
+
+	// Initializes the COM library
+	HRESULT hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
+	if (!SUCCEEDED(hr)) return file_path;
+
+	// Create the FileOpenDialog object.
+	hr = CoCreateInstance(CLSID_FileOpenDialog, NULL, CLSCTX_ALL, IID_IFileOpenDialog, reinterpret_cast<void **>(&pFileOpen));
+	if (SUCCEEDED(hr)) {
+		// Show the Open dialog box.
+		hr = pFileOpen->Show(NULL);
+
+		// Get the file name from the dialog box.
+		if (SUCCEEDED(hr)) {
+			IShellItem *pItem;
+			hr = pFileOpen->GetResult(&pItem);
+			if (SUCCEEDED(hr)) {
+				PWSTR pszFilePath;
+				hr = pItem->GetDisplayName(SIGDN_FILESYSPATH, &pszFilePath);
+
+				// Display the file name to the user.
+				if (SUCCEEDED(hr)) {
+					file_path = pszFilePath;
+					CoTaskMemFree(pszFilePath);
+				}
+				pItem->Release();
+			}
+		}
+		pFileOpen->Release();
+	}
+	CoUninitialize();
+	return file_path;
+}
+
+std::vector<char> load_font(const std::string &name) {
+	std::vector<char> data;
+	HFONT fontHandle;
+
+	auto u16name = utf8_to_utf16(name);
+
+	fontHandle = CreateFont(0, 0, 0, 0, 0, 0, 0, 0, 0, OUT_TT_ONLY_PRECIS, 0, 0, 0, u16name.c_str());
+	if (!fontHandle) {
+		std::cerr << "CreateFont failed" << std::endl;
+		return data;
+	}
+	HDC hdc = ::CreateCompatibleDC(NULL);
+	if (hdc != NULL) {
+		::SelectObject(hdc, fontHandle);
+
+		int ncount = ::GetTextFaceW(hdc, 0, nullptr);
+		if (ncount == 0) return data;
+
+		LPWSTR fname = new wchar_t[ncount];
+		ncount       = ::GetTextFaceW(hdc, ncount, fname);
+
+		if (!name.empty() &&
+		    ::CompareStringEx(NULL, NORM_IGNORECASE, u16name.c_str(), name.size(), fname, ncount - 1, NULL, NULL, 0) !=
+		        CSTR_EQUAL) // We didn't get the font we requested
+			return data;
+
+		const size_t size = ::GetFontData(hdc, 0, 0, NULL, 0);
+		if (size == GDI_ERROR) {
+#ifdef ENABLE_SDL2
+			SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Couldn't get \"%s\" font data: %lu", name.c_str(), GetLastError());
+#else
+			std::cout << "Couldn't get \"" << name << "\" font data: " << GetLastError() << std::endl;
+#endif
+		} else if (size > 0) {
+			char *buffer = new char[size];
+			if (::GetFontData(hdc, 0, 0, buffer, size) == size) {
+				data = std::vector<char>(buffer, buffer + size);
+			}
+			delete[] buffer;
+		}
+		::DeleteDC(hdc);
+	}
+	DeleteObject(fontHandle);
+	return data;
+}
+
+const std::string get_user_dir(const UserDir userdir) {
+	int cdret = 0;
+	std::string configPath;
+	PWSTR envVar = nullptr;
+	if (userdir == UserDir::Config)
+		SHGetKnownFolderPath(FOLDERID_RoamingAppData, 0, NULL, &envVar);
+	else if (userdir == UserDir::Data)
+		SHGetKnownFolderPath(FOLDERID_LocalAppData, 0, NULL, &envVar);
+
+	if (envVar) {
+		configPath = utf16_to_utf8(envVar);
+		configPath += "\\" OBV_NAME "\\";
+		auto configPathu16 = utf8_to_utf16(configPath);
+		cdret = CreateDirectoryW(configPathu16.c_str(), NULL); // Doesn't work recursively but it's not an issue here
+	}
+	CoTaskMemFree(envVar);
+
+	if (configPath.empty() || (cdret == 0 && GetLastError() != ERROR_ALREADY_EXISTS)) configPath = ".\\"; // Fallback to current dir
+	return configPath;
+}
+
+char *strcasestr(const char *str, const char *pattern) {
+	size_t i;
+
+	if ((!str) || (!pattern)) return NULL;
+
+	if (!*pattern) return (char *)str;
+
+	for (; *str; str++) {
+		if (toupper(*str) == toupper(*pattern)) {
+			for (i = 1;; i++) {
+				if (!pattern[i]) return (char *)str;
+				if (toupper(str[i]) != toupper(pattern[i])) break;
+			}
+		}
+	}
+	return NULL;
+}
+
+#endif

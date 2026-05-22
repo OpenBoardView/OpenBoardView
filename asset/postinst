@@ -1,0 +1,8 @@
+#!/bin/sh
+# Refresh desktop menu
+/bin/touch --no-create /usr/share/icons/hicolor &>/dev/null
+/usr/bin/gtk-update-icon-cache /usr/share/icons/hicolor &>/dev/null || :
+# Mime and desktop cache database of MIME types
+/bin/touch --no-create /usr/share/mime/packages &>/dev/null || :
+/usr/bin/update-mime-database /usr/share/mime &> /dev/null || :
+/usr/bin/update-desktop-database &> /dev/null || :

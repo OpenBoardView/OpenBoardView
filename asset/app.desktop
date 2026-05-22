@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=@PROJECT_NAME@
+Comment=Viewer for PCB layouts
+Exec=@PROJECT_NAME_LOWER@ %f
+Icon=@PROJECT_NAME_LOWER@
+MimeType=application/x-openboardview-asc;application/x-openboardview-board;application/x-openboardview-brd-landrex;application/x-openboardview-brd-r4;application/x-openboardview-lst
+Terminal=false
+Type=Application
+Categories=Utility;Viewer;Electronics;GTK;

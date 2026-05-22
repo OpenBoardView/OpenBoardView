@@ -1,0 +1,170 @@
+name: Build and make packages
+on: [push, pull_request]
+jobs:
+  build-and-package_DEB_RPM:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+      - uses: docker/setup-buildx-action@v3 # enable caching support for action below
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          load: true
+          tags: openboardview.org/linux-build-env:latest
+          cache-from: type=gha,scope=linux-build-env
+          cache-to: type=gha,scope=linux-build-env
+          target: linux-build-env
+        env:
+          DOCKER_BUILD_CHECKS_ANNOTATIONS: false
+          DOCKER_BUILD_SUMMARY: false
+          DOCKER_BUILD_RECORD_UPLOAD: false
+      - name: Linux build_DEBUG
+        run: >
+          docker run --rm -t -v "$PWD:$PWD" -w "$PWD" -u "$(id -u):$(id -g)" openboardview.org/linux-build-env:latest sh -c '
+          bash ./build.sh --recompile --debug &&
+          mv bin/openboardview bin/openboardview_DEBUG
+          '
+      - uses: actions/upload-artifact@v4
+        with:
+          name: "openboardview_DEBUG_linux_elf.${{ github.sha }}"
+          path: bin/openboardview_DEBUG
+      - name: Linux build
+        run: >
+          docker run --rm -t -v "$PWD:$PWD" -w "$PWD" -u "$(id -u):$(id -g)" openboardview.org/linux-build-env:latest sh -c '
+          bash ./build.sh --recompile &&
+          cd release_build &&
+          make package
+          '
+      - uses: actions/upload-artifact@v4
+        with:
+          name: "openboardview_package_linux_deb.${{ github.sha }}"
+          path: '*.deb'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: "openboardview_package_linux_rpm.${{ github.sha }}"
+          path: '*.rpm'
+  crossbuild-32bit-exe-on-mingw:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+      - uses: docker/setup-buildx-action@v3 # enable caching support for action below
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          load: true
+          tags: openboardview.org/mingw-deb-based-build-env:latest
+          cache-from: type=gha,scope=mingw-deb-based-build-env
+          cache-to: type=gha,scope=mingw-deb-based-build-env
+          target: mingw-deb-based-build-env
+        env:
+          DOCKER_BUILD_CHECKS_ANNOTATIONS: false
+          DOCKER_BUILD_SUMMARY: false
+          DOCKER_BUILD_RECORD_UPLOAD: false
+      - name: Mingw build debug
+        run: >
+            docker run --rm -t -v "$PWD:$PWD" -w "$PWD" -u "$(id -u):$(id -g)" openboardview.org/mingw-deb-based-build-env:latest sh -c '
+            CROSS=mingw64 ./build.sh --recompile --debug &&
+            mv bin/openboardview.exe bin/openboardview_DEBUG.exe
+            '
+      - uses: actions/upload-artifact@v4
+        with:
+          name: "openboardview_DEBUG-32bit.exe.${{ github.sha }}"
+          path: bin/openboardview_DEBUG.exe
+      - name: Mingw build
+        run: >
+            docker run --rm -t -v "$PWD:$PWD" -w "$PWD" -u "$(id -u):$(id -g)" openboardview.org/mingw-deb-based-build-env:latest sh -c '
+            CROSS=mingw64 ./build.sh --recompile
+            '
+      - uses: actions/upload-artifact@v4
+        with:
+          name: "openboardview-32bit.exe.${{ github.sha }}"
+          path: bin/openboardview.exe
+  build-and-package_intel-DMG:
+    runs-on: macos-15-intel
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+      - name: MacOS dependencies
+        run: |
+          pip3 install jinja2 --break-system-packages
+          brew tap-new local/oldermacos
+          ln -s $(pwd)/utilities/brew_oldermacos/sdl2.rb "$(brew --repository local/oldermacos)/Formula/sdl2.rb"
+          brew install local/oldermacos/sdl2
+      - name: MacOS build
+        run: TERM=xterm bash ./build.sh --recompile
+      - uses: actions/upload-artifact@v4
+        with:
+          name: "openboardview_unsigned_macos_intel_dmg.${{ github.sha }}"
+          path: '*.dmg'
+  build-and-package_universal-DMG:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+      - name: MacOS dependencies (jinja2)
+        run: pip3 install jinja2 --break-system-packages
+      - name: MacOS dependencies (SDL2)
+        uses: BrettDong/setup-sdl2-frameworks@v2 # Installing as a framework to build univeral x86_64 + arm64 binary
+        with:
+          sdl2: 2.32.0
+      - name: MacOS build
+        run: TERM=xterm SIGNER=- bash ./build.sh --recompile
+      - uses: actions/upload-artifact@v4
+        with:
+          name: "openboardview_adhoc_signed_macos15_universal_dmg.${{ github.sha }}"
+          path: '*.dmg'
+  build-64bit-exe-on-windows:
+    runs-on: windows-2025
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+      - name: Set up shell
+        shell: bash
+        run: |
+          echo 'C:\msys64\usr\bin\' >> "$GITHUB_PATH"
+          echo 'C:\msys64\ucrt64\bin\' >> "$GITHUB_PATH"
+      - name: Install dependencies
+        shell: bash
+        run: |
+          pacman -Sy
+          pacman -S --noconfirm make mingw-w64-ucrt-x86_64-gcc mingw-w64-ucrt-x86_64-cmake mingw-w64-ucrt-x86_64-SDL2
+          # Preinstalled python forced into UTF8 mode is used
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.14'
+      - name: Install dependencies (jinja2)
+        shell: bash
+        run: PYTHONUTF8=1 python3 -m pip install jinja2 --break-system-packages
+      - name: Build ucrt64 debug
+        if: always()
+        shell: bash
+        run: |
+          PYTHONUTF8=1 ./build.sh --debug --recompile
+          mv bin/openboardview.exe bin/openboardview_DEBUG.exe
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: "openboardview_DEBUG-ucrt64.exe.${{ github.sha }}"
+          path: bin/openboardview_DEBUG.exe
+      - name: Build ucrt64
+        if: always()
+        shell: bash
+        run: |
+          PYTHONUTF8=1 ./build.sh --recompile
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: "openboardview-ucrt64.exe.${{ github.sha }}"
+          path: bin/openboardview.exe

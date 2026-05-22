@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop">
+  <id>@PROJECT_NAME_LOWER@.desktop</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>@PROJECT_LICENSE@</project_license>
+  <name>@PROJECT_NAME@</name>
+  <summary>Viewer for PCB layouts</summary>
+  <description>
+    <p>
+      Software for viewing PCB/Laptop/Motherboard Layouts.
+    </p>
+    <ul>
+      <li>Dynamic part outline rendering, including complex connectors</li>
+      <li>Annotations, for leaving notes about parts, nets, pins or location
+      </li>
+      <li>Configurable colour themes</li>
+      <li>Configurable DPI to facilitate usage on 4K monitors</li>
+      <li>Tablet usage with OSD controls</li>
+      <li>Slower CPU systems through adjustable features</li>
+      <li>Reads FZ (with key), BRD, BRD2, BDV and BV* formats</li>
+      <li>Combined search system finds parts, pins and nets all within single
+          search</li>
+    </ul>
+  </description>
+  <screenshots>
+    <screenshot type="default">
+      <image>@PROJECT_URL@/ofbv-light-dark.png</image>
+    </screenshot>
+  </screenshots>
+  <url type="homepage">@PROJECT_URL@</url>
+</component>
