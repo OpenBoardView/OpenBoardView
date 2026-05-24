@@ -28,24 +28,27 @@ else()
 			add_definitions(-DENABLE_FONTCONFIG)
 		endif()
 
-		pkg_search_module(GTK gtk+-3.0 gtk+-2.0) # gtk2 fallback if gtk3 not found
-		if(GTK_FOUND)
-			message(STATUS "Found GTK version ${GTK_VERSION}")
-			link_directories(${GTK_LIBRARY_DIRS}) # not linked since we load it at runtime
-			add_definitions(${GTK_CFLAGS} ${GTK_CFLAGS_OTHER})
-			add_definitions(-DENABLE_GTK)
-		else()
-			message(WARNING "GTK not found, file picker will be unavailable.")
-		endif()
+		if(NOT HAIKU)
+			pkg_search_module(GTK gtk+-3.0 gtk+-2.0) # gtk2 fallback if gtk3 not found
+			if(GTK_FOUND)
+				message(STATUS "Found GTK version ${GTK_VERSION}")
+				link_directories(${GTK_LIBRARY_DIRS}) # not linked since we load it at runtime
+				add_definitions(${GTK_CFLAGS} ${GTK_CFLAGS_OTHER})
+				add_definitions(-DENABLE_GTK)
+			else()
+				message(WARNING "GTK not found, file picker will be unavailable.")
+			endif()
+		
 
-		pkg_search_module(GIO REQUIRED gio-2.0)
-		if(GIO_FOUND)
-			message(STATUS "Found GIO version ${GIO_VERSION}")
-			link_directories(${GIO_LIBRARY_DIRS})
-			add_definitions(${GIO_CFLAGS} ${GIO_CFLAGS_OTHER})
-			add_definitions(-DENABLE_PDFBRIDGE_EVINCE)
-		else()
-			message(SEND_ERROR "GIO not found, PDFBridgeEvince cannot be enabled.")
+			pkg_search_module(GIO REQUIRED gio-2.0)
+			if(GIO_FOUND)
+				message(STATUS "Found GIO version ${GIO_VERSION}")
+				link_directories(${GIO_LIBRARY_DIRS})
+				add_definitions(${GIO_CFLAGS} ${GIO_CFLAGS_OTHER})
+				add_definitions(-DENABLE_PDFBRIDGE_EVINCE)
+			else()
+				message(SEND_ERROR "GIO not found, PDFBridgeEvince cannot be enabled.")
+			endif()
 		endif()
 	endif(APPLE)
 endif()
@@ -140,6 +143,10 @@ if(APPLE)
 	set(SOURCES ${SOURCES}
 		osx.mm
 	)
+elseif(HAIKU)
+	set(SOURCES ${SOURCES}
+		haiku.cpp
+	)
 endif()
 	set(SOURCES ${SOURCES}
 		unix.cpp
@@ -174,6 +181,9 @@ add_executable(${PROJECT_NAME_LOWER}
 	${ASSETS}
 )
 
+if(HAIKU)
+	set(CMAKE_CXX_FLAGS "-lbe -ltracker -lstdc++")
+endif()
 if(MINGW) # Dirty fix to force linking all libs (esp. libstdc++) statically for Windows
 	set(CMAKE_EXE_LINKER_FLAGS "-static -static-libgcc -static-libstdc++")
 	set_target_properties(${PROJECT_NAME_LOWER} PROPERTIES LINK_SEARCH_END_STATIC 1)

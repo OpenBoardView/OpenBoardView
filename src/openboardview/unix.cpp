@@ -149,7 +149,7 @@ const filesystem::path show_file_picker(bool filterBoards) {
 
 	return path;
 }
-#elif !defined(__APPLE__)
+#elif !defined(__APPLE__) && !defined(__HAIKU__)
 const filesystem::path show_file_picker(bool filterBoards) { // dummy function when not building for OS X and GTK not available
 	SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Cannot show open file dialog: not built in.");
 	return std::string();
