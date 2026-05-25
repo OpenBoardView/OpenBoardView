@@ -24,15 +24,21 @@ void PDFFile::close() {
 	this->pdfBridge->CloseDocument();
 }
 
-void PDFFile::loadFromConfig(const filesystem::path &filepath) {
+void PDFFile::loadFromConfig(const filesystem::path &filepath, const filesystem::path &pdfSearchDir) {
 	configFilepath = filepath; // save filepath for latter use with writeToConfig
 
 	// Use boardview file path as default PDF file path, with ext replaced with .pdf
 	path = filepath;
 	path.replace_extension("pdf");
 
-	if (!filesystem::exists(filepath)) { // Config file doesn't exist, do not attempt to read or write it and load images
+	if (!filesystem::exists(filepath)) { // Config file doesn't exist
 		SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "Board configuration file %s does not exist", filepath.generic_string().c_str());
+		// pdfSearchDir varsa yine de kontrol et
+		if (!pdfSearchDir.empty()) {
+			auto candidate = pdfSearchDir / path.filename();
+			if (filesystem::exists(candidate))
+				path = candidate;
+		}
 		return;
 	}
 
@@ -47,6 +53,13 @@ void PDFFile::loadFromConfig(const filesystem::path &filepath) {
 	std::string pdfFilePathStr{confparse.ParseStr("PDFFilePath", "")};
 	if (!pdfFilePathStr.empty())
 		path = configDir/filesystem::u8path(pdfFilePathStr);
+
+	// Eğer PDF bulunamadıysa ve pdfSearchDir tanımlıysa orada ara
+	if (!filesystem::exists(path) && !pdfSearchDir.empty()) {
+		auto candidate = pdfSearchDir / path.filename();
+		if (filesystem::exists(candidate))
+			path = candidate;
+	}
 
 	writeToConfig(filepath);
 }

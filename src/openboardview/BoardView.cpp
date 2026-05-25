@@ -158,7 +158,7 @@ int BoardView::LoadFile(const filesystem::path &filepath) {
 				auto conffilepath = filepath;
 				conffilepath.replace_extension("conf");
 				backgroundImage.loadFromConfig(conffilepath);
-				pdfFile.loadFromConfig(conffilepath);
+				pdfFile.loadFromConfig(conffilepath, filesystem::u8path(config.pdfDirectory));
 
 				pdfBridge.OpenDocument(pdfFile);
 
@@ -3570,7 +3570,11 @@ void BoardView::HandlePDFBridgeSelection() {
 		if (selection.empty()) {
 			m_pinHighlighted.clear();
 			m_partHighlighted.clear();
+			m_search[0][0] = '\0';
 		} else {
+			// Update search box so highlights persist across frames
+			strncpy(m_search[0], selection.c_str(), sizeof(m_search[0]) - 1);
+			m_search[0][sizeof(m_search[0]) - 1] = '\0';
 			SearchCompound(selection.c_str());
 			CenterZoomSearchResults();
 		}

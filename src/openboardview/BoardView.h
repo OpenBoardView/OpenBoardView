@@ -19,6 +19,7 @@
 #include "GUI/Preferences/BoardSettings/BoardSettings.h"
 #include "PDFBridge/PDFBridge.h"
 #include "PDFBridge/PDFBridgeEvince.h"
+#include "PDFBridge/PDFBridgeSkim.h"
 #include "PDFBridge/PDFBridgeSumatra.h"
 #include "PDFBridge/PDFFile.h"
 #include <cstdint>
@@ -64,6 +65,8 @@ struct BoardView {
 	PDFBridgeEvince pdfBridge;
 #elif defined(_WIN32)
 	PDFBridgeSumatra &pdfBridge = PDFBridgeSumatra::GetInstance(obvconfig);
+#elif defined(__APPLE__)
+	PDFBridgeSkim pdfBridge;
 #else
 	PDFBridge pdfBridge; // Dummy implementation
 #endif

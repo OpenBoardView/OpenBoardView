@@ -3,6 +3,8 @@
 #include <string>
 #include <vector>
 
+#include "platform.h"
+
 #include "Program.h"
 
 #include "imgui/imgui.h"
@@ -83,9 +85,39 @@ void Program::render() {
 			}
 		}
 
-#ifdef _WIN32
 		ImGui::Separator();
 
+		RightAlignedText("PDF folder", DPI(250));
+		ImGui::SameLine();
+		{
+			std::vector<char> buf(config.pdfDirectory.c_str(), config.pdfDirectory.c_str() + config.pdfDirectory.size() + 1);
+			buf.resize(32768, '\0');
+			if (ImGui::InputText("##pdfDirectory", buf.data(), buf.size()))
+				config.pdfDirectory = buf.data();
+			ImGui::SameLine();
+			if (ImGui::Button("Browse##pdfDirectory")) {
+				auto path = show_folder_picker();
+				if (!path.empty()) config.pdfDirectory = path.string();
+			}
+		}
+
+		RightAlignedText("BRD folder", DPI(250));
+		ImGui::SameLine();
+		{
+			std::vector<char> buf(config.brdDirectory.c_str(), config.brdDirectory.c_str() + config.brdDirectory.size() + 1);
+			buf.resize(32768, '\0');
+			if (ImGui::InputText("##brdDirectory", buf.data(), buf.size()))
+				config.brdDirectory = buf.data();
+			ImGui::SameLine();
+			if (ImGui::Button("Browse##brdDirectory")) {
+				auto path = show_folder_picker();
+				if (!path.empty()) config.brdDirectory = path.string();
+			}
+		}
+
+		ImGui::Separator();
+
+#ifdef _WIN32
 		RightAlignedText("PDF software executable", DPI(250));
 		ImGui::SameLine();
 

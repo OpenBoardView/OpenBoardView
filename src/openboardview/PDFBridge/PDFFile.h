@@ -32,7 +32,7 @@ public:
 	void reload();
 	void close();
 
-	void loadFromConfig(const filesystem::path &filepath);
+	void loadFromConfig(const filesystem::path &filepath, const filesystem::path &pdfSearchDir = {});
 	void writeToConfig(const filesystem::path &filepath);
 	filesystem::path getPath() const;
 
