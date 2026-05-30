@@ -482,7 +482,6 @@ ADFile::ADFile(std::vector<char> &buf) {
 		parts.push_back(part);
 	}
 
-	std::sort(pins.begin(), pins.end(), customLess);
 
 	num_parts  = parts.size();
 	num_pins   = pins.size();

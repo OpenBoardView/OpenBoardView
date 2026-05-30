@@ -36,13 +36,6 @@ struct AD_BRDPad {
 struct ADFile : public BRDFileBase {
 	ADFile(std::vector<char> &buf);
 
-	struct {
-		bool operator()(BRDPin a, BRDPin b) const {
-			char *pEnd;
-			return strtod(a.snum, &pEnd) < strtod(b.snum, &pEnd);
-		}
-	} customLess;
-
 	std::vector<AD_BRDNet> ad_nets;
 	std::vector<AD_BRDPart> ad_parts;
 	std::vector<AD_BRDPad> ad_pads;
