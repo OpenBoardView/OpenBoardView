@@ -32,5 +32,7 @@
 	<string>${MACOSX_BUNDLE_COPYRIGHT}</string>
 	<key>NSHighResolutionCapable</key>
 	<true/>
+	<key>NSAppleEventsUsageDescription</key>
+	<string>OpenBoardView controls a PDF viewer (Skim) to search the schematic for the selected component.</string>
 </dict>
 </plist>
