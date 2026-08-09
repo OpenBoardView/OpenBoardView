@@ -12,6 +12,8 @@ endif()
 if(WIN32)
 	add_definitions(-DUNICODE)
 	add_definitions(-D_UNICODE)
+	# windows.h defines min/max macros which break std::min/std::max
+	add_definitions(-DNOMINMAX)
 else()
 	if(APPLE)
 		find_library(COCOA_LIBRARY Cocoa)
