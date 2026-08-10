@@ -7,6 +7,11 @@
 
 #include "filesystem_impl.h"
 
+// MSVC does not provide __PRETTY_FUNCTION__; __FUNCSIG__ is the equivalent
+#if defined(_MSC_VER) && !defined(__PRETTY_FUNCTION__)
+#define __PRETTY_FUNCTION__ __FUNCSIG__
+#endif
+
 // Verify predicate X, if false write error to ERROR_MSG and log and execute ACTION
 #define ENSURE_OR_FAIL(X, ERROR_MSG, ACTION) if (!(X)) { \
 		ERROR_MSG = std::string(__FILE__) + ":" + std::to_string(__LINE__) + ": " + __PRETTY_FUNCTION__ + ": Assertion `" + #X + "' failed."; \
