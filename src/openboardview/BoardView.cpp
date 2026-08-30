@@ -28,6 +28,7 @@
 #include "FileFormats/CSTFile.h"
 #include "FileFormats/FZFile.h"
 #include "FileFormats/GenCADFile.h"
+#include "FileFormats/TVWFile.h"
 #include "FileFormats/XZZPCBFile.h"
 #include "GUI/DPI.h"
 #include "GUI/Fonts.h"
@@ -140,6 +141,8 @@ int BoardView::LoadFile(const filesystem::path &filepath) {
 				m_file = new BRDAllegroFile(buffer);
 			else if (XZZPCBFile::verifyFormat(buffer))
 				m_file = new XZZPCBFile(buffer, config.XZZPCBKey);
+			else if (TVWFile::verifyFormat(buffer))
+				m_file = new TVWFile(buffer);
 			else
 				m_error_msg = "Unrecognized file format.";
 
