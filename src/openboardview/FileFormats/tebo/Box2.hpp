@@ -9,6 +9,8 @@
 
 #pragma once
 
+#include "Common.hpp" // CONSTEXPR_DEF
+#include <cstdint> // int32_t
 #include <algorithm> // std::min, std::max
 #include <limits> // std::numeric_limits
 

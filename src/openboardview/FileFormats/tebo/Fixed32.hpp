@@ -18,12 +18,9 @@ namespace Tebo
     class Fixed32T
     {
     private:
+        // single return: a C++11 constexpr body cannot hold statements
         static constexpr int32_t Pow(int32_t base, size_t power)
-        {
-            if (!power)
-                return 1;
-            return base*Pow(base, power-1);
-        }
+        { return power ? base*Pow(base, power-1) : 1; }
 
         static constexpr int32_t decimalMultiplier = Pow(10, DecimalPlaces);
         int32_t value;

@@ -28,7 +28,10 @@ struct Vector2T
         Y(y)
     {}
 
-    constexpr Scalar &operator[](size_t i)
+    // not constexpr: a C++11 constexpr member is implicitly const, which
+    // would collide with the const overload below, and its body may hold
+    // only a return - not this switch and assert.
+    Scalar &operator[](size_t i)
     {
         switch (i)
         {
@@ -38,7 +41,7 @@ struct Vector2T
         }
     }
 
-    constexpr Scalar const &operator[](size_t i) const
+    Scalar const &operator[](size_t i) const
     { return const_cast<Vector2T &>(*this)[i]; }
 
     constexpr Vec2 operator+(Vec2 v) const
@@ -59,16 +62,16 @@ struct Vector2T
     constexpr Vec2 operator/(Scalar s) const
     { return Vec2(X/s, Y/s); }
 
-    constexpr Vec2 &operator+=(Scalar s)
+    Vec2 &operator+=(Scalar s)
     { return *this = *this + s; }
 
-    constexpr Vec2 &operator-=(Scalar s)
+    Vec2 &operator-=(Scalar s)
     { return *this = *this - s; }
 
-    constexpr Vec2 &operator+=(Vec2 v)
+    Vec2 &operator+=(Vec2 v)
     { return *this = *this + v; }
 
-    constexpr Vec2 &operator-=(Vec2 v)
+    Vec2 &operator-=(Vec2 v)
     { return *this = *this - v; }
 
     constexpr Vec2 operator-() const
@@ -107,15 +110,11 @@ struct Vector2T
     Vec2 Normalize() const
     { return *this / Length(); }
 
-private:
-    template <typename T>
-    static constexpr bool IsFP = std::is_floating_point<T>::value;
-
-public:
     // non-fp to anything, fp to other fp
     template <typename T,
         typename S = Scalar,
-        typename = std::enable_if_t<!IsFP<S> || IsFP<S> && IsFP<T>>
+        typename = typename std::enable_if<!std::is_floating_point<S>::value ||
+            (std::is_floating_point<S>::value && std::is_floating_point<T>::value)>::type
     >
     constexpr operator Vector2T<T>() const
     { return {T(X), T(Y)}; }
@@ -124,7 +123,8 @@ public:
     template <typename T,
         typename = void,
         typename S = Scalar,
-        typename = std::enable_if_t<IsFP<S> && !IsFP<T>>
+        typename = typename std::enable_if<std::is_floating_point<S>::value &&
+            !std::is_floating_point<T>::value>::type
     >
     operator Vector2T<T>() const
     { return {T(std::round(X)), T(std::round(Y))}; }

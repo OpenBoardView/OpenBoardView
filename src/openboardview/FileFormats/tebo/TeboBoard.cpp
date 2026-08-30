@@ -26,21 +26,21 @@ namespace Tebo
         {
             auto const skip = r.ReadVec2S();
             (void)skip;
-            return std::make_unique<Round>(size);
+            return std::unique_ptr<Round>(new Round(size));
         }
         case ShapeType::Rect:
         {
             auto const turn = r.ReadFloat();
             auto const skip = r.ReadS32();
             (void)skip;
-            return std::make_unique<Rect>(size, turn);
+            return std::unique_ptr<Rect>(new Rect(size, turn));
         }
         case ShapeType::Poly:
         {
             auto const skip = r.ReadU32();
             (void)skip;
             auto const name = r.ReadString255();
-            auto shape = std::make_unique<Poly>(size, name);
+            auto shape = std::unique_ptr<Poly>(new Poly(size, name));
             shape->BBox.Min = r.ReadVec2S();
             shape->BBox.Max = r.ReadVec2S();
             auto subObjCount = r.ReadU32();
@@ -76,7 +76,7 @@ namespace Tebo
         {
             auto const turn = r.ReadFloat();
             auto const cornerRadius = r.ReadS32();
-            return std::make_unique<RoundRect>(size, cornerRadius, turn);
+            return std::unique_ptr<RoundRect>(new RoundRect(size, cornerRadius, turn));
         }
         default:
             R_ASSERT(!"Unrecognized shape type");
@@ -746,7 +746,7 @@ namespace Tebo
         {
             ProbeData body;
             body.Load(r);
-            Body = std::make_unique<ProbeData>();
+            Body = std::unique_ptr<ProbeData>(new ProbeData());
             *Body = std::move(body);
         }
         Tail.Tag = r.ReadU32();
