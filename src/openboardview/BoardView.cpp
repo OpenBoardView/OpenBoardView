@@ -175,6 +175,15 @@ int BoardView::LoadFile(const filesystem::path &filepath) {
 				m_lastFileOpenWasInvalid = false;
 				m_validBoard             = true;
 				m_error_msg.clear();
+#ifdef ENABLE_DIAGNOSTICS
+				diagnostics.SetBoardFile(filepath);
+				if (diagnostics.HasCase()) {
+					config.showInfoPanel = true;
+					m_sidePanelMode = 1;
+					m_diagnosticsWidthExpanded = false;
+					m_diagnosticsWidthManuallySized = false;
+				}
+#endif
 			}
 		}
 	} else {
@@ -190,6 +199,21 @@ void BoardView::ShowInfoPane(void) {
 	ImVec2 ds   = io.DisplaySize;
 
 	if (!config.showInfoPanel) return;
+#ifdef ENABLE_DIAGNOSTICS
+	const bool diagnostics_open = diagnostics.HasCase() && m_sidePanelMode == 1;
+	const bool display_width_changed = std::abs(ds.x - m_lastDiagnosticsDisplayWidth) > DPIF(24.0f);
+	if (diagnostics_open && !m_diagnosticsWidthManuallySized && (!m_diagnosticsWidthExpanded || display_width_changed)) {
+		const float preferred_width = std::max(DPIF(228.0f), std::min(DPIF(408.0f), ds.x * 0.276f));
+		const float maximum_width = std::max(DPIF(156.0f), ds.x - DPIF(320.0f));
+		m_info_surface.x = std::min(preferred_width, maximum_width);
+		m_board_surface.x = ds.x - m_info_surface.x;
+		m_diagnosticsWidthExpanded = true;
+		m_needsRedraw = true;
+	}
+	m_lastDiagnosticsDisplayWidth = ds.x;
+#else
+	const bool diagnostics_open = false;
+#endif
 
 	if (m_info_surface.x < DPIF(100)) {
 		//	fprintf(stderr,"Too small (%f), set to (%f)\n", width, DPIF(100));
@@ -213,6 +237,8 @@ void BoardView::ShowInfoPane(void) {
 	             NULL,
 	             ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize |
 	                 ImGuiWindowFlags_NoSavedSettings);
+	if (diagnostics_open) ImGui::SetWindowFontScale(1.10f);
+	else ImGui::SetWindowFontScale(1.0f);
 
 	if ((m_dragging_token == 0) && (io.MousePos.x > m_board_surface.x) && (io.MousePos.x < (m_board_surface.x + DPIF(12.0f)))) {
 		ImDrawList *draw = ImGui::GetWindowDrawList();
@@ -236,19 +262,53 @@ void BoardView::ShowInfoPane(void) {
 			ImGui::ResetMouseDragDelta();
 			m_board_surface.x += delta.x;
 			m_info_surface.x = ds.x - m_board_surface.x;
-			if (m_board_surface.x < ds.x * 0.66) {
-				m_board_surface.x = ds.x * 0.66;
+			const float minimum_board_ratio = diagnostics_open ? 0.50f : 0.66f;
+			if (m_board_surface.x < ds.x * minimum_board_ratio) {
+				m_board_surface.x = ds.x * minimum_board_ratio;
 				m_info_surface.x  = ds.x - m_board_surface.x;
 			}
 			if (delta.x > 0) m_needsRedraw = true;
 		}
 	} else {
 		if (m_dragging_token == 2) {
+#ifdef ENABLE_DIAGNOSTICS
+			if (diagnostics_open) m_diagnosticsWidthManuallySized = true;
+#endif
 			config.infoPanelWidth = IDPIF(m_info_surface.x); // Convert back to DPI-independant value
 			obvconfig.WriteInt("infoPanelWidth", config.infoPanelWidth);
 		}
 		m_dragging_token = 0;
 	}
+
+#ifdef ENABLE_DIAGNOSTICS
+	if (diagnostics.HasCase()) {
+		const ImGuiStyle &style = ImGui::GetStyle();
+		const float tab_width = (ImGui::GetContentRegionAvail().x - style.ItemSpacing.x) * 0.5f;
+		auto panel_tab = [&](const char *label, int mode) {
+			const bool active = m_sidePanelMode == mode;
+			ImGui::PushStyleColor(ImGuiCol_Button, style.Colors[active ? ImGuiCol_TabSelected : ImGuiCol_Tab]);
+			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, style.Colors[ImGuiCol_TabHovered]);
+			ImGui::PushStyleColor(ImGuiCol_ButtonActive, style.Colors[ImGuiCol_TabSelected]);
+			if (ImGui::Button(label, ImVec2(tab_width, 0.0f))) {
+				m_sidePanelMode = mode;
+				m_needsRedraw = true;
+			}
+			ImGui::PopStyleColor(3);
+		};
+		panel_tab("Board", 0);
+		ImGui::SameLine();
+		panel_tab("Diagnostics", 1);
+		ImGui::Separator();
+		if (m_sidePanelMode == 1) {
+			diagnostics.Draw([this](const std::string &target, bool show_context, std::string &error) {
+				return LocateDiagnosticTarget(target, show_context, error);
+			});
+			ImGui::End();
+			ImGui::PopStyleVar();
+			return;
+		}
+	}
+#endif
 
 	if (m_board) {
 		ImGui::Columns(2);
@@ -3538,6 +3598,75 @@ void BoardView::SearchCompound(const char *item) {
 void BoardView::SetLastFileOpenName(const std::string &name) {
 	m_lastFileOpenName = name;
 }
+
+#ifdef ENABLE_DIAGNOSTICS
+void BoardView::SetDiagnosticTicket(const std::string &ticket) {
+	diagnostics.SetPreferredTicket(ticket);
+}
+
+void BoardView::SetDiagnosticTarget(const std::string &target) {
+	diagnostics.SetPendingTarget(target);
+}
+
+bool BoardView::PollDiagnostics() {
+	const bool changed = diagnostics.PollForChanges();
+	if (changed && diagnostics.HasCase()) {
+		config.showInfoPanel = true;
+		m_sidePanelMode = 1;
+		m_needsRedraw = true;
+	}
+	const std::string target = diagnostics.TakePendingTarget();
+	if (!target.empty() && m_validBoard) {
+		std::string error;
+		LocateDiagnosticTarget(target, false, error);
+		return true;
+	}
+	return changed;
+}
+
+bool BoardView::LocateDiagnosticTarget(const std::string &target, bool show_context, std::string &error) {
+	if (!m_validBoard || !m_board) {
+		error = "Load the ticket's board file before locating a measurement.";
+		return false;
+	}
+	auto center_target = [&]() {
+		const bool previous_center_zoom = config.centerZoomSearchResults;
+		const float previous_zoom_factor = config.partZoomScaleOutFactor;
+		config.centerZoomSearchResults = true;
+		if (show_context) config.partZoomScaleOutFactor *= 5.0f;
+		CenterZoomSearchResults();
+		config.centerZoomSearchResults = previous_center_zoom;
+		config.partZoomScaleOutFactor = previous_zoom_factor;
+	};
+
+	ClearAllHighlights();
+	for (const auto &part : m_board->Components()) {
+		if (stricmp(part->name.c_str(), target.c_str()) != 0) continue;
+		m_partHighlighted.push_back(part);
+		for (const auto &pin : part->pins) m_pinHighlighted.push_back(pin);
+		if (!BoardElementIsVisible(part)) FlipBoard(1);
+		center_target();
+		m_needsRedraw = true;
+		return true;
+	}
+
+	for (const auto &net : m_board->Nets()) {
+		if (stricmp(net->name.c_str(), target.c_str()) != 0) continue;
+		bool visible = false;
+		for (const auto &pin : net->pins) {
+			m_pinHighlighted.push_back(pin);
+			visible |= BoardElementIsVisible(pin->component);
+		}
+		if (!visible && !net->pins.empty()) FlipBoard(1);
+		center_target();
+		m_needsRedraw = true;
+		return true;
+	}
+
+	error = "No component or net named " + target + " exists in this boardview.";
+	return false;
+}
+#endif
 
 void BoardView::FlipBoard(int mode) {
 	ImVec2 mpos = ImGui::GetMousePos();

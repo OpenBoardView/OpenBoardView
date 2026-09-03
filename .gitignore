@@ -59,6 +59,8 @@ CPackSourceConfig.cmake
 
 include/version.h
 share
+__pycache__/
+*.py[cod]
 
 # macOS specific
 .DS_Store
