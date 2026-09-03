@@ -77,6 +77,7 @@ int BoardView::ConfigParse(void) {
 	backgroundImage.enabled = config.showBackgroundImage;
 
 	m_colors.readFromConfig(obvconfig);
+	systemTheme.ApplyIfChanged(true);
 	keybindings.readFromConfig(obvconfig);
 
 	return 0;
@@ -897,6 +898,7 @@ void BoardView::Update() {
 		return;
 	}
 
+	if (systemTheme.ApplyIfChanged()) m_needsRedraw = true;
 	// Set global font size and scale with user-defined DPI
 	// Do not use DPIF() here as we do not want to apply display_scale, it is already applied through style.FontScaleDpi
 	ImGui::PushFont(nullptr, (config.fontSize * getDPI()) / 100.0f);
