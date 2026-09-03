@@ -14,6 +14,9 @@
 
 #include "BoardView.h"
 #include "history.h"
+#ifdef ENABLE_DIAGNOSTICS
+#include "AgentSkillInstaller.h"
+#endif
 
 #include "confparse.h"
 #include "resource.h"
@@ -55,6 +58,10 @@ struct globals {
 	int dpi = 0;
 	float font_size = 0.0f;
 	bool debug = false;
+#ifdef ENABLE_DIAGNOSTICS
+	char *diagnostics_ticket = nullptr;
+	char *diagnostics_target = nullptr;
+#endif
 	Renderers::Renderer renderer = Renderers::Renderer::DEFAULT;
 #ifdef _WIN32
 	char *pdfBridgePdfPath = nullptr;
@@ -64,21 +71,28 @@ struct globals {
 
 static SDL_Window *window      = nullptr;
 
+#ifdef ENABLE_DIAGNOSTICS
+#define DIAGNOSTICS_HELP                                                                                              \
+	"\t--ticket <ticket> : open the matching Board Diagnostics ticket\n"                                             \
+	"\t--locate <component-or-net> : locate a diagnostic target after loading the board\n"
+#else
+#define DIAGNOSTICS_HELP ""
+#endif
+
 char help[] =
-    " [-h] [-V] [-l] [-c <config file>] [-i <intput file>] [-x <width>] [-y <height>] [-z <fontsize>] [-p <dpi>] [-r <renderer>] [-d]\n\
-	-h : This help\n\
-	-V : Version information\n\
-	-l : slow CPU mode, disables AA and other items to try provide more FPS\n\
-	-c <config file> : alternative configuration file (default is ~/.config/" OBV_NAME
-    "/obv.conf)\n\
-	-i <input file> : board file to load\n\
-	-x <width> : Set window width\n\
-	-y <height> : Set window height\n\
-	-z <pixels> : Set font size\n\
-	-p <dpi> : Set the dpi\n\
-	-r <renderer> : Set the renderer [ OPENGL1 = 1; OPENGL3 = 2; OPENGLES2 = 3 ]\n\
-	-d : Debug mode\n\
-";
+    " [-h] [-V] [-l] [-c <config file>] [-i <intput file>] [-x <width>] [-y <height>] [-z <fontsize>] [-p <dpi>] [-r <renderer>] [-d]\n"
+	"\t-h : This help\n"
+	"\t-V : Version information\n"
+	"\t-l : slow CPU mode, disables AA and other items to try provide more FPS\n"
+	"\t-c <config file> : alternative configuration file (default is ~/.config/" OBV_NAME "/obv.conf)\n"
+	"\t-i <input file> : board file to load\n"
+	"\t-x <width> : Set window width\n"
+	"\t-y <height> : Set window height\n"
+	"\t-z <pixels> : Set font size\n"
+	"\t-p <dpi> : Set the dpi\n"
+	"\t-r <renderer> : Set the renderer [ OPENGL1 = 1; OPENGL3 = 2; OPENGLES2 = 3 ]\n"
+	"\t-d : Debug mode\n"
+	DIAGNOSTICS_HELP;
 
 int parse_parameters(int argc, char **argv, struct globals *g) {
 	int param;
@@ -173,6 +187,24 @@ int parse_parameters(int argc, char **argv, struct globals *g) {
 
 		} else if (strcmp(p, "-d") == 0) {
 			g->debug = true;
+#ifdef ENABLE_DIAGNOSTICS
+		} else if (strcmp(p, "--ticket") == 0) {
+			param++;
+			if (param < argc && argv[param][0] != '-') {
+				g->diagnostics_ticket = argv[param];
+			} else {
+				SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Not enough parameters for --ticket <ticket>\n");
+				exit(1);
+			}
+		} else if (strcmp(p, "--locate") == 0) {
+			param++;
+			if (param < argc && argv[param][0] != '-') {
+				g->diagnostics_target = argv[param];
+			} else {
+				SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Not enough parameters for --locate <component-or-net>\n");
+				exit(1);
+			}
+#endif
 #ifdef _WIN32
 		} else if (!strncmp(p, "--reversesearch", 15)) {
 			// Handling of DDE command for PDFBridge
@@ -237,6 +269,10 @@ int main(int argc, char **argv) {
 	parse_parameters(argc, argv, &g);
 
 	app.debug = g.debug;
+#ifdef ENABLE_DIAGNOSTICS
+	if (g.diagnostics_ticket) app.SetDiagnosticTicket(g.diagnostics_ticket);
+	if (g.diagnostics_target) app.SetDiagnosticTarget(g.diagnostics_target);
+#endif
 
 	// Log all messages
 	if (app.debug) {
@@ -248,6 +284,10 @@ int main(int argc, char **argv) {
 		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Error: %s\n", SDL_GetError());
 		return -1;
 	}
+
+#ifdef ENABLE_DIAGNOSTICS
+	InstallBundledBoardDiagnosticsSkill();
+#endif
 
 #ifdef __APPLE__
 	// Add some menu items to system and dock menu bar on macOS
@@ -433,6 +473,14 @@ int main(int argc, char **argv) {
 
 			if (event.type == SDL_QUIT) done = true;
 		}
+
+#ifdef ENABLE_DIAGNOSTICS
+		if (app.PollDiagnostics()) {
+			if (SDL_GetWindowFlags(window) & SDL_WINDOW_MINIMIZED) SDL_RestoreWindow(window);
+			SDL_RaiseWindow(window);
+			sleepout = 30;
+		}
+#endif
 
 		// reset rotation angle accumulator
 		if (ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
