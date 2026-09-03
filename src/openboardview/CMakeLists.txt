@@ -97,6 +97,7 @@ set(SOURCES
 	GUI/ColorScheme.cpp
 	GUI/Config.cpp
 	GUI/Fonts.cpp
+	GUI/SystemTheme.cpp
 	GUI/Image.cpp
 	GUI/Help/About.cpp
 	GUI/Help/Controls.cpp

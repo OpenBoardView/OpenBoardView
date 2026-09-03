@@ -10,6 +10,7 @@
 #include "UI/Keyboard/KeyBindings.h"
 #include "GUI/Config.h"
 #include "GUI/ColorScheme.h"
+#include "GUI/SystemTheme.h"
 #include "GUI/Help/About.h"
 #include "GUI/Help/Controls.h"
 #include "GUI/Preferences/Color.h"
@@ -105,6 +106,7 @@ struct BoardView {
 
 	/* Context menu, sql stuff */
 	Annotations m_annotations;
+	SystemTheme systemTheme;
 	void ContextMenu(void);
 	int AnnotationIsHovered(void);
 	bool AnnotationWasHovered     = false;
