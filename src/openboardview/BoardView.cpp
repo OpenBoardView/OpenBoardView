@@ -2071,7 +2071,7 @@ void BoardView::DrawDiamond(ImDrawList *draw, ImVec2 c, double r, uint32_t color
 	dia[2] = ImVec2(c.x, c.y + r);
 	dia[3] = ImVec2(c.x - r, c.y);
 
-	draw->AddPolyline(dia, 4, color, true, 1.0f);
+	draw->AddPolyline(dia, 4, color, 1.0f, ImDrawFlags_Closed);
 }
 
 void BoardView::DrawHex(ImDrawList *draw, ImVec2 c, double r, uint32_t color) {
@@ -2088,7 +2088,7 @@ void BoardView::DrawHex(ImDrawList *draw, ImVec2 c, double r, uint32_t color) {
 	hex[4] = ImVec2(c.x + da, c.y + db);
 	hex[5] = ImVec2(c.x - da, c.y + db);
 
-	draw->AddPolyline(hex, 6, color, true, 1.0f);
+	draw->AddPolyline(hex, 6, color, 1.0f, ImDrawFlags_Closed);
 }
 
 void BoardView::DrawOutlineSegments(ImDrawList *draw) {
@@ -2779,7 +2779,7 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 					ImVec2 p = CoordToScreen(part->hull[i].x, part->hull[i].y);
 					draw->PathLineTo(p);
 				}
-				draw->PathStroke(m_colors.partHullColor, true, 1.0f);
+				draw->PathStroke(m_colors.partHullColor, 1.0f, ImDrawFlags_Closed);
 			}
 
 			/*
