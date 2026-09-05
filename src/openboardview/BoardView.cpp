@@ -2418,11 +2418,13 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 					ImVec2 size_net_name = font->CalcTextSizeA(maxfontsize, FLT_MAX, 0.0f, pin->net->name.c_str());
 					ImVec2 pos_net_name   = ImVec2(pos.x - size_net_name.x * 0.5f, pos.y);
 
+					float padding = maxfontsize / 10.0f;
+
 					// Background rectangle
-					draw->AddRectFilled(ImVec2(pos_net_name.x - m_scale * 0.5f, pos_net_name.y), // Begining of text with slight padding
-							ImVec2(pos_net_name.x + size_net_name.x + m_scale * 0.5f, pos_net_name.y + size_net_name.y), // End of text with slight padding
+					draw->AddRectFilled(ImVec2(pos_net_name.x - padding, pos_net_name.y - padding), // Begining of text with slight padding
+							ImVec2(pos_net_name.x + size_net_name.x + padding, pos_net_name.y + size_net_name.y), // End of text with slight padding
 							m_colors.pinTextBackgroundColor,
-							m_scale * 0.5f/*rounding*/);
+							maxfontsize / 5.0f/*rounding*/);
 
 					draw->ChannelsSetCurrent(kChannelText);
 					draw->AddText(font, maxfontsize, pos_net_name, text_color, pin->net->name.c_str());
