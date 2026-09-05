@@ -2407,31 +2407,38 @@ inline void BoardView::DrawPins(ImDrawList *draw) {
 				ImFont *font = ImGui::GetIO().Fonts->Fonts[0]; // Default font
 				ImVec2 text_size_normalized = font->CalcTextSizeA(1.0f, FLT_MAX, 0.0f, text.c_str());
 
-				float maxfontwidth = psz * 2.125/ text_size_normalized.x; // Fit horizontally with 6.75% overflow (should still avoid colliding with neighbours)
+				float maxfontwidth = psz * 2.125 / text_size_normalized.x; // Fit horizontally with 6.75% overflow (should still avoid colliding with neighbours)
 				maxfontwidth = std::min(Fonts::MAX_FONT_SIZE, maxfontwidth); // Clamp to try not to overflow texture size
-				float maxfontheight = psz * 1.5/ text_size_normalized.y; // Fit vertically with 25% top/bottom padding
+				float maxfontheight = psz * 1.5 / text_size_normalized.y; // Fit vertically with 25% top/bottom padding
 				maxfontheight = std::min(Fonts::MAX_FONT_SIZE, maxfontheight); // Clamp to try not to overflow texture size
 				float maxfontsize = std::min(maxfontwidth, maxfontheight);
 
-				// Font size for pin name only depends on height of text (rather than width of full text incl. net name) to scale to pin bounding box
-				ImVec2 size_pin_name = font->CalcTextSizeA(maxfontheight, FLT_MAX, 0.0f, pin->name.c_str());
-				// Font size for net name also depends on width of full text to avoid overflowing too much and colliding with text from other pin
-				ImVec2 size_net_name = font->CalcTextSizeA(maxfontsize, FLT_MAX, 0.0f, pin->net->name.c_str());
+				if (maxfontsize >= 1.0f) {
+					// Font size for net name depends on width of full text to avoid overflowing too much and colliding with text from other pin
+					ImVec2 size_net_name = font->CalcTextSizeA(maxfontsize, FLT_MAX, 0.0f, pin->net->name.c_str());
+					ImVec2 pos_net_name   = ImVec2(pos.x - size_net_name.x * 0.5f, pos.y);
 
-				// Show pin name above net name, full text is centered vertically
-				ImVec2 pos_pin_name   = ImVec2(pos.x - size_pin_name.x * 0.5f, pos.y - size_pin_name.y);
-				ImVec2 pos_net_name   = ImVec2(pos.x - size_net_name.x * 0.5f, pos.y);
+					// Background rectangle
+					draw->AddRectFilled(ImVec2(pos_net_name.x - m_scale * 0.5f, pos_net_name.y), // Begining of text with slight padding
+							ImVec2(pos_net_name.x + size_net_name.x + m_scale * 0.5f, pos_net_name.y + size_net_name.y), // End of text with slight padding
+							m_colors.pinTextBackgroundColor,
+							m_scale * 0.5f/*rounding*/);
 
-				// Background rectangle
-				draw->AddRectFilled(ImVec2(pos_net_name.x - m_scale * 0.5f, pos_net_name.y), // Begining of text with slight padding
-										ImVec2(pos_net_name.x + size_net_name.x + m_scale * 0.5f, pos_net_name.y + size_net_name.y), // End of text with slight padding
-										m_colors.pinTextBackgroundColor,
-										m_scale * 0.5f/*rounding*/);
+					draw->ChannelsSetCurrent(kChannelText);
+					draw->AddText(font, maxfontsize, pos_net_name, text_color, pin->net->name.c_str());
+					draw->ChannelsSetCurrent(kChannelPins);
+				}
 
-				draw->ChannelsSetCurrent(kChannelText);
-				draw->AddText(font, maxfontheight, pos_pin_name, text_color, pin->name.c_str());
-				draw->AddText(font, maxfontsize, pos_net_name, text_color, pin->net->name.c_str());
-				draw->ChannelsSetCurrent(kChannelPins);
+				if (maxfontheight >= 1.0f) {
+					// Font size for pin name only depends on height of text (rather than width of full text incl. net name) to scale to pin bounding box
+					ImVec2 size_pin_name = font->CalcTextSizeA(maxfontheight, FLT_MAX, 0.0f, pin->name.c_str());
+					// Show pin name above net name, full text is centered vertically
+					ImVec2 pos_pin_name   = ImVec2(pos.x - size_pin_name.x * 0.5f, pos.y - size_pin_name.y);
+
+					draw->ChannelsSetCurrent(kChannelText);
+					draw->AddText(font, maxfontheight, pos_pin_name, text_color, pin->name.c_str());
+					draw->ChannelsSetCurrent(kChannelPins);
+				}
 			}
 		}
 	}
@@ -2821,16 +2828,18 @@ inline void BoardView::DrawParts(ImDrawList *draw) {
 					float maxfontsize = std::min(maxfontwidth, maxfontheight);
 					maxfontsize = std::min(Fonts::MAX_FONT_SIZE, maxfontsize); // Clamp to try not to overflow texture size
 
-					ImVec2 text_size{text_size_normalized.x * maxfontsize, text_size_normalized.y * maxfontsize};
+					if (maxfontsize >= 1.0f) {
+						ImVec2 text_size{text_size_normalized.x * maxfontsize, text_size_normalized.y * maxfontsize};
 
-					// Center text
-					ImVec2 pos = CoordToScreen(part->centerpoint.x, part->centerpoint.y); // Computed previously during bounding box generation
-					pos.x -= text_size.x * 0.5f;
-					pos.y -= text_size.y * 0.5f;
+						// Center text
+						ImVec2 pos = CoordToScreen(part->centerpoint.x, part->centerpoint.y); // Computed previously during bounding box generation
+						pos.x -= text_size.x * 0.5f;
+						pos.y -= text_size.y * 0.5f;
 
-					draw->ChannelsSetCurrent(kChannelText);
-					draw->AddText(font, maxfontsize, pos, m_colors.partTextColor, part->name.c_str());
-					draw->ChannelsSetCurrent(kChannelPolylines);
+						draw->ChannelsSetCurrent(kChannelText);
+						draw->AddText(font, maxfontsize, pos, m_colors.partTextColor, part->name.c_str());
+						draw->ChannelsSetCurrent(kChannelPolylines);
+					}
 				}
 
 				/*
