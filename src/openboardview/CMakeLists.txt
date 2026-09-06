@@ -17,6 +17,7 @@ else()
 		find_library(COCOA_LIBRARY Cocoa)
 		find_package(OpenGL REQUIRED)
 		set(OPENGL_INCLUDE_DIR ${OPENGL_INCLUDE_DIR}/Headers)
+		add_definitions(-DENABLE_PDFBRIDGE_SKIM) # macOS PDF bridge via Skim
 	else(APPLE)
 		find_package(PkgConfig REQUIRED)
 
@@ -139,7 +140,10 @@ else()
 if(APPLE)
 	set(SOURCES ${SOURCES}
 		osx.mm
+		PDFBridge/PDFBridgeSkim.mm
 	)
+	# PDFBridgeSkim uses ARC; the rest of the ObjC++ (osx.mm) is manual retain/release.
+	set_source_files_properties(PDFBridge/PDFBridgeSkim.mm PROPERTIES COMPILE_FLAGS "-fobjc-arc")
 endif()
 	set(SOURCES ${SOURCES}
 		unix.cpp

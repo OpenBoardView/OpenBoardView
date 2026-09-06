@@ -20,6 +20,7 @@
 #include "PDFBridge/PDFBridge.h"
 #include "PDFBridge/PDFBridgeEvince.h"
 #include "PDFBridge/PDFBridgeSumatra.h"
+#include "PDFBridge/PDFBridgeSkim.h"
 #include "PDFBridge/PDFFile.h"
 #include <cstdint>
 #include <vector>
@@ -64,6 +65,8 @@ struct BoardView {
 	PDFBridgeEvince pdfBridge;
 #elif defined(_WIN32)
 	PDFBridgeSumatra &pdfBridge = PDFBridgeSumatra::GetInstance(obvconfig);
+#elif defined(ENABLE_PDFBRIDGE_SKIM)
+	PDFBridgeSkim pdfBridge{obvconfig};
 #else
 	PDFBridge pdfBridge; // Dummy implementation
 #endif
