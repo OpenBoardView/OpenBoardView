@@ -1,7 +1,6 @@
 #ifndef _RENDERERS_H_
 #define _RENDERERS_H_
 
-#include "ImGuiRendererSDLGL1.h"
 #include "ImGuiRendererSDLGL3.h"
 
 #include <memory>

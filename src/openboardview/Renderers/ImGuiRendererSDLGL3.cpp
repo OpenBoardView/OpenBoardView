@@ -1,20 +1,38 @@
 #include "ImGuiRendererSDLGL3.h"
 
-
 #ifdef ENABLE_GLES2
-#include <glad/gles2.h>
+#include <SDL_opengles2.h>
 #else
-#include <glad/gl.h>
+#include <SDL_opengl.h>
+#include <SDL_opengl_glext.h> // for extension typedefs like PFNGLGENERATEMIPMAPPROC
 #endif
 #include "backends/imgui_impl_opengl3.h"
+#include "backends/imgui_impl_sdl2.h"
+
+#ifdef ENABLE_GLES2
+#define GLEXT_MIPMAP_FUNC "glGenerateMipmapOES"
+#else
+#define GLEXT_MIPMAP_FUNC "glGenerateMipmap"
+#endif
+
+#ifndef PFNGLGENERATEMIPMAPPROC	// fallback for GLES2
+typedef void (APIENTRYP PFNGLGENERATEMIPMAPPROC) (GLenum target);
+#endif
+
+static inline void portable_glGenerateMipmap(GLenum target) {
+	static auto pfn = (PFNGLGENERATEMIPMAPPROC)SDL_GL_GetProcAddress(GLEXT_MIPMAP_FUNC);
+	if (pfn) pfn(target);
+}
 
 std::string ImGuiRendererSDLGL3::name() {
 	return "ImGuiRendererSDLGL3";
 }
 
-bool ImGuiRendererSDLGL3::checkGLVersion(int version) {
-	int major = GLAD_VERSION_MAJOR(version);
-	int minor = GLAD_VERSION_MINOR(version);
+bool ImGuiRendererSDLGL3::checkGLVersion() {
+	int major, minor;
+
+	SDL_GL_GetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, &major);
+	SDL_GL_GetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, &minor);
 
 	if (major < GL_VERSION_MAJOR || (major == GL_VERSION_MAJOR && minor < GL_VERSION_MINOR)) {
 		SDL_LogError(SDL_LOG_CATEGORY_RENDER,
@@ -129,7 +147,7 @@ std::string ImGuiRendererSDLGL3::createTexture(ImTextureID* out_texture, uint8_t
 		return "error " + std::to_string(code) + " when loading the image into GPU memory.";
 	}
 
-	glGenerateMipmap(GL_TEXTURE_2D);
+	portable_glGenerateMipmap(GL_TEXTURE_2D);
 	glBindTexture(GL_TEXTURE_2D, 0);
 
 	*out_texture = tex;

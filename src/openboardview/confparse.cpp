@@ -18,7 +18,6 @@ char default_conf[] =
     " configuration\r\n\
 #\r\n\
 # Renderer options\r\n\
-#  1 = OpenGL1\r\n\
 #  2 = OpenGL3\r\n\
 #  3 = OpenGLES2\r\n\
 renderer=2\r\n\

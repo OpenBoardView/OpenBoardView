@@ -76,7 +76,7 @@ char help[] =
 	-y <height> : Set window height\n\
 	-z <pixels> : Set font size\n\
 	-p <dpi> : Set the dpi\n\
-	-r <renderer> : Set the renderer [ OPENGL1 = 1; OPENGL3 = 2; OPENGLES2 = 3 ]\n\
+	-r <renderer> : Set the renderer [ OPENGL3 = 2; OPENGLES2 = 3 ]\n\
 	-d : Debug mode\n\
 ";
 
@@ -317,7 +317,7 @@ int main(int argc, char **argv) {
 	// Setup renderer
 	bool initialized = Renderers::initBestRenderer(g.renderer);
 	if (!initialized) {
-		SDL_LogError(SDL_LOG_CATEGORY_RENDER, "%s", "No renderer not available. Exiting.");
+		SDL_LogError(SDL_LOG_CATEGORY_RENDER, "%s", "No renderer available. Exiting.");
 		cleanupAndExit(1);
 	}
 

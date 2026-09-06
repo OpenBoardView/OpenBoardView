@@ -1,13 +1,3 @@
-if(ENABLE_GL1)
-	add_definitions(-DENABLE_GL1)
-endif()
-if(ENABLE_GL3)
-	add_definitions(-DENABLE_GL3)
-endif()
-if(ENABLE_GLES2)
-	add_definitions(-DENABLE_GLES2)
-endif()
-
 # Platform-specific configuration
 if(WIN32)
 	add_definitions(-DUNICODE)
@@ -15,8 +5,6 @@ if(WIN32)
 else()
 	if(APPLE)
 		find_library(COCOA_LIBRARY Cocoa)
-		find_package(OpenGL REQUIRED)
-		set(OPENGL_INCLUDE_DIR ${OPENGL_INCLUDE_DIR}/Headers)
 	else(APPLE)
 		find_package(PkgConfig REQUIRED)
 
@@ -113,11 +101,6 @@ set(SOURCES
 	main_opengl.cpp
 )
 
-if(ENABLE_GL1)
-	LIST(APPEND SOURCES
-		Renderers/ImGuiRendererSDLGL1.cpp
-	)
-endif()
 if(ENABLE_GL3)
 	LIST(APPEND SOURCES
 		Renderers/ImGuiRendererSDLGL3.cpp
@@ -191,9 +174,8 @@ target_include_directories(${PROJECT_NAME_LOWER} PRIVATE
 	${CMAKE_CURRENT_BINARY_DIR} # for build-generated
 	${IMGUI_INCLUDE_DIRS}
 	${UTF8_INCLUDE_DIR}
-	${GLAD_INCLUDE_DIRS}
 	${GTK_INCLUDE_DIRS}
-	${OPENGL_INCLUDE_DIR}
+	opengl_target
 	${ZLIB_INCLUDE_DIRS}
 	${FONTCONFIG_INCLUDE_DIRS}
 )
@@ -202,7 +184,7 @@ target_link_libraries(${PROJECT_NAME_LOWER}
 	imgui
 	SQLite::SQLite3
 	mpc
-	${GLAD_LIBRARIES}
+	opengl_target
 	${COCOA_LIBRARY}
 	${ZLIB_LIBRARIES}
 	${FILESYSTEM_LIBRARIES}

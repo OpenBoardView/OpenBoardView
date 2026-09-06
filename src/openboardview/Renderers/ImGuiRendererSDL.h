@@ -3,12 +3,9 @@
 
 #include <string>
 
-// SDL, glad
-#ifdef ENABLE_GLES2
-#include <glad/gles2.h>
-#else
-#include <glad/gl.h>
-#endif
+#include "backends/imgui_impl_opengl3.h"
+#include "backends/imgui_impl_sdl2.h"
+
 #include <SDL.h>
 
 #include <imgui.h>
@@ -23,7 +20,7 @@ public:
 	virtual ~ImGuiRendererSDL();
 
 	virtual std::string name();
-	virtual bool checkGLVersion(int version) = 0;
+	virtual bool checkGLVersion() = 0;
 	virtual bool init();
 	virtual void processEvent(SDL_Event &event);
 	virtual void initFrame();

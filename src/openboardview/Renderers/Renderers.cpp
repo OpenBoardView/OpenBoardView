@@ -22,10 +22,6 @@ namespace Renderers {
 
 	std::unique_ptr<ImGuiRendererSDL> newInstance(Renderer r) {
 		switch (r) {
-#ifdef ENABLE_GL1
-			case Renderer::OPENGL1:
-				return std::unique_ptr<ImGuiRendererSDL>(new ImGuiRendererSDLGL1());
-#endif
 #ifdef ENABLE_GL3
 			case Renderer::OPENGL3:
 				return std::unique_ptr<ImGuiRendererSDL>(new ImGuiRendererSDLGL3());

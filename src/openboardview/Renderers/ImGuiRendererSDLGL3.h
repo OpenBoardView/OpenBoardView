@@ -21,7 +21,7 @@ class ImGuiRendererSDLGL3 : public ImGuiRendererSDL {
 
 public:
 	std::string name();
-	bool checkGLVersion(int version);
+	bool checkGLVersion();
 	void setGLVersion();
 	bool init();
 	void initFrame();

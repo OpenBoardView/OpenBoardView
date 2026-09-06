@@ -3,16 +3,19 @@
 #include <sstream>
 #include <vector>
 
-#ifdef ENABLE_GLES2
-#include <glad/gles2.h>
-#else
-#include <glad/gl.h>
-#endif
-
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
 #include "filesystem_impl.h"
+
+#ifdef ENABLE_GLES2
+#include <SDL_opengles2.h>
+#else
+#define GL_GLEXT_PROTOTYPES 1
+#include <SDL_opengl.h>
+#include <SDL2/SDL_opengl_glext.h>
+#endif
+#include "backends/imgui_impl_opengl3.h"
 #include "backends/imgui_impl_sdl2.h"
 #include "../utils.h"
 
@@ -71,13 +74,9 @@ bool ImGuiRendererSDL::init() {
 		return false;
 	}
 
-#ifdef ENABLE_GLES2
-	this->version = gladLoadGLES2(reinterpret_cast<GLADloadfunc>(SDL_GL_GetProcAddress));
-#else
-	this->version = gladLoadGL(reinterpret_cast<GLADloadfunc>(SDL_GL_GetProcAddress));
-#endif
+	SDL_GL_GetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, &this->version);
 	if (!version) {
-		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "%s: glad failed to load OpenGL\n", this->name().c_str());
+		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "%s: imgui failed to load OpenGL\n", this->name().c_str());
 		shutdown();
 		return false;
 	}
@@ -104,7 +103,7 @@ bool ImGuiRendererSDL::init() {
 		SDL_LogWarn(SDL_LOG_CATEGORY_RENDER, "%s: Unable to enable VSync: %s\n", this->name().c_str(), SDL_GetError());
 
 	// check if we got the correct OpenGL context version
-	if (!this->checkGLVersion(this->version)) {
+	if (!this->checkGLVersion()) {
 		shutdown();
 		return false;
 	}

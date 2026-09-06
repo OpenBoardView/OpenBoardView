@@ -1,5 +1,4 @@
 ## COMMON ##
-option(ENABLE_GL1 "Build OpenGL 1 renderer." ON)
 option(ENABLE_GL3 "Build OpenGL 3 renderer." ON)
 option(ENABLE_GLES2 "Configure OpenGL 3 renderer to be OpenGL ES 2.0 compatible." OFF)
 
@@ -52,21 +51,6 @@ if(NOT SQLITE3_FOUND)
 	add_subdirectory(sqlite3)
 endif()
 
-## glad ##
-execute_process(
-	COMMAND git submodule update --init src/glad
-	WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-)
-set(GLAD_SOURCES_DIR "${PROJECT_SOURCE_DIR}/src/glad")
-add_subdirectory(glad/cmake glad_cmake)
-
-if(ENABLE_GL1 OR ENABLE_GL3)
-glad_add_library(glad_gl REPRODUCIBLE API gl:compatibility=3.2 EXTENSIONS NONE)
-endif()
-if(ENABLE_GLES2)
-glad_add_library(glad_gles REPRODUCIBLE API gles2=2.0 EXTENSIONS GL_OES_element_index_uint GL_EXT_texture_format_BGRA8888)
-endif()
-
 ## SDL2 ##
 find_package(SDL2 REQUIRED CONFIG)
 add_definitions(-DENABLE_SDL2)
@@ -89,26 +73,33 @@ if(NOT TARGET SDL2::SDL2)
 	endif()
 endif()
 
+## OpenGL ##
+add_library(opengl_target INTERFACE IMPORTED)
+if(ENABLE_GL3)
+    find_package(OpenGL REQUIRED)
+    set_target_properties(opengl_target PROPERTIES
+        INTERFACE_COMPILE_DEFINITIONS ENABLE_GL3
+        )
+    if(ENABLE_GLES2)
+        set_target_properties(opengl_target PROPERTIES
+            INTERFACE_LINK_LIBRARIES OpenGL::GLES2
+            INTERFACE_COMPILE_DEFINITIONS ENABLE_GLES2
+        )
+    else()
+        set_target_properties(opengl_target PROPERTIES
+            INTERFACE_LINK_LIBRARIES OpenGL::GL
+        )
+    endif()
+endif()
+
 ## imgui ##
 # note: in the future there may be integrated CMake support into imgui
 # see: https://github.com/ocornut/imgui/pull/1713
-# for now do it manually, after glad and SDL2 because we use the includes for the sdl_opengl examples
+# for now do it manually, after SDL2 because we use the includes for the sdl_opengl examples
 execute_process(
 	COMMAND git submodule update --init src/imgui
 	WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
 )
-
-# workaround for OpenGL include for OpenGL2, need to be glad rather than gl itself
-file(READ "${CMAKE_CURRENT_SOURCE_DIR}/imgui/backends/imgui_impl_opengl2.cpp" input)
-string(REPLACE "OpenGL/gl.h" "glad/gl.h" input "${input}")
-string(REPLACE "GL/gl.h" "glad/gl.h" input "${input}")
-file(WRITE "${CMAKE_CURRENT_SOURCE_DIR}/imgui/backends/imgui_impl_opengl2.cpp" "${input}")
-
-# workaround for OpenGLES includes, need to be glad rather than gles itself
-file(READ "${CMAKE_CURRENT_SOURCE_DIR}/imgui/backends/imgui_impl_opengl3.cpp" input)
-string(REPLACE "GLES2/gl2.h" "glad/gles.h" input "${input}")
-string(REPLACE "GLES3/gl3.h" "glad/gles.h" input "${input}")
-file(WRITE "${CMAKE_CURRENT_SOURCE_DIR}/imgui/backends/imgui_impl_opengl3.cpp" "${input}")
 
 set(SOURCES
 	imgui/imgui.cpp
@@ -119,11 +110,6 @@ set(SOURCES
 	imgui/backends/imgui_impl_sdl2.cpp)
 
 
-if(ENABLE_GL1)
-	LIST(APPEND SOURCES
-		imgui/backends/imgui_impl_opengl2.cpp
-	)
-endif()
 if(ENABLE_GL3)
 	LIST(APPEND SOURCES
 		imgui/backends/imgui_impl_opengl3.cpp
@@ -132,7 +118,6 @@ endif()
 
 add_library(imgui STATIC ${SOURCES})
 target_compile_definitions(imgui PUBLIC "-DImDrawIdx=unsigned int") # short is not enough for us
-target_compile_definitions(imgui PUBLIC "-DIMGUI_IMPL_OPENGL_LOADER_GLAD") # We use glad
 # Configure GL3 renderer to be GLES2 compatible if GLES2 is enabled
 if(ENABLE_GLES2)
 	target_compile_definitions(imgui PUBLIC "-DIMGUI_IMPL_OPENGL_ES2")
@@ -142,15 +127,7 @@ target_include_directories(imgui PUBLIC
 	${CMAKE_CURRENT_SOURCE_DIR}/imgui/examples
 	${CMAKE_CURRENT_SOURCE_DIR}/imgui/misc/cpp
 )
-if(ENABLE_GLES2)
-target_link_libraries(imgui
-  glad_gles
-)
-elseif(ENABLE_GL1 OR ENABLE_GL3)
-  target_link_libraries(imgui
-    glad_gl
-  )
-endif()
+
 if(MINGW)
 target_link_libraries(imgui
 	SDL2::SDL2-static
