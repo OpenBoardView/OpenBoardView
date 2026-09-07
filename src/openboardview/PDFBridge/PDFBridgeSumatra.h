@@ -29,6 +29,9 @@ private:
 	HSZ hszServerService = nullptr;
 	HSZ hszServerTopic = nullptr;
 
+	bool IsForked = false;
+	bool ForkTested = false;
+
 	DWORD idInst = 0L;
 	HCONV hConv = nullptr;
 	HDDEDATA hDataNameService = nullptr; // OBV server name registered
@@ -40,6 +43,7 @@ private:
 	bool StartDDEServer(const std::wstring &service, const std::wstring &topic);
 	bool ConnectDDEClient(const std::wstring &service, const std::wstring &topic);
 	bool ExecuteDDECommand(std::wstring ddeCmd);
+	bool TestFork();
 	std::string GetDDEString(HSZ hsz);
 
 public:
