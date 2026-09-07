@@ -4,6 +4,9 @@
 #include "Searcher.h"
 #include "SpellCorrector.h"
 #include "Annotations.h"
+#ifdef ENABLE_DIAGNOSTICS
+#include "DiagnosticsPanel.h"
+#endif
 #include "confparse.h"
 #include "history.h"
 #include "imgui/imgui.h"
@@ -105,6 +108,9 @@ struct BoardView {
 
 	/* Context menu, sql stuff */
 	Annotations m_annotations;
+#ifdef ENABLE_DIAGNOSTICS
+	DiagnosticsPanel diagnostics;
+#endif
 	void ContextMenu(void);
 	int AnnotationIsHovered(void);
 	bool AnnotationWasHovered     = false;
@@ -180,6 +186,12 @@ struct BoardView {
 	bool m_showPartList;
 	bool m_showPreferences;
 	bool m_showColorPreferences;
+#ifdef ENABLE_DIAGNOSTICS
+	int m_sidePanelMode = 0;
+	bool m_diagnosticsWidthExpanded = false;
+	bool m_diagnosticsWidthManuallySized = false;
+	float m_lastDiagnosticsDisplayWidth = 0.0f;
+#endif
 	bool m_firstFrame = true;
 	bool m_lastFileOpenWasInvalid;
 	bool m_validBoard = false;
@@ -239,6 +251,12 @@ struct BoardView {
 	std::pair<SharedVector<Component>, SharedVector<Net>> SearchPartsAndNets(const char *search, int limit);
 
 	void SetLastFileOpenName(const std::string &name);
+#ifdef ENABLE_DIAGNOSTICS
+	void SetDiagnosticTicket(const std::string &ticket);
+	void SetDiagnosticTarget(const std::string &target);
+	bool PollDiagnostics();
+	bool LocateDiagnosticTarget(const std::string &target, bool show_context, std::string &error);
+#endif
 	void FlipBoard(int mode = 0);
 	void HandlePDFBridgeSelection();
 };

@@ -24,6 +24,7 @@ replacement for the "Test_Link" software and "Landrex".
 - Non-orthagonally orientated caps/resistors/diodes now drawn more realistically
 - Adjustable DPI (for working on 2K/4K screens)
 - Works with multiple concurrent instances
+- Optional AI-assisted diagnostic checklists beside the boardview
 
 
 ### TODO
@@ -87,6 +88,11 @@ $ open ./openboardview.app
 ```
 
 ### Usage
+
+When diagnostics support is built, OpenBoardView installs its portable `board-diagnostics`
+skill for Codex/OpenCode in `~/.agents/skills` and for Claude Code in
+`~/.claude/skills` on first launch. Existing skills not managed by OpenBoardView are
+left untouched. The skill requires Python 3.
 
 - Ctrl-O: Open file select dialog
 

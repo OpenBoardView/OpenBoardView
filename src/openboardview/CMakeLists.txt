@@ -1,3 +1,5 @@
+option(ENABLE_BOARD_DIAGNOSTICS "Build the optional ticket-based diagnostics panel" ON)
+
 if(ENABLE_GL1)
 	add_definitions(-DENABLE_GL1)
 endif()
@@ -50,6 +52,31 @@ else()
 	endif(APPLE)
 endif()
 
+if(ENABLE_BOARD_DIAGNOSTICS)
+	find_package(PkgConfig QUIET)
+	if(PKG_CONFIG_FOUND)
+		pkg_check_modules(JSONC json-c)
+	endif()
+	if(JSONC_FOUND)
+		message(STATUS "Found json-c version ${JSONC_VERSION}; enabling diagnostics panel")
+		link_directories(${JSONC_LIBRARY_DIRS})
+		add_definitions(${JSONC_CFLAGS} ${JSONC_CFLAGS_OTHER})
+		add_definitions(-DENABLE_DIAGNOSTICS)
+		set(DIAGNOSTICS_SOURCES DiagnosticsPanel.cpp AgentSkillInstaller.cpp)
+		if(APPLE)
+			set(DIAGNOSTICS_SKILL_DESTINATION "openboardview.app/Contents/Resources/openboardview/skills")
+		else()
+			set(DIAGNOSTICS_SKILL_DESTINATION "share/openboardview/skills")
+		endif()
+		install(DIRECTORY "${PROJECT_SOURCE_DIR}/skills/board-diagnostics"
+		        DESTINATION "${DIAGNOSTICS_SKILL_DESTINATION}"
+		        PATTERN "__pycache__" EXCLUDE
+		        PATTERN "*.pyc" EXCLUDE)
+	else()
+		message(STATUS "json-c not found; diagnostics panel will not be built")
+	endif()
+endif()
+
 # python is required for GenCAD grammar build-rime generation
 if (CMAKE_VERSION VERSION_GREATER 3.12)
 	find_package(Python REQUIRED COMPONENTS Interpreter)
@@ -65,6 +92,7 @@ set(SOURCES
 	history.cpp
 	utils.cpp
 	Annotations.cpp
+	${DIAGNOSTICS_SOURCES}
 	BoardView.cpp
 	Board.cpp
 	BRDBoard.cpp
@@ -196,6 +224,7 @@ target_include_directories(${PROJECT_NAME_LOWER} PRIVATE
 	${OPENGL_INCLUDE_DIR}
 	${ZLIB_INCLUDE_DIRS}
 	${FONTCONFIG_INCLUDE_DIRS}
+	${JSONC_INCLUDE_DIRS}
 )
 
 target_link_libraries(${PROJECT_NAME_LOWER}
@@ -207,6 +236,7 @@ target_link_libraries(${PROJECT_NAME_LOWER}
 	${ZLIB_LIBRARIES}
 	${FILESYSTEM_LIBRARIES}
 	${CMAKE_DL_LIBS}
+	${JSONC_LIBRARIES}
 )
 
 if(NOT APPLE AND NOT MINGW)
