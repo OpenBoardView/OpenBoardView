@@ -1,5 +1,7 @@
 #include "ImGuiRendererSDL.h"
 
+#include <cmath>
+#include <cstdlib>
 #include <sstream>
 #include <vector>
 
@@ -17,7 +19,19 @@
 #include "../utils.h"
 
 float ImGuiRendererSDL::getDisplayScale() {
-	// Scaling from platform display DPI is only supported on Windows for now as it is broken and inconsistent on X11/XWayland/Wayland
+	auto environment_scale = [](const char *name) {
+		const char *value = std::getenv(name);
+		if (!value || !*value) return 0.0f;
+		char *end = nullptr;
+		const float scale = std::strtof(value, &end);
+		return end && *end == '\0' && std::isfinite(scale) && scale >= 1.0f && scale <= 4.0f ? scale : 0.0f;
+	};
+
+	if (const float override_scale = environment_scale("OPENBOARDVIEW_SCALE")) return override_scale;
+	const char *driver = SDL_GetCurrentVideoDriver();
+	if (driver && std::string(driver) == "wayland") {
+		if (const float toolkit_scale = environment_scale("GDK_SCALE")) return toolkit_scale;
+	}
 #ifdef _WIN32
 	return ImGui_ImplSDL2_GetContentScaleForDisplay(0);
 #else
