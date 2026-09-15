@@ -177,6 +177,9 @@ add_executable(${PROJECT_NAME_LOWER}
 if(MINGW) # Dirty fix to force linking all libs (esp. libstdc++) statically for Windows
 	set(CMAKE_EXE_LINKER_FLAGS "-static -static-libgcc -static-libstdc++")
 	set_target_properties(${PROJECT_NAME_LOWER} PROPERTIES LINK_SEARCH_END_STATIC 1)
+elseif(MSVC)
+	target_compile_options(${PROJECT_NAME_LOWER} PRIVATE /W1 /Oi)
+	add_definitions(-DWIN32_LEAN_AND_MEAN -DNOMINMAX -D_CRT_SECURE_NO_WARNINGS)
 elseif(APPLE)
 	set_target_properties(${PROJECT_NAME_LOWER} PROPERTIES MACOSX_BUNDLE_INFO_PLIST "${PROJECT_SOURCE_DIR}/asset/MacOSXBundleInfo.plist.in")
 	set_target_properties(${PROJECT_NAME_LOWER} PROPERTIES MACOSX_BUNDLE_ICON_FILE ${PROJECT_NAME_LOWER})
@@ -223,6 +226,10 @@ endif()
 
 
 if(MINGW)
+target_link_libraries(${PROJECT_NAME_LOWER}
+	SDL2::SDL2-static
+)
+elseif(MSVC)
 target_link_libraries(${PROJECT_NAME_LOWER}
 	SDL2::SDL2-static
 )

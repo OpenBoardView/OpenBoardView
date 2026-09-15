@@ -7,6 +7,11 @@
 
 #include "filesystem_impl.h"
 
+// MSVC does not supply this macro, so we need to do it here
+#if !defined(__PRETTY_FUNCTION__) && !defined(__GNUC__)
+#define __PRETTY_FUNCTION__ __FUNCSIG__
+#endif
+
 // Verify predicate X, if false write error to ERROR_MSG and log and execute ACTION
 #define ENSURE_OR_FAIL(X, ERROR_MSG, ACTION) if (!(X)) { \
 		ERROR_MSG = std::string(__FILE__) + ":" + std::to_string(__LINE__) + ": " + __PRETTY_FUNCTION__ + ": Assertion `" + #X + "' failed."; \

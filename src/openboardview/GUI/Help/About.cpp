@@ -12,15 +12,20 @@ namespace Help {
 const std::string About::OBV_LICENSE_TEXT_NONWRAPPED{removeSingleLineFeed(OBV_LICENSE_TEXT)};
 
 std::string About::removeSingleLineFeed(std::string str) {
-	for (auto it = str.begin(); it != str.end(); it++) {
-		if (*it == '\n') {
-			if (*(it + 1) == '\n') { // Two consecutive line feeds encountered
-				while (*++it == '\n'); // Skip all subsequent line feeds
+	for (size_t i = 0; i < str.length(); i++) {
+		if (str[i] == '\n') {
+			if (i == str.length()) {
+				continue;
 			} else {
-				*it = ' '; // Single consecutive line feed replaced with whitespace
+				if (str[i + 1] == '\n') {
+					i++;
+				} else {
+					str[i] == ' ';
+				}
 			}
 		}
 	}
+
 	return str;
 }
 
