@@ -18,6 +18,21 @@ const filesystem::path show_file_picker(bool filterBoards) {
 
 	return filename;
 }
+
+const filesystem::path show_folder_picker() {
+	std::string folder;
+	NSOpenPanel *op = [NSOpenPanel openPanel];
+	[op setCanChooseFiles:NO];
+	[op setCanChooseDirectories:YES];
+	[op setAllowsMultipleSelection:NO];
+
+	if ([op runModal] == NSModalResponseOK) {
+		NSURL *nsurl = [[op URLs] objectAtIndex:0];
+		folder = std::string([[nsurl path] UTF8String]);
+	}
+
+	return folder;
+}
 #endif
 
 #ifndef ENABLE_FONTCONFIG

@@ -131,6 +131,9 @@ void Config::readFromConfig(Confparse &obvconfig) {
 	pdfSoftwarePath = obvconfig.ParseStr("pdfSoftwarePath", "SumatraPDF.exe");
 #endif
 
+	pdfDirectory = obvconfig.ParseStr("pdfDirectory", "");
+	brdDirectory = obvconfig.ParseStr("brdDirectory", "");
+
 	/*
 	 * Some machines (Atom etc) don't have enough CPU/GPU
 	 * grunt to cope with the large number of AA'd circles
@@ -212,6 +215,9 @@ void Config::writeToConfig(Confparse &obvconfig) {
 #ifdef _WIN32
 	obvconfig.WriteStr("pdfSoftwarePath", pdfSoftwarePath.c_str());
 #endif
+
+	obvconfig.WriteStr("pdfDirectory", pdfDirectory.c_str());
+	obvconfig.WriteStr("brdDirectory", brdDirectory.c_str());
 
 	obvconfig.WriteBool("slowCPU", slowCPU);
 
