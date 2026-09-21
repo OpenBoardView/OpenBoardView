@@ -59,6 +59,18 @@ For Fedora, you will need the following packages at a minimum;
 
 	$ dnf install SDL2-devel gtk3-devel fontconfig-devel cmake
 
+### Haiku
+
+For Haiku OS, you will need the following packages at a minimum;
+
+	pkgman install cmake libsdl2_devel fontconfig_devel sqlite_devel python3.14 sqlite_devel
+	mkdir -p build
+	cd build
+	cmake .. -DCMAKE_BUILD_TYPE=Release
+	./src/openboardview/openboardview
+
+
+
 ### Installation
 
 1. Clone the project
