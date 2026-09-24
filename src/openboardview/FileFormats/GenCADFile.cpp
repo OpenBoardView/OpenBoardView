@@ -6,6 +6,7 @@
 #include <cmath>
 #include <cstdlib>
 #include <cstring>
+#include <iterator>
 #include <limits>
 
 #include <SDL.h>
@@ -39,10 +40,24 @@ bool GenCADFile::parse_file(const std::vector<char> &buf) {
 			throw parser_error;
 		}
 
+		// Some exporters sprinkle NUL bytes through otherwise valid text (typically right
+		// before a line ending). mpc treats NUL as end of input, so the parse stops there
+		// with a misleading "expected $HEADER at end of input". Strip them first.
+		std::vector<char> clean;
+		const std::vector<char> *input = &buf;
+		if (std::find(buf.begin(), buf.end(), '\0') != buf.end()) {
+			clean.reserve(buf.size());
+			std::copy_if(buf.begin(), buf.end(), std::back_inserter(clean), [](char c) { return c != '\0'; });
+			SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+			            "GenCAD file contains %zu NUL byte(s); ignoring them",
+			            buf.size() - clean.size());
+			input = &clean;
+		}
+
 		mpc_result_t r;
 		mpc_ast_t *ast = nullptr;
 		ret            = true;
-		if (mpc_nparse("", buf.data(), buf.size(), gencad_file, &r)) {
+		if (mpc_nparse("", input->data(), input->size(), gencad_file, &r)) {
 			ast = static_cast<mpc_ast_t *>(r.output);
 			if (!ast) throw std::string("Failed to parse GenCAD file: the file does not match the GenCAD format specification");
 

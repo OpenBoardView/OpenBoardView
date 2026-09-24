@@ -82,7 +82,7 @@ rectangle           : "RECTANGLE" <s>+ <x> <s>+ <y>  <s>+ <width> <s>+ <height> 
 cutout              : "CUTOUT" <s>+ <name> <s>+ <n> (<line>|<arc>|<circle>|<rectangle>|<n>)*;
 mask                : "MASK" <s>+ <name> <s>+ <layer> <n> (<line>|<arc>|<circle>|<rectangle>|<n>)*;
 artwork             : "ARTWORK" <s>+ <name> <s>+ <layer> <n> (<line>|<arc>|<circle>|<rectangle>|<type>|<filled>)*;
-board               : "$BOARD" <n>+ <thickness>? (<line>|<arc>|<circle>|<rectangle>|<cutout>|<mask>|<artwork>|<attribute>|<text>)* <n>* "$ENDBOARD" <n>*;
+board               : "$BOARD" <n>+ <thickness>? (<line>|<arc>|<circle>|<rectangle>|<cutout>|<mask>|<artwork>|<attribute>|<text>)* <n>* ("$ENDBOARD" <n>*)?;
 pad                 : "PAD" <s>+ <pad_name> <s>+ <pad_type> <s>+ <drill_size> <n>+ (<line>|<arc>|<circle>|<rectangle>|<attribute>)* <n>*;
 pads                : "$PADS" <n>+ <pad>* "$ENDPADS" <n>*;
 padstacks_pad       : "PAD" <s>+ <pad_name> <s>+ <layer> <s>+ <rot> <s>+ <mirror> <n>+;
