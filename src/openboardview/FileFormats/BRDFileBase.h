@@ -18,8 +18,10 @@
 		while ((*p) && (isspace((uint8_t)*p))) ++p;  \
 		s = p;                                       \
 		while ((*p) && (!isspace((uint8_t)*p))) ++p; \
-		*p = 0;                                      \
-		p++;                                         \
+		if (*p) {                                    \
+			*p = 0;                                  \
+			p++;                                     \
+		} /* else: end of line, stay on terminator so later reads see an empty field */ \
 		return fix_to_utf8(s, &arena, arena_end);    \
 	}
 

@@ -51,6 +51,11 @@ void ASCFile::parse_pin(char *&p, char *&s, char *&arena, char *&arena_end, line
 		pin.part = parts.size();
 		/*int id =*/READ_INT(); // uint
 		/*char *name =*/READ_STR2();
+		// Some exporters emit pins with only an id and name (e.g. unpopulated
+		// connector pins). There is no position or net to load, so skip them
+		// rather than placing them at (0,0) with an empty net.
+		while ((*p) && (isspace((uint8_t)*p))) ++p;
+		if (!*p) return;
 		double posx = READ_DOUBLE();
 		pin.pos.x   = posx * 1000.0f;
 		double posy = READ_DOUBLE();
