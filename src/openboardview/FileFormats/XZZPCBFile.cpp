@@ -142,7 +142,13 @@ XZZPCBFile::XZZPCBFile(std::vector<char> &buf, uint64_t xzzkey) {
 		key = xzzkey;
 	} else if (!checkKey(key)) { // Try to fallback to built-in key
 		valid = false;
-		error_msg = "Invalid XZZ PCB Key\nXZZ PCB key: " + keyToString(xzzkey);
+		if (xzzkey == 0) {
+			error_msg = "This is an encrypted XZZ PCB file and no XZZ PCB key is configured.\n"
+			            "Enter the key under File > Program Preferences > XZZ PCB Key and reopen the file.";
+		} else {
+			error_msg = "Invalid XZZ PCB key (bad parity): " + keyToString(xzzkey) + "\n"
+			            "Check the value under File > Program Preferences > XZZ PCB Key.";
+		}
 		return;
 	}
 

@@ -56,11 +56,20 @@ void Config::SetCAEKey(const char *keytext) {
 }
 
 void Config::SetXZZPCBKey(const std::string &keytext) {
+	if (keytext.empty()) { // field cleared: forget the previous key rather than keeping it silently
+		XZZPCBKey    = 0;
+		XZZPCBKeyStr = keytext;
+		return;
+	}
 	try {
-		XZZPCBKey = std::stoul(keytext, nullptr, 0);
+		// The key is a 64-bit DES key: stoull, not stoul, which is only 32-bit on Windows
+		// and throws out_of_range for any real key there.
+		XZZPCBKey    = std::stoull(keytext, nullptr, 0);
 		XZZPCBKeyStr = keytext;
 	} catch (const std::invalid_argument &e) {
-
+		// not a number (yet): keep the previous key while the user is still typing
+	} catch (const std::out_of_range &e) {
+		// more than 64 bits: keep the previous key
 	}
 }
 
