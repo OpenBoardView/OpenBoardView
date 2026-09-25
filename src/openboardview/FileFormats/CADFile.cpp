@@ -9,9 +9,12 @@
 #include <cstring>
 #include <unordered_map>
 
+#include <SDL.h>
+
 #define OUTLINE_MARGIN 20
 void CADFile::gen_outline() {
 	// Determine board outline
+	if (pins.empty()) return; // min_element on an empty range returns end(); nothing to outline anyway
 	int minx =
 	    std::min_element(pins.begin(), pins.end(), [](BRDPin a, BRDPin b) { return a.pos.x < b.pos.x; })->pos.x - OUTLINE_MARGIN;
 	int maxx =
@@ -106,7 +109,14 @@ CADFile::CADFile(std::vector<char> &buf) {
 				ptr = strchr(part, '-'); //remove all after
 				if (ptr != NULL)         //
 					{*ptr = '\0';}       //
-				pin.part       = parts_id.at(part);
+				auto part_it = parts_id.find(part);
+				if (part_it == parts_id.end()) {
+					// A C_PIN referencing a part that never appeared in a COMP line. Skip it
+					// instead of throwing (an uncaught std::out_of_range takes the whole app down).
+					SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION, "CADFile: skipping pin of unknown part '%s'", part);
+					continue;
+				}
+				pin.part       = part_it->second;
 				double posx    = READ_DOUBLE();
 				pin.pos.x      = posx * multiplier;
 				double posy    = READ_DOUBLE();
