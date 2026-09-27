@@ -51,7 +51,7 @@ bool ImGuiRendererSDL::init() {
 
 	// Setup window
 	uint32_t window_flags = SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE;
-#if defined(_WIN32) || defined(__APPLE__)
+#if defined(_WIN32) || defined(__APPLE__) || defined(__EMSCRIPTEN__)
 	window_flags |= SDL_WINDOW_ALLOW_HIGHDPI;
 #endif
 	window = SDL_CreateWindow("", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 0, 0, window_flags);

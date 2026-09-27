@@ -265,6 +265,11 @@ int main(int argc, char **argv) {
 		SDL_LogSetAllPriority(SDL_LOG_PRIORITY_VERBOSE);
 	}
 
+#ifdef __EMSCRIPTEN__
+	// The main loop yields once per frame in waitAnimationFrame(). Do not yield again in SDL_GL_SwapWindow().
+	SDL_SetHint(SDL_HINT_EMSCRIPTEN_ASYNCIFY, "0");
+#endif
+
 	// Setup SDL
 	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) != 0) {
 		SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Error: %s\n", SDL_GetError());
@@ -429,6 +434,7 @@ int main(int argc, char **argv) {
 
 			if (event.type == SDL_DROPFILE) {
 				app.LoadFile(filesystem::u8path(event.drop.file));
+				SDL_free(event.drop.file);
 			} else if(event.type == SDL_MULTIGESTURE && event.mgesture.numFingers == 2 && !ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
 				//Inhibit dragging board area
 				app.m_dragging_token = -1;

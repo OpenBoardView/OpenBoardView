@@ -247,6 +247,7 @@ if(EMSCRIPTEN)
 	set_target_properties(${PROJECT_NAME_LOWER} PROPERTIES SUFFIX ".html")
 	set(OBV_WEB_SHELL "${PROJECT_SOURCE_DIR}/asset/web/shell.html")
 	target_link_options(${PROJECT_NAME_LOWER} PRIVATE
+		"-sUSE_SDL=2" # CMake before 3.13 does not propagate INTERFACE_LINK_OPTIONS
 		"-sMAX_WEBGL_VERSION=2"
 		"-sMIN_WEBGL_VERSION=2"
 		"-sGL_ENABLE_GET_PROC_ADDRESS=1" # glad loads GL functions through SDL_GL_GetProcAddress()

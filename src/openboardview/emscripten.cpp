@@ -8,27 +8,33 @@
 
 #include <cstdlib>
 
-// Opens a browser file dialog, copies the chosen file into the in-memory
-// file system under /uploads and returns its path. Returns an empty string
-// when the user cancels. Needs ASYNCIFY to block the caller.
+// Opens a browser file dialog and copies the chosen files into the in-memory
+// file system with Module.obvStoreFiles() from shell.html. Returns the path of
+// the board file, or an empty string when the user cancels. The user can pick
+// more than one file because some formats, for example ASC, need them all.
+// Needs ASYNCIFY to block the caller.
 // clang-format off
 EM_ASYNC_JS(char *, obv_pick_file, (int filterBoards), {
-	const file = await new Promise((resolve) => {
+	const files = await new Promise((resolve) => {
 		const input = document.createElement('input');
 		input.type = 'file';
+		input.multiple = true;
 		if (filterBoards) {
 			input.accept = '.asc,.bom,.brd,.bdv,.bvr,.cad,.cae,.cst,.pcbdoc,.fz,.pcb';
 		}
-		input.addEventListener('change', () => resolve(input.files.length > 0 ? input.files[0] : null));
-		input.addEventListener('cancel', () => resolve(null));
+		input.addEventListener('change', () => resolve(input.files));
+		input.addEventListener('cancel', () => resolve([]));
 		input.click();
 	});
-	if (!file) return 0;
-	const data = new Uint8Array(await file.arrayBuffer());
-	FS.mkdirTree('/uploads');
-	const path = '/uploads/' + file.name.split('/').join('_');
-	FS.writeFile(path, data);
-	return stringToNewUTF8(path);
+	try {
+		const path = await Module.obvStoreFiles(files);
+		return path ? stringToNewUTF8(path) : 0;
+	} catch (e) {
+		console.error(e);
+		Module.setStatus('Cannot open the file. See the browser console.');
+		setTimeout(() => Module.setStatus(''), 5000);
+		return 0;
+	}
 });
 // clang-format on
 

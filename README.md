@@ -101,7 +101,7 @@ $ cmake --build build-wasm
 $ python3 -m http.server -d build-wasm/src/openboardview 8000
 ```
 
-To open a board, use File > Open or drag the file onto the page. The browser keeps files and settings in memory only. They are lost when you reload the page.
+To open a board, use File > Open or drag the file onto the page. Some formats need more than one file. For ASC, select or drag `format.asc`, `pins.asc` and `nails.asc` together. The browser keeps files and settings in memory only. They are lost when you reload the page.
 
 The build embeds the font at `OBV_WEB_FONT` (default `/usr/share/fonts/TTF/DejaVuSans.ttf`). Set `-DOBV_WEB_FONT=<path to .ttf>` to use a different font. PDF integration is not available in the web build.
 

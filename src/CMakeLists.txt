@@ -132,6 +132,7 @@ file(WRITE "${CMAKE_CURRENT_SOURCE_DIR}/imgui/backends/imgui_impl_opengl2.cpp" "
 file(READ "${CMAKE_CURRENT_SOURCE_DIR}/imgui/backends/imgui_impl_opengl3.cpp" input)
 string(REPLACE "GLES2/gl2.h" "glad/gles2.h" input "${input}")
 string(REPLACE "GLES3/gl3.h" "glad/gles2.h" input "${input}")
+string(REPLACE "glad/gles.h" "glad/gles2.h" input "${input}") # Older versions of this patch wrote a header that glad does not generate
 file(WRITE "${CMAKE_CURRENT_SOURCE_DIR}/imgui/backends/imgui_impl_opengl3.cpp" "${input}")
 
 set(SOURCES
