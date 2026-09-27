@@ -45,6 +45,10 @@
 #ifdef __APPLE__
 #include "osx.h" // configureMenuBar()
 #endif
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#include <emscripten/html5.h>
+#endif
 
 struct globals {
 	char *input_file = nullptr;
@@ -205,6 +209,24 @@ int parse_parameters(int argc, char **argv, struct globals *g) {
 	return 0;
 }
 
+#ifdef __EMSCRIPTEN__
+// Waits for the next browser animation frame. Needs ASYNCIFY.
+EM_ASYNC_JS(void, waitAnimationFrame, (), {
+	await new Promise((resolve) => requestAnimationFrame(resolve));
+});
+
+// Make the SDL window follow the size of the browser window. Returns true if the size changed.
+static bool fitWindowToBrowser(SDL_Window *sdlWindow) {
+	double cssWidth, cssHeight;
+	if (emscripten_get_element_css_size("#canvas", &cssWidth, &cssHeight) != EMSCRIPTEN_RESULT_SUCCESS) return false;
+	int width, height;
+	SDL_GetWindowSize(sdlWindow, &width, &height);
+	if (width == static_cast<int>(cssWidth) && height == static_cast<int>(cssHeight)) return false;
+	SDL_SetWindowSize(sdlWindow, static_cast<int>(cssWidth), static_cast<int>(cssHeight));
+	return true;
+}
+#endif
+
 void cleanupAndExit(int c) {
 	if (window) SDL_DestroyWindow(window);
 	SDL_Quit();
@@ -242,6 +264,11 @@ int main(int argc, char **argv) {
 	if (app.debug) {
 		SDL_LogSetAllPriority(SDL_LOG_PRIORITY_VERBOSE);
 	}
+
+#ifdef __EMSCRIPTEN__
+	// The main loop yields once per frame in waitAnimationFrame(). Do not yield again in SDL_GL_SwapWindow().
+	SDL_SetHint(SDL_HINT_EMSCRIPTEN_ASYNCIFY, "0");
+#endif
 
 	// Setup SDL
 	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) != 0) {
@@ -407,6 +434,7 @@ int main(int argc, char **argv) {
 
 			if (event.type == SDL_DROPFILE) {
 				app.LoadFile(filesystem::u8path(event.drop.file));
+				SDL_free(event.drop.file);
 			} else if(event.type == SDL_MULTIGESTURE && event.mgesture.numFingers == 2 && !ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
 				//Inhibit dragging board area
 				app.m_dragging_token = -1;
@@ -452,9 +480,15 @@ int main(int argc, char **argv) {
 			app.reloadFonts = false;
 		}
 
+#ifdef __EMSCRIPTEN__
+		if (fitWindowToBrowser(window)) sleepout = 30;
+#endif
+
 		if (!(sleepout--)) {
 #ifdef _WIN32
 			Sleep(50);
+#elif defined(__EMSCRIPTEN__)
+			emscripten_sleep(50); // Gives control back to the browser
 #else
 			usleep(50000);
 #endif
@@ -492,6 +526,10 @@ int main(int argc, char **argv) {
 		ImGui::Render();
 		Renderers::current->renderFrame(clear_color);
 
+#ifdef __EMSCRIPTEN__
+		// The browser must get control back after each frame to show it and deliver events
+		waitAnimationFrame();
+#else
 		// vsync disabled, manual FPS limiting
 		if (!SDL_GL_GetSwapInterval()) {
 			static const int FPS = 30;
@@ -501,6 +539,7 @@ int main(int argc, char **argv) {
 			std::this_thread::sleep_until(nextFrame);
 			nextFrame += frameDuration;
 		}
+#endif
 	}
 
 	// Cleanup

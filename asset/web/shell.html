@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OpenBoardView</title>
+<style>
+	html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #14141e; }
+	#canvas { display: block; width: 100vw; height: 100vh; border: 0; outline: none; }
+	#status {
+		position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+		font: 16px sans-serif; color: #ccc; pointer-events: none;
+	}
+	body.dragging #canvas { opacity: 0.6; }
+</style>
+</head>
+<body>
+<canvas id="canvas" tabindex="-1" oncontextmenu="event.preventDefault()"></canvas>
+<div id="status">Loading OpenBoardView…</div>
+<script>
+	var statusElement = document.getElementById('status');
+	var runtimeReady = false;
+	var uploadCount = 0;
+	var BOARD_EXTENSIONS = ['.asc', '.bom', '.brd', '.bdv', '.bvr', '.cad', '.cae', '.cst', '.pcbdoc', '.fz', '.pcb'];
+
+	var Module = {
+		canvas: document.getElementById('canvas'),
+		print: function (text) { console.log(text); },
+		printErr: function (text) { console.error(text); },
+		setStatus: function (text) {
+			statusElement.textContent = text;
+			statusElement.style.display = text ? 'flex' : 'none';
+		},
+		onRuntimeInitialized: function () {
+			runtimeReady = true;
+			Module.setStatus('');
+		},
+		// Writes the files into a new directory in the in-memory file system and returns the path of the
+		// board file. Some formats (for example ASC) read the other files from the same directory.
+		obvStoreFiles: async function (files) {
+			if (files.length === 0) return '';
+			var dir = '/uploads/' + (++uploadCount);
+			Module.FS.mkdirTree(dir);
+			var board = '';
+			for (var i = 0; i < files.length; i++) {
+				var name = files[i].name.split('/').join('_');
+				var path = dir + '/' + name;
+				Module.FS.writeFile(path, new Uint8Array(await files[i].arrayBuffer()));
+				var lower = name.toLowerCase();
+				var isBoard = BOARD_EXTENSIONS.some(function (ext) { return lower.endsWith(ext); });
+				if (!board || (isBoard && !board.isBoard)) board = { path: path, isBoard: isBoard };
+			}
+			return board.path;
+		},
+	};
+	window.onerror = function () { Module.setStatus('OpenBoardView stopped. See the browser console.'); };
+	window.addEventListener('unhandledrejection', function (e) {
+		console.error(e.reason);
+		Module.setStatus('Cannot open the file. See the browser console.');
+		setTimeout(function () { Module.setStatus(''); }, 5000);
+	});
+
+	// Drag and drop board files onto the page to open them.
+	document.addEventListener('dragover', function (e) { e.preventDefault(); document.body.classList.add('dragging'); });
+	document.addEventListener('dragleave', function () { document.body.classList.remove('dragging'); });
+	document.addEventListener('drop', async function (e) {
+		e.preventDefault();
+		document.body.classList.remove('dragging');
+		if (!runtimeReady) return;
+		var path = await Module.obvStoreFiles(e.dataTransfer.files);
+		if (path) Module.ccall('obv_open_file', null, ['string'], [path]);
+	});
+</script>
+{{{ SCRIPT }}}
+</body>
+</html>
