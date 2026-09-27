@@ -93,7 +93,9 @@ std::string ImGuiRendererSDLGL3::createTexture(ImTextureID* out_texture, uint8_t
 	switch (fmt) {
 		default:
 		case 0:
-#ifdef ENABLE_GLES2
+#if defined(__EMSCRIPTEN__) // WebGL has no BGRA texture format
+			format = GL_RGBA;
+#elif defined(ENABLE_GLES2)
 			format = GL_BGRA_EXT;
 #else
 			format = GL_BGRA;

@@ -86,6 +86,25 @@ $ ./openboardview.sh
 $ open ./openboardview.app
 ```
 
+### Web build (WebAssembly)
+
+OpenBoardView can run in a web browser that supports WebGL 2.
+
+1. Install [Emscripten](https://emscripten.org/docs/getting_started/downloads.html).
+2. Build it:
+```
+$ emcmake cmake -S . -B build-wasm -G Ninja -DCMAKE_BUILD_TYPE=Release
+$ cmake --build build-wasm
+```
+3. Serve the output directory over HTTP and open `openboardview.html`:
+```
+$ python3 -m http.server -d build-wasm/src/openboardview 8000
+```
+
+To open a board, use File > Open or drag the file onto the page. The browser keeps files and settings in memory only. They are lost when you reload the page.
+
+The build embeds the font at `OBV_WEB_FONT` (default `/usr/share/fonts/TTF/DejaVuSans.ttf`). Set `-DOBV_WEB_FONT=<path to .ttf>` to use a different font. PDF integration is not available in the web build.
+
 ### Usage
 
 - Ctrl-O: Open file select dialog

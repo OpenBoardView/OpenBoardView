@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OpenBoardView</title>
+<style>
+	html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #14141e; }
+	#canvas { display: block; width: 100vw; height: 100vh; border: 0; outline: none; }
+	#status {
+		position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+		font: 16px sans-serif; color: #ccc; pointer-events: none;
+	}
+	body.dragging #canvas { opacity: 0.6; }
+</style>
+</head>
+<body>
+<canvas id="canvas" tabindex="-1" oncontextmenu="event.preventDefault()"></canvas>
+<div id="status">Loading OpenBoardView…</div>
+<script>
+	var statusElement = document.getElementById('status');
+	var Module = {
+		canvas: document.getElementById('canvas'),
+		print: function (text) { console.log(text); },
+		printErr: function (text) { console.error(text); },
+		setStatus: function (text) {
+			statusElement.textContent = text;
+			statusElement.style.display = text ? 'flex' : 'none';
+		},
+		onRuntimeInitialized: function () { Module.setStatus(''); },
+	};
+	window.onerror = function () { Module.setStatus('OpenBoardView stopped. See the browser console.'); };
+
+	// Drag and drop a board file onto the page to open it.
+	document.addEventListener('dragover', function (e) { e.preventDefault(); document.body.classList.add('dragging'); });
+	document.addEventListener('dragleave', function () { document.body.classList.remove('dragging'); });
+	document.addEventListener('drop', async function (e) {
+		e.preventDefault();
+		document.body.classList.remove('dragging');
+		var file = e.dataTransfer.files[0];
+		if (!file) return;
+		var data = new Uint8Array(await file.arrayBuffer());
+		FS.mkdirTree('/uploads');
+		var path = '/uploads/' + file.name.replace(/\//g, '_');
+		FS.writeFile(path, data);
+		Module.ccall('obv_open_file', null, ['string'], [path]);
+	});
+</script>
+{{{ SCRIPT }}}
+</body>
+</html>

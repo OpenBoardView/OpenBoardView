@@ -3,7 +3,19 @@ option(ENABLE_GL1 "Build OpenGL 1 renderer." ON)
 option(ENABLE_GL3 "Build OpenGL 3 renderer." ON)
 option(ENABLE_GLES2 "Configure OpenGL 3 renderer to be OpenGL ES 2.0 compatible." OFF)
 
-if(NOT APPLE AND NOT WIN32 OR MINGW)
+if(EMSCRIPTEN)
+	# The code catches exceptions, for example from std::stoul() in the config parser.
+	# Use -fexceptions: ASYNCIFY does not support -fwasm-exceptions.
+	add_compile_options("-fexceptions")
+	add_link_options("-fexceptions")
+
+	# The browser only has WebGL, which is OpenGL ES. Use the GL3 renderer in its GLES mode.
+	set(ENABLE_GL1 OFF CACHE BOOL "Build OpenGL 1 renderer." FORCE)
+	set(ENABLE_GL3 ON CACHE BOOL "Build OpenGL 3 renderer." FORCE)
+	set(ENABLE_GLES2 ON CACHE BOOL "Configure OpenGL 3 renderer to be OpenGL ES 2.0 compatible." FORCE)
+endif()
+
+if((NOT APPLE AND NOT WIN32 OR MINGW) AND NOT EMSCRIPTEN)
 	find_package(PkgConfig REQUIRED)
 endif()
 
@@ -38,7 +50,7 @@ if(NOT ZLIB_FOUND)
 	set(SKIP_INSTALL_HEADERS NO)
 	add_subdirectory(zlib)
 
-	if(WIN32)
+	if(WIN32 OR EMSCRIPTEN)
 		set(ZLIB_LIBRARIES zlibstatic CACHE INTERNAL "zlib library")
 	else()
 		set(ZLIB_LIBRARIES z CACHE INTERNAL "zlib library")
@@ -63,12 +75,24 @@ add_subdirectory(glad/cmake glad_cmake)
 if(ENABLE_GL1 OR ENABLE_GL3)
 glad_add_library(glad_gl REPRODUCIBLE API gl:compatibility=3.2 EXTENSIONS NONE)
 endif()
-if(ENABLE_GLES2)
+if(EMSCRIPTEN)
+# WebGL 2 is OpenGL ES 3.0, which has 32-bit indices in core
+glad_add_library(glad_gles REPRODUCIBLE API gles2=3.0 EXTENSIONS NONE)
+elseif(ENABLE_GLES2)
 glad_add_library(glad_gles REPRODUCIBLE API gles2=2.0 EXTENSIONS GL_OES_element_index_uint GL_EXT_texture_format_BGRA8888)
 endif()
 
 ## SDL2 ##
+if(EMSCRIPTEN)
+	# Use the SDL2 port that ships with Emscripten
+	add_library(SDL2::SDL2 INTERFACE IMPORTED)
+	set_target_properties(SDL2::SDL2 PROPERTIES
+		INTERFACE_COMPILE_OPTIONS "-sUSE_SDL=2"
+		INTERFACE_LINK_OPTIONS "-sUSE_SDL=2")
+	add_library(SDL2::SDL2main INTERFACE IMPORTED)
+else()
 find_package(SDL2 REQUIRED CONFIG)
+endif()
 add_definitions(-DENABLE_SDL2)
 
 # Create namespace targets for system with SDL2 older than 2.0.12
@@ -106,8 +130,8 @@ file(WRITE "${CMAKE_CURRENT_SOURCE_DIR}/imgui/backends/imgui_impl_opengl2.cpp" "
 
 # workaround for OpenGLES includes, need to be glad rather than gles itself
 file(READ "${CMAKE_CURRENT_SOURCE_DIR}/imgui/backends/imgui_impl_opengl3.cpp" input)
-string(REPLACE "GLES2/gl2.h" "glad/gles.h" input "${input}")
-string(REPLACE "GLES3/gl3.h" "glad/gles.h" input "${input}")
+string(REPLACE "GLES2/gl2.h" "glad/gles2.h" input "${input}")
+string(REPLACE "GLES3/gl3.h" "glad/gles2.h" input "${input}")
 file(WRITE "${CMAKE_CURRENT_SOURCE_DIR}/imgui/backends/imgui_impl_opengl3.cpp" "${input}")
 
 set(SOURCES
@@ -134,7 +158,9 @@ add_library(imgui STATIC ${SOURCES})
 target_compile_definitions(imgui PUBLIC "-DImDrawIdx=unsigned int") # short is not enough for us
 target_compile_definitions(imgui PUBLIC "-DIMGUI_IMPL_OPENGL_LOADER_GLAD") # We use glad
 # Configure GL3 renderer to be GLES2 compatible if GLES2 is enabled
-if(ENABLE_GLES2)
+if(EMSCRIPTEN)
+	target_compile_definitions(imgui PUBLIC "-DIMGUI_IMPL_OPENGL_ES3")
+elseif(ENABLE_GLES2)
 	target_compile_definitions(imgui PUBLIC "-DIMGUI_IMPL_OPENGL_ES2")
 endif()
 target_include_directories(imgui PUBLIC
@@ -205,7 +231,7 @@ else() # Other compiler/version are unsupported, use external lib
 endif()
 
 ## stb ##
-if(NOT APPLE AND NOT WIN32 OR MINGW)
+if((NOT APPLE AND NOT WIN32 OR MINGW) AND NOT EMSCRIPTEN)
 	pkg_check_modules(STB stb)
 endif()
 

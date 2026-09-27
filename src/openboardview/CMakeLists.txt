@@ -17,7 +17,9 @@ else()
 		find_library(COCOA_LIBRARY Cocoa)
 		find_package(OpenGL REQUIRED)
 		set(OPENGL_INCLUDE_DIR ${OPENGL_INCLUDE_DIR}/Headers)
-	else(APPLE)
+	elseif(EMSCRIPTEN)
+		# No fontconfig, GTK or GIO in the browser. See emscripten.cpp.
+	else()
 		find_package(PkgConfig REQUIRED)
 
 		pkg_check_modules(FONTCONFIG REQUIRED fontconfig)
@@ -144,6 +146,11 @@ endif()
 	set(SOURCES ${SOURCES}
 		unix.cpp
 	)
+if(EMSCRIPTEN)
+	set(SOURCES ${SOURCES}
+		emscripten.cpp
+	)
+endif()
 endif()
 
 
@@ -234,6 +241,30 @@ endif()
 target_link_libraries(${PROJECT_NAME_LOWER}
 	SDL2::SDL2main
 )
+
+if(EMSCRIPTEN)
+	set(OBV_WEB_FONT "/usr/share/fonts/TTF/DejaVuSans.ttf" CACHE FILEPATH "TrueType font embedded in the web build")
+	set_target_properties(${PROJECT_NAME_LOWER} PROPERTIES SUFFIX ".html")
+	set(OBV_WEB_SHELL "${PROJECT_SOURCE_DIR}/asset/web/shell.html")
+	target_link_options(${PROJECT_NAME_LOWER} PRIVATE
+		"-sMAX_WEBGL_VERSION=2"
+		"-sMIN_WEBGL_VERSION=2"
+		"-sGL_ENABLE_GET_PROC_ADDRESS=1" # glad loads GL functions through SDL_GL_GetProcAddress()
+		"-sALLOW_MEMORY_GROWTH=1"
+		"-sASYNCIFY=1" # Keeps the blocking main loop and file picker working
+		"-sASYNCIFY_STACK_SIZE=65536"
+		"-sSTACK_SIZE=1048576"
+		"-sEXPORTED_RUNTIME_METHODS=FS,ccall"
+		"-sEXPORTED_FUNCTIONS=_main,_obv_open_file"
+		"--shell-file=${OBV_WEB_SHELL}"
+	)
+	if(EXISTS "${OBV_WEB_FONT}")
+		target_link_options(${PROJECT_NAME_LOWER} PRIVATE "--embed-file=${OBV_WEB_FONT}@/fonts/default.ttf")
+	else()
+		message(WARNING "OBV_WEB_FONT not found, the web build uses the ImGui default font.")
+	endif()
+	set_property(TARGET ${PROJECT_NAME_LOWER} APPEND PROPERTY LINK_DEPENDS "${OBV_WEB_SHELL}")
+endif()
 
 install(TARGETS
 	${PROJECT_NAME_LOWER}
