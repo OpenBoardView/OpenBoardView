@@ -28,6 +28,7 @@
 #include "FileFormats/CSTFile.h"
 #include "FileFormats/FZFile.h"
 #include "FileFormats/GenCADFile.h"
+#include "FileFormats/KiCadPCBFile.h"
 #include "FileFormats/XZZPCBFile.h"
 #include "GUI/DPI.h"
 #include "GUI/Fonts.h"
@@ -120,6 +121,8 @@ int BoardView::LoadFile(const filesystem::path &filepath) {
 				m_file = new ASCFile(buffer, filepath);
 			else if (GenCADFile::verifyFormat(buffer))
 				m_file = new GenCADFile(buffer);
+			else if (KiCadPCBFile::verifyFormat(buffer))
+				m_file = new KiCadPCBFile(buffer);
 			else if (ADFile::verifyFormat(buffer))
 				m_file = new ADFile(buffer);
 			else if (CADFile::verifyFormat(buffer))

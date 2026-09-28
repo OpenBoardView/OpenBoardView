@@ -82,6 +82,8 @@ set(SOURCES
 	FileFormats/CSTFile.cpp
 	FileFormats/FZFile.cpp
 	FileFormats/GenCADFile.cpp
+	FileFormats/KiCadPCBFile.cpp
+	FileFormats/SExpr.cpp
 	FileFormats/XZZPCBFile.cpp
 	NetList.cpp
 	PartList.cpp
