@@ -269,6 +269,22 @@ void BoardView::ShowInfoPane(void) {
 		ImGui::Text("No board currently loaded.");
 	}
 
+	if (m_partHighlighted.size() > 1) {
+		if (ImGui::SmallButton("Copy All")) {
+			std::string to_copy;
+			for (auto part : m_partHighlighted) {
+				if (!to_copy.empty()) to_copy += "\n";
+				to_copy += part->name;
+				if (part->mfgcode.size()) to_copy += " " + part->mfgcode;
+				for (const auto &pin : part->pins) {
+					to_copy += "\n" + pin->name + " " + pin->net->name;
+				}
+			}
+			ImGui::SetClipboardText(to_copy.c_str());
+		}
+		ImGui::SameLine();
+	}
+
 	if (m_partHighlighted.size()) {
 		ImGui::Separator();
 		ImGui::TextUnformatted((std::to_string(m_partHighlighted.size()) + " parts selected").c_str());
