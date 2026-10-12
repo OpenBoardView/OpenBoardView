@@ -71,11 +71,6 @@ struct BRDPin {
 	double radius    = 0.5f;
 	const char *snum = nullptr;
 	const char *name = nullptr;
-
-	bool operator<(const BRDPin &p) const // For sorting the vector
-	{
-		return part == p.part ? (std::string(snum) < std::string(p.snum)) : (part < p.part); // sort by part number then pin number
-	}
 };
 
 struct BRDNail {

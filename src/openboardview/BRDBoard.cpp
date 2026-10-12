@@ -2,6 +2,7 @@
 
 #include "FileFormats/BRDFile.h"
 
+#include <algorithm>
 #include <cerrno>
 #include <fstream>
 #include <functional>
@@ -212,6 +213,11 @@ BRDBoard::BRDBoard(const BRDFileBase * const boardFile)
 		components_.erase(
 		    remove_if(begin(components_), end(components_), [](std::shared_ptr<Component> &comp) { return comp->is_dummy(); }),
 		    end(components_));
+
+		// sort pins according to BGA pin naming
+		for (auto &component: components_) {
+		  std::stable_sort(component->pins.begin(), component->pins.end(), Pin::LessByNumberAndName());
+		}
 
 		components_.push_back(comp_dummy);
 	}
