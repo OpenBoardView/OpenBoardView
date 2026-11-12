@@ -75,6 +75,7 @@ set(SOURCES
 	FileFormats/BDVFile.cpp
 	FileFormats/BRD2File.cpp
 	FileFormats/BRDFile.cpp
+	FileFormats/BVFile.cpp
 	FileFormats/BVRFile.cpp
 	FileFormats/BVR3File.cpp
 	FileFormats/CADFile.cpp
