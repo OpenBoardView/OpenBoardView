@@ -21,6 +21,7 @@
 #include "FileFormats/BRD2File.h"
 #include "FileFormats/BRDAllegroFile.h"
 #include "FileFormats/BRDFile.h"
+#include "FileFormats/BVFile.h"
 #include "FileFormats/BVRFile.h"
 #include "FileFormats/BVR3File.h"
 #include "FileFormats/CADFile.h"
@@ -118,6 +119,8 @@ int BoardView::LoadFile(const filesystem::path &filepath) {
 				m_file = caefile;
 			} else if (check_fileext(filepath, ".bom") || check_fileext(filepath, ".asc"))
 				m_file = new ASCFile(buffer, filepath);
+			else if (BVFile::verifyFormat(buffer))
+				m_file = new BVFile(buffer);
 			else if (GenCADFile::verifyFormat(buffer))
 				m_file = new GenCADFile(buffer);
 			else if (ADFile::verifyFormat(buffer))

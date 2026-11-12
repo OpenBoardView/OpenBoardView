@@ -11,6 +11,7 @@
   <mime-type type="application/x-openboardview-board">
     <comment>OpenBoardView PCB Layout</comment>
     <glob pattern="*.bdv"/>
+    <glob pattern="*.bv"/>
     <glob pattern="*.bvr"/>
     <glob pattern="*.fz"/>
     <glob pattern="*.cae"/>
